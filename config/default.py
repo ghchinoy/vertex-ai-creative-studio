@@ -172,7 +172,16 @@ class Default:
 
     IMAGEN_PROMPTS_JSON = "prompts/imagen_prompts.json"
 
-    USE_MEDIA_PROXY: bool = os.environ.get("USE_MEDIA_PROXY", "true").lower() == "true"
+    USE_MEDIA_PROXY: bool = os.environ.get("USE_MEDIA_PROXY", "false").lower() == "true"
+
+    # Firebase Web Config
+    FIREBASE_API_KEY: str = os.environ.get("FIREBASE_API_KEY", "")
+    FIREBASE_AUTH_DOMAIN: str = os.environ.get("FIREBASE_AUTH_DOMAIN", "")
+    FIREBASE_PROJECT_ID: str = os.environ.get("FIREBASE_PROJECT_ID", PROJECT_ID)
+    FIREBASE_STORAGE_BUCKET: str = os.environ.get("FIREBASE_STORAGE_BUCKET", "")
+    FIREBASE_MESSAGING_SENDER_ID: str = os.environ.get("FIREBASE_MESSAGING_SENDER_ID", "")
+    FIREBASE_APP_ID: str = os.environ.get("FIREBASE_APP_ID", "")
+    FIREBASE_MEASUREMENT_ID: str = os.environ.get("FIREBASE_MEASUREMENT_ID", "")
 
     image_modifiers: list[str] = field(
         default_factory=lambda: [

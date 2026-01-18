@@ -1,5 +1,7 @@
 import { LitElement, css, html } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { SvgIcon } from "../svg_icon/svg_icon.js";
+import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 class MediaTile extends LitElement {
   static styles = css`
@@ -93,6 +95,8 @@ class MediaTile extends LitElement {
       audioSrc: { type: String },
       pillsJson: { type: String },
       clickEvent: { type: String }, // Added to receive the event handler ID
+      _resolvedThumbnailSrc: { state: true },
+      _resolvedAudioSrc: { state: true },
     };
   }
 
@@ -103,8 +107,57 @@ class MediaTile extends LitElement {
     this.audioSrc = "";
     this.pillsJson = "[]";
     this.clickEvent = ""; // Initialize
+    this._resolvedThumbnailSrc = "";
+    this._resolvedAudioSrc = "";
     this.addEventListener("click", this.handleClick);
   }
+
+  updated(changedProperties) {
+    if (changedProperties.has('thumbnailSrc')) {
+        this._resolveUrl(this.thumbnailSrc).then(url => {
+            this._resolvedThumbnailSrc = url;
+        });
+    }
+    if (changedProperties.has('audioSrc')) {
+        this._resolveUrl(this.audioSrc).then(url => {
+            this._resolvedAudioSrc = url;
+        });
+    }
+  }
+
+  async _resolveUrl(url) {
+        if (!url) return "";
+        if (url.startsWith("gs://")) {
+            try {
+                let app;
+                try {
+                    app = getApp();
+                } catch(e) {
+                    // App not initialized yet.
+                    app = window.genMediaFirebaseApp;
+                }
+
+                if (!app) {
+                     // Retry once after 500ms
+                     await new Promise(r => setTimeout(r, 500));
+                     try { app = getApp(); } catch(e) { app = window.genMediaFirebaseApp; }
+                }
+
+                if (!app) {
+                    console.error("Firebase app not found");
+                    return "";
+                }
+
+                const storage = getStorage(app);
+                const storageRef = ref(storage, url);
+                return await getDownloadURL(storageRef);
+            } catch (e) {
+                console.error("Error resolving GCS URL:", url, e);
+                return "";
+            }
+        }
+        return url;
+    }
 
   disconnectedCallback() {
     super.disconnectedCallback();
@@ -122,12 +175,18 @@ class MediaTile extends LitElement {
   }
 
   renderPreview() {
+    const src = this._resolvedThumbnailSrc || this.thumbnailSrc;
+    if (!src && this.mediaType !== 'audio' && this.thumbnailSrc) {
+        // Still resolving or failed
+        return html`<div>Loading...</div>`;
+    }
+
     switch (this.mediaType) {
       case "image":
-        return html`<img .src=${this.thumbnailSrc} />`;
+        return html`<img .src=${src} />`;
       case "video":
         return html`<video
-          .src=${this.thumbnailSrc}
+          .src=${src}
           muted
           autoplay
           loop
@@ -155,7 +214,7 @@ class MediaTile extends LitElement {
       <div class="preview">${this.renderPreview()}</div>
       <div class="overlay">
         ${this.mediaType === "audio"
-          ? html`<audio controls .src=${this.audioSrc}></audio>`
+          ? html`<audio controls .src=${this._resolvedAudioSrc || this.audioSrc}></audio>`
           : ""}
         <div class="pills-container">${this.renderPills()}</div>
       </div>

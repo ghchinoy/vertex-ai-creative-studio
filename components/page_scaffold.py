@@ -24,12 +24,18 @@ from components.styles import (
     SIDENAV_MIN_WIDTH,
 )
 from components.theme_manager.theme_manager import theme_manager
+from components.auth_handler import auth_handler
+from config.default import Default as cfg
 
 def on_theme_load(e: me.WebEvent):
     s = me.state(AppState)
     s.theme_mode = e.value["theme"]
     me.set_theme_mode(s.theme_mode)
     yield
+
+
+def on_auth_state_change(e: me.WebEvent):
+    pass
 
 
 @me.content_component
@@ -54,6 +60,20 @@ def page_scaffold(page_name: str):
             ),
         ),
     ):
+        firebase_config = {
+            "apiKey": cfg().FIREBASE_API_KEY,
+            "authDomain": cfg().FIREBASE_AUTH_DOMAIN,
+            "projectId": cfg().FIREBASE_PROJECT_ID,
+            "storageBucket": cfg().FIREBASE_STORAGE_BUCKET,
+            "messagingSenderId": cfg().FIREBASE_MESSAGING_SENDER_ID,
+            "appId": cfg().FIREBASE_APP_ID,
+            "measurementId": cfg().FIREBASE_MEASUREMENT_ID,
+        }
+        auth_handler.auth_handler(
+            firebase_config=firebase_config,
+            on_auth_state_change=on_auth_state_change,
+        )
+
         with me.box(
             style=me.Style(
                 background=me.theme_var("background"),

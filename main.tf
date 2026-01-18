@@ -62,6 +62,7 @@ module "project-services" {
     "firestore.googleapis.com",
     "serviceusage.googleapis.com",
     "cloudresourcemanager.googleapis.com",
+    "identitytoolkit.googleapis.com",
   ]
 }
 

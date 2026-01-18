@@ -24,11 +24,12 @@ from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.wsgi import WSGIMiddleware
-from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from google.auth import impersonated_credentials
 from google.cloud import storage
 from pydantic import BaseModel
+from firebase_admin import auth
 
 import pages.shop_the_look
 from app_factory import app
@@ -36,7 +37,11 @@ from common.prompt_template_service import PromptTemplate
 from common.utils import create_display_url
 from routers import veo_router
 from config import default as config
+from config.firebase_config import FirebaseClient
 from models.video_processing import convert_mp4_to_gif
+
+# Initialize Firebase Client
+FirebaseClient()
 from pages import about as about_page
 from pages import banana_studio as banana_studio_page
 from pages import character_consistency as character_consistency_page
@@ -83,10 +88,44 @@ class UserInfo(BaseModel):
     email: str | None
     agent: str | None
 
+class LoginRequest(BaseModel):
+    token: str | None
+
 
 # FastAPI server with Mesop
 router = APIRouter()
 app.include_router(router)
+
+
+@app.post("/api/auth/login")
+async def login(request: LoginRequest):
+    """Verifies Firebase ID token and sets a session cookie."""
+    if not request.token:
+        response = JSONResponse(content={"status": "logged_out"})
+        response.delete_cookie("session_token")
+        return response
+
+    try:
+        # Verify the ID token
+        decoded_token = auth.verify_id_token(request.token)
+
+        # Create a session cookie
+        expires_in = datetime.timedelta(days=5)
+        session_cookie = auth.create_session_cookie(request.token, expires_in=expires_in)
+
+        response = JSONResponse(content={"status": "success"})
+        response.set_cookie(
+            key="session_token",
+            value=session_cookie,
+            expires=int(expires_in.total_seconds()),
+            httponly=True,
+            secure=True,  # Ensure this is True in production (HTTPS)
+            samesite="Lax"
+        )
+        return response
+    except Exception as e:
+        print(f"Auth error: {e}")
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -172,9 +211,26 @@ async def add_global_csp(request: Request, call_next):
 
 @app.middleware("http")
 async def set_request_context(request: Request, call_next):
-    user_email = request.headers.get("X-Goog-Authenticated-User-Email")
+    user_email = None
+
+    # 1. Try Session Cookie (Firebase Auth)
+    session_cookie = request.cookies.get("session_token")
+    if session_cookie:
+        try:
+            decoded_claims = auth.verify_session_cookie(session_cookie, check_revoked=True)
+            user_email = decoded_claims.get("email")
+        except Exception as e:
+            # Invalid or expired session cookie
+            pass
+
+    # 2. Fallback to IAP or other headers
+    if not user_email:
+        user_email = request.headers.get("X-Goog-Authenticated-User-Email")
+
+    # 3. Default to anonymous
     if not user_email:
         user_email = "anonymous@google.com"
+
     if user_email.startswith("accounts.google.com:"):
         user_email = user_email.split(":")[-1]
 

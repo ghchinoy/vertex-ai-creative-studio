@@ -2,6 +2,8 @@ import { LitElement, css, html } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { SvgIcon } from "../svg_icon/svg_icon.js";
 import "../download_button/download_button.js"; // Import the download button component
 import "../convert_to_gif_button/convert_to_gif_button.js";
+import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 class MediaDetailViewer extends LitElement {
   static styles = css`
@@ -139,6 +141,8 @@ class MediaDetailViewer extends LitElement {
       extendClickEvent: { type: String },
       _currentIndex: { state: true },
       _activeTab: { state: true },
+      _resolvedPrimaryUrls: { state: true },
+      _resolvedSourceUrls: { state: true },
     };
   }
 
@@ -155,7 +159,57 @@ class MediaDetailViewer extends LitElement {
     this.extendClickEvent = "";
     this._currentIndex = 0;
     this._activeTab = "details";
+    this._resolvedPrimaryUrls = [];
+    this._resolvedSourceUrls = [];
   }
+
+  updated(changedProperties) {
+    if (changedProperties.has('primaryUrlsJson')) {
+        this._resolveUrlList(JSON.parse(this.primaryUrlsJson)).then(urls => {
+            this._resolvedPrimaryUrls = urls;
+        });
+    }
+    if (changedProperties.has('sourceUrlsJson')) {
+        this._resolveUrlList(JSON.parse(this.sourceUrlsJson)).then(urls => {
+            this._resolvedSourceUrls = urls;
+        });
+    }
+  }
+
+  async _resolveUrlList(urls) {
+      return Promise.all(urls.map(url => this._resolveUrl(url)));
+  }
+
+  async _resolveUrl(url) {
+        if (!url) return "";
+        if (url.startsWith("gs://")) {
+            try {
+                let app;
+                try {
+                    app = getApp();
+                } catch(e) {
+                    app = window.genMediaFirebaseApp;
+                }
+
+                if (!app) {
+                     await new Promise(r => setTimeout(r, 500));
+                     try { app = getApp(); } catch(e) { app = window.genMediaFirebaseApp; }
+                }
+
+                if (!app) {
+                    return "";
+                }
+
+                const storage = getStorage(app);
+                const storageRef = ref(storage, url);
+                return await getDownloadURL(storageRef);
+            } catch (e) {
+                console.error("Error resolving GCS URL:", url, e);
+                return "";
+            }
+        }
+        return url;
+    }
 
   _navigate(direction) {
     const urls = JSON.parse(this.primaryUrlsJson);
@@ -192,10 +246,13 @@ class MediaDetailViewer extends LitElement {
   }
 
   renderPrimaryAsset() {
-    const urls = JSON.parse(this.primaryUrlsJson);
+    const urls = this._resolvedPrimaryUrls.length > 0 ? this._resolvedPrimaryUrls : JSON.parse(this.primaryUrlsJson);
     if (urls.length === 0) return html``;
 
     const currentUrl = urls[this._currentIndex];
+    if (!currentUrl && this.mediaType !== 'audio') {
+        return html`<div>Loading...</div>`;
+    }
 
     let assetHtml;
     switch (this.mediaType) {
@@ -239,13 +296,16 @@ class MediaDetailViewer extends LitElement {
 
   renderSourceImages() {
     try {
-      const sourceUrls = JSON.parse(this.sourceUrlsJson);
+      const sourceUrls = this._resolvedSourceUrls.length > 0 ? this._resolvedSourceUrls : JSON.parse(this.sourceUrlsJson);
       if (sourceUrls.length === 0) return html``;
 
       return html`
         <h3>Sources</h3>
         <div class="sources">
-          ${sourceUrls.map((url) => url.endsWith(".mp4") ? html`<video width="160" height="120" .src=${url} controls autoplay></video>` : html`<img .src=${url} />`)}
+          ${sourceUrls.map((url) => {
+              if (!url) return html``;
+              return url.endsWith(".mp4") ? html`<video width="160" height="120" .src=${url} controls autoplay></video>` : html`<img .src=${url} />`
+          })}
         </div>
       `;
     } catch (e) {
@@ -298,12 +358,20 @@ class MediaDetailViewer extends LitElement {
   renderActions() {
     const urls = JSON.parse(this.primaryUrlsJson);
     if (urls.length === 0) return html``;
-    const currentUrl = urls[this._currentIndex]; // This is the proxy URL, e.g., /media/bucket/object.png
+    const currentUrl = urls[this._currentIndex];
 
-    // Correctly convert the proxy URL back to a GCS URI for backend functions
-    const isProxyUrl = currentUrl.startsWith("/media/");
-    const gcsPath = isProxyUrl ? currentUrl.substring(7) : new URL(currentUrl).pathname.substring(1);
-    const gcsUri = `gs://${gcsPath}`;
+    // Determine gs URI
+    let gcsUri = currentUrl;
+    if (currentUrl.startsWith("/media/")) {
+        gcsUri = `gs://${currentUrl.substring(7)}`;
+    } else if (currentUrl.startsWith("http") && currentUrl.includes("storage.googleapis.com")) {
+        try {
+            gcsUri = `gs://${new URL(currentUrl).pathname.substring(1)}`;
+        } catch (e) { console.warn("Could not parse GCS URL", e); }
+    }
+
+    // For download button filename
+    const filename = gcsUri.split("/").pop();
 
     const isImage = this.mediaType === 'image';
     const isVideo = this.mediaType === 'video';
@@ -330,10 +398,10 @@ class MediaDetailViewer extends LitElement {
 
     return html`
       <div class="actions">
-        <download-button .url=${gcsUri} .filename=${gcsPath.split("/").pop()}></download-button>
-        ${isImage ? html`<mwc-button outlined @click=${() => this._dispatch(this.editClickEvent, {url: currentUrl})}><svg-icon slot="icon" .iconName=${'edit'}></svg-icon>Edit</mwc-button>` : ""}
-        ${isImage ? html`<mwc-button outlined @click=${() => this._dispatch(this.veoClickEvent, {url: currentUrl})}><svg-icon slot="icon" .iconName=${'movie_filter'}></svg-icon>Veo</mwc-button>` : ""}
-        ${isVideo ? html`<mwc-button outlined @click=${() => this._dispatch(this.extendClickEvent, {url: currentUrl})}><svg-icon slot="icon" .iconName=${'movie_filter'}></svg-icon>Extend</mwc-button>` : ""}
+        <download-button .url=${gcsUri} .filename=${filename}></download-button>
+        ${isImage ? html`<mwc-button outlined @click=${() => this._dispatch(this.editClickEvent, {url: gcsUri})}><svg-icon slot="icon" .iconName=${'edit'}></svg-icon>Edit</mwc-button>` : ""}
+        ${isImage ? html`<mwc-button outlined @click=${() => this._dispatch(this.veoClickEvent, {url: gcsUri})}><svg-icon slot="icon" .iconName=${'movie_filter'}></svg-icon>Veo</mwc-button>` : ""}
+        ${isVideo ? html`<mwc-button outlined @click=${() => this._dispatch(this.extendClickEvent, {url: gcsUri})}><svg-icon slot="icon" .iconName=${'movie_filter'}></svg-icon>Extend</mwc-button>` : ""}
         <mwc-button id="copy-link-btn" outlined @click=${handleCopyLink}><svg-icon slot="icon" .iconName=${'link'}></svg-icon>Copy Link</mwc-button>
         ${this.mediaType === 'video' ? html`<convert-to-gif-button .url=${gcsUri} @conversion-complete=${this._handleGifConversion}></convert-to-gif-button>` : ""}
       </div>

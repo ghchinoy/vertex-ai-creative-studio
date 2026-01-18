@@ -45,8 +45,8 @@ def create_display_url(gcs_uri: str) -> str:
         proxy_path = gcs_uri.replace("gs://", "")
         return f"/media/{proxy_path}"
     else:
-        # Use the direct GCS URL
-        return gcs_uri.replace("gs://", "https://storage.cloud.google.com/")
+        # Return the raw GCS URI so the frontend can handle it (e.g. via Firebase SDK)
+        return gcs_uri
 
 
 

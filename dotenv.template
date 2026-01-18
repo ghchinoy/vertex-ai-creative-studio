@@ -183,8 +183,17 @@ PROJECT_ID=
 # LIBRARY_MEDIA_PER_PAGE=15
 
 # [OPTIONAL] If true, media URLs are proxied to avoid CORS/hotlinking issues.
-# Default: true
-# USE_MEDIA_PROXY=true
+# Default: false
+# USE_MEDIA_PROXY=false
+
+# [REQUIRED] Firebase Web Configuration
+FIREBASE_API_KEY=
+FIREBASE_AUTH_DOMAIN=
+FIREBASE_PROJECT_ID=
+FIREBASE_STORAGE_BUCKET=
+FIREBASE_MESSAGING_SENDER_ID=
+FIREBASE_APP_ID=
+FIREBASE_MEASUREMENT_ID=
 
 # [OPTIONAL] Model used specifically in the Character Consistency workflow.
 # Default: veo-3.0-fast-generate-001
