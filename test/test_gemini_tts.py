@@ -13,10 +13,12 @@
 # limitations under the License.
 
 """Test script for Gemini Text-to-Speech model."""
+
 import os
 
 # Add the project root to the Python path
 import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models.gemini_tts import synthesize_speech

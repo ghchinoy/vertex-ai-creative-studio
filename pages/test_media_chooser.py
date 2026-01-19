@@ -22,7 +22,6 @@ from common.metadata import MediaItem, config, db, get_media_for_chooser
 from common.utils import create_display_url
 from components.dialog import dialog
 from components.header import header
-from components.library.events import LibrarySelectionChangeEvent
 from components.library.media_chooser_button import media_chooser_button
 from components.media_tile.media_tile import get_pills_for_item, media_tile
 from components.page_scaffold import page_frame, page_scaffold
@@ -66,7 +65,7 @@ def page_content():
 
     def open_dialog_for(e: me.ClickEvent, media_type: str):
         print(
-            f"<-- LOGGER: Button with key '{e.key}' clicked. Opening dialog for media_type: '{media_type}' -->"
+            f"<-- LOGGER: Button with key '{e.key}' clicked. Opening dialog for media_type: '{media_type}' -->",
         )
         state.show_dialog = True
         state.dialog_media_type = media_type
@@ -89,14 +88,14 @@ def page_content():
 
     with me.box(style=me.Style(display="flex", flex_direction="column", gap=20)):
         me.text(
-            "This page is for testing the new media_chooser_button component in isolation."
+            "This page is for testing the new media_chooser_button component in isolation.",
         )
 
         # Test the video chooser
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=16, align_items="center"
-            )
+                display="flex", flex_direction="row", gap=16, align_items="center",
+            ),
         ):
             media_chooser_button(
                 key="video_chooser_1",
@@ -109,8 +108,11 @@ def page_content():
         # Test the audio chooser
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=16, align_items="center",
-            )
+                display="flex",
+                flex_direction="row",
+                gap=16,
+                align_items="center",
+            ),
         ):
             media_chooser_button(
                 key="audio_chooser_1",
@@ -123,8 +125,8 @@ def page_content():
         # Test the image chooser
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=16, align_items="center"
-            )
+                display="flex", flex_direction="row", gap=16, align_items="center",
+            ),
         ):
             media_chooser_button(
                 key="image_chooser_1",
@@ -143,7 +145,7 @@ def render_chooser_dialog():
     def handle_item_selected(e: me.ClickEvent):
         gcs_uri = e.key
         print(
-            f"<-- LOGGER: Item selected. Chooser ID: '{state.dialog_chooser_id}'. GCS URI: {gcs_uri} -->"
+            f"<-- LOGGER: Item selected. Chooser ID: '{state.dialog_chooser_id}'. GCS URI: {gcs_uri} -->",
         )
 
         if state.dialog_chooser_id == "video_chooser_1":
@@ -172,7 +174,7 @@ def render_chooser_dialog():
         )
 
         new_items, last_doc = get_media_for_chooser(
-            media_type=state.dialog_media_type, page_size=20, start_after=last_doc_ref
+            media_type=state.dialog_media_type, page_size=20, start_after=last_doc_ref,
         )
         state.media_items.extend(new_items)
         state.last_doc_id = last_doc.id if last_doc else ""
@@ -182,15 +184,18 @@ def render_chooser_dialog():
         yield
 
     dialog_style = me.Style(
-        width="95vw", height="80vh", display="flex", flex_direction="column"
+        width="95vw", height="80vh", display="flex", flex_direction="column",
     )
 
     with dialog(is_open=state.show_dialog, dialog_style=dialog_style):  # pylint: disable=E1129:not-context-manager
         if state.show_dialog:
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="column", gap=16, flex_grow=1,
-                )
+                    display="flex",
+                    flex_direction="column",
+                    gap=16,
+                    flex_grow=1,
+                ),
             ):
                 # Dialog header with title and close button
                 with me.box(
@@ -200,7 +205,7 @@ def render_chooser_dialog():
                         justify_content="space-between",
                         align_items="center",
                         width="100%",
-                    )
+                    ),
                 ):
                     me.text(
                         f"Select a {state.dialog_media_type.capitalize()} from Library",
@@ -215,8 +220,8 @@ def render_chooser_dialog():
                 # Main content area with grid and scroller
                 with me.box(
                     style=me.Style(
-                        flex_grow=1, overflow_y="auto", padding=me.Padding.all(10)
-                    )
+                        flex_grow=1, overflow_y="auto", padding=me.Padding.all(10),
+                    ),
                 ):
                     if state.is_loading and not state.media_items:
                         with me.box(
@@ -225,7 +230,7 @@ def render_chooser_dialog():
                                 justify_content="center",
                                 align_items="center",
                                 height="100%",
-                            )
+                            ),
                         ):
                             me.progress_spinner()
                     else:
@@ -234,20 +239,20 @@ def render_chooser_dialog():
                                 display="grid",
                                 grid_template_columns="repeat(auto-fill, minmax(250px, 1fr))",
                                 gap="16px",
-                            )
+                            ),
                         ):
                             items_to_render = (
                                 state.media_items
                             )  # No need to filter, query does it now
                             if not items_to_render and not state.is_loading:
                                 me.text(
-                                    f"No items of type '{state.dialog_media_type}' found in your library."
+                                    f"No items of type '{state.dialog_media_type}' found in your library.",
                                 )
                             else:
                                 for item in items_to_render:
                                     https_url = create_display_url(
                                         item.gcsuri
-                                        or (item.gcs_uris[0] if item.gcs_uris else "")
+                                        or (item.gcs_uris[0] if item.gcs_uris else ""),
                                     )
                                     media_tile(
                                         key=item.gcsuri

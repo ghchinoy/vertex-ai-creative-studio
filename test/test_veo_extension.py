@@ -16,8 +16,6 @@ import logging
 import os
 import sys
 
-from dotenv import load_dotenv
-
 # Add the project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -31,12 +29,11 @@ logger = logging.getLogger(__name__)
 
 
 def test_veo_extension(
-    input_video_gcs: str, model_id: str = "veo-3.1-fast-generate-preview"
+    input_video_gcs: str, model_id: str = "veo-3.1-fast-generate-preview",
 ):
+    """Test the Veo video extension capability.
     """
-    Test the Veo video extension capability.
-    """
-    logger.info(f"--- Starting Veo Extension Test ---")
+    logger.info("--- Starting Veo Extension Test ---")
     logger.info(f"Input Video: {input_video_gcs}")
     logger.info(f"Model: {model_id}")
 
@@ -64,10 +61,10 @@ def test_veo_extension(
         logger.info(f"Resolution: {resolution}")
 
     except GenerationError as e:
-        logger.error(f"--- Generation Failed ---")
+        logger.error("--- Generation Failed ---")
         logger.error(f"Error: {e}")
     except Exception as e:
-        logger.error(f"--- Unexpected Error ---")
+        logger.error("--- Unexpected Error ---")
         logger.error(f"Error: {e}")
 
 

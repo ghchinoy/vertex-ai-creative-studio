@@ -79,6 +79,10 @@ GENMEDIA_BUCKET="creative-studio-your-project-id-assets"
 # Direct Access vs Proxy
 # Set to false to use direct Browser-to-GCS streaming (Offloads app server)
 USE_MEDIA_PROXY=false
+
+# Domain Allowlist
+# Comma-separated list of domains allowed to access the app (e.g., google.com, example.com)
+DOMAIN_ALLOWLIST="google.com"
 ```
 
 ### Content Security Policy (CSP)

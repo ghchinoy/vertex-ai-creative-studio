@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 
 @dataclass
@@ -29,10 +28,21 @@ class GeminiImageModelConfig:
     max_output_images: int
     requires_base_url: bool = False
 
-    supported_aspect_ratios: List[str] = field(
-        default_factory=lambda: ["1:1", "3:2", "2:3", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]
+    supported_aspect_ratios: list[str] = field(
+        default_factory=lambda: [
+            "1:1",
+            "3:2",
+            "2:3",
+            "3:4",
+            "4:3",
+            "4:5",
+            "5:4",
+            "9:16",
+            "16:9",
+            "21:9",
+        ],
     )
-    supported_image_sizes: List[str] = field(
+    supported_image_sizes: list[str] = field(
         default_factory=lambda: ["1K", "2K"],
     )
 
@@ -43,7 +53,7 @@ class GeminiImageModelConfig:
 
 
 # Single source of truth
-GEMINI_IMAGE_MODELS: List[GeminiImageModelConfig] = [
+GEMINI_IMAGE_MODELS: list[GeminiImageModelConfig] = [
     GeminiImageModelConfig(
         version_id="2.5-flash",
         model_name="gemini-2.5-flash-image",
@@ -66,9 +76,10 @@ GEMINI_IMAGE_MODELS: List[GeminiImageModelConfig] = [
     ),
 ]
 
+
 def get_gemini_image_model_config(
     model_name_or_version: str,
-) -> Optional[GeminiImageModelConfig]:
+) -> GeminiImageModelConfig | None:
     """Finds config by either full model name or short version ID."""
     for model in GEMINI_IMAGE_MODELS:
         if (

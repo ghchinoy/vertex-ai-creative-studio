@@ -1,5 +1,6 @@
 import mesop as me
 
+
 @me.web_component(path="./svg_icon.js")
 def svg_icon(
     *,

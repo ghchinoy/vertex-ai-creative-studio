@@ -21,7 +21,7 @@ class APIReferenceImage(BaseModel):
     """Represents a single reference image for the API request."""
 
     gcs_uri: str
-    mime_type: str
+    mime_type: str = "image/png"
 
 
 class VideoGenerationRequest(BaseModel):
@@ -37,9 +37,11 @@ class VideoGenerationRequest(BaseModel):
     aspect_ratio: str
     resolution: str
     enhance_prompt: bool
+    generate_audio: bool
     model_version_id: str
     person_generation: str
     negative_prompt: Optional[str] = None
+    rewriter_type: Optional[str] = None
 
     # For I2V and Interpolation
     reference_image_gcs: Optional[str] = None

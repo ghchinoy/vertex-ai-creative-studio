@@ -1,12 +1,12 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from google.cloud import storage
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from models.vto import generate_vto_image_genai
 
 # This is a sample test file, you will need to adapt it to your needs.
 # You will need to have a person and product image in GCS to run this test.
+
 
 def test_generate_vto_image_genai(gcs_bucket_for_tests):
     """Tests the generate_vto_image_genai function."""

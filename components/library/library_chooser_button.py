@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import field
 from functools import partial
-from typing import Callable, Optional
 
 import mesop as me
 
@@ -41,7 +41,7 @@ class State:
 @me.component
 def library_chooser_button(
     on_library_select: Callable[[LibrarySelectionChangeEvent], None],
-    button_label: Optional[str] = None,
+    button_label: str | None = None,
     button_type: str = "stroked",
     key: str = "",
     media_type: list[str] | None = None,
@@ -65,7 +65,7 @@ def library_chooser_button(
         # Use the media_type stored in state, which was set when opening the dialog
         print(f"DEBUG: fetching items with media_type={state.media_type}")
         items, _ = get_media_for_page_optimized(
-            20, state.media_type, filter_by_user_email=user_email
+            20, state.media_type, filter_by_user_email=user_email,
         )
 
         # Convert GCS URIs to display URLs using the centralized helper.
@@ -83,7 +83,9 @@ def library_chooser_button(
 
     def open_dialog(e: me.ClickEvent, media_type: list[str]):
         """Dedicated click handler for opening the dialog and fetching data."""
-        print(f"CLICK on library_chooser_button with key: '{e.key}', media_type: {media_type}")
+        print(
+            f"CLICK on library_chooser_button with key: '{e.key}', media_type: {media_type}",
+        )
         state.active_chooser_key = e.key
         state.show_library_dialog = True
         # Capture the media_type for this specific button click into the shared state
@@ -116,18 +118,17 @@ def library_chooser_button(
         type=button_type,
         key=key,
         disabled=disabled,
+    ), me.box(
+        style=me.Style(
+            display="flex",
+            flex_direction="row",
+            gap=8,
+            align_items="center",
+        ),
     ):
-        with me.box(
-            style=me.Style(
-                display="flex",
-                flex_direction="row",
-                gap=8,
-                align_items="center",
-            )
-        ):
-            me.icon(icon_name)
-            if button_label:
-                me.text(button_label)
+        me.icon(icon_name)
+        if button_label:
+            me.text(button_label)
 
     dialog_style = me.Style(
         width="65vw",
@@ -140,7 +141,9 @@ def library_chooser_button(
     with dialog(is_open=is_active, dialog_style=dialog_style):  # pylint: disable=E1129
         if is_active:
             with me.box(
-                style=me.Style(display="flex", flex_direction="column", gap=16, flex_grow=1)
+                style=me.Style(
+                    display="flex", flex_direction="column", gap=16, flex_grow=1,
+                ),
             ):
                 # Header with title and toggle
                 with me.box(
@@ -149,7 +152,7 @@ def library_chooser_button(
                         flex_direction="row",
                         justify_content="space-between",
                         align_items="center",
-                    )
+                    ),
                 ):
                     # Dynamic title based on media type
                     media_type_label = "Media"
@@ -160,7 +163,9 @@ def library_chooser_button(
                     elif state.media_type == ["audio"]:
                         media_type_label = "Audio"
 
-                    me.text(f"Select {media_type_label} from Library", type="headline-6")
+                    me.text(
+                        f"Select {media_type_label} from Library", type="headline-6",
+                    )
                     me.slide_toggle(
                         label="Show only my items",
                         checked=state.show_only_my_items,
@@ -175,7 +180,7 @@ def library_chooser_button(
                                 justify_content="center",
                                 align_items="center",
                                 height="100%",
-                            )
+                            ),
                         ):
                             me.progress_spinner()
                     else:
@@ -185,8 +190,10 @@ def library_chooser_button(
                         )
                 with me.box(
                     style=me.Style(
-                        display="flex", justify_content="flex-end", margin=me.Margin(top=24)
-                    )
+                        display="flex",
+                        justify_content="flex-end",
+                        margin=me.Margin(top=24),
+                    ),
                 ):
                     me.button(
                         "Cancel",

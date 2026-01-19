@@ -14,8 +14,9 @@
 
 """Model for Chirp3 HD Text-to-Speech."""
 
-from typing import List, Dict
+
 from google.cloud import texttospeech_v1beta1 as texttospeech
+
 
 def synthesize_chirp_speech(
     text: str,
@@ -24,7 +25,7 @@ def synthesize_chirp_speech(
     speaking_rate: float = 1.0,
     # pitch: float = 0.0, # Disabled pending API support
     volume_gain_db: float = 0.0,
-    pronunciations: List[Dict[str, str]] = None,
+    pronunciations: list[dict[str, str]] = None,
     phonetic_encoding: str = "PHONETIC_ENCODING_X_SAMPA",
 ) -> bytes:
     """Synthesizes speech from text using the Chirp3 HD model."""
@@ -45,7 +46,7 @@ def synthesize_chirp_speech(
             custom_pronunciation_entries.append(entry)
         if custom_pronunciation_entries:
             input_dict["custom_pronunciations"] = texttospeech.CustomPronunciations(
-                pronunciations=custom_pronunciation_entries
+                pronunciations=custom_pronunciation_entries,
             )
 
     synthesis_input = texttospeech.SynthesisInput(input_dict)

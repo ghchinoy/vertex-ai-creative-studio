@@ -14,8 +14,8 @@
 """Guideline Analysis page."""
 
 import json
-from dataclasses import asdict, dataclass, field
-from typing import Callable
+from collections.abc import Callable
+from dataclasses import field
 
 import mesop as me
 from google.cloud import firestore
@@ -32,7 +32,6 @@ from common.storage import store_to_gcs
 from common.utils import create_display_url
 from components.dialog import dialog
 from components.header import header
-from components.library.library_dialog import library_dialog
 from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.scroll_sentinel.scroll_sentinel import scroll_sentinel
@@ -47,15 +46,17 @@ class PageState:
 
     selected_media_item_id: str | None = None
     additional_guidance: str = ""
-    criteria: dict[str, list[str]] = field(default_factory=dict) # pylint: disable=E3701:invalid-field-call
+    criteria: dict[str, list[str]] = field(default_factory=dict)  # pylint: disable=E3701:invalid-field-call
     is_generating_criteria: bool = False
     criteria_error: str | None = None
-    evaluations: dict[str, str] = field(default_factory=dict)  # Store as JSON strings # pylint: disable=E3701:invalid-field-call
+    evaluations: dict[str, str] = field(
+        default_factory=dict,
+    )  # Store as JSON strings # pylint: disable=E3701:invalid-field-call
     is_evaluating: bool = False
     evaluation_error: str | None = None
     show_chooser_dialog: bool = False
     chooser_is_loading: bool = False
-    chooser_media_items: list[MediaItem] = field(default_factory=list) # pylint: disable=E3701:invalid-field-call
+    chooser_media_items: list[MediaItem] = field(default_factory=list)  # pylint: disable=E3701:invalid-field-call
     chooser_last_doc_id: str = ""
     chooser_all_items_loaded: bool = False
 
@@ -66,8 +67,8 @@ class PageState:
 )
 def page():
     """Main Page."""
-    with page_scaffold(page_name="guideline-analysis"): # pylint: disable=E1129:not-context-manager
-        with page_frame(): # pylint: disable=E1129:not-context-manager
+    with page_scaffold(page_name="guideline-analysis"):  # pylint: disable=E1129:not-context-manager
+        with page_frame():  # pylint: disable=E1129:not-context-manager
             header("Guideline Analysis", "rule")
             page_content()
 
@@ -152,7 +153,7 @@ def on_evaluate_criteria_click(e: me.ClickEvent):
             if not questions:
                 continue
             evaluation_result = evaluate_media_with_questions(
-                media_uri=gcs_uri, mime_type=item.mime_type, questions=questions
+                media_uri=gcs_uri, mime_type=item.mime_type, questions=questions,
             )
             yes_answers = sum(
                 1 for answer in evaluation_result.answers if answer.answer
@@ -189,13 +190,13 @@ def page_content():
                 background=me.theme_var("surface-container-lowest"),
                 padding=me.Padding.all(16),
                 border_radius=12,
-            )
+            ),
         ):
             me.text("Select a media asset to analyze")
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="row", align_items="center", gap=16
-                )
+                    display="flex", flex_direction="row", align_items="center", gap=16,
+                ),
             ):
                 _uploader_placeholder(on_library_select=open_chooser_dialog)
                 with me.content_button(on_click=on_clear_click, type="icon"):
@@ -203,10 +204,12 @@ def page_content():
 
         with me.box(style=me.Style(flex_grow=1)):
             if item:
-                with me.box(style=me.Style(display="flex", flex_direction="row", gap=16)):
+                with me.box(
+                    style=me.Style(display="flex", flex_direction="row", gap=16),
+                ):
                     with me.box(style=me.Style(width="50%")):
                         display_url = create_display_url(
-                            item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
+                            item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None),
                         )
                         if display_url:
                             mime_type = item.mime_type or ""
@@ -260,8 +263,8 @@ def page_content():
                                         me.text(f"- {q}")
                                     with me.box(
                                         style=me.Style(
-                                            margin=me.Margin(top=8, bottom=8)
-                                        )
+                                            margin=me.Margin(top=8, bottom=8),
+                                        ),
                                     ):
                                         me.divider()
 
@@ -298,20 +301,20 @@ def page_content():
                                                 align_items="center",
                                                 gap=8,
                                                 margin=me.Margin(bottom=8),
-                                            )
+                                            ),
                                         ):
                                             if detail["answer"]:
                                                 me.icon(
                                                     "check_circle",
                                                     style=me.Style(
-                                                        color=me.theme_var("success")
+                                                        color=me.theme_var("success"),
                                                     ),
                                                 )
                                             else:
                                                 me.icon(
                                                     "cancel",
                                                     style=me.Style(
-                                                        color=me.theme_var("error")
+                                                        color=me.theme_var("error"),
                                                     ),
                                                 )
                                             me.text(detail["question"])
@@ -350,7 +353,7 @@ def _uploader_placeholder(on_library_select: Callable):
             height=100,
             width=100,
             border=me.Border.all(
-                me.BorderSide(width=1, style="dashed", color=me.theme_var("outline"))
+                me.BorderSide(width=1, style="dashed", color=me.theme_var("outline")),
             ),
             border_radius=8,
             display="flex",
@@ -358,7 +361,7 @@ def _uploader_placeholder(on_library_select: Callable):
             align_items="center",
             justify_content="center",
             gap=8,
-        )
+        ),
     ):
         me.uploader(
             label="Upload Media",
@@ -380,13 +383,13 @@ def _uploader_placeholder(on_library_select: Callable):
 
 
 def get_all_media_for_chooser(
-    page_size: int, start_after=None
+    page_size: int, start_after=None,
 ) -> tuple[list[MediaItem], firestore.DocumentSnapshot | None]:
     if not db:
         return [], None
     try:
         query = db.collection(config.GENMEDIA_COLLECTION_NAME).order_by(
-            "timestamp", direction=firestore.Query.DESCENDING
+            "timestamp", direction=firestore.Query.DESCENDING,
         )
         if start_after:
             query = query.start_after(start_after)
@@ -444,15 +447,15 @@ def render_chooser_dialog():
         yield
 
     dialog_style = me.Style(
-        width="95vw", height="80vh", display="flex", flex_direction="column"
+        width="95vw", height="80vh", display="flex", flex_direction="column",
     )
 
-    with dialog(is_open=state.show_chooser_dialog, dialog_style=dialog_style): # pylint: disable=E1129:not-context-manager
+    with dialog(is_open=state.show_chooser_dialog, dialog_style=dialog_style):  # pylint: disable=E1129:not-context-manager
         if state.show_chooser_dialog:
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="column", gap=16, flex_grow=1
-                )
+                    display="flex", flex_direction="column", gap=16, flex_grow=1,
+                ),
             ):
                 with me.box(
                     style=me.Style(
@@ -461,7 +464,7 @@ def render_chooser_dialog():
                         justify_content="space-between",
                         align_items="center",
                         width="100%",
-                    )
+                    ),
                 ):
                     me.text("Select a Media Asset from Library", type="headline-6")
                     with me.content_button(
@@ -472,8 +475,8 @@ def render_chooser_dialog():
 
                 with me.box(
                     style=me.Style(
-                        flex_grow=1, overflow_y="auto", padding=me.Padding.all(10)
-                    )
+                        flex_grow=1, overflow_y="auto", padding=me.Padding.all(10),
+                    ),
                 ):
                     if state.chooser_is_loading and not state.chooser_media_items:
                         me.progress_spinner()
@@ -483,7 +486,7 @@ def render_chooser_dialog():
                                 display="grid",
                                 grid_template_columns="repeat(auto-fill, minmax(250px, 1fr))",
                                 gap="16px",
-                            )
+                            ),
                         ):
                             for item in state.chooser_media_items:
                                 https_url = (
@@ -558,7 +561,7 @@ def on_generate_criteria_click(e: me.ClickEvent):
 
     try:
         criteria_result = generate_guideline_criteria(
-            item.prompt, state.additional_guidance
+            item.prompt, state.additional_guidance,
         )
         if not any(criteria_result.values()):
             state.criteria_error = "Failed to generate any guideline criteria. The model may have returned an empty response."

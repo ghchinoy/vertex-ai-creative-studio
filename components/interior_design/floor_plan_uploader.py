@@ -1,16 +1,12 @@
-"""
-Component for uploading a floor plan.
+"""Component for uploading a floor plan.
 """
 
-from typing import Callable
+from collections.abc import Callable
+
 import mesop as me
 
-from common.storage import store_to_gcs
 from common.utils import create_display_url
-from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
-from state.interior_design_v2_state import PageState
-
 
 IMAGE_PLACEHOLDER_STYLE = me.Style(
     width=400,
@@ -33,8 +29,7 @@ def floor_plan_uploader(
     on_upload: Callable,
     on_library_select: Callable,
 ):
-    """
-    Component for uploading a floor plan.
+    """Component for uploading a floor plan.
     """
     with me.box(
         style=me.Style(
@@ -42,7 +37,7 @@ def floor_plan_uploader(
             flex_direction="column",
             gap=10,
             align_items="center",
-        )
+        ),
     ):
         me.text("Floor Plan", type="headline-6")
         with me.box(
@@ -52,7 +47,7 @@ def floor_plan_uploader(
                 gap=8,
                 align_items="center",
                 min_height=48,
-            )
+            ),
         ):
             me.uploader(
                 label="Upload Floor Plan",
@@ -61,7 +56,7 @@ def floor_plan_uploader(
                 style=me.Style(width="100%"),
             )
             library_chooser_button(
-                key="floor_plan", on_library_select=on_library_select
+                key="floor_plan", on_library_select=on_library_select,
             )
         with me.box(style=IMAGE_PLACEHOLDER_STYLE):
             if storyboard and storyboard.get("original_floor_plan_uri"):

@@ -14,8 +14,10 @@
 import mesop as me
 
 from common.analytics import log_page_view
+from common.auth import get_user_avatar
+from common.utils import create_display_url
+from components.auth_handler import auth_handler
 from components.side_nav import sidenav
-from state.state import AppState
 from components.styles import (
     MAIN_COLUMN_STYLE,
     PAGE_BACKGROUND_PADDING_STYLE,
@@ -24,10 +26,9 @@ from components.styles import (
     SIDENAV_MIN_WIDTH,
 )
 from components.theme_manager.theme_manager import theme_manager
-from components.auth_handler import auth_handler
 from config.default import Default as cfg
-from common.auth import get_user_avatar
-from common.utils import create_display_url
+from state.state import AppState
+
 
 def on_theme_load(e: me.WebEvent):
     s = me.state(AppState)
@@ -42,7 +43,7 @@ def on_auth_state_change(e: me.WebEvent):
     token = e.value.get("token")
     role = e.value.get("role")
     email = e.value.get("email")
-    
+
     s = me.state(AppState)
     if role:
         s.role = role
@@ -52,19 +53,20 @@ def on_auth_state_change(e: me.WebEvent):
         # Reset to anonymous on logout
         s.user_email = "anonymous@google.com"
         s.role = "guest"
-    
+
     # Check if we are on the welcome page and if login was explicitly requested
     from pages.welcome import PageState as WelcomePageState
+
     login_was_requested = False
     try:
         ws = me.state(WelcomePageState)
         login_was_requested = ws.show_login
-        ws.show_login = False # Always reset
+        ws.show_login = False  # Always reset
     except:
         pass
 
     if token:
-        # Successful login - only redirect to home if login was explicitly requested 
+        # Successful login - only redirect to home if login was explicitly requested
         # from the welcome page tiles.
         if login_was_requested:
             me.navigate("/home")
@@ -76,8 +78,7 @@ def on_auth_state_change(e: me.WebEvent):
 
 @me.content_component
 def page_scaffold(page_name: str):
-    """page scaffold component"""
-
+    """Page scaffold component"""
     app_state = me.state(AppState)
     app_state.current_page = page_name
     log_page_view(page_name=page_name, session_id=app_state.session_id)
@@ -107,7 +108,9 @@ def page_scaffold(page_name: str):
         }
         # Fetch cached avatar if it exists
         cached_avatar_uri = get_user_avatar(app_state.user_email)
-        cached_photo_url = create_display_url(cached_avatar_uri) if cached_avatar_uri else ""
+        cached_photo_url = (
+            create_display_url(cached_avatar_uri) if cached_avatar_uri else ""
+        )
 
         auth_handler.auth_handler(
             firebase_config=firebase_config,
@@ -121,7 +124,7 @@ def page_scaffold(page_name: str):
                 height="100%",
                 overflow_y="scroll",
                 margin=me.Margin(bottom=20),
-            )
+            ),
         ):
             me.slot()
 
@@ -129,7 +132,6 @@ def page_scaffold(page_name: str):
 @me.content_component
 def page_frame():
     """Page Frame"""
-    with me.box(style=MAIN_COLUMN_STYLE):
-        with me.box(style=PAGE_BACKGROUND_STYLE):
-            with me.box(style=PAGE_BACKGROUND_PADDING_STYLE):
-                me.slot()
+    with me.box(style=MAIN_COLUMN_STYLE), me.box(style=PAGE_BACKGROUND_STYLE):
+        with me.box(style=PAGE_BACKGROUND_PADDING_STYLE):
+            me.slot()

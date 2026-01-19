@@ -11,13 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Gemini 2.0 Voices Studio Mesop Page """
+"""Gemini 2.0 Voices Studio Mesop Page"""
 
 import json
 import logging
-import socket
 
-#from typing import List, TypedDict, Any, cast
+# from typing import List, TypedDict, Any, cast
 import urllib
 from dataclasses import field
 
@@ -27,9 +26,9 @@ import google.oauth2.id_token
 import mesop as me
 from common.utility import get_uri_by_key_name
 
-#from components.page_scaffold import page_scaffold, page_frame
+# from components.page_scaffold import page_scaffold, page_frame
 from components.styles import BACKGROUND_COLOR, CONTENT_STYLE
-from config.default import BabelMetadata, Default, gemini_voices, reference_voices
+from config.default import BabelMetadata, Default, gemini_voices
 
 logging.basicConfig(level=logging.DEBUG)
 config = Default()
@@ -44,11 +43,11 @@ class PageState:
 
     gemini_voice: str = "Zephyr"
     gemini_statement: str = ""
-    gemini_output_metadata: list[BabelMetadata] = field(default_factory=lambda: [])  # pylint: disable=invalid-field-call
+    gemini_output_metadata: list[BabelMetadata] = field(default_factory=list)  # pylint: disable=invalid-field-call
     gemini_reference_voice_uri: str = ""
     gemini_reference_voice_image_uri: str = ""
 
-    audio_output_infos: list[str] = field(default_factory=lambda: [])  # pylint: disable=invalid-field-call
+    audio_output_infos: list[str] = field(default_factory=list)  # pylint: disable=invalid-field-call
 
 
 # Gemini voices
@@ -66,7 +65,7 @@ def gemini_studio_page(app_state: me.state):
                 gap=3,
                 align_items="flex-start",
                 padding=me.Padding(bottom=16),
-            )
+            ),
         ):
             me.image(
                 src=state.gemini_reference_voice_image_uri,
@@ -76,7 +75,12 @@ def gemini_studio_page(app_state: me.state):
             voice_options = []
             gemini_voices.sort()
             for voice in gemini_voices:
-                voice_options.append(me.SelectOption(label=voice, value=voice,))
+                voice_options.append(
+                    me.SelectOption(
+                        label=voice,
+                        value=voice,
+                    ),
+                )
 
             me.select(
                 label="Select a Gemini Voice",
@@ -91,9 +95,8 @@ def gemini_studio_page(app_state: me.state):
             me.progress_spinner()
         elif state.gemini_output_metadata:
             with me.box(
-                style=me.Style(display="grid", grid_template_columns="1fr 1fr")
+                style=me.Style(display="grid", grid_template_columns="1fr 1fr"),
             ):
-
                 sorted_metadata = sorted(
                     state.gemini_output_metadata,
                     key=lambda voice: voice["language_code"],
@@ -108,29 +111,27 @@ def gemini_studio_page(app_state: me.state):
                             flex_direction="column",
                             gap=5,
                             padding=me.Padding(top=10, left=10, right=10, bottom=12),
-                        )
+                        ),
                     ):
                         me.text(
-                            f"{item["voice_name"]}",
+                            f"{item['voice_name']}",
                             style=me.Style(font_weight="bold"),
                         )
                         me.audio(src=audio_url)
                         me.text(item["text"])
 
 
-
 def on_click_set_gemini_voice(e: me.ClickEvent):
-    """event to set the gemini voice"""
-
+    """Event to set the gemini voice"""
     state = me.state(PageState)
     state.gemini_voice = e.value
     print(f"voice choice: {e.value}")
 
     uri = get_uri_by_key_name(e.value, "uri")
     if uri:
-        #print(f"the gsuri is: {uri}")
+        # print(f"the gsuri is: {uri}")
         state.gemini_reference_voice_uri = uri.replace(
-            "gs://", "https://storage.mtls.cloud.google.com/"
+            "gs://", "https://storage.mtls.cloud.google.com/",
         )
     else:
         print("Couldn't find URI for voice")
@@ -139,14 +140,15 @@ def on_click_set_gemini_voice(e: me.ClickEvent):
     if image:
         print(f"the image gsuri is: {image}")
         state.gemini_reference_voice_image_uri = uri.replace(
-            "gs://", "https://storage.mtls.cloud.google.com/"
+            "gs://", "https://storage.mtls.cloud.google.com/",
         )
     else:
         print("Couldn't find URI for voice")
 
+
 @me.component
 def subtle_chat_input_gemini():
-    """input component"""
+    """Input component"""
     with me.box(
         style=me.Style(
             border_radius=16,
@@ -154,12 +156,12 @@ def subtle_chat_input_gemini():
             background=BACKGROUND_COLOR,
             display="flex",
             width="100%",
-        )
+        ),
     ):
         with me.box(
             style=me.Style(
                 flex_grow=1,
-            )
+            ),
         ):
             me.native_textarea(
                 autosize=True,
@@ -187,14 +189,13 @@ def subtle_chat_input_gemini():
 
 
 def on_blur_gemini_statement(e: me.InputBlurEvent):
-    """updates the statement to synthesize"""
+    """Updates the statement to synthesize"""
     state = me.state(PageState)
     state.gemini_statement = e.value
 
 
 def on_click_gemini(e: me.ClickEvent):
-    """uses the Gemini voices to create audio"""
-
+    """Uses the Gemini voices to create audio"""
     state = me.state(PageState)
     state.is_loading = True
     if not state.gemini_statement:
@@ -206,7 +207,7 @@ def on_click_gemini(e: me.ClickEvent):
 
     post_object = {
         "statement": state.gemini_statement,
-        #"instructions": "say the following",
+        # "instructions": "say the following",
         "voiceName": state.gemini_voice,
     }
     print(post_object)
@@ -258,7 +259,7 @@ def on_click_gemini(e: me.ClickEvent):
         print(f"URL Error: {err.reason}")
         # Handle the URL error (e.g., check network connectivity)
 
-    except socket.error as err:
+    except OSError as err:
         print(f"Socket Error: {err}")
         # Handle the socket error (e.g., retry the request, check network
         state.gemini_statement = ""

@@ -1,13 +1,13 @@
 # %%writefile vto.py
-import streamlit as st
-from PIL import Image
 import base64
-import io
-import time
-import os
 import concurrent.futures
-from google.cloud import aiplatform
+import io
+import os
+import time
+
+import streamlit as st
 from google.cloud.aiplatform.gapic import PredictionServiceClient
+from PIL import Image
 
 # Must be first command
 st.set_page_config(page_title="Virtual Try-On", layout="wide")
@@ -19,18 +19,23 @@ MODEL_ID = "virtual-try-on-exp-05-31"
 IMAGE_DIR = "/Users/layolin/Documents/VTO/tryon"
 PRODUCT_IMAGE_FILES = ["red.jpg", "green.png", "dress.png", "blue.png", "yellow.png"]
 TARGET_SIZE = (250, 550)
-model_endpoint = f"projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL_ID}"
+model_endpoint = (
+    f"projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL_ID}"
+)
 
 # --- Utility functions with caching ---
+
 
 @st.cache_data(show_spinner=False)
 def load_image_bytes(path):
     with open(path, "rb") as f:
         return f.read()
 
+
 @st.cache_data(show_spinner=False)
 def encode_image(img_bytes):
     return base64.b64encode(img_bytes).decode("utf-8")
+
 
 def prediction_to_pil_image(prediction, size=TARGET_SIZE):
     encoded = prediction["bytesBase64Encoded"]
@@ -38,8 +43,10 @@ def prediction_to_pil_image(prediction, size=TARGET_SIZE):
     image = Image.open(io.BytesIO(decoded)).convert("RGB")
     return image.resize(size)
 
+
 # Optional: In-memory cache for try-on results
 tryon_cache = {}
+
 
 def run_tryon_cached(person_b64, name, b64):
     cache_key = (name, person_b64, b64)
@@ -47,16 +54,23 @@ def run_tryon_cached(person_b64, name, b64):
         return tryon_cache[cache_key]
 
     start = time.time()
-    client = PredictionServiceClient(client_options={"api_endpoint": f"{LOCATION}-aiplatform.googleapis.com"})
-    instances = [{
-        "personImage": {"image": {"bytesBase64Encoded": person_b64}},
-        "productImages": [{"image": {"bytesBase64Encoded": b64}}],
-    }]
-    response = client.predict(endpoint=model_endpoint, instances=instances, parameters={})
+    client = PredictionServiceClient(
+        client_options={"api_endpoint": f"{LOCATION}-aiplatform.googleapis.com"},
+    )
+    instances = [
+        {
+            "personImage": {"image": {"bytesBase64Encoded": person_b64}},
+            "productImages": [{"image": {"bytesBase64Encoded": b64}}],
+        },
+    ]
+    response = client.predict(
+        endpoint=model_endpoint, instances=instances, parameters={},
+    )
     elapsed = time.time() - start
     output_img = prediction_to_pil_image(response.predictions[0])
     tryon_cache[cache_key] = (output_img, elapsed)
     return output_img, elapsed
+
 
 # --- Streamlit UI ---
 
@@ -106,6 +120,7 @@ if uploaded_person:
             results = []
 
             with st.spinner("Generating results in parallel..."):
+
                 def run_thread(item):
                     name, b64 = item
                     out_img, elapsed = run_tryon_cached(person_b64, name, b64)
@@ -116,7 +131,13 @@ if uploaded_person:
                     for f in concurrent.futures.as_completed(futures):
                         results.append(f.result())
 
-            ordered_results = sorted(results, key=lambda x: PRODUCT_IMAGE_FILES.index(x[0]))
+            ordered_results = sorted(
+                results, key=lambda x: PRODUCT_IMAGE_FILES.index(x[0]),
+            )
             cols = st.columns(len(ordered_results))
             for i, (name, out_img, elapsed) in enumerate(ordered_results):
-                cols[i].image(out_img, caption=f"Time taken: {elapsed:.2f}s", use_container_width=True)
+                cols[i].image(
+                    out_img,
+                    caption=f"Time taken: {elapsed:.2f}s",
+                    use_container_width=True,
+                )

@@ -15,7 +15,6 @@
 """A generic, stateless media chooser button component."""
 
 from collections.abc import Callable
-from typing import Optional
 
 import mesop as me
 
@@ -25,12 +24,11 @@ def media_chooser_button(
     *,
     on_click: Callable[[me.ClickEvent], None],
     media_type: str,  # "video", "audio", or "image"
-    button_label: Optional[str] = None,
+    button_label: str | None = None,
     button_type: str = "stroked",
     key: str,
 ):
-    """
-    Renders a simple, stateless button for choosing media.
+    """Renders a simple, stateless button for choosing media.
     It emits an on_click event and does not manage its own state or dialog.
     """
     icon_name = "image"
@@ -39,12 +37,11 @@ def media_chooser_button(
     elif media_type == "audio":
         icon_name = "audio_file"
 
-    with me.content_button(on_click=on_click, type=button_type, key=key):
-        with me.box(
-            style=me.Style(
-                display="flex", flex_direction="row", gap=8, align_items="center"
-            )
-        ):
-            me.icon(icon_name)
-            if button_label:
-                me.text(button_label)
+    with me.content_button(on_click=on_click, type=button_type, key=key), me.box(
+        style=me.Style(
+            display="flex", flex_direction="row", gap=8, align_items="center",
+        ),
+    ):
+        me.icon(icon_name)
+        if button_label:
+            me.text(button_label)

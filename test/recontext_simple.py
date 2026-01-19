@@ -1,5 +1,4 @@
-"""
-Product Recontextualization brings Google's cutting edge Imagen model to generate high quality images of products "recontextualized" in new scenes and backgrounds.
+"""Product Recontextualization brings Google's cutting edge Imagen model to generate high quality images of products "recontextualized" in new scenes and backgrounds.
 you will be exploring the features of Imagen Product Recontextualization using the Vertex AI Python SDK.
 You will
 
@@ -19,12 +18,9 @@ You will
 Product recontextualization using Imagen with PredictionServiceClient
 """
 
-import base64
-import io
 import os
-import re
 import timeit
-from typing import Any, Dict
+from typing import Any
 
 from google.cloud import aiplatform
 from google.cloud.aiplatform.gapic import PredictResponse
@@ -37,7 +33,8 @@ model_endpoint = (
     f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{RECONTEXT}"
 )
 OUTPUT_GCS = os.getenv(
-    "OUTPUT_GCS", f"gs://{PROJECT_ID}-assets",
+    "OUTPUT_GCS",
+    f"gs://{PROJECT_ID}-assets",
 )  # gs:// prefix required
 
 client_options = {"api_endpoint": api_regional_endpoint}
@@ -58,7 +55,7 @@ def call_product_recontext(
 ) -> PredictResponse:
     instances = []
 
-    instance: Dict[str, Any] = {"productImages": []}
+    instance: dict[str, Any] = {"productImages": []}
 
     if image_bytes_list:
         for product_image_bytes in image_bytes_list:
@@ -72,12 +69,12 @@ def call_product_recontext(
 
     if len(instance["productImages"]) == 0:
         raise ValueError(
-            "No product images provided. At least one image must be provided."
+            "No product images provided. At least one image must be provided.",
         )
 
     if product_description:
         instance["productImages"][0]["productConfig"] = {
-            "productDescription": product_description
+            "productDescription": product_description,
         }
 
     if prompt:
@@ -96,7 +93,7 @@ def call_product_recontext(
 
     if disable_prompt_enhancement:
         parameters["enhancePrompt"] = False
-    
+
     if output_gcs:
         parameters["storageUri"] = output_gcs
 
@@ -105,7 +102,7 @@ def call_product_recontext(
     start = timeit.default_timer()
 
     response = client.predict(
-        endpoint=model_endpoint, instances=instances, parameters=parameters
+        endpoint=model_endpoint, instances=instances, parameters=parameters,
     )
     end = timeit.default_timer()
     print(f"Product Recontextualization took {end - start:.2f}s.")
@@ -126,13 +123,17 @@ person_generation = "allow_adult"  # ["dont_allow", "allow_adult", "allow_all"]
 
 product_1 = "gs://genai-blackbelt-fishfooding-assets/vto_product_images/product_hawaiian_shirt.png"
 product_2 = "gs://genai-blackbelt-fishfooding-assets/images/generated_images/1752171998606/sample_0.png"
-product_3 = "gs://genai-blackbelt-fishfooding-assets/uploads/girlwithapearlearing_vermeer.jpg"
+product_3 = (
+    "gs://genai-blackbelt-fishfooding-assets/uploads/girlwithapearlearing_vermeer.jpg"
+)
 
 r = call_product_recontext(
     prompt=prompt,
-    #image_bytes_list=image_bytes_list,
+    # image_bytes_list=image_bytes_list,
     image_uris_list=[
-        product_1, product_2, product_3,
+        product_1,
+        product_2,
+        product_3,
     ],
     product_description=product_description,
     disable_prompt_enhancement=disable_prompt_enhancement,

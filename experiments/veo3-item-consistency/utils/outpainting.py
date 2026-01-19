@@ -12,30 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import io
-from PIL import Image as PIL_Image
-import google.genai as genai
+import os
+
+from google import genai
 from google.genai.types import (
     EditImageConfig,
     Image,
+    MaskReferenceConfig,
     MaskReferenceImage,
     RawReferenceImage,
-    MaskReferenceConfig,
 )
+from PIL import Image as PIL_Image
+
 import config
 
 # Initialize the Gemini client to use Vertex AI
-client = genai.Client(vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION)
+client = genai.Client(
+    vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION,
+)
 edit_model = "imagen-3.0-capability-001"
 
 # Helper functions adapted from the notebook
+
 
 def get_bytes_from_pil(image: PIL_Image.Image) -> bytes:
     """Gets the image bytes from a PIL Image object."""
     byte_io_png = io.BytesIO()
     image.save(byte_io_png, "PNG")
     return byte_io_png.getvalue()
+
 
 def pad_to_target_size(
     source_image,
@@ -50,17 +56,17 @@ def pad_to_target_size(
     target_size_w, target_size_h = target_size
 
     insert_pt_x = (target_size_w - orig_image_size_w) // 2 + int(
-        horizontal_offset_ratio * target_size_w
+        horizontal_offset_ratio * target_size_w,
     )
     insert_pt_y = (target_size_h - orig_image_size_h) // 2 + int(
-        vertical_offset_ratio * target_size_h
+        vertical_offset_ratio * target_size_h,
     )
     insert_pt_x = min(insert_pt_x, target_size_w - orig_image_size_w)
     insert_pt_y = min(insert_pt_y, target_size_h - orig_image_size_h)
 
     if mode == "RGB":
         source_image_padded = PIL_Image.new(
-            mode, target_size, color=(fill_val, fill_val, fill_val)
+            mode, target_size, color=(fill_val, fill_val, fill_val),
         )
     elif mode == "L":
         source_image_padded = PIL_Image.new(mode, target_size, color=(fill_val))
@@ -69,6 +75,7 @@ def pad_to_target_size(
 
     source_image_padded.paste(source_image, (insert_pt_x, insert_pt_y))
     return source_image_padded
+
 
 def pad_image_and_mask(
     image_pil: PIL_Image.Image,
@@ -95,19 +102,19 @@ def pad_image_and_mask(
         mode="L",
         vertical_offset_ratio=vertical_offset_ratio,
         horizontal_offset_ratio=horizontal_offset_ratio,
-        fill_val=255, # White for the area to be filled
+        fill_val=255,  # White for the area to be filled
     )
     return image_pil_padded, mask_pil_padded
 
+
 def outpaint_image(image_path: str, prompt: str) -> str:
-    """
-    Performs outpainting on an image to a 16:9 aspect ratio. This function
+    """Performs outpainting on an image to a 16:9 aspect ratio. This function
     takes the best-selected image and expands it to create a wider scene,
     which is more suitable for video generation. This helps to create a more
     dynamic and visually appealing video.
     """
     initial_image = PIL_Image.open(image_path)
-    
+
     # Create a black mask with the same size as the original image
     mask = PIL_Image.new("L", initial_image.size, 0)
 
@@ -152,11 +159,13 @@ def outpaint_image(image_path: str, prompt: str) -> str:
             person_generation="ALLOW_ALL",
         ),
     )
-    
+
     # Save the outpainted image
     outpainted_image = edited_image_response.generated_images[0].image
-    outpainted_image_path = os.path.join(os.path.dirname(image_path), "outpainted_image.png")
-    
+    outpainted_image_path = os.path.join(
+        os.path.dirname(image_path), "outpainted_image.png",
+    )
+
     # To save the PIL image from the response, we need to access the private _pil_image attribute
     # or save its bytes. Let's use the bytes.
     with open(outpainted_image_path, "wb") as f:

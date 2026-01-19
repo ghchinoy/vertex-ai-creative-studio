@@ -15,8 +15,15 @@
 import mesop as me
 from state.veo_and_me_state import PageState
 
+
 @me.component
-def r2v_prompt_inputs(on_click_generate, on_click_rewrite, on_click_clear, on_blur_prompt, on_blur_negative_prompt):
+def r2v_prompt_inputs(
+    on_click_generate,
+    on_click_rewrite,
+    on_click_clear,
+    on_blur_prompt,
+    on_blur_negative_prompt,
+):
     """A component for R2V prompt inputs with a shorter text area."""
     state = me.state(PageState)
 
@@ -28,7 +35,7 @@ def r2v_prompt_inputs(on_click_generate, on_click_rewrite, on_click_clear, on_bl
             background=me.theme_var("secondary-container"),
             display="flex",
             width="100%",
-        )
+        ),
     ):
         with me.box(style=me.Style(flex_grow=1)):
             me.native_textarea(
@@ -59,25 +66,22 @@ def r2v_prompt_inputs(on_click_generate, on_click_rewrite, on_click_clear, on_bl
                 align_items="center",
             )
             with me.content_button(
-                type="icon", on_click=on_click_generate, disabled=state.is_loading
-            ):
-                with me.box(style=icon_style):
-                    me.icon("play_arrow")
-                    me.text("Create")
+                type="icon", on_click=on_click_generate, disabled=state.is_loading,
+            ), me.box(style=icon_style):
+                me.icon("play_arrow")
+                me.text("Create")
             with me.content_button(
                 type="icon",
                 on_click=on_click_rewrite,
                 disabled=state.is_loading,
-            ):
-                with me.box(style=icon_style):
-                    me.icon("auto_awesome")
-                    me.text("Rewriter")
+            ), me.box(style=icon_style):
+                me.icon("auto_awesome")
+                me.text("Rewriter")
             with me.content_button(
-                type="icon", on_click=on_click_clear, disabled=state.is_loading
-            ):
-                with me.box(style=icon_style):
-                    me.icon("clear")
-                    me.text("Clear")
+                type="icon", on_click=on_click_clear, disabled=state.is_loading,
+            ), me.box(style=icon_style):
+                me.icon("clear")
+                me.text("Clear")
 
     me.box(style=me.Style(height="16px"))
 
@@ -89,21 +93,20 @@ def r2v_prompt_inputs(on_click_generate, on_click_rewrite, on_click_clear, on_bl
             background=me.theme_var("secondary-container"),
             display="flex",
             width="100%",
+        ),
+    ), me.box(style=me.Style(flex_grow=1)):
+        me.native_textarea(
+            placeholder="Enter concepts to avoid (negative prompt)",
+            on_blur=on_blur_negative_prompt,
+            value=state.negative_prompt,
+            autosize=True,
+            min_rows=1,
+            max_rows=3,
+            style=me.Style(
+                background="transparent",
+                outline="none",
+                width="100%",
+                border=me.Border.all(me.BorderSide(style="none")),
+                color=me.theme_var("foreground"),
+            ),
         )
-    ):
-        with me.box(style=me.Style(flex_grow=1)):
-            me.native_textarea(
-                placeholder="Enter concepts to avoid (negative prompt)",
-                on_blur=on_blur_negative_prompt,
-                value=state.negative_prompt,
-                autosize=True,
-                min_rows=1,
-                max_rows=3,
-                style=me.Style(
-                    background="transparent",
-                    outline="none",
-                    width="100%",
-                    border=me.Border.all(me.BorderSide(style="none")),
-                    color=me.theme_var("foreground"),
-                ),
-            )

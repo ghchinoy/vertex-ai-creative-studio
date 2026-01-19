@@ -12,34 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import random
-import uuid
 import json
+import random
 import time
 from dataclasses import field
 from pathlib import Path
 
-
 import mesop as me
 
 from common.analytics import log_ui_click, track_click
-
 from common.metadata import add_media_item
 from common.storage import store_to_gcs
+from common.utils import create_display_url
+from components.dialog import dialog
+from components.edit_button.edit_button import edit_button
 from components.header import header
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
 from components.page_scaffold import page_frame, page_scaffold
+from components.veo_button.veo_button import veo_button
 from config.default import Default
 from models.image_models import generate_virtual_models
-from models.virtual_model_generator import VirtualModelGenerator, DEFAULT_PROMPT
+from models.virtual_model_generator import DEFAULT_PROMPT, VirtualModelGenerator
 from models.vto import generate_vto_image
-from common.utils import create_display_url
 from state.state import AppState
-from config.default import ABOUT_PAGE_CONTENT
-from components.dialog import dialog
-from components.edit_button.edit_button import edit_button
-from components.veo_button.veo_button import veo_button
 
 config = Default()
 
@@ -58,10 +54,10 @@ IMAGE_BOX_STYLE = me.Style(
     margin=me.Margin(top=16),
 )
 
-with open("config/about_content.json", "r") as f:
+with open("config/about_content.json") as f:
     about_content = json.load(f)
     VTO_INFO = next(
-        (s for s in about_content["sections"] if s.get("id") == "vto"), None
+        (s for s in about_content["sections"] if s.get("id") == "vto"), None,
     )
 
 
@@ -89,11 +85,11 @@ class PageState:
     info_dialog_open: bool = False
 
     # Load options once
-    _options: dict = field(default_factory=dict, init=False) # pylint: disable=E3701:invalid-field-call
+    _options: dict = field(default_factory=dict, init=False)  # pylint: disable=E3701:invalid-field-call
 
     def __post_init__(self):
         config_path = Path(__file__).parent.parent / "config/virtual_model_options.json"
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             self._options = json.load(f)
 
 
@@ -102,7 +98,7 @@ def on_upload_person(e: me.UploadEvent):
     state = me.state(PageState)
     state.person_image_file = e.file
     gcs_url = store_to_gcs(
-        "vto_person_images", e.file.name, e.file.mime_type, e.file.getvalue()
+        "vto_person_images", e.file.name, e.file.mime_type, e.file.getvalue(),
     )
     state.person_image_gcs = gcs_url
     state.person_image_display_url = create_display_url(gcs_url)
@@ -130,7 +126,7 @@ def on_upload_product(e: me.UploadEvent):
     state = me.state(PageState)
     state.product_image_file = e.file
     gcs_url = store_to_gcs(
-        "vto_product_images", e.file.name, e.file.mime_type, e.file.getvalue()
+        "vto_product_images", e.file.name, e.file.mime_type, e.file.getvalue(),
     )
     state.product_image_gcs = gcs_url
     state.product_image_display_url = create_display_url(gcs_url)
@@ -147,7 +143,9 @@ def on_click_generate_person(e: me.ClickEvent):
     try:
         # Randomly select options
         selected_gender_obj = random.choice(state._options.get("genders", []))
-        selected_silhouette_obj = random.choice(state._options.get("silhouette_presets", []))
+        selected_silhouette_obj = random.choice(
+            state._options.get("silhouette_presets", []),
+        )
         selected_mst_obj = random.choice(state._options.get("MST", []))
         selected_variant_obj = random.choice(state._options.get("variants", []))
 
@@ -192,8 +190,8 @@ def on_generate(e: me.ClickEvent):
     try:
         start_time = time.time()
         result_gcs_uris = generate_vto_image(
-            state.person_image_gcs, # Pass the correct gs:// URI
-            state.product_image_gcs, # Pass the correct gs:// URI
+            state.person_image_gcs,  # Pass the correct gs:// URI
+            state.product_image_gcs,  # Pass the correct gs:// URI
             state.vto_sample_count,
             state.vto_base_steps,
             person_generation=state.person_generation,
@@ -261,17 +259,20 @@ def on_clear(e: me.ClickEvent):
     state.result_display_urls = []
     yield
 
+
 def open_info_dialog(e: me.ClickEvent):
     """Open the info dialog."""
     state = me.state(PageState)
     state.info_dialog_open = True
     yield
 
+
 def close_info_dialog(e: me.ClickEvent):
     """Close the info dialog."""
     state = me.state(PageState)
     state.info_dialog_open = False
     yield
+
 
 def close_error_dialog(e: me.ClickEvent):
     """Close the error dialog."""
@@ -293,7 +294,7 @@ def page():
 
     if state.info_dialog_open:
         with dialog(is_open=state.info_dialog_open):  # pylint: disable=E1129
-            me.text(f'About {VTO_INFO["title"]}', type="headline-6")
+            me.text(f"About {VTO_INFO['title']}", type="headline-6")
             me.markdown(VTO_INFO["description"])
             me.divider()
             me.text("Current Settings", type="headline-6")
@@ -305,7 +306,12 @@ def page():
 
     with page_scaffold(page_name="vto"):  # pylint: disable=E1129
         with page_frame():  # pylint: disable=E1129
-            header("Virtual Try-On", "checkroom", show_info_button=True, on_info_click=open_info_dialog) # pylint: disable=E1129
+            header(
+                "Virtual Try-On",
+                "checkroom",
+                show_info_button=True,
+                on_info_click=open_info_dialog,
+            )  # pylint: disable=E1129
 
             with me.box(style=me.Style(display="flex", flex_direction="row", gap=16)):
                 # Person Image Section
@@ -315,7 +321,7 @@ def page():
                         display="flex",
                         flex_direction="column",
                         align_items="center",
-                    )
+                    ),
                 ):
                     with me.box(
                         style=me.Style(
@@ -354,7 +360,12 @@ def page():
                                 ),
                             )
                         else:
-                            me.icon("person_outline", style=me.Style(font_size=32, width="50px", height="60px"))
+                            me.icon(
+                                "person_outline",
+                                style=me.Style(
+                                    font_size=32, width="50px", height="60px",
+                                ),
+                            )
                             me.text("Upload a person image")
 
                 # Product Image Section
@@ -364,7 +375,7 @@ def page():
                         display="flex",
                         flex_direction="column",
                         align_items="center",
-                    )
+                    ),
                 ):
                     with me.box(
                         style=me.Style(
@@ -397,7 +408,12 @@ def page():
                                 ),
                             )
                         else:
-                            me.icon("backpack", style=me.Style(font_size=32, width="50px", height="60px"))
+                            me.icon(
+                                "backpack",
+                                style=me.Style(
+                                    font_size=32, width="50px", height="60px",
+                                ),
+                            )
                             me.text("Upload a product image")
 
             me.box(style=me.Style(height=36))
@@ -430,8 +446,10 @@ def page():
                     label="Person Generation",
                     options=[
                         me.SelectOption(label="Allow (All ages)", value="allow_all"),
-                        me.SelectOption(label="Allow (Adults only)", value="allow_adult"),
-                        #me.SelectOption(label="Don't Allow", value="dont_allow"),
+                        me.SelectOption(
+                            label="Allow (Adults only)", value="allow_adult",
+                        ),
+                        # me.SelectOption(label="Don't Allow", value="dont_allow"),
                     ],
                     appearance="outline",
                     value=state.person_generation,
@@ -444,8 +462,12 @@ def page():
                 me.select(
                     label="Safety Filter",
                     options=[
-                        me.SelectOption(label="Block most", value="block_low_and_above"),
-                        me.SelectOption(label="Block some", value="block_medium_and_above"),
+                        me.SelectOption(
+                            label="Block most", value="block_low_and_above",
+                        ),
+                        me.SelectOption(
+                            label="Block some", value="block_medium_and_above",
+                        ),
                         me.SelectOption(label="Block few", value="block_only_high"),
                     ],
                     appearance="outline",
@@ -453,7 +475,6 @@ def page():
                     on_selection_change=on_safety_filter_change,
                     style=me.Style(width=200),
                 )
-
 
                 me.box(style=me.Style(width=36))
 
@@ -466,7 +487,7 @@ def page():
                         display="flex",
                         align_items="center",
                         justify_content="center",
-                    )
+                    ),
                 ):
                     me.progress_spinner()
 
@@ -479,14 +500,26 @@ def page():
                         gap=16,
                         margin=me.Margin(top=16),
                         justify_content="center",
-                    )
+                    ),
                 ):
                     for i, display_url in enumerate(state.result_display_urls):
                         gcs_uri = state.result_gcs_uris[i]
-                        with me.box(style=me.Style(display="flex", flex_direction="column", gap=8)):
+                        with me.box(
+                            style=me.Style(
+                                display="flex", flex_direction="column", gap=8,
+                            ),
+                        ):
                             me.image(
-                                src=display_url, style=me.Style(width="400px", border_radius=12)
+                                src=display_url,
+                                style=me.Style(width="400px", border_radius=12),
                             )
-                            with me.box(style=me.Style(display="flex", flex_direction="row", gap=8, justify_content="center")):
+                            with me.box(
+                                style=me.Style(
+                                    display="flex",
+                                    flex_direction="row",
+                                    gap=8,
+                                    justify_content="center",
+                                ),
+                            ):
                                 edit_button(gcs_uri=gcs_uri)
                                 veo_button(gcs_uri=gcs_uri)

@@ -1,5 +1,7 @@
-import mesop as me
 import typing
+
+import mesop as me
+
 
 @me.web_component(path="./welcome_hero.js")
 def welcome_hero(
@@ -7,7 +9,7 @@ def welcome_hero(
     title: str,
     subtitle: str,
     video_url: str,
-    tiles: str, # JSON string
+    tiles: str,  # JSON string
     on_tile_click: typing.Callable[[me.WebEvent], None] | None = None,
     key: str | None = None,
 ):

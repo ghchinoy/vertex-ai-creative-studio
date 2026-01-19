@@ -12,35 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import field
 import json
+from dataclasses import field
 
 import mesop as me
 
+from common.analytics import track_model_call
 from common.metadata import add_media_item
 from common.storage import store_to_gcs
 from common.utils import create_display_url
 from components.dialog import dialog
 from components.edit_button.edit_button import edit_button
-from components.veo_button.veo_button import veo_button
 from components.header import header
+from components.image_thumbnail import image_thumbnail
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
 from components.page_scaffold import page_frame, page_scaffold
-from components.image_thumbnail import image_thumbnail
-from config.default import Default, ABOUT_PAGE_CONTENT
+from components.veo_button.veo_button import veo_button
+from config.default import Default
 from models.image_models import recontextualize_product_in_scene
 from state.state import AppState
-from common.analytics import track_model_call
 
 config = Default()
 
 
-with open("config/about_content.json", "r") as f:
+with open("config/about_content.json") as f:
     about_content = json.load(f)
     RECONTEXT_INFO = next(
-        (s for s in about_content["sections"] if s.get("id") == "recontextualize"), None
+        (s for s in about_content["sections"] if s.get("id") == "recontextualize"), None,
     )
+
 
 @me.stateclass
 class PageState:
@@ -66,7 +67,7 @@ def recontextualize():
 
         if state.info_dialog_open:
             with dialog(is_open=state.info_dialog_open):  # pylint: disable=not-context-manager
-                me.text(f'About {RECONTEXT_INFO["title"]}', type="headline-6")
+                me.text(f"About {RECONTEXT_INFO['title']}", type="headline-6")
                 me.markdown(RECONTEXT_INFO["description"])
                 me.divider()
                 me.text("Current Settings", type="headline-6")
@@ -77,20 +78,32 @@ def recontextualize():
                     me.button("Close", on_click=close_info_dialog, type="stroked")
 
         with page_frame():  # pylint: disable=not-context-manager
-            header("Product in Scene", "scene_based_layout", show_info_button=True, on_info_click=open_info_dialog)
+            header(
+                "Product in Scene",
+                "scene_based_layout",
+                show_info_button=True,
+                on_info_click=open_info_dialog,
+            )
 
             with me.box(
                 style=me.Style(display="flex", flex_direction="column", gap=16),
             ):
-                me.text("Provide 1-3 images of a product, then recast it in a new scene of your choosing.")
+                me.text(
+                    "Provide 1-3 images of a product, then recast it in a new scene of your choosing.",
+                )
                 if len(state.uploaded_image_gcs_uris) < 3:
                     with me.box(
-                        style=me.Style(display="flex", flex_direction="row", gap=16, justify_content="center"),
+                        style=me.Style(
+                            display="flex",
+                            flex_direction="row",
+                            gap=16,
+                            justify_content="center",
+                        ),
                     ):
                         me.uploader(
                             label="Upload Product Images",
                             on_upload=on_upload,
-                            #style=me.Style(width="100%"),
+                            # style=me.Style(width="100%"),
                             key="product_uploader",
                             multiple=True,
                         )
@@ -112,11 +125,13 @@ def recontextualize():
 
                 if state.uploaded_image_gcs_uris:
                     with me.box(
-                        style=me.Style(display="flex", flex_wrap="wrap", gap=16)
+                        style=me.Style(display="flex", flex_wrap="wrap", gap=16),
                     ):
                         for i, uri in enumerate(state.uploaded_image_gcs_uris):
                             image_thumbnail(
-                                image_uri=create_display_url(uri), index=i, on_remove=on_remove_image
+                                image_uri=create_display_url(uri),
+                                index=i,
+                                on_remove=on_remove_image,
                             )
 
                 me.input(
@@ -135,12 +150,12 @@ def recontextualize():
                     ),
                 ):
                     with me.box(
-                        style=me.Style(width="400px", margin=me.Margin(top=16))
+                        style=me.Style(width="400px", margin=me.Margin(top=16)),
                     ):
                         with me.box(
                             style=me.Style(
-                                display="flex", justify_content="space-between"
-                            )
+                                display="flex", justify_content="space-between",
+                            ),
                         ):
                             me.text(f"Number of images: {state.recontext_sample_count}")
                         me.slider(
@@ -161,7 +176,7 @@ def recontextualize():
                             display="flex",
                             align_items="center",
                             justify_content="center",
-                        )
+                        ),
                     ):
                         me.progress_spinner()
 
@@ -173,15 +188,26 @@ def recontextualize():
                             gap=16,
                             justify_content="center",
                             margin=me.Margin(top=16),
-                        )
+                        ),
                     ):
                         for gcs_uri in state.result_gcs_uris:
-                            with me.box(style=me.Style(display="flex", flex_direction="column", gap=8)):
+                            with me.box(
+                                style=me.Style(
+                                    display="flex", flex_direction="column", gap=8,
+                                ),
+                            ):
                                 me.image(
                                     src=create_display_url(gcs_uri),
                                     style=me.Style(width="400px", border_radius=12),
                                 )
-                                with me.box(style=me.Style(display="flex", flex_direction="row", gap=8, justify_content="center")):
+                                with me.box(
+                                    style=me.Style(
+                                        display="flex",
+                                        flex_direction="row",
+                                        gap=8,
+                                        justify_content="center",
+                                    ),
+                                ):
                                     edit_button(gcs_uri=gcs_uri)
                                     veo_button(gcs_uri=gcs_uri)
 
@@ -204,7 +230,10 @@ def on_upload(e: me.UploadEvent):
     state = me.state(PageState)
     for file in e.files:
         gcs_url = store_to_gcs(
-            "recontext_sources", file.name, file.mime_type, file.getvalue(),
+            "recontext_sources",
+            file.name,
+            file.mime_type,
+            file.getvalue(),
         )
         state.uploaded_image_gcs_uris.append(gcs_url)
     yield
@@ -244,7 +273,9 @@ def on_generate(e: me.ClickEvent):
             source_images=state.uploaded_image_gcs_uris,
         ):
             result_gcs_uris = recontextualize_product_in_scene(
-                state.uploaded_image_gcs_uris, state.prompt, state.recontext_sample_count
+                state.uploaded_image_gcs_uris,
+                state.prompt,
+                state.recontext_sample_count,
             )
         state.result_gcs_uris = result_gcs_uris
         add_media_item(
@@ -276,11 +307,13 @@ def on_close_error_dialog(e: me.ClickEvent):
     state.show_error_dialog = False
     yield
 
+
 def open_info_dialog(e: me.ClickEvent):
     """Open the info dialog."""
     state = me.state(PageState)
     state.info_dialog_open = True
     yield
+
 
 def close_info_dialog(e: me.ClickEvent):
     """Close the info dialog."""

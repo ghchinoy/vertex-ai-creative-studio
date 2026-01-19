@@ -1,4 +1,3 @@
-
 # Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,29 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Generate Images from models in Model Garden or Gemini """
+"""Generate Images from models in Model Garden or Gemini"""
 
 import base64
 import io
 import logging
-import time
-from typing import Any
-import uuid
-import random
 import os
+import random
+import time
+import uuid
+from typing import Any
 
-from PIL import Image
-
+import vertexai
 from google.cloud import aiplatform
 from google.cloud.firestore import Client, FieldFilter
-import vertexai
+from PIL import Image
 from vertexai.preview.vision_models import ImageGenerationModel
 
+from common.metadata import add_image_metadata
+from common.storage import store_to_gcs
 from config.default import Default
 from config.firebase_config import FirebaseClient
-from common.storage import store_to_gcs
-from common.metadata import add_image_metadata
-
 
 config = Default()
 logging.basicConfig(level=logging.DEBUG)
@@ -48,9 +45,11 @@ def base64_to_image(image_str: str) -> Any:
 
     Returns:
       A PIL.Image instance.
+
     """
     image = Image.open(io.BytesIO(base64.b64decode(image_str)))
     return image
+
 
 def generate_images_from_model_garden(
     prompt: str,
@@ -61,8 +60,7 @@ def generate_images_from_model_garden(
     project_id: str = config.PROJECT_ID,
     location: str = config.LOCATION,
 ) -> list[str]:
-    """
-    Generates images using a specified endpoints of Model Garden deployed models.
+    """Generates images using a specified endpoints of Model Garden deployed models.
 
     Args:
         prompt: The text prompt for image generation.
@@ -80,9 +78,12 @@ def generate_images_from_model_garden(
     Raises:
         ValueError: If required arguments are missing or invalid.
         # Re-raises exceptions from aiplatform.Endpoint.predict
+
     """
     if not all([prompt, endpoint_id, model_name, output_gcs_folder, parameters]):
-        raise ValueError("Missing one or more required arguments: prompt, endpoint_id, model_name, output_gcs_folder, parameters")
+        raise ValueError(
+            "Missing one or more required arguments: prompt, endpoint_id, model_name, output_gcs_folder, parameters",
+        )
     if not isinstance(parameters, dict):
         raise ValueError("parameters must be a dictionary")
 
@@ -90,13 +91,17 @@ def generate_images_from_model_garden(
     logging.info(f"Prompt: '{prompt}'")
     logging.info(f"Endpoint ID: {endpoint_id}")
     logging.info(f"Parameters: {parameters}")
-    logging.info(f"Target GCS Folder: gs://{config.GENMEDIA_BUCKET}/{output_gcs_folder}/")
+    logging.info(
+        f"Target GCS Folder: gs://{config.GENMEDIA_BUCKET}/{output_gcs_folder}/",
+    )
 
     aiplatform.init(project=project_id, location=location)
 
-    instances = [{"text": prompt}] 
+    instances = [{"text": prompt}]
 
-    endpoint_path = f"projects/{project_id}/locations/{location}/endpoints/{endpoint_id}"
+    endpoint_path = (
+        f"projects/{project_id}/locations/{location}/endpoints/{endpoint_id}"
+    )
     endpoint = aiplatform.Endpoint(endpoint_path)
 
     arena_output: list[str] = []
@@ -109,29 +114,39 @@ def generate_images_from_model_garden(
             parameters=parameters,
         )
         # logging.info(f"Received response from endpoint: {response}")
-        if not response or not hasattr(response, 'predictions') or not response.predictions:
-             logging.error("Received empty or invalid response from endpoint.")
-             return []
+        if (
+            not response
+            or not hasattr(response, "predictions")
+            or not response.predictions
+        ):
+            logging.error("Received empty or invalid response from endpoint.")
+            return []
 
         image_outputs = []
         for prediction in response.predictions:
-             # Check common keys for base64 image data
-             img_data = prediction.get("output") or prediction.get("bytesBase64Encoded")
-             if img_data:
-                 image_outputs.append(img_data)
-             else:
-                 logging.warning(f"Prediction missing expected image data key ('output' or 'bytesBase64Encoded'): {prediction}")
+            # Check common keys for base64 image data
+            img_data = prediction.get("output") or prediction.get("bytesBase64Encoded")
+            if img_data:
+                image_outputs.append(img_data)
+            else:
+                logging.warning(
+                    f"Prediction missing expected image data key ('output' or 'bytesBase64Encoded'): {prediction}",
+                )
 
         if not image_outputs:
-             logging.error("No valid image data found in any endpoint predictions.")
-             return [] # Or raise an error
+            logging.error("No valid image data found in any endpoint predictions.")
+            return []  # Or raise an error
     except Exception as e:
-        logging.error(f"Error calling Vertex AI endpoint {endpoint_path}: {e}", exc_info=True)
+        logging.error(
+            f"Error calling Vertex AI endpoint {endpoint_path}: {e}", exc_info=True,
+        )
         raise
 
     end_time = time.time()
     elapsed_time = end_time - start_time
-    logging.info(f"Endpoint call finished in {elapsed_time:.2f} seconds. Processing {len(image_outputs)} images.")
+    logging.info(
+        f"Endpoint call finished in {elapsed_time:.2f} seconds. Processing {len(image_outputs)} images.",
+    )
 
     for idx, img_base64 in enumerate(image_outputs):
         try:
@@ -141,14 +156,14 @@ def generate_images_from_model_garden(
                 file_name=image_filename,
                 mime_type="image/png",
                 contents=img_base64,
-                decode=True
+                decode=True,
             )
             # Construct full GCS URI
             gcs_uri = f"gs://{gcs_path_suffix}"
 
             logging.info(
-                f"Generated image {idx+1}/{len(image_outputs)} with model {model_name}. "
-                f"Stored at: {gcs_uri}"
+                f"Generated image {idx + 1}/{len(image_outputs)} with model {model_name}. "
+                f"Stored at: {gcs_uri}",
             )
             arena_output.append(gcs_uri)
 
@@ -157,20 +172,30 @@ def generate_images_from_model_garden(
                 logging.debug(f"Successfully added metadata for {gcs_uri}")
             except Exception as ex:
                 if "DeadlineExceeded" in str(ex):
-                    logging.error(f"Firestore timeout adding metadata for {gcs_uri}: {ex}")
+                    logging.exception(
+                        f"Firestore timeout adding metadata for {gcs_uri}: {ex}",
+                    )
                 else:
-                    logging.error(f"Error adding image metadata for {gcs_uri}: {ex}", exc_info=True)
+                    logging.error(
+                        f"Error adding image metadata for {gcs_uri}: {ex}",
+                        exc_info=True,
+                    )
 
         except Exception as ex:
-            logging.error(f"Error processing or uploading image {idx+1} from {model_name}: {ex}", exc_info=True)
+            logging.error(
+                f"Error processing or uploading image {idx + 1} from {model_name}: {ex}",
+                exc_info=True,
+            )
             # Continue with the next image
 
-    logging.info(f"Finished endpoint processing for model {model_name}. Returning {len(arena_output)} GCS URIs.")
+    logging.info(
+        f"Finished endpoint processing for model {model_name}. Returning {len(arena_output)} GCS URIs.",
+    )
     return arena_output
 
+
 def images_from_flux(model_name: str, prompt: str, aspect_ratio: str) -> list[str]:
-    """
-    Generates images using the configured Flux.1 model endpoint.
+    """Generates images using the configured Flux.1 model endpoint.
 
     Args:
         prompt: The text prompt.
@@ -178,15 +203,16 @@ def images_from_flux(model_name: str, prompt: str, aspect_ratio: str) -> list[st
 
     Returns:
         A list of GCS URIs for the generated images.
+
     """
     _ = aspect_ratio  # aspect ratio is not used in this function
     if not config.MODEL_FLUX1_ENDPOINT_ID:
-         raise ValueError("config.MODEL_FLUX1_ENDPOINT_ID is not set.")
+        raise ValueError("config.MODEL_FLUX1_ENDPOINT_ID is not set.")
 
     default_params = {
         "height": 1024,
         "width": 1024,
-        "num_inference_steps": 4, # Default for Flux
+        "num_inference_steps": 4,  # Default for Flux
     }
 
     return generate_images_from_model_garden(
@@ -197,9 +223,11 @@ def images_from_flux(model_name: str, prompt: str, aspect_ratio: str) -> list[st
         parameters=default_params,
     )
 
-def images_from_stable_diffusion(model_name: str, prompt: str, aspect_ratio: str) -> list[str]:
-    """
-    Generates images using the configured Stable Diffusion model endpoint.
+
+def images_from_stable_diffusion(
+    model_name: str, prompt: str, aspect_ratio: str,
+) -> list[str]:
+    """Generates images using the configured Stable Diffusion model endpoint.
     *Adjust default_params based on your specific Stable Diffusion deployment.*
 
     Args:
@@ -208,28 +236,30 @@ def images_from_stable_diffusion(model_name: str, prompt: str, aspect_ratio: str
 
     Returns:
         A list of GCS URIs for the generated images.
+
     """
     _ = aspect_ratio  # aspect ratio is not used in this function
     if not config.MODEL_STABLE_DIFFUSION_ENDPOINT_ID:
-         raise ValueError("config.MODEL_STABLE_DIFFUSION_ENDPOINT_ID is not set.")
+        raise ValueError("config.MODEL_STABLE_DIFFUSION_ENDPOINT_ID is not set.")
 
     default_params = {
         "height": 1024,
         "width": 1024,
         "num_inference_steps": 25,  # Typically higher for SD
-        "guidance_scale": 7.5,     # Common SD parameter
+        "guidance_scale": 7.5,  # Common SD parameter
     }
 
     return generate_images_from_model_garden(
         prompt=prompt,
         endpoint_id=config.MODEL_STABLE_DIFFUSION_ENDPOINT_ID,
         model_name=model_name,
-        output_gcs_folder="stablediffusion", 
+        output_gcs_folder="stablediffusion",
         parameters=default_params,
     )
 
+
 def images_from_imagen(model_name: str, prompt: str, aspect_ratio: str):
-    """creates images from Imagen and returns a list of gcs uris
+    """Creates images from Imagen and returns a list of gcs uris
     Args:
         model_name (str): imagen model name
         prompt (str): prompt for t2i model
@@ -237,7 +267,6 @@ def images_from_imagen(model_name: str, prompt: str, aspect_ratio: str):
     Returns:
         _type_: a list of strings (gcs uris of image output)
     """
-
     start_time = time.time()
 
     arena_output = []
@@ -265,10 +294,12 @@ def images_from_imagen(model_name: str, prompt: str, aspect_ratio: str):
     elapsed_time = end_time - start_time
 
     for idx, img in enumerate(response.images):
-        logging.info(f"Generated image {idx} with model {model_name} in {elapsed_time:.2f} seconds")
+        logging.info(
+            f"Generated image {idx} with model {model_name} in {elapsed_time:.2f} seconds",
+        )
 
         logging.info(
-            f"Generated image: #{idx}, len {len(img._as_base64_string())} at {img._gcs_uri}"
+            f"Generated image: #{idx}, len {len(img._as_base64_string())} at {img._gcs_uri}",
         )
         # output = img._as_base64_string()
         # state.image_output.append(output)
@@ -278,30 +309,33 @@ def images_from_imagen(model_name: str, prompt: str, aspect_ratio: str):
             add_image_metadata(img._gcs_uri, prompt, model_name)
         except Exception as e:
             if "DeadlineExceeded" in str(e):  # Check for timeout error
-                logging.error(f"Firestore timeout: {e}")
+                logging.exception(f"Firestore timeout: {e}")
             else:
-                logging.error(f"Error adding image metadata: {e}")
+                logging.exception(f"Error adding image metadata: {e}")
 
     return arena_output
+
 
 def study_fetch(model_name: str, prompt: str) -> list[str]:
     db: Client = FirebaseClient(database_id=config.IMAGE_FIREBASE_DB).get_client()
     collection_ref = db.collection(config.IMAGE_COLLECTION_NAME)
     print(f"Using: {model_name}")
 
-    query = collection_ref.where(filter=FieldFilter("prompt", "==", prompt)).where(filter=FieldFilter("model", "==", model_name)).stream()
+    query = (
+        collection_ref.where(filter=FieldFilter("prompt", "==", prompt))
+        .where(filter=FieldFilter("model", "==", model_name))
+        .stream()
+    )
 
     docs = []
     for doc in query:
-        gs_uri = doc.to_dict()['gcsuri']
-        if "stablediffusion" not in gs_uri:
+        gs_uri = doc.to_dict()["gcsuri"]
+        if "stablediffusion" not in gs_uri or gs_uri.startswith("20250328_"):
             docs.append(os.path.splitext(gs_uri)[0])
         else:
-            if gs_uri.startswith("20250328_"):
-                docs.append(os.path.splitext(gs_uri)[0])
-            else:
-                docs.append(gs_uri)
+            docs.append(gs_uri)
     return random.sample(docs, 1)
+
 
 if __name__ == "__main__":
     # Example usage
@@ -311,4 +345,3 @@ if __name__ == "__main__":
 
     images = images_from_flux(model_name, prompt, aspect_ratio)
     print("Generated images:", images[0])
-

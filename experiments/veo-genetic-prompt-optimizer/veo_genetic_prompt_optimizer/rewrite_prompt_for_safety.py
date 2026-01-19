@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
-"""
-This script sanitizes a given prompt for safety using the Gemini API.
+"""This script sanitizes a given prompt for safety using the Gemini API.
 """
 
 import argparse
-import time
-import random
-from google import genai
 import os
+import random
+import time
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
+from google import genai
+
 load_dotenv()
 
 # --- Configuration ---
@@ -64,6 +63,7 @@ SANITIZATION_PROMPT = """You are an AI specializing in prompt sanitization with 
 Now, analyze and sanitize the following query:
 """
 
+
 def get_genai_client() -> genai.Client:
     """Initializes and returns a GenAI client."""
     try:
@@ -72,7 +72,10 @@ def get_genai_client() -> genai.Client:
         print(f"Error initializing GenAI client: {e}")
         raise
 
-def _generate_content_with_retry(client: genai.Client, *args, **kwargs) -> genai.types.GenerateContentResponse:
+
+def _generate_content_with_retry(
+    client: genai.Client, *args, **kwargs,
+) -> genai.types.GenerateContentResponse:
     """Wrapper for generate_content with exponential backoff."""
     max_retries = 5
     base_delay = 2
@@ -83,7 +86,9 @@ def _generate_content_with_retry(client: genai.Client, *args, **kwargs) -> genai
             if "resource exhausted" in str(e).lower():
                 if n < max_retries - 1:
                     delay = base_delay * (2**n) + random.uniform(0, 1)
-                    print(f"Resource exhausted error. Retrying in {delay:.2f} seconds...")
+                    print(
+                        f"Resource exhausted error. Retrying in {delay:.2f} seconds...",
+                    )
                     time.sleep(delay)
                 else:
                     print("Max retries reached. Raising exception.")
@@ -91,31 +96,47 @@ def _generate_content_with_retry(client: genai.Client, *args, **kwargs) -> genai
             else:
                 raise e
 
+
 def sanitize_prompt(client: genai.Client, prompt_to_sanitize: str) -> str:
     """Sanitizes a prompt using the Gemini API."""
     full_prompt = f"{SANITIZATION_PROMPT}\n{prompt_to_sanitize}"
-    
-    contents = [genai.types.Content(role="user", parts=[genai.types.Part.from_text(text=full_prompt)])]
+
+    contents = [
+        genai.types.Content(
+            role="user", parts=[genai.types.Part.from_text(text=full_prompt)],
+        ),
+    ]
     config_dict = {
         "temperature": 0,
         "top_p": 1.0,
         "max_output_tokens": 65535,
         "thinking_config": genai.types.ThinkingConfig(thinking_budget=-1),
         "safety_settings": [
-            genai.types.SafetySetting(category="HARM_CATEGORY_HATE_SPEECH", threshold="OFF"),
-            genai.types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="OFF"),
-            genai.types.SafetySetting(category="HARM_CATEGORY_SEXUALLY_EXPLICIT",   threshold="OFF"),
-            genai.types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="OFF"),
-        ]
+            genai.types.SafetySetting(
+                category="HARM_CATEGORY_HATE_SPEECH", threshold="OFF",
+            ),
+            genai.types.SafetySetting(
+                category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="OFF",
+            ),
+            genai.types.SafetySetting(
+                category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="OFF",
+            ),
+            genai.types.SafetySetting(
+                category="HARM_CATEGORY_HARASSMENT", threshold="OFF",
+            ),
+        ],
     }
     config = genai.types.GenerateContentConfig(**config_dict)
-    
+
     try:
-        response = _generate_content_with_retry(client, model=GEMINI_MODEL_ID, contents=contents, config=config)
+        response = _generate_content_with_retry(
+            client, model=GEMINI_MODEL_ID, contents=contents, config=config,
+        )
         return response.text.strip()
     except Exception as e:
         print(f"  - Gemini API call failed: {e}")
         return "I am unable to process this request. Please try a different prompt."
+
 
 def main():
     """Main function to sanitize a prompt."""
@@ -126,6 +147,7 @@ def main():
     client = get_genai_client()
     sanitized_prompt = sanitize_prompt(client, args.prompt)
     print(sanitized_prompt)
+
 
 if __name__ == "__main__":
     main()

@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import functools
 
 import mesop as me
 
 from common.analytics import log_ui_click
-from state.state import AppState
-from state.veo_state import PageState
 from components.library.library_chooser_button import library_chooser_button
 from config.veo_models import get_veo_model_config
+from state.state import AppState
+from state.veo_state import PageState
 
 
 @me.component
@@ -139,7 +138,7 @@ def _r2v_uploader(
                             icon_size=16,
                         )
                     elif not asset_uploader_disabled and i == len(
-                        state.r2v_reference_images
+                        state.r2v_reference_images,
                     ):
                         _uploader_placeholder(
                             on_upload=on_r2v_asset_add,
@@ -153,7 +152,9 @@ def _r2v_uploader(
         if show_style_reference:
             with me.box(style=me.Style(display="flex", flex_direction="column", gap=2)):
                 me.text("Style reference", style=me.Style(font_size="10pt"))
-                with me.box(style=me.Style(display="flex", flex_direction="row", gap=5)):
+                with me.box(
+                    style=me.Style(display="flex", flex_direction="row", gap=5),
+                ):
                     if state.r2v_style_image:
                         image_thumbnail(
                             image_uri=create_display_url(state.r2v_style_image),
@@ -171,7 +172,9 @@ def _r2v_uploader(
 
 
 @me.component
-def _uploader_placeholder(on_upload, on_library_select, key_prefix: str, disabled: bool):
+def _uploader_placeholder(
+    on_upload, on_library_select, key_prefix: str, disabled: bool,
+):
     """A placeholder box with uploader and library chooser buttons."""
     with me.box(
         style=me.Style(
@@ -182,7 +185,7 @@ def _uploader_placeholder(on_upload, on_library_select, key_prefix: str, disable
                     width=1,
                     style="dashed",
                     color=me.theme_var("outline"),
-                )
+                ),
             ),
             border_radius=8,
             display="flex",
@@ -191,7 +194,7 @@ def _uploader_placeholder(on_upload, on_library_select, key_prefix: str, disable
             justify_content="center",
             gap=8,
             opacity=0.5 if disabled else 1.0,
-        )
+        ),
     ):
         me.uploader(
             label="Upload Image",
@@ -216,16 +219,12 @@ def _empty_placeholder():
             height=100,
             width=100,
             border=me.Border.all(
-                me.BorderSide(
-                    width=1, style="dashed", color=me.theme_var("outline")
-                )
+                me.BorderSide(width=1, style="dashed", color=me.theme_var("outline")),
             ),
             border_radius=8,
             opacity=0.5,
-        )
+        ),
     )
-
-
 
 
 @me.component
@@ -278,7 +277,7 @@ def _image_uploader(
 
 
 def on_selection_change_veo_mode(e: me.ButtonToggleChangeEvent):
-    """toggle veo mode and validate/update settings."""
+    """Toggle veo mode and validate/update settings."""
     app_state = me.state(AppState)
     log_ui_click(
         element_id="veo_mode",
@@ -309,6 +308,7 @@ def on_selection_change_veo_mode(e: me.ButtonToggleChangeEvent):
         ):
             state.aspect_ratio = override.supported_aspect_ratios[0]
     yield
+
 
 def on_click_clear_reference_image(e: me.ClickEvent):
     """Clear reference image"""

@@ -12,29 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-This module is responsible for selecting the best generated image.
+"""This module is responsible for selecting the best generated image.
 
 It compares the generated images with the original input images to ensure
 consistency of the character and their primary machine, then selects the one
 with the highest overall likeness.
 """
+
+
 from google.genai import Client, types
 from pydantic import BaseModel
-from typing import List
+
 import config
 
 # Initialize the Gemini client to use Vertex AI
-client = Client(vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION)
+client = Client(
+    vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION,
+)
+
 
 class BestImage(BaseModel):
     """Pydantic model for the best image selection."""
+
     best_image_path: str
     reasoning: str
 
-def select_best_image(real_image_paths: List[str], generated_image_paths: List[str]) -> BestImage:
-    """
-    Selects the best generated image by comparing it against a set of real
+
+def select_best_image(
+    real_image_paths: list[str], generated_image_paths: list[str],
+) -> BestImage:
+    """Selects the best generated image by comparing it against a set of real
     images. This function uses a multimodal model to analyze the images and
     determine which generated image has the highest likeness for both the
     character and their main machine.
@@ -54,20 +61,29 @@ def select_best_image(real_image_paths: List[str], generated_image_paths: List[s
         "1. **Person Consistency:** The person's facial features and build must closely match the person in the real photos.",
         "2. **Machine Consistency:** The main machine in the generated image must closely match the one in the real photos (in type, shape, color, and key details). If multiple machines are present, focus on the primary one associated with the person.",
         "In your reasoning, explain how the chosen image satisfies both criteria. Finally, provide the file path for your selection.",
-        "\n--- REAL IMAGES ---"
+        "\n--- REAL IMAGES ---",
     ]
 
     for path in real_image_paths:
-        prompt_parts.append(types.Part.from_bytes(data=types.Image.from_file(location=path).image_bytes, mime_type="image/png"))
+        prompt_parts.append(
+            types.Part.from_bytes(
+                data=types.Image.from_file(location=path).image_bytes,
+                mime_type="image/png",
+            ),
+        )
 
     prompt_parts.append("\n--- GENERATED IMAGES ---")
 
     for path in generated_image_paths:
         prompt_parts.append(f"Image path: {path}")
-        prompt_parts.append(types.Part.from_bytes(data=types.Image.from_file(location=path).image_bytes, mime_type="image/png"))
+        prompt_parts.append(
+            types.Part.from_bytes(
+                data=types.Image.from_file(location=path).image_bytes,
+                mime_type="image/png",
+            ),
+        )
 
     response = client.models.generate_content(
-        model=model,
-        contents=prompt_parts,
-        config=config)
+        model=model, contents=prompt_parts, config=config,
+    )
     return BestImage.model_validate_json(response.text)

@@ -19,24 +19,17 @@ import io
 import json
 import re
 from typing import Any
-import datetime
 
+import requests
 from absl import logging
-from PIL import Image
-import google.auth
 from google.cloud import storage
-from google.auth import impersonated_credentials
-
-import os
+from PIL import Image
 
 from config.default import Default as cfg
 
 
-import requests
-
 def mirror_user_avatar(email: str, photo_url: str) -> str | None:
-    """
-    Downloads a user's avatar and stores it in GCS.
+    """Downloads a user's avatar and stores it in GCS.
     Returns the GCS URI if successful, None otherwise.
     """
     if not photo_url or not email:
@@ -56,16 +49,19 @@ def mirror_user_avatar(email: str, photo_url: str) -> str | None:
         blob_path = f"avatars/{email}.png"
         blob = bucket.blob(blob_path)
 
-        blob.upload_from_string(response.content, content_type=response.headers.get('Content-Type', 'image/png'))
-        
+        blob.upload_from_string(
+            response.content,
+            content_type=response.headers.get("Content-Type", "image/png"),
+        )
+
         return f"gs://{bucket_name}/{blob_path}"
     except Exception as e:
         print(f"Error mirroring avatar for {email}: {e}")
         return None
 
+
 def create_display_url(gcs_uri: str) -> str:
-    """
-    Creates a cacheable display URL for a GCS asset.
+    """Creates a cacheable display URL for a GCS asset.
     Switches between a direct GCS link and the app proxy based on config.
     """
     if not gcs_uri or not gcs_uri.startswith("gs://"):
@@ -75,11 +71,8 @@ def create_display_url(gcs_uri: str) -> str:
         # Use the fast, simple proxy URL
         proxy_path = gcs_uri.replace("gs://", "")
         return f"/media/{proxy_path}"
-    else:
-        # Return the raw GCS URI so the frontend can handle it (e.g. via Firebase SDK)
-        return gcs_uri
-
-
+    # Return the raw GCS URI so the frontend can handle it (e.g. via Firebase SDK)
+    return gcs_uri
 
 
 def extract_username(email_string: str | None) -> str:
@@ -90,10 +83,11 @@ def extract_username(email_string: str | None) -> str:
 
     Returns:
         The extracted username, or None if no valid username is found.
+
     """
     if email_string:
         match = re.search(
-            r":([^@]+)@", email_string
+            r":([^@]+)@", email_string,
         )  # Matches anything between ":" and "@"
         if match:
             return match.group(1)
@@ -108,6 +102,7 @@ def get_image_dimensions_from_base64(base64_string: str) -> tuple[int, int]:
 
     Returns:
         A tuple (width, height) if successful, or None if an error occurs.
+
     """
     try:
         # Remove the data URL prefix if it exists.
@@ -136,8 +131,8 @@ def make_local_request(endpoint: str) -> dict[str, Any]:
     except FileNotFoundError:
         logging.info(f"Mock file not found: {filepath}")
         return None  # Or raise an exception
-    
-    
+
+
 def print_keys(obj, prefix=""):
     """Recursively prints keys of a JSON object."""
     if obj is None:  # Base case: if obj is None, do nothing and return
@@ -155,11 +150,12 @@ def print_keys(obj, prefix=""):
             # Current behavior: treats list items as potentially new objects to explore.
             print_keys(item, prefix + f"  [{i}] ")  # indicate list index in prefix
 
+
 GCS_PUBLIC_URL_PREFIX = "https://storage.cloud.google.com/"
 
+
 def _get_gcs_public_https_url(gcs_uri: str | None) -> str:
-    """
-    (Internal use only) Converts a GCS URI to a publicly accessible URL.
+    """(Internal use only) Converts a GCS URI to a publicly accessible URL.
     This performs a simple string replacement and does NOT work for private objects.
     """
     if not gcs_uri:
@@ -171,9 +167,9 @@ def _get_gcs_public_https_url(gcs_uri: str | None) -> str:
     # Return as-is if it's not a recognized format
     return gcs_uri
 
+
 def https_url_to_gcs_uri(url: str | None) -> str:
-    """
-    Converts a public GCS HTTPS URL (including signed URLs) back to a gs:// URI.
+    """Converts a public GCS HTTPS URL (including signed URLs) back to a gs:// URI.
     """
     if not url:
         return ""

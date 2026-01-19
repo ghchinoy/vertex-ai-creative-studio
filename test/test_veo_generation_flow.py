@@ -1,25 +1,23 @@
-
-
-import pytest
-from unittest.mock import patch, MagicMock
-import datetime
-
 # Setup sys.path to allow imports from the parent directory.
 import os
 import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from unittest.mock import MagicMock, patch
 
-from pages.veo import on_click_veo
-from state.veo_state import PageState
-from state.state import AppState
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from common.metadata import MediaItem
+from pages.veo import on_click_veo
+from state.state import AppState
+from state.veo_state import PageState
 
-@patch('pages.veo.add_media_item_to_firestore')
-@patch('pages.veo.generate_video', return_value="gs://fake-bucket/fake_video.mp4")
-@patch('mesop.state')
-def test_veo_generation_flow_and_metadata(mock_state, mock_generate_video, mock_add_media_item):
-    """
-    Tests the VEO generation flow, focusing on the data handling and metadata
+
+@patch("pages.veo.add_media_item_to_firestore")
+@patch("pages.veo.generate_video", return_value="gs://fake-bucket/fake_video.mp4")
+@patch("mesop.state")
+def test_veo_generation_flow_and_metadata(
+    mock_state, mock_generate_video, mock_add_media_item,
+):
+    """Tests the VEO generation flow, focusing on the data handling and metadata
     creation after a successful API call.
     """
     # --- Arrange ---
@@ -32,7 +30,7 @@ def test_veo_generation_flow_and_metadata(mock_state, mock_generate_video, mock_
         video_length=5,
         reference_image_gcs=None,
         last_reference_image_gcs=None,
-        auto_enhance_prompt=False
+        auto_enhance_prompt=False,
     )
 
     # Configure the mesop.state mock to return the correct state object when called.
@@ -59,7 +57,6 @@ def test_veo_generation_flow_and_metadata(mock_state, mock_generate_video, mock_
     assert media_item_logged.user_email == "test_user@example.com"
     assert media_item_logged.prompt == "a test prompt for veo"
     assert media_item_logged.gcsuri == "gs://fake-bucket/fake_video.mp4"
-    assert media_item_logged.model == "veo-2.0-generate-001" # This comes from config
+    assert media_item_logged.model == "veo-2.0-generate-001"  # This comes from config
 
     print("\nComponent-level integration test for VEO passed successfully.")
-

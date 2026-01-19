@@ -16,8 +16,7 @@ import mesop as me
 
 @me.component
 def header(title: str, icon: str):
-    """
-    Creates a header component with a title and an icon.
+    """Creates a header component with a title and an icon.
 
     This component is used to display a consistent header across different pages
     of the application. It includes an icon and a title, which are passed as
@@ -26,17 +25,17 @@ def header(title: str, icon: str):
     Args:
         title: The text to display as the header title.
         icon: The name of the Material Icon to display next to the title.
+
     """
     with me.box(
         style=me.Style(
             display="flex",
             justify_content="space-between",
+        ),
+    ), me.box(style=me.Style(display="flex", flex_direction="row", gap=5)):
+        me.icon(icon=icon)
+        me.text(
+            title,
+            type="headline-5",
+            style=me.Style(font_family="Google Sans"),
         )
-    ):
-        with me.box(style=me.Style(display="flex", flex_direction="row", gap=5)):
-            me.icon(icon=icon)
-            me.text(
-                title,
-                type="headline-5",
-                style=me.Style(font_family="Google Sans"),
-            )

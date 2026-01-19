@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Callable, List
+from collections.abc import Callable
 
 import mesop as me
 
@@ -24,7 +24,7 @@ from components.media_tile.media_tile import get_pills_for_item, media_tile
 @me.component
 def library_image_selector(
     on_select: Callable[[LibrarySelectionChangeEvent], None],
-    media_items: List[MediaItem],
+    media_items: list[MediaItem],
 ):
     """A component that displays a grid of recent media items from the library."""
 
@@ -38,7 +38,7 @@ def library_image_selector(
             display="grid",
             grid_template_columns="repeat(auto-fill, minmax(150px, 1fr))",
             gap="16px",
-        )
+        ),
     ):
         if not media_items:
             me.text("No recent items found in the library.")

@@ -12,24 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime  # Required for timestamp
 import json
 import random
 import time
 
 import mesop as me
-import datetime # Required for timestamp
 
+from common.analytics import track_click
+from common.metadata import MediaItem, add_media_item_to_firestore  # Updated import
 from common.utils import create_display_url
-
-from common.analytics import track_click, track_model_call
-from common.metadata import MediaItem, add_media_item_to_firestore # Updated import
+from components.styles import _BOX_STYLE  # Import the style
 from config.default import Default
 from config.imagen_models import IMAGEN_MODELS, get_imagen_model_config
 from models.gemini import generate_compliment, rewrite_prompt_with_gemini
 from models.image_models import generate_images_from_prompt
-from state.state import AppState
 from state.imagen_state import PageState
-from components.styles import _BOX_STYLE # Import the style
+from state.state import AppState
 
 app_config_instance = Default()
 
@@ -72,9 +71,7 @@ def generation_controls():
             or state.image_prompt_input,  # Show input if placeholder is also input
         )
         me.box(style=me.Style(height=8))
-        with me.box(
-            style=me.Style(display="flex", justify_content="space-between")
-        ):
+        with me.box(style=me.Style(display="flex", justify_content="space-between")):
             me.button(
                 "Clear",
                 color="primary",
@@ -87,7 +84,7 @@ def generation_controls():
                 type="stroked",
                 on_click=random_prompt_generator,
                 style=me.Style(
-                    color="#1A73E8"
+                    color="#1A73E8",
                 ),  # Consider using theme variables if available
             )
             with me.content_button(
@@ -101,7 +98,7 @@ def generation_controls():
                             display="flex",
                             gap=3,
                             align_items="center",
-                        )
+                        ),
                     ):
                         me.icon("auto_awesome")
                         me.text("Rewriter")
@@ -127,7 +124,7 @@ def on_selection_change_image_model(e: me.SelectSelectionChangeEvent):
     """Handles selection change for the image model."""
     state = me.state(PageState)
     state.image_model_name = e.value
-    
+
     new_config = get_imagen_model_config(e.value)
     if new_config:
         state.image_aspect_ratio = new_config.supported_aspect_ratios[0]
@@ -199,7 +196,7 @@ def on_click_generate_images(e: me.ClickEvent):
 
         item = MediaItem(
             user_email=app_state.user_email or "local_user@example.com",
-            timestamp=datetime.datetime.now(datetime.timezone.utc),
+            timestamp=datetime.datetime.now(datetime.UTC),
             prompt=final_prompt_for_generation,  # The prompt actually used
             original_prompt=media_original_prompt,
             rewritten_prompt=media_rewritten_prompt,
@@ -220,10 +217,10 @@ def on_click_generate_images(e: me.ClickEvent):
 
     except Exception as ex:
         # If error happens here, we should log it to MediaItem as well
-        state.error_message = f"An unexpected error occurred: {str(ex)}"
+        state.error_message = f"An unexpected error occurred: {ex!s}"
         item_with_error = MediaItem(
             user_email=app_state.user_email or "local_user@example.com",
-            timestamp=datetime.datetime.now(datetime.timezone.utc),
+            timestamp=datetime.datetime.now(datetime.UTC),
             prompt=current_prompt,  # Or state.image_prompt_input
             model=state.image_model_name,
             mime_type="image/png",
@@ -240,7 +237,7 @@ def on_click_generate_images(e: me.ClickEvent):
             print(f"CRITICAL: Failed to store error metadata: {meta_err}")
 
         print(f"Error during the image generation or critique process: {ex}")
-        state.dialog_message = f"An unexpected error occurred: {str(ex)}"
+        state.dialog_message = f"An unexpected error occurred: {ex!s}"
         state.show_dialog = True
         state.image_output = []
         state.is_loading = False
@@ -253,7 +250,7 @@ def random_prompt_generator(e: me.ClickEvent):
     state = me.state(PageState)
     try:
         with open(
-            app_config_instance.IMAGEN_PROMPTS_JSON, "r", encoding="utf-8"
+            app_config_instance.IMAGEN_PROMPTS_JSON, encoding="utf-8",
         ) as file:
             data = json.load(file)  # Use json.load for direct parsing
         prompts_list = data.get("imagen", [])
@@ -277,7 +274,7 @@ def random_prompt_generator(e: me.ClickEvent):
         print(state.error_message)
     except Exception as ex:
         state.error_message = (
-            f"An unexpected error occurred while loading random prompts: {str(ex)}"
+            f"An unexpected error occurred while loading random prompts: {ex!s}"
         )
         print(state.error_message)
     yield
@@ -317,7 +314,7 @@ def on_click_rewrite_prompt(e: me.ClickEvent):
     try:
         print(f"Rewriting prompt: '{state.image_prompt_input}'")
         rewritten_prompt = rewrite_prompt_with_gemini(
-            state.image_prompt_input
+            state.image_prompt_input,
         )  # Changed function name for clarity
         state.image_prompt_input = rewritten_prompt
         state.image_prompt_placeholder = rewritten_prompt  # Update placeholder as well
@@ -325,8 +322,7 @@ def on_click_rewrite_prompt(e: me.ClickEvent):
         print(f"Rewritten prompt: '{rewritten_prompt}'")
     except Exception as ex:
         print(f"Error during prompt rewriting: {ex}")
-        state.error_message = f"Failed to rewrite prompt: {str(ex)}"
+        state.error_message = f"Failed to rewrite prompt: {ex!s}"
     finally:
         state.is_loading = False  # Hide spinner
         yield
-

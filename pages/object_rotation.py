@@ -16,8 +16,8 @@
 
 import datetime
 import time
+from collections.abc import Callable
 from dataclasses import field
-from typing import Callable
 
 import mesop as me
 
@@ -30,6 +30,7 @@ from components.library.library_chooser_button import library_chooser_button
 from components.library.library_dialog import library_dialog
 from components.snackbar import snackbar
 
+
 @me.component
 def _uploader_placeholder(on_upload: Callable, on_library_select: Callable):
     with me.box(
@@ -37,9 +38,7 @@ def _uploader_placeholder(on_upload: Callable, on_library_select: Callable):
             height=100,
             width=100,
             border=me.Border.all(
-                me.BorderSide(
-                    width=1, style="dashed", color=me.theme_var("outline")
-                )
+                me.BorderSide(width=1, style="dashed", color=me.theme_var("outline")),
             ),
             border_radius=8,
             display="flex",
@@ -47,12 +46,16 @@ def _uploader_placeholder(on_upload: Callable, on_library_select: Callable):
             align_items="center",
             justify_content="center",
             gap=8,
-        )
+        ),
     ):
-        me.uploader(
-            label="Upload", on_upload=on_upload, style=me.Style(flex_grow=1)
+        me.uploader(label="Upload", on_upload=on_upload, style=me.Style(flex_grow=1))
+        library_chooser_button(
+            on_library_select=on_library_select,
+            button_type="icon",
+            key="step1_library_chooser",
         )
-        library_chooser_button(on_library_select=on_library_select, button_type="icon", key="step1_library_chooser")
+
+
 from components.page_scaffold import page_frame, page_scaffold
 from components.stepper import stepper
 from models.object_rotation import generate_product_views, save_object_rotation_project
@@ -92,19 +95,28 @@ def on_load(e: me.LoadEvent):
         object_rotation_id = me.query_params.get("object_rotation_id")
         if object_rotation_id:
             from config.firebase_config import FirebaseClient
+
             db = FirebaseClient().get_client()
-            doc_ref = db.collection("object_rotation_projects").document(object_rotation_id)
+            doc_ref = db.collection("object_rotation_projects").document(
+                object_rotation_id,
+            )
             doc = doc_ref.get()
             if doc.exists:
                 project = doc.to_dict()
                 # Hydrate display URLs
                 if project.get("main_product_image_uri"):
-                    project["main_product_image_display_url"] = create_display_url(project["main_product_image_uri"])
+                    project["main_product_image_display_url"] = create_display_url(
+                        project["main_product_image_uri"],
+                    )
                 if project.get("final_video_uri"):
-                    project["final_video_display_url"] = create_display_url(project["final_video_uri"])
+                    project["final_video_display_url"] = create_display_url(
+                        project["final_video_uri"],
+                    )
                 # Iterate over a copy of the items to avoid changing dict size during iteration
                 for view, uri in list(project.get("product_views", {}).items()):
-                    project["product_views"][f"{view}_display_url"] = create_display_url(uri)
+                    project["product_views"][f"{view}_display_url"] = (
+                        create_display_url(uri)
+                    )
 
                 state.rotation_project = project
                 state.current_step = 3
@@ -163,7 +175,7 @@ def step1_content():
             gap=32,
             margin=me.Margin(top=24),
             justify_content="center",
-        )
+        ),
     ):
         me.textarea(
             label="Product Description",
@@ -171,22 +183,31 @@ def step1_content():
             on_blur=on_description_input,
             style=me.Style(width=400, height=200),
         )
-        with me.box(style=me.Style(display="flex", flex_direction="column", gap=8, align_items="center")):
+        with me.box(
+            style=me.Style(
+                display="flex", flex_direction="column", gap=8, align_items="center",
+            ),
+        ):
             me.text("Product Image", type="headline-6")
             if state.rotation_project.get("main_product_image_uri"):
                 image_thumbnail(
-                    image_uri=create_display_url(state.rotation_project.get("main_product_image_uri")),
+                    image_uri=create_display_url(
+                        state.rotation_project.get("main_product_image_uri"),
+                    ),
                     on_remove=on_remove_main_image,
                     index=0,
                     icon_size=18,
                 )
             else:
-                _uploader_placeholder(on_upload=on_main_image_upload, on_library_select=open_library_dialog)
+                _uploader_placeholder(
+                    on_upload=on_main_image_upload,
+                    on_library_select=open_library_dialog,
+                )
 
     with me.box(
         style=me.Style(
-            display="flex", justify_content="flex-end", margin=me.Margin(top=24)
-        )
+            display="flex", justify_content="flex-end", margin=me.Margin(top=24),
+        ),
     ):
         me.button(
             "Next",
@@ -212,13 +233,13 @@ def on_main_image_upload(e: me.UploadEvent):
     app_state = me.state(AppState)
     file = e.files[0]
     gcs_uri = store_to_gcs(
-        "object_rotation_uploads", file.name, file.mime_type, file.getvalue()
+        "object_rotation_uploads", file.name, file.mime_type, file.getvalue(),
     )
 
     if not state.rotation_project:
         state.rotation_project = {
             "user_email": app_state.user_email,
-            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
         }
 
     state.rotation_project["main_product_image_uri"] = gcs_uri
@@ -238,6 +259,7 @@ def open_library_dialog(e: me.ClickEvent, view_name: str | None = None):
 
     try:
         from common.metadata import get_media_for_page
+
         state.library_items = get_media_for_page(1, 50, type_filters=["images"])
     except Exception as ex:
         print(f"Error loading library items: {ex}")
@@ -245,10 +267,12 @@ def open_library_dialog(e: me.ClickEvent, view_name: str | None = None):
         state.is_loading_library = False
         yield
 
+
 def on_close_library(e: me.ClickEvent):
     state = me.state(PageState)
     state.show_library = False
     yield
+
 
 def on_select_from_library(e: LibrarySelectionChangeEvent):
     state = me.state(PageState)
@@ -263,7 +287,7 @@ def on_select_from_library(e: LibrarySelectionChangeEvent):
         if not state.rotation_project:
             state.rotation_project = {
                 "user_email": app_state.user_email,
-                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
             }
         state.rotation_project["main_product_image_uri"] = e.gcs_uri
 
@@ -277,9 +301,13 @@ def on_remove_main_image(e: me.ClickEvent):
     state.rotation_project["main_product_image_uri"] = None
     yield
 
+
 def on_remove_view(e: me.ClickEvent, view_name: str):
     state = me.state(PageState)
-    if "product_views" in state.rotation_project and view_name in state.rotation_project["product_views"]:
+    if (
+        "product_views" in state.rotation_project
+        and view_name in state.rotation_project["product_views"]
+    ):
         del state.rotation_project["product_views"][view_name]
         yield
 
@@ -305,7 +333,7 @@ def step2_content():
             align_items="center",
             gap=16,
             margin=me.Margin(top=24),
-        )
+        ),
     ):
         me.button(
             "Generate 4 Views",
@@ -322,64 +350,100 @@ def step2_content():
                 grid_template_columns="1fr 1fr",
                 gap=16,
                 margin=me.Margin(top=16),
-            )
+            ),
         ):
             # Front View
-            with me.box(style=me.Style(display="flex", flex_direction="column", gap=8, align_items="center")):
+            with me.box(
+                style=me.Style(
+                    display="flex", flex_direction="column", gap=8, align_items="center",
+                ),
+            ):
                 me.text("Front", type="headline-6")
                 if state.rotation_project.get("product_views", {}).get("front"):
                     image_thumbnail(
-                        image_uri=create_display_url(state.rotation_project.get("product_views", {}).get("front")),
+                        image_uri=create_display_url(
+                            state.rotation_project.get("product_views", {}).get("front"),
+                        ),
                         on_remove=on_front_view_remove,
                         index=0,
                         icon_size=18,
                     )
                 else:
-                    _uploader_placeholder(on_upload=on_front_view_upload, on_library_select=on_front_view_library_select)
+                    _uploader_placeholder(
+                        on_upload=on_front_view_upload,
+                        on_library_select=on_front_view_library_select,
+                    )
 
             # Back View
-            with me.box(style=me.Style(display="flex", flex_direction="column", gap=8, align_items="center")):
+            with me.box(
+                style=me.Style(
+                    display="flex", flex_direction="column", gap=8, align_items="center",
+                ),
+            ):
                 me.text("Back", type="headline-6")
                 if state.rotation_project.get("product_views", {}).get("back"):
                     image_thumbnail(
-                        image_uri=create_display_url(state.rotation_project.get("product_views", {}).get("back")),
+                        image_uri=create_display_url(
+                            state.rotation_project.get("product_views", {}).get("back"),
+                        ),
                         on_remove=on_back_view_remove,
                         index=1,
                         icon_size=18,
                     )
                 else:
-                    _uploader_placeholder(on_upload=on_back_view_upload, on_library_select=on_back_view_library_select)
+                    _uploader_placeholder(
+                        on_upload=on_back_view_upload,
+                        on_library_select=on_back_view_library_select,
+                    )
 
             # Left View
-            with me.box(style=me.Style(display="flex", flex_direction="column", gap=8, align_items="center")):
+            with me.box(
+                style=me.Style(
+                    display="flex", flex_direction="column", gap=8, align_items="center",
+                ),
+            ):
                 me.text("Left", type="headline-6")
                 if state.rotation_project.get("product_views", {}).get("left"):
                     image_thumbnail(
-                        image_uri=create_display_url(state.rotation_project.get("product_views", {}).get("left")),
+                        image_uri=create_display_url(
+                            state.rotation_project.get("product_views", {}).get("left"),
+                        ),
                         on_remove=on_left_view_remove,
                         index=2,
                         icon_size=18,
                     )
                 else:
-                    _uploader_placeholder(on_upload=on_left_view_upload, on_library_select=on_left_view_library_select)
+                    _uploader_placeholder(
+                        on_upload=on_left_view_upload,
+                        on_library_select=on_left_view_library_select,
+                    )
 
             # Right View
-            with me.box(style=me.Style(display="flex", flex_direction="column", gap=8, align_items="center")):
+            with me.box(
+                style=me.Style(
+                    display="flex", flex_direction="column", gap=8, align_items="center",
+                ),
+            ):
                 me.text("Right", type="headline-6")
                 if state.rotation_project.get("product_views", {}).get("right"):
                     image_thumbnail(
-                        image_uri=create_display_url(state.rotation_project.get("product_views", {}).get("right")),
+                        image_uri=create_display_url(
+                            state.rotation_project.get("product_views", {}).get("right"),
+                        ),
                         on_remove=on_right_view_remove,
                         index=3,
                         icon_size=18,
                     )
                 else:
-                    _uploader_placeholder(on_upload=on_right_view_upload, on_library_select=on_right_view_library_select)
+                    _uploader_placeholder(
+                        on_upload=on_right_view_upload,
+                        on_library_select=on_right_view_library_select,
+                    )
 
     with me.box(
         style=me.Style(
-            display="flex", justify_content="flex-end", margin=me.Margin(top=24)
-        )
+            display="flex", justify_content="flex-end", margin=me.Margin(top=24),
+        ),
     ):
         me.button(
             "Next",
@@ -408,10 +472,21 @@ def on_left_view_upload(e: me.UploadEvent):
 def on_right_view_upload(e: me.UploadEvent):
     yield from on_view_upload(e, "right")
 
-def on_front_view_remove(e: me.ClickEvent): yield from on_remove_view(e, "front")
-def on_back_view_remove(e: me.ClickEvent): yield from on_remove_view(e, "back")
-def on_left_view_remove(e: me.ClickEvent): yield from on_remove_view(e, "left")
-def on_right_view_remove(e: me.ClickEvent): yield from on_remove_view(e, "right")
+
+def on_front_view_remove(e: me.ClickEvent):
+    yield from on_remove_view(e, "front")
+
+
+def on_back_view_remove(e: me.ClickEvent):
+    yield from on_remove_view(e, "back")
+
+
+def on_left_view_remove(e: me.ClickEvent):
+    yield from on_remove_view(e, "left")
+
+
+def on_right_view_remove(e: me.ClickEvent):
+    yield from on_remove_view(e, "right")
 
 
 def on_front_view_library_select(e: me.ClickEvent):
@@ -510,7 +585,7 @@ def step3_content():
             align_items="center",
             gap=16,
             margin=me.Margin(top=24),
-        )
+        ),
     ):
         me.button(
             "Generate Video",
@@ -550,12 +625,12 @@ def on_generate_video(e: me.ClickEvent):
 
         # Create and save the final MediaItem
         source_images = [state.rotation_project["main_product_image_uri"]] + list(
-            state.rotation_project["product_views"].values()
+            state.rotation_project["product_views"].values(),
         )
 
         media_item = MediaItem(
             user_email=app_state.user_email,
-            timestamp=datetime.datetime.now(datetime.timezone.utc),
+            timestamp=datetime.datetime.now(datetime.UTC),
             gcsuri=video_uri,
             mime_type="video/mp4",
             source_images_gcs=source_images,

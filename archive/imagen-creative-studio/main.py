@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Main Mesop App """
+"""Main Mesop App"""
+
 import json
 import random
 from dataclasses import dataclass, field
@@ -19,6 +20,10 @@ from dataclasses import dataclass, field
 import mesop as me
 import vertexai
 from google.cloud.aiplatform import telemetry
+from prompts.critics import (
+    MAGAZINE_EDITOR_PROMPT,
+    REWRITER_PROMPT,
+)
 from vertexai.generative_models import (
     GenerationConfig,
     GenerativeModel,
@@ -26,17 +31,15 @@ from vertexai.generative_models import (
     Part,
 )
 from vertexai.preview.vision_models import ImageGenerationModel
-from models.image_models import ImageModel
+
 from config.default import Config
-from prompts.critics import (
-    MAGAZINE_EDITOR_PROMPT,
-    REWRITER_PROMPT,
-)
+from models.image_models import ImageModel
 from svg_icon.svg_icon_component import svg_icon_component
 
 # Initialize Configuration
 cfg = Config()
 vertexai.init(project=cfg.PROJECT_ID, location=cfg.LOCATION)
+
 
 @dataclass
 @me.stateclass
@@ -44,7 +47,9 @@ class State:
     """Mesop App State"""
 
     # Image generation model selection and output
-    image_models: list[ImageModel] = field(default_factory=lambda: cfg.display_image_models.copy())
+    image_models: list[ImageModel] = field(
+        default_factory=lambda: cfg.display_image_models.copy(),
+    )
     image_output: list[str] = field(default_factory=list)
     image_commentary: str = ""
     image_model_name: str = cfg.MODEL_IMAGEN3_FAST
@@ -129,7 +134,7 @@ def generate_images(input_txt: str):
         print(f"negative prompt: {state.image_negative_prompt_input}")
     print(f"model: {state.image_model_name}")
     image_generation_model = ImageGenerationModel.from_pretrained(
-        state.image_model_name
+        state.image_model_name,
     )
     response = image_generation_model.generate_images(
         prompt=prompt,
@@ -142,21 +147,21 @@ def generate_images(input_txt: str):
     )
     for idx, img in enumerate(response):
         print(
-            f"generated image: {idx} size: {len(img._as_base64_string())} at {img._gcs_uri}"
+            f"generated image: {idx} size: {len(img._as_base64_string())} at {img._gcs_uri}",
         )
-        state.image_output.append(img._gcs_uri) # type: ignore
+        state.image_output.append(img._gcs_uri)  # type: ignore
 
 
 def random_prompt_generator(e: me.ClickEvent):
     """Click Event to generate a random prompt from a list of predefined prompts."""
     state = me.state(State)
-    with open(cfg.IMAGEN_PROMPTS_JSON, "r", encoding="utf-8") as file:
+    with open(cfg.IMAGEN_PROMPTS_JSON, encoding="utf-8") as file:
         data = file.read()
     prompts = json.loads(data)
     random_prompt = random.choice(prompts["imagen"])
     state.image_prompt_placeholder = random_prompt
     on_image_input(
-        me.InputEvent(key=str(state.image_textarea_key), value=random_prompt)
+        me.InputEvent(key=str(state.image_textarea_key), value=random_prompt),
     )
     print(f"preset chosen: {random_prompt}")
     yield
@@ -196,11 +201,11 @@ def on_click_rewrite_prompt(e: me.ClickEvent):
 
 
 def rewrite_prompt(original_prompt: str):
-    """
-    Outputs a rewritten prompt
+    """Outputs a rewritten prompt
 
     Args:
         original_prompt (str): artists's original prompt
+
     """
     # state = me.state(State)
     with telemetry.tool_context_manager("creative-studio"):
@@ -235,8 +240,7 @@ def rewrite_prompt(original_prompt: str):
 
 
 def generate_compliment(generation_instruction: str):
-    """
-    Outputs a Gemini generated comment about images
+    """Outputs a Gemini generated comment about images
     """
     state = me.state(State)
     with telemetry.tool_context_manager("creative-studio"):
@@ -265,7 +269,7 @@ def generate_compliment(generation_instruction: str):
         # not bytes
         # prompt_parts.append(Part.from_data(data=img, mime_type="image/png"))
         # now gcs uri
-        prompt_parts.append(f"""image {idx+1}""")
+        prompt_parts.append(f"""image {idx + 1}""")
         prompt_parts.append(Part.from_uri(uri=img, mime_type="image/png"))
     prompt_parts.append(MAGAZINE_EDITOR_PROMPT.format(generation_instruction))
     response = generation_model.generate_content(
@@ -301,7 +305,7 @@ def app():
                 height="100%",
                 overflow_y="scroll",
                 margin=me.Margin(bottom=20),
-            )
+            ),
         ):
             with me.box(
                 style=me.Style(
@@ -309,16 +313,16 @@ def app():
                     padding=me.Padding(top=24, left=24, right=24, bottom=24),
                     display="flex",
                     flex_direction="column",
-                )
+                ),
             ):
                 with me.box(
                     style=me.Style(
                         display="flex",
                         justify_content="space-between",
-                    )
+                    ),
                 ):
                     with me.box(
-                        style=me.Style(display="flex", flex_direction="row", gap=5)
+                        style=me.Style(display="flex", flex_direction="row", gap=5),
                     ):
                         me.icon(icon="auto_fix_high")
                         me.text(
@@ -330,8 +334,8 @@ def app():
                     for c in state.image_models:
                         image_model_options.append(
                             me.SelectOption(
-                                label=c.get("display"), value=c.get("model_name")
-                            )
+                                label=c.get("display"), value=c.get("model_name"),
+                            ),
                         )
                     me.select(
                         label="Imagen version",
@@ -351,7 +355,7 @@ def app():
                         display="flex",
                         flex_wrap="wrap",
                         flex_direction="column",
-                    )
+                    ),
                 ):
                     with me.box(style=_BOX_STYLE):
                         me.text(
@@ -373,8 +377,8 @@ def app():
                         me.box(style=me.Style(height=12))
                         with me.box(
                             style=me.Style(
-                                display="flex", justify_content="space-between"
-                            )
+                                display="flex", justify_content="space-between",
+                            ),
                         ):
                             me.button(
                                 "Clear",
@@ -403,7 +407,7 @@ def app():
                                             display="flex",
                                             gap=3,
                                             align_items="center",
-                                        )
+                                        ),
                                     ):
                                         me.icon("auto_awesome")
                                         me.text("Rewriter")
@@ -423,22 +427,20 @@ def app():
                                 justify_content="space-between",
                                 gap=2,
                                 width="100%",
-                            )
+                            ),
                         ):
                             if state.show_advanced:
                                 with me.content_button(
-                                    on_click=on_click_advanced_controls
-                                ):
-                                    with me.tooltip(message="hide advanced controls"):
-                                        with me.box(style=me.Style(display="flex")):
-                                            me.icon("expand_less")
+                                    on_click=on_click_advanced_controls,
+                                ), me.tooltip(message="hide advanced controls"):
+                                    with me.box(style=me.Style(display="flex")):
+                                        me.icon("expand_less")
                             else:
                                 with me.content_button(
-                                    on_click=on_click_advanced_controls
-                                ):
-                                    with me.tooltip(message="show advanced controls"):
-                                        with me.box(style=me.Style(display="flex")):
-                                            me.icon("expand_more")
+                                    on_click=on_click_advanced_controls,
+                                ), me.tooltip(message="show advanced controls"):
+                                    with me.box(style=me.Style(display="flex")):
+                                        me.icon("expand_more")
 
                             # Default Modifiers
                             me.select(
@@ -480,7 +482,7 @@ def app():
                                 "Toned image",
                             ]:
                                 color_and_tone_options.append(
-                                    me.SelectOption(label=c, value=c)
+                                    me.SelectOption(label=c, value=c),
                                 )
                             me.select(
                                 label="Color & Tone",
@@ -504,7 +506,7 @@ def app():
                                 "Surreal lighting",
                             ]:
                                 lighting_options.append(
-                                    me.SelectOption(label=l, value=l)
+                                    me.SelectOption(label=l, value=l),
                                 )
                             me.select(
                                 label="Lighting",
@@ -528,7 +530,7 @@ def app():
                                 "Wide angle",
                             ]:
                                 composition_options.append(
-                                    me.SelectOption(label=c, value=c)
+                                    me.SelectOption(label=c, value=c),
                                 )
                             me.select(
                                 label="Composition",
@@ -545,7 +547,7 @@ def app():
                                 display="flex",
                                 flex_direction="row",
                                 gap=5,
-                            )
+                            ),
                         ):
                             if state.show_advanced:
                                 me.box(style=me.Style(width=67))
@@ -592,7 +594,7 @@ def app():
                                     display="grid",
                                     justify_content="center",
                                     justify_items="center",
-                                )
+                                ),
                             ):
                                 me.progress_spinner()
                         if len(state.image_output) != 0:
@@ -601,13 +603,13 @@ def app():
                                     display="grid",
                                     justify_content="center",
                                     justify_items="center",
-                                )
+                                ),
                             ):
                                 # Generated images row
                                 with me.box(
                                     style=me.Style(
-                                        flex_wrap="wrap", display="flex", gap="15px"
-                                    )
+                                        flex_wrap="wrap", display="flex", gap="15px",
+                                    ),
                                 ):
                                     for _, img in enumerate(state.image_output):
                                         # print(f"{idx}: {len(img)}")
@@ -631,10 +633,10 @@ def app():
                                         display="flex",
                                         flex_direction="row",
                                         align_items="center",
-                                    )
+                                    ),
                                 ):
                                     svg_icon_component(
-                                        svg="""<svg data-icon-name="digitalWatermarkIcon" viewBox="0 0 24 24" width="24" height="24" fill="none" aria-hidden="true" sandboxuid="2"><path fill="#3367D6" d="M12 22c-.117 0-.233-.008-.35-.025-.1-.033-.2-.075-.3-.125-2.467-1.267-4.308-2.833-5.525-4.7C4.608 15.267 4 12.983 4 10.3V6.2c0-.433.117-.825.35-1.175.25-.35.575-.592.975-.725l6-2.15a7.7 7.7 0 00.325-.1c.117-.033.233-.05.35-.05.15 0 .375.05.675.15l6 2.15c.4.133.717.375.95.725.25.333.375.717.375 1.15V10.3c0 2.683-.625 4.967-1.875 6.85-1.233 1.883-3.067 3.45-5.5 4.7-.1.05-.2.092-.3.125-.1.017-.208.025-.325.025zm0-2.075c2.017-1.1 3.517-2.417 4.5-3.95 1-1.55 1.5-3.442 1.5-5.675V6.175l-6-2.15-6 2.15V10.3c0 2.233.492 4.125 1.475 5.675 1 1.55 2.508 2.867 4.525 3.95z" sandboxuid="2"></path><path fill="#3367D6" d="M12 16.275c0-.68-.127-1.314-.383-1.901a4.815 4.815 0 00-1.059-1.557 4.813 4.813 0 00-1.557-1.06 4.716 4.716 0 00-1.9-.382c.68 0 1.313-.128 1.9-.383a4.916 4.916 0 002.616-2.616A4.776 4.776 0 0012 6.475c0 .672.128 1.306.383 1.901a5.07 5.07 0 001.046 1.57 5.07 5.07 0 001.57 1.046 4.776 4.776 0 001.901.383c-.672 0-1.306.128-1.901.383a4.916 4.916 0 00-2.616 2.616A4.716 4.716 0 0012 16.275z" sandboxuid="2"></path></svg>"""
+                                        svg="""<svg data-icon-name="digitalWatermarkIcon" viewBox="0 0 24 24" width="24" height="24" fill="none" aria-hidden="true" sandboxuid="2"><path fill="#3367D6" d="M12 22c-.117 0-.233-.008-.35-.025-.1-.033-.2-.075-.3-.125-2.467-1.267-4.308-2.833-5.525-4.7C4.608 15.267 4 12.983 4 10.3V6.2c0-.433.117-.825.35-1.175.25-.35.575-.592.975-.725l6-2.15a7.7 7.7 0 00.325-.1c.117-.033.233-.05.35-.05.15 0 .375.05.675.15l6 2.15c.4.133.717.375.95.725.25.333.375.717.375 1.15V10.3c0 2.683-.625 4.967-1.875 6.85-1.233 1.883-3.067 3.45-5.5 4.7-.1.05-.2.092-.3.125-.1.017-.208.025-.325.025zm0-2.075c2.017-1.1 3.517-2.417 4.5-3.95 1-1.55 1.5-3.442 1.5-5.675V6.175l-6-2.15-6 2.15V10.3c0 2.233.492 4.125 1.475 5.675 1 1.55 2.508 2.867 4.525 3.95z" sandboxuid="2"></path><path fill="#3367D6" d="M12 16.275c0-.68-.127-1.314-.383-1.901a4.815 4.815 0 00-1.059-1.557 4.813 4.813 0 00-1.557-1.06 4.716 4.716 0 00-1.9-.382c.68 0 1.313-.128 1.9-.383a4.916 4.916 0 002.616-2.616A4.776 4.776 0 0012 6.475c0 .672.128 1.306.383 1.901a5.07 5.07 0 001.046 1.57 5.07 5.07 0 001.57 1.046 4.776 4.776 0 001.901.383c-.672 0-1.306.128-1.901.383a4.916 4.916 0 00-2.616 2.616A4.716 4.716 0 0012 16.275z" sandboxuid="2"></path></svg>""",
                                     )
 
                                     me.text(
@@ -644,55 +646,52 @@ def app():
                                             font_size="0.95em",
                                         ),
                                     )
+                        elif state.is_loading:
+                            me.text(
+                                text="generating images!",
+                                style=me.Style(
+                                    display="grid",
+                                    justify_content="center",
+                                    padding=me.Padding.all(20),
+                                ),
+                            )
                         else:
-                            if state.is_loading:
-                                me.text(
-                                    text="generating images!",
-                                    style=me.Style(
-                                        display="grid",
-                                        justify_content="center",
-                                        padding=me.Padding.all(20),
-                                    ),
-                                )
-                            else:
-                                me.text(
-                                    text="generate some images!",
-                                    style=me.Style(
-                                        display="grid",
-                                        justify_content="center",
-                                        padding=me.Padding.all(20),
-                                    ),
-                                )
+                            me.text(
+                                text="generate some images!",
+                                style=me.Style(
+                                    display="grid",
+                                    justify_content="center",
+                                    padding=me.Padding.all(20),
+                                ),
+                            )
 
                     # Image commentary
                     if len(state.image_output) != 0:
-                        with me.box(style=_BOX_STYLE):
-                            with me.box(
-                                style=me.Style(
-                                    display="flex",
-                                    justify_content="space-between",
-                                    gap=2,
-                                    width="100%",
-                                )
-                            ):
-                                with me.box(
-                                    style=me.Style(
-                                        flex_wrap="wrap",
-                                        display="flex",
-                                        flex_direction="row",
-                                        # width="85%",
-                                        padding=me.Padding.all(10),
-                                    )
-                                ):
-                                    me.icon("assistant")
-                                    me.text(
-                                        "magazine editor",
-                                        style=me.Style(font_weight=500),
-                                    )
-                                    me.markdown(
-                                        text=state.image_commentary,
-                                        style=me.Style(padding=me.Padding.all(15)),
-                                    )
+                        with me.box(style=_BOX_STYLE), me.box(
+                            style=me.Style(
+                                display="flex",
+                                justify_content="space-between",
+                                gap=2,
+                                width="100%",
+                            ),
+                        ), me.box(
+                            style=me.Style(
+                                flex_wrap="wrap",
+                                display="flex",
+                                flex_direction="row",
+                                # width="85%",
+                                padding=me.Padding.all(10),
+                            ),
+                        ):
+                            me.icon("assistant")
+                            me.text(
+                                "magazine editor",
+                                style=me.Style(font_weight=500),
+                            )
+                            me.markdown(
+                                text=state.image_commentary,
+                                style=me.Style(padding=me.Padding.all(15)),
+                            )
 
         footer()
 
@@ -704,7 +703,7 @@ def footer():
             # height="18px",
             padding=me.Padding(left=20, right=20, top=10, bottom=14),
             border=me.Border(
-                top=me.BorderSide(width=1, style="solid", color="$ececf1")
+                top=me.BorderSide(width=1, style="solid", color="$ececf1"),
             ),
             display="flex",
             justify_content="space-between",
@@ -714,16 +713,16 @@ def footer():
             line_height="14px",
             font_size=14,
             font_family="Google Sans",
-        )
+        ),
     ):
         me.html(
             "<a href='https://cloud.google.com/vertex-ai/generative-ai/docs/image/overview' target='_blank'>Imagen</a>",
         )
         me.html(
-            "<a href='https://cloud.google.com/vertex-ai/generative-ai/docs/image/img-gen-prompt-guide' target='_blank'>Imagen Prompting Guide</a>"
+            "<a href='https://cloud.google.com/vertex-ai/generative-ai/docs/image/img-gen-prompt-guide' target='_blank'>Imagen Prompting Guide</a>",
         )
         me.html(
-            "<a href='https://cloud.google.com/vertex-ai/generative-ai/docs/image/responsible-ai-imagen' target='_blank'>Imagen Responsible AI</a>"
+            "<a href='https://cloud.google.com/vertex-ai/generative-ai/docs/image/responsible-ai-imagen' target='_blank'>Imagen Responsible AI</a>",
         )
 
 

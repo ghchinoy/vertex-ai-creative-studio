@@ -15,6 +15,12 @@ class MediaTile extends LitElement {
       height: 100%;
       box-sizing: border-box;
       background-color: rgba(255, 255, 255, 0.05);
+      border: 2px solid transparent;
+      transition: border-color 0.2s ease-in-out;
+    }
+
+    :host([selected]) {
+      border-color: var(--mesop-theme-primary, #6200EE);
     }
 
     :host([has-pills]) {
@@ -99,6 +105,8 @@ class MediaTile extends LitElement {
       thumbnailSrc: { type: String },
       audioSrc: { type: String },
       pillsJson: { type: String },
+      controls: { type: Boolean },
+      selected: { type: Boolean },
       clickEvent: { type: String }, // Added to receive the event handler ID
       _resolvedThumbnailSrc: { state: true },
       _resolvedAudioSrc: { state: true },
@@ -111,6 +119,7 @@ class MediaTile extends LitElement {
     this.thumbnailSrc = "";
     this.audioSrc = "";
     this.pillsJson = "[]";
+    this.controls = false;
     this.clickEvent = ""; // Initialize
     this._resolvedThumbnailSrc = "";
     this._resolvedAudioSrc = "";
@@ -118,6 +127,16 @@ class MediaTile extends LitElement {
   }
 
   updated(changedProperties) {
+    if (changedProperties.has('controls')) {
+      console.log("media-tile controls property changed:", this.controls);
+    }
+    if (changedProperties.has('selected')) {
+        if (this.selected) {
+            this.setAttribute('selected', '');
+        } else {
+            this.removeAttribute('selected');
+        }
+    }
     if (changedProperties.has('pillsJson')) {
         const hasPills = this.pillsJson && this.pillsJson !== "[]";
         if (hasPills) {
@@ -135,6 +154,21 @@ class MediaTile extends LitElement {
         this._resolveUrl(this.audioSrc).then(url => {
             this._resolvedAudioSrc = url;
         });
+    }
+  }
+
+  handleMouseOver(e) {
+    if (this.controls) return;
+    const video = this.shadowRoot.querySelector('video');
+    if (video) video.play();
+  }
+
+  handleMouseOut(e) {
+    if (this.controls) return;
+    const video = this.shadowRoot.querySelector('video');
+    if (video) {
+      video.pause();
+      video.currentTime = 0;
     }
   }
 
@@ -204,8 +238,9 @@ class MediaTile extends LitElement {
       case "video":
         return html`<video
           .src=${src}
-          muted
-          autoplay
+          .muted=${!this.controls}
+          .autoplay=${this.controls}
+          ?controls=${this.controls}
           loop
           playsinline
         ></video>`;
@@ -229,7 +264,11 @@ class MediaTile extends LitElement {
   render() {
     const hasPills = this.pillsJson && this.pillsJson !== "[]";
     return html`
-      <div class="preview">${this.renderPreview()}</div>
+      <div class="preview"
+           @mouseover=${this.handleMouseOver}
+           @mouseout=${this.handleMouseOut}>
+        ${this.renderPreview()}
+      </div>
       ${hasPills || this.mediaType === "audio" ? html`
       <div class="overlay">
         ${this.mediaType === "audio"

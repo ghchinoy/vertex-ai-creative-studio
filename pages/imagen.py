@@ -49,27 +49,26 @@ def imagen_content(app_state: me.state):
                 me.button("Close", on_click=close_info_dialog, type="flat")
 
     with page_frame():  # pylint: disable=not-context-manager
-            header(
-                "Imagen Creative Studio",
-                "image",
-                show_info_button=True,
-                on_info_click=open_info_dialog,
-            )
-            with me.box(
-                style=me.Style(
-                    width="100%", display="flex", flex_direction="column", align_items="center",
-                ),
-            ):
-                with me.box(
-                    style=me.Style(
-                        width="80vw",
-                        display="flex", flex_direction="column"
-                    ),
-                ):
-                    generation_controls()
-                    modifier_controls()
-                    advanced_controls()
-            image_output()
+        header(
+            "Imagen Creative Studio",
+            "image",
+            show_info_button=True,
+            on_info_click=open_info_dialog,
+        )
+        with me.box(
+            style=me.Style(
+                width="100%",
+                display="flex",
+                flex_direction="column",
+                align_items="center",
+            ),
+        ), me.box(
+            style=me.Style(width="80vw", display="flex", flex_direction="column"),
+        ):
+            generation_controls()
+            modifier_controls()
+            advanced_controls()
+        image_output()
 
     with dialog(is_open=state.show_dialog):  # pylint: disable=not-context-manager
         me.text(

@@ -34,7 +34,7 @@ class PageState:
     security_policy=me.SecurityPolicy(
         allowed_script_srcs=[
             "https://esm.sh",
-        ]
+        ],
     ),
 )
 def test_infinite_scroll_page():

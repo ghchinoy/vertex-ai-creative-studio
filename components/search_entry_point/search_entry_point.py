@@ -14,6 +14,7 @@
 
 import mesop as me
 
+
 @me.web_component(path="./search_entry_point.js")
 def search_entry_point(
     *,

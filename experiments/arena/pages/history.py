@@ -11,17 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" History page"""
+"""History page"""
+
 import mesop as me
 
 from common.metadata import get_latest_votes
-
-from components.header import header
 from components.dialog import dialog
-
+from components.header import header
 from components.page_scaffold import (
-    page_scaffold,
     page_frame,
+    page_scaffold,
 )
 
 
@@ -53,7 +52,7 @@ def history_page_content(app_state: me.state):
                     flex_direction="column",
                     align_items="center",
                     width="90hv",
-                )
+                ),
             ):
                 for v in votes:
                     model1 = v.get("model1")
@@ -71,7 +70,7 @@ def history_page_content(app_state: me.state):
                             align_items="center",
                             width="50%",
                             gap=10,
-                        )
+                        ),
                     ):
                         # images
                         image1_url = gcs_to_http(image1)
@@ -81,7 +80,7 @@ def history_page_content(app_state: me.state):
                                 display="flex",
                                 flex_direction="column",
                                 gap=10,
-                                align_items="center"
+                                align_items="center",
                             ),
                         ):
                             with me.box(
@@ -89,7 +88,7 @@ def history_page_content(app_state: me.state):
                                     flex_direction="row",
                                     display="flex",
                                     align_items="center",
-                                    padding=me.Padding(bottom=40, top=45)
+                                    padding=me.Padding(bottom=40, top=45),
                                 ),
                             ):
                                 with me.content_button(
@@ -104,7 +103,9 @@ def history_page_content(app_state: me.state):
                                     me.image(
                                         src=image1_url,
                                         style=(
-                                            WINNER_THUMBNAIL_STYLE if winner == model1 else THUMBNAIL_STYLE
+                                            WINNER_THUMBNAIL_STYLE
+                                            if winner == model1
+                                            else THUMBNAIL_STYLE
                                         ),
                                     )
                                     me.text(
@@ -124,7 +125,9 @@ def history_page_content(app_state: me.state):
                                     me.image(
                                         src=image2_url,
                                         style=(
-                                            WINNER_THUMBNAIL_STYLE if winner == model2 else THUMBNAIL_STYLE
+                                            WINNER_THUMBNAIL_STYLE
+                                            if winner == model2
+                                            else THUMBNAIL_STYLE
                                         ),
                                     )
                                     me.text(
@@ -132,30 +135,30 @@ def history_page_content(app_state: me.state):
                                         style=me.Style(font_size="10pt", color="black"),
                                     )
                             me.html(
-                                html=f"{timestamp}: {model1} vs. {model2}:  <strong>{winner}</strong> won."
+                                html=f"{timestamp}: {model1} vs. {model2}:  <strong>{winner}</strong> won.",
                             )
                             me.html(html=f'With prompt: "<em>{prompt}</em>"')
 
 
 def on_click_image_dialog(e: me.ClickEvent):
-    """show larger image"""
+    """Show larger image"""
     page_state = me.state(PageState)
     page_state.image_url = e.key
     page_state.is_open = True
 
 
 def on_click_background_close(e: me.ClickEvent):
-    """implementation dialog component's close event """
+    """Implementation dialog component's close event"""
     page_state = me.state(PageState)
     page_state.is_open = False
 
 
 def gcs_to_http(gcs_uri: str) -> str:
-    """replaces gcsuri with http uri"""
+    """Replaces gcsuri with http uri"""
     return gcs_uri.replace(
         "gs://",
-        #"https://storage.mtls.cloud.google.com/", # secure
-        "https://storage.googleapis.com/" # public
+        # "https://storage.mtls.cloud.google.com/", # secure
+        "https://storage.googleapis.com/",  # public
     )
 
 

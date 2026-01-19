@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import mesop as me
+
 from state.state import AppState
+
 
 @me.page(
     path="/forbidden",
@@ -22,7 +24,7 @@ from state.state import AppState
 def page():
     """Simple Forbidden page with no extra components to prevent redirect loops."""
     app_state = me.state(AppState)
-    
+
     with me.box(
         style=me.Style(
             display="flex",
@@ -32,31 +34,34 @@ def page():
             height="100vh",
             background=me.theme_var("background"),
             font_family="'Google Sans', Roboto, sans-serif",
-        )
+        ),
     ):
-        me.icon("lock", style=me.Style(font_size=64, height=64, width=64, color=me.theme_var("error")))
-        
+        me.icon(
+            "lock",
+            style=me.Style(
+                font_size=64, height=64, width=64, color=me.theme_var("error"),
+            ),
+        )
+
         me.text(
             "Access Denied",
             type="headline-4",
-            style=me.Style(margin=me.Margin(top=24, bottom=16))
+            style=me.Style(margin=me.Margin(top=24, bottom=16)),
         )
-        
+
         me.text(
             f"Sorry, {app_state.user_email}, you do not have permission to access this application.",
             type="headline-6",
-            style=me.Style(text_align="center", padding=me.Padding.symmetric(horizontal=40))
+            style=me.Style(
+                text_align="center", padding=me.Padding.symmetric(horizontal=40),
+            ),
         )
-        
+
         me.text(
             "Please contact an administrator to be added to the allowlist.",
-            style=me.Style(margin=me.Margin(top=16, bottom=40))
+            style=me.Style(margin=me.Margin(top=16, bottom=40)),
         )
-        
-        # Simple button that takes them back to welcome. 
+
+        # Simple button that takes them back to welcome.
         # The user can sign out there if they need to switch accounts.
-        me.button(
-            "Go Back", 
-            on_click=lambda e: me.navigate("/welcome"), 
-            type="stroked"
-        )
+        me.button("Go Back", on_click=lambda e: me.navigate("/welcome"), type="stroked")

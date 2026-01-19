@@ -11,16 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
-import dotenv
-
-from pathlib import Path
-from typing import Dict, List, Union, Optional
 import logging
+import os
+from pathlib import Path
+
+import dotenv
+import fire
+from alive_progress import alive_bar
 from google.cloud import storage
 from google.cloud.storage import transfer_manager
-from alive_progress import alive_bar
-import fire
 
 from config.default import Default
 
@@ -31,32 +30,41 @@ dotenv.load_dotenv(override=True)
 # This is a singleton class that manages the configuration for the application.
 config = Default()
 
+
 class GCSUploader:
     """Singleton class for uploading directories to Google Cloud Storage."""
 
     _instances = {}  # Store instances per project/bucket
 
-    def __new__(cls, bucket_name: str, project_id: Optional[str] = None):
+    def __new__(cls, bucket_name: str, project_id: str | None = None):
         key = (bucket_name, project_id)
         if key not in cls._instances:
             cls._instances[key] = super(GCSUploader, cls).__new__(cls)
             cls._instances[key].storage_client = storage.Client(project=project_id)
-            cls._instances[key].bucket = cls._instances[key].storage_client.bucket(bucket_name)
+            cls._instances[key].bucket = cls._instances[key].storage_client.bucket(
+                bucket_name,
+            )
             cls._instances[key]._setup_logging()
-            cls._instances[key].logger.info(f"Initialized GCSUploader for bucket: {bucket_name}, project: {project_id}")
+            cls._instances[key].logger.info(
+                f"Initialized GCSUploader for bucket: {bucket_name}, project: {project_id}",
+            )
         return cls._instances[key]
 
-    def __init__(self, bucket_name: str, project_id: Optional[str] = None):
-        if not hasattr(self, 'bucket'):
+    def __init__(self, bucket_name: str, project_id: str | None = None):
+        if not hasattr(self, "bucket"):
             self.bucket = self.storage_client.bucket(bucket_name)
-            self.logger.info(f"GCSUploader instance created for bucket: {bucket_name}, project: {project_id}")
+            self.logger.info(
+                f"GCSUploader instance created for bucket: {bucket_name}, project: {project_id}",
+            )
 
     def _setup_logging(self):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
         ch = logging.StreamHandler()
         ch.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        )
         ch.setFormatter(formatter)
         self.logger.addHandler(ch)
 
@@ -67,10 +75,9 @@ class GCSUploader:
         workers: int = os.cpu_count(),
         verbose: bool = False,
         skip_if_exists: bool = False,
-        extensions: Optional[List[str]] = None,
-    ) -> Dict[str, Union[None, Exception]]:
+        extensions: list[str] | None = None,
+    ) -> dict[str, None | Exception]:
         """Upload every file in a directory, including all files in subdirectories."""
-
         # Validate the source directory
         if not os.path.isdir(src_dir):
             self.logger.error(f"Source directory {src_dir} is not a valid directory.")
@@ -79,9 +86,10 @@ class GCSUploader:
         if not gcs_destination_directory:
             self.logger.error("Destination directory cannot be empty.")
             raise ValueError("Destination directory cannot be empty.")
-    
-        self.logger.info(f"Starting upload from {src_dir} to {self.bucket.name}/{gcs_destination_directory}")
-    
+
+        self.logger.info(
+            f"Starting upload from {src_dir} to {self.bucket.name}/{gcs_destination_directory}",
+        )
 
         if not os.path.exists(src_dir):
             self.logger.error(f"Directory {src_dir} not found.")
@@ -91,7 +99,8 @@ class GCSUploader:
         paths = [
             str(path.relative_to(src_dir))
             for path in dir_as_path_objs.rglob("*")
-            if path.is_file() and (extensions is None or path.suffix[1:].lower() in extensions)
+            if path.is_file()
+            and (extensions is None or path.suffix[1:].lower() in extensions)
         ]
 
         self.logger.info(f"Found {len(paths)} files to upload.")
@@ -100,9 +109,9 @@ class GCSUploader:
             self._log(f"Found {len(paths)} files in directory: {src_dir}")
             self._log("Starting upload...")
 
-        upload_results: Dict[str, Union[None, Exception]] = {}
+        upload_results: dict[str, None | Exception] = {}
         try:
-            with alive_bar(len(paths), title='Uploading...', force_tty=True) as bar:
+            with alive_bar(len(paths), title="Uploading...", force_tty=True) as bar:
                 self.logger.info(f"Using {workers} workers for upload.")
                 results = transfer_manager.upload_many_from_filenames(
                     self.bucket,
@@ -119,8 +128,13 @@ class GCSUploader:
             for name, result in zip(paths, results):
                 upload_results[name] = result
                 if isinstance(result, Exception):
-                    self.logger.error(f"Failed to upload {name} due to exception: {result}")
-                    self._log(f"Failed to upload {name} due to exception: {result}", level=logging.ERROR)
+                    self.logger.error(
+                        f"Failed to upload {name} due to exception: {result}",
+                    )
+                    self._log(
+                        f"Failed to upload {name} due to exception: {result}",
+                        level=logging.ERROR,
+                    )
                 elif verbose:
                     self.logger.info(f"Uploaded {name} to {self.bucket.name}.")
                     self._log(f"Uploaded {name} to {self.bucket.name}.")
@@ -136,17 +150,17 @@ class GCSUploader:
         """Internal logging function."""
         self.logger.log(level, message)
 
+
 def main(
     bucket_name: str,
     source_directory: str,
     destination_directory: str = "",
     verbose: bool = False,
     skip_if_exists: bool = False,
-    extensions: Optional[str] = ".json,png",
-    project_id: Optional[str] = config.PROJECT_ID,
+    extensions: str | None = ".json,png",
+    project_id: str | None = config.PROJECT_ID,
 ):
-    """
-    Uploads files from a local directory to a GCS bucket.
+    """Uploads files from a local directory to a GCS bucket.
 
     Args:
         bucket_name: The GCS bucket name e.g. "my-gcs-bucket" without the "gs://" prefix.
@@ -156,24 +170,30 @@ def main(
         skip_if_exists: Skip existing files.
         extensions: Optional comma-separated file extensions (e.g., "png,json").
         project_id: Optional Google Cloud Project ID.
+
     """
     # Validate destination directory
     if not destination_directory:
-        destination_directory = os.path.basename(source_directory.rstrip('/\\'))
+        destination_directory = os.path.basename(source_directory.rstrip("/\\"))
         if not destination_directory:
             raise ValueError("Destination directory cannot be empty.")
-        logging.info(f"Destination directory not provided. Using the base name of the source directory: {destination_directory}")
-        
+        logging.info(
+            f"Destination directory not provided. Using the base name of the source directory: {destination_directory}",
+        )
 
     # Validate bucket name does not start with gs://
     if bucket_name.startswith("gs://"):
-        logging.info("Bucket name should not start with 'gs://'. Removing 'gs://' prefix.")
-        bucket_name = bucket_name[5:]       
+        logging.info(
+            "Bucket name should not start with 'gs://'. Removing 'gs://' prefix.",
+        )
+        bucket_name = bucket_name[5:]
 
-    logging.info(f"Starting main function with bucket: {bucket_name}, source: {source_directory}, dest subfolder: {destination_directory}, project: {project_id}")
+    logging.info(
+        f"Starting main function with bucket: {bucket_name}, source: {source_directory}, dest subfolder: {destination_directory}, project: {project_id}",
+    )
 
     if extensions:
-        extensions_list = [ext.strip().lower() for ext in extensions.split(',')]
+        extensions_list = [ext.strip().lower() for ext in extensions.split(",")]
     else:
         extensions_list = None
 
@@ -200,13 +220,14 @@ def main(
                         print(f"Failed: {filename}")
                         logging.error(f"Failed to upload {filename}.")
     except ValueError as e:
-        logging.error(f"Error: {e}")
+        logging.exception(f"Error: {e}")
         print(f"Error: {e}")
     except Exception as e:
         logging.exception(f"An unexpected error occurred: {e}")
         print(f"An unexpected error occurred: {e}")
 
     logging.info("Main function finished.")
+
 
 if __name__ == "__main__":
     fire.Fire(main)

@@ -14,8 +14,10 @@
 
 """Python wrapper for the Worsfold Encoder Lit component."""
 
-import mesop as me
 import typing
+
+import mesop as me
+
 
 @me.web_component(path="./worsfold_encoder.js")
 def worsfold_encoder(
@@ -24,13 +26,11 @@ def worsfold_encoder(
     video_url: str = "",
     config: dict = {},
     start_encode: bool = False,
-
     # --- Events ---
     on_encode_complete: typing.Callable[[me.WebEvent], None] = None,
     on_progress: typing.Callable[[me.WebEvent], None] = None,
     on_log: typing.Callable[[me.WebEvent], None] = None,
     on_load_complete: typing.Callable[[me.WebEvent], None] = None,
-
     key: str | None = None,
 ):
     """Defines the API for the Worsfold Encoder web component."""

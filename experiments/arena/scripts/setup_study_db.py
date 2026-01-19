@@ -12,30 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Setup the study database for GenMedia Arena on Spanner."""
-from typing import Optional
-import fire
 
+
+import fire
 from config.spanner_config import ArenaStudySchema
-from config.default import Default
 from utils.logger import LogLevel, log
 
+from config.default import Default
+
 config = Default()  # Load default configuration
+
 
 class ArenaStudySchemaCreationException(Exception):
     """Custom exception for errors during study database schema creation."""
 
+
 def initialize_study_database(
-        project_id: Optional[str] = None,
-        spanner_instance_id: Optional[str] = None,
-        spanner_database_id: Optional[str] = None,
+    project_id: str | None = None,
+    spanner_instance_id: str | None = None,
+    spanner_database_id: str | None = None,
 ):
     """Initialize the study database schema for GenMedia Arena on Spanner.
+
     Args:
         project_id (str): Google Cloud project ID. If None, uses default.
         spanner_instance_id (str): Spanner instance ID. If None, uses default.
         spanner_database_id (str): Spanner database ID. If None, uses default.
+
     Returns:
         None
+
     """
     if not project_id:
         project_id = config.PROJECT_ID
@@ -49,27 +55,28 @@ def initialize_study_database(
             "Invalid input: Missing required parameters for initializing the study database schema. "
             f"Project ID: {project_id}, Spanner Instance ID: {spanner_instance_id}, "
             f"Spanner Database ID: {spanner_database_id}",
-            LogLevel.ERROR
+            LogLevel.ERROR,
         )
         raise ArenaStudySchemaCreationException(
-            "Missing required parameters for initializing the study database schema."
+            "Missing required parameters for initializing the study database schema.",
         )
 
     try:
         schema = ArenaStudySchema(
             project_id=project_id,
             spanner_instance_id=spanner_instance_id,
-            spanner_database_id=spanner_database_id
+            spanner_database_id=spanner_database_id,
         )
-        schema.create_database(exists_ok=True)  # Create the database if it doesn't exist
+        schema.create_database(
+            exists_ok=True,
+        )  # Create the database if it doesn't exist
         schema.create_schema()
     except Exception as e:
-        log(
-            f"Failed to initialize the study database schema: {e}",
-            LogLevel.ERROR
-        )
-        raise ArenaStudySchemaCreationException("Failed to initialize the study database schema") from e 
-    
+        log(f"Failed to initialize the study database schema: {e}", LogLevel.ERROR)
+        raise ArenaStudySchemaCreationException(
+            "Failed to initialize the study database schema",
+        ) from e
+
 
 # Entry point for the CLI application
 if __name__ == "__main__":

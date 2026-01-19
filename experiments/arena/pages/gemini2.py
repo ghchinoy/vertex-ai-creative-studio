@@ -12,23 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tenacity import (
-    retry,
-    wait_exponential,
-    stop_after_attempt,
-    retry_if_exception_type,
-)
-
 import mesop as me
-
-from google import genai
 from google.genai.types import (
     GenerateContentConfig,
 )
+from models.set_up import ModelSetup
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from components.header import header
-
-from models.set_up import ModelSetup
 
 client, model_id = ModelSetup.init()
 MODEL_ID = model_id
@@ -36,7 +32,7 @@ MODEL_ID = model_id
 
 @retry(
     wait=wait_exponential(
-        multiplier=1, min=1, max=10
+        multiplier=1, min=1, max=10,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
     retry=retry_if_exception_type(Exception),  # Retry on all exceptions
@@ -61,34 +57,31 @@ def say_something_nice(name: str) -> str:
 
 def gemini_page_content(app_state: me.state):
     """Gemini 2.0 Flash Mesop Page"""
-
     with me.box(
         style=me.Style(
             display="flex",
             flex_direction="column",
             height="100%",
         ),
+    ), me.box(
+        style=me.Style(
+            background=me.theme_var("background"),
+            height="100%",
+            overflow_y="scroll",
+            margin=me.Margin(bottom=20),
+        ),
+    ), me.box(
+        style=me.Style(
+            background=me.theme_var("background"),
+            padding=me.Padding(top=24, left=24, right=24, bottom=24),
+            display="flex",
+            flex_direction="column",
+        ),
     ):
-        with me.box(
-            style=me.Style(
-                background=me.theme_var("background"),
-                height="100%",
-                overflow_y="scroll",
-                margin=me.Margin(bottom=20),
-            )
-        ):
-            with me.box(
-                style=me.Style(
-                    background=me.theme_var("background"),
-                    padding=me.Padding(top=24, left=24, right=24, bottom=24),
-                    display="flex",
-                    flex_direction="column",
-                )
-            ):
-                header("Gemini 2.0 Flash", "auto_awesome")
+        header("Gemini 2.0 Flash", "auto_awesome")
 
-                me.text(f"Hello, {app_state.name}!")
+        me.text(f"Hello, {app_state.name}!")
 
-                me.box(style=me.Style(height=16))
+        me.box(style=me.Style(height=16))
 
-                me.text(say_something_nice(app_state.name))
+        me.text(say_something_nice(app_state.name))

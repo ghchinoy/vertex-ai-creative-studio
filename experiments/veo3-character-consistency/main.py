@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import logging
+import os
+
 from image_generator import generate_images_and_select_best
 from video_generator import generate_video_from_best_image
-from typing import List
+
 import config
 
 # --- CONFIGURATION ---
@@ -26,12 +27,14 @@ IMAGE_LOCATION = config.INPUT_DIR
 SCENARIO = "a man wearing a spiderman outfit in the desert"
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
 
+
 def run_full_workflow(image_location: str, scenario: str):
-    """
-    Runs the full image and video generation workflow based on configured variables.
+    """Runs the full image and video generation workflow based on configured variables.
     """
     try:
         logger.info(f"Starting workflow for scenario: '{scenario}'")
@@ -39,10 +42,16 @@ def run_full_workflow(image_location: str, scenario: str):
 
         # Validate inputs
         if not os.path.isdir(image_location):
-            logger.error(f"The provided image location is not a valid directory: {image_location}")
+            logger.error(
+                f"The provided image location is not a valid directory: {image_location}",
+            )
             return
 
-        image_files = [os.path.join(image_location, f) for f in os.listdir(image_location) if os.path.isfile(os.path.join(image_location, f))]
+        image_files = [
+            os.path.join(image_location, f)
+            for f in os.listdir(image_location)
+            if os.path.isfile(os.path.join(image_location, f))
+        ]
 
         if not image_files:
             logger.error(f"No image files found in the directory: {image_location}")
@@ -54,7 +63,9 @@ def run_full_workflow(image_location: str, scenario: str):
 
         # 1. Generate images and select the best one
         logger.info("Step 1: Generating images and selecting the best candidate...")
-        output_path, best_image_path, _ = generate_images_and_select_best(image_files, scenario)
+        output_path, best_image_path, _ = generate_images_and_select_best(
+            image_files, scenario,
+        )
         logger.info(f"Best image selected: {best_image_path}")
         logger.info(f"Generated assets stored in: {output_path}")
 
@@ -72,6 +83,7 @@ def run_full_workflow(image_location: str, scenario: str):
     except Exception as e:
         logger.error(f"An error occurred during the workflow: {e}", exc_info=True)
         print(f"\nAn error occurred: {e}")
+
 
 if __name__ == "__main__":
     run_full_workflow(IMAGE_LOCATION, SCENARIO)

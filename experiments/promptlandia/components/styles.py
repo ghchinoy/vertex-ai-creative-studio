@@ -11,16 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-This module defines the styles used throughout the Promptlandia application.
+"""This module defines the styles used throughout the Promptlandia application.
 
 It includes styles for the side navigation, main content area, and other UI
 -elements. By centralizing the styles in this module, we ensure a consistent
 look and feel across the application and make it easier to update the
 application's appearance.
 """
-import mesop as me
 
+import mesop as me
 
 SIDENAV_MIN_WIDTH = 68
 SIDENAV_MAX_WIDTH = 176
@@ -30,7 +29,7 @@ DEFAULT_MENU_STYLE = me.Style(align_content="left")
 _FANCY_TEXT_GRADIENT = me.Style(
     color="transparent",
     background=(
-        "linear-gradient(72.83deg,#4285f4 11.63%,#9b72cb 40.43%,#d96570 68.07%)" " text"
+        "linear-gradient(72.83deg,#4285f4 11.63%,#9b72cb 40.43%,#d96570 68.07%) text"
     ),
 )
 

@@ -13,9 +13,9 @@
 # limitations under the License.
 """Motion portraits"""
 
+import base64
 import json
 import time
-import base64
 import uuid
 from dataclasses import field
 
@@ -42,7 +42,7 @@ from components.page_scaffold import (
     page_scaffold,
 )
 from components.selfie_camera.selfie_camera import selfie_camera
-from config.default import ABOUT_PAGE_CONTENT, Default
+from config.default import Default
 from models.model_setup import GeminiModelSetup, VeoModelSetup
 from models.veo import VideoGenerationRequest, generate_video
 from models.video_processing import convert_mp4_to_gif
@@ -59,11 +59,13 @@ config = Default()
 veo_model_name = VeoModelSetup.init()
 
 
-with open("config/about_content.json", "r") as f:
+with open("config/about_content.json") as f:
     about_content = json.load(f)
     MOTION_PORTRAITS_INFO = next(
-        (s for s in about_content["sections"] if s.get("id") == "motion_portraits"), None
+        (s for s in about_content["sections"] if s.get("id") == "motion_portraits"),
+        None,
     )
+
 
 @me.stateclass
 class PageState:
@@ -81,7 +83,7 @@ class PageState:
     auto_enhance_prompt: bool = False
 
     generated_scene_direction: str = ""
-    
+
     gif_gcs_uri: str = ""
     gif_display_url: str = ""
     is_converting_gif: bool = False
@@ -143,13 +145,19 @@ def motion_portraits_content(app_state: me.state):
     ]
     video_length_options = [
         me.SelectOption(label=f"{i} seconds", value=str(i))
-        for i in (selected_model_config.supported_durations or range(selected_model_config.min_duration, selected_model_config.max_duration + 1))
+        for i in (
+            selected_model_config.supported_durations
+            or range(
+                selected_model_config.min_duration,
+                selected_model_config.max_duration + 1,
+            )
+        )
     ]
     auto_enhance_disabled = not selected_model_config.supports_prompt_enhancement
 
     if state.info_dialog_open:
         with dialog(is_open=state.info_dialog_open):  # pylint: disable=not-context-manager
-            me.text(f'About {MOTION_PORTRAITS_INFO["title"]}', type="headline-6")
+            me.text(f"About {MOTION_PORTRAITS_INFO['title']}", type="headline-6")
             me.markdown(MOTION_PORTRAITS_INFO["description"])
             me.divider()
             me.text("Current Settings", type="headline-6")
@@ -159,339 +167,323 @@ def motion_portraits_content(app_state: me.state):
                 me.button("Close", on_click=close_info_dialog, type="flat")
 
     with page_frame():  # pylint: disable=not-context-manager
-            header(
-                "Motion Portraits",
-                "portrait",
-                show_info_button=True,
-                on_info_click=open_info_dialog,
-            )
+        header(
+            "Motion Portraits",
+            "portrait",
+            show_info_button=True,
+            on_info_click=open_info_dialog,
+        )
 
-            with me.box(
-                style=me.Style(
-                    display="flex",
-                    flex_direction="row",
-                    gap=20,
-                )
-            ):
-                # Uploaded image
-                with me.box(style=_BOX_STYLE_CENTER_DISTRIBUTED):
-                    me.text("Portrait")
+        with me.box(
+            style=me.Style(
+                display="flex",
+                flex_direction="row",
+                gap=20,
+            ),
+        ):
+            # Uploaded image
+            with me.box(style=_BOX_STYLE_CENTER_DISTRIBUTED):
+                me.text("Portrait")
 
-                    if state.reference_image_display_url:
-                        output_url = state.reference_image_display_url
-                        print(f"Displaying reference image: {output_url}")
-                        me.image(
-                            src=output_url,
-                            style=me.Style(
-                                height=200, border_radius=12, object_fit="contain"
-                            ),
-                            key=str(state.reference_image_file_key),
-                        )
-                    else:
-                        me.box(
-                            style=me.Style(
-                                height=200,
-                                width=200,
-                                display="flex",
-                                align_items="center",
-                                justify_content="center",
-                                background=me.theme_var(
-                                    "sys-color-surface-container-highest",
-                                ),
-                                border_radius=12,
-                                border=me.Border.all(
-                                    me.BorderSide(
-                                        color=me.theme_var("sys-color-outline"),
-                                    ),
-                                ),
-                            ),
-                        )
-
-                    # uploader controls
-                    with me.box(
+                if state.reference_image_display_url:
+                    output_url = state.reference_image_display_url
+                    print(f"Displaying reference image: {output_url}")
+                    me.image(
+                        src=output_url,
                         style=me.Style(
+                            height=200, border_radius=12, object_fit="contain",
+                        ),
+                        key=str(state.reference_image_file_key),
+                    )
+                else:
+                    me.box(
+                        style=me.Style(
+                            height=200,
+                            width=200,
                             display="flex",
-                            flex_direction="row",
-                            gap=10,
-                            margin=me.Margin(top=10),
-                        )
-                    ):
-                        me.uploader(
-                            label="Upload",
-                            accepted_file_types=["image/jpeg", "image/png"],
-                            on_upload=on_click_upload,
-                            type="flat",
-                            color="primary",
-                            style=me.Style(font_weight="bold"),
-                        )
-                        library_chooser_button(
-                            on_library_select=on_portrait_image_from_library,
-                            button_type="icon",
-                            key="portrait_library_chooser",
-                        )
-                        with me.content_button(type="icon", on_click=on_open_selfie_dialog):
-                            me.icon("camera_alt")
-                        me.button(
-                            label="Clear",
-                            on_click=on_click_clear_reference_image,
-                        )
+                            align_items="center",
+                            justify_content="center",
+                            background=me.theme_var(
+                                "sys-color-surface-container-highest",
+                            ),
+                            border_radius=12,
+                            border=me.Border.all(
+                                me.BorderSide(
+                                    color=me.theme_var("sys-color-outline"),
+                                ),
+                            ),
+                        ),
+                    )
 
+                # uploader controls
                 with me.box(
                     style=me.Style(
                         display="flex",
-                        flex_direction="column",
-                        gap=15,
-                        padding=me.Padding.all(12),
-                        flex_grow=1,
-                    )
+                        flex_direction="row",
+                        gap=10,
+                        margin=me.Margin(top=10),
+                    ),
                 ):
-                    me.text(
-                        "Video options",
-                        style=me.Style(font_size="1.1em", font_weight="bold"),
+                    me.uploader(
+                        label="Upload",
+                        accepted_file_types=["image/jpeg", "image/png"],
+                        on_upload=on_click_upload,
+                        type="flat",
+                        color="primary",
+                        style=me.Style(font_weight="bold"),
                     )
-                    with me.box(
-                        style=me.Style(display="flex", flex_direction="row", gap=5)
-                    ):
-                        me.select(
-                            label="model",
-                            appearance="outline",
-                            options=[
-                                me.SelectOption(
-                                    label=model.display_name, value=model.version_id
-                                )
-                                for model in VEO_MODELS
-                            ],
-                            value=state.veo_model,
-                            on_selection_change=on_model_selection_change,
-                        )
-                        me.select(
-                            label="aspect",
-                            appearance="outline",
-                            options=aspect_ratio_options,
-                            value=state.aspect_ratio,
-                            on_selection_change=on_selection_change_aspect,
-                        )
-                        me.select(
-                            label="length",
-                            options=video_length_options,
-                            appearance="outline",
-                            style=me.Style(),
-                            value=f"{state.video_length}",
-                            on_selection_change=on_selection_change_length,
-                        )
-                        me.checkbox(
-                            label="auto-enhance prompt",
-                            checked=state.auto_enhance_prompt,
-                            on_change=on_change_auto_enhance_prompt,
-                            disabled=auto_enhance_disabled,
-                        )
-
-                    me.text(
-                        "Style options",
-                        style=me.Style(font_size="1.1em", font_weight="bold"),
+                    library_chooser_button(
+                        on_library_select=on_portrait_image_from_library,
+                        button_type="icon",
+                        key="portrait_library_chooser",
                     )
-                    with me.box(
-                        style=me.Style(
-                            display="flex",
-                            flex_direction="row",
-                            gap=10,
-                            flex_wrap="wrap",
-                        )
-                    ):
-                        for style in PORTRAIT_STYLES:
-                            num_selected = len(state.modifier_array)
-                            is_selected = style.id in state.modifier_array
-                            is_disabled = num_selected >= 2 and not is_selected
-
-                            # Define styles based on state
-                            if is_disabled:
-                                button_style = me.Style(
-                                    padding=me.Padding.symmetric(
-                                        vertical=8, horizontal=16
-                                    ),
-                                    border_radius=20,
-                                    border=me.Border.all(
-                                        me.BorderSide(
-                                            color=me.theme_var(
-                                                "sys-color-outline-variant"
-                                            )
-                                        )
-                                    ),
-                                    background=me.theme_var(
-                                        "sys-color-surface-container"
-                                    ),
-                                )
-                                text_color = me.theme_var(
-                                    "sys-color-on-surface-variant"
-                                )
-                            elif is_selected:
-                                button_style = me.Style(
-                                    padding=me.Padding.symmetric(
-                                        vertical=8, horizontal=16
-                                    ),
-                                    border_radius=20,
-                                    border=me.Border.all(
-                                        me.BorderSide(
-                                            width=1,
-                                            color=me.theme_var("sys-color-primary"),
-                                        )
-                                    ),
-                                    background=me.theme_var(
-                                        "sys-color-primary-container"
-                                    ),
-                                )
-                                text_color = me.theme_var(
-                                    "sys-color-on-primary-container"
-                                )
-                            else:  # Default
-                                button_style = me.Style(
-                                    padding=me.Padding.symmetric(
-                                        vertical=8, horizontal=16
-                                    ),
-                                    border_radius=20,
-                                    border=me.Border.all(
-                                        me.BorderSide(
-                                            width=1,
-                                            color=me.theme_var("sys-color-outline"),
-                                        )
-                                    ),
-                                    background="transparent",
-                                )
-                                text_color = me.theme_var("sys-color-on-surface")
-
-                            with me.content_button(
-                                key=f"mod_btn_{style.id}",
-                                on_click=on_modifier_click,
-                                disabled=is_disabled,
-                                style=button_style,
-                            ):
-                                with me.box(
-                                    style=me.Style(
-                                        display="flex",
-                                        flex_direction="row",
-                                        align_items="center",
-                                        gap=6,
-                                    )
-                                ):
-                                    if is_selected:
-                                        me.icon(
-                                            "check", style=me.Style(color=text_color)
-                                        )
-                                    me.text(
-                                        style.label, style=me.Style(color=text_color)
-                                    )
+                    with me.content_button(type="icon", on_click=on_open_selfie_dialog):
+                        me.icon("camera_alt")
+                    me.button(
+                        label="Clear",
+                        on_click=on_click_clear_reference_image,
+                    )
 
             with me.box(
                 style=me.Style(
-                    padding=me.Padding.all(16),
-                    justify_content="center",
                     display="flex",
-                )
+                    flex_direction="column",
+                    gap=15,
+                    padding=me.Padding.all(12),
+                    flex_grow=1,
+                ),
             ):
-                with me.content_button(
-                    on_click=on_click_motion_portraits,
-                    type="flat",
-                    key="generate_motion_portrait_button",
-                    disabled=state.is_loading or not state.reference_image_display_url,
+                me.text(
+                    "Video options",
+                    style=me.Style(font_size="1.1em", font_weight="bold"),
+                )
+                with me.box(
+                    style=me.Style(display="flex", flex_direction="row", gap=5),
                 ):
+                    me.select(
+                        label="model",
+                        appearance="outline",
+                        options=[
+                            me.SelectOption(
+                                label=model.display_name, value=model.version_id,
+                            )
+                            for model in VEO_MODELS
+                        ],
+                        value=state.veo_model,
+                        on_selection_change=on_model_selection_change,
+                    )
+                    me.select(
+                        label="aspect",
+                        appearance="outline",
+                        options=aspect_ratio_options,
+                        value=state.aspect_ratio,
+                        on_selection_change=on_selection_change_aspect,
+                    )
+                    me.select(
+                        label="length",
+                        options=video_length_options,
+                        appearance="outline",
+                        style=me.Style(),
+                        value=f"{state.video_length}",
+                        on_selection_change=on_selection_change_length,
+                    )
+                    me.checkbox(
+                        label="auto-enhance prompt",
+                        checked=state.auto_enhance_prompt,
+                        on_change=on_change_auto_enhance_prompt,
+                        disabled=auto_enhance_disabled,
+                    )
+
+                me.text(
+                    "Style options",
+                    style=me.Style(font_size="1.1em", font_weight="bold"),
+                )
+                with me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        gap=10,
+                        flex_wrap="wrap",
+                    ),
+                ):
+                    for style in PORTRAIT_STYLES:
+                        num_selected = len(state.modifier_array)
+                        is_selected = style.id in state.modifier_array
+                        is_disabled = num_selected >= 2 and not is_selected
+
+                        # Define styles based on state
+                        if is_disabled:
+                            button_style = me.Style(
+                                padding=me.Padding.symmetric(vertical=8, horizontal=16),
+                                border_radius=20,
+                                border=me.Border.all(
+                                    me.BorderSide(
+                                        color=me.theme_var("sys-color-outline-variant"),
+                                    ),
+                                ),
+                                background=me.theme_var("sys-color-surface-container"),
+                            )
+                            text_color = me.theme_var("sys-color-on-surface-variant")
+                        elif is_selected:
+                            button_style = me.Style(
+                                padding=me.Padding.symmetric(vertical=8, horizontal=16),
+                                border_radius=20,
+                                border=me.Border.all(
+                                    me.BorderSide(
+                                        width=1,
+                                        color=me.theme_var("sys-color-primary"),
+                                    ),
+                                ),
+                                background=me.theme_var("sys-color-primary-container"),
+                            )
+                            text_color = me.theme_var("sys-color-on-primary-container")
+                        else:  # Default
+                            button_style = me.Style(
+                                padding=me.Padding.symmetric(vertical=8, horizontal=16),
+                                border_radius=20,
+                                border=me.Border.all(
+                                    me.BorderSide(
+                                        width=1,
+                                        color=me.theme_var("sys-color-outline"),
+                                    ),
+                                ),
+                                background="transparent",
+                            )
+                            text_color = me.theme_var("sys-color-on-surface")
+
+                        with me.content_button(
+                            key=f"mod_btn_{style.id}",
+                            on_click=on_modifier_click,
+                            disabled=is_disabled,
+                            style=button_style,
+                        ), me.box(
+                            style=me.Style(
+                                display="flex",
+                                flex_direction="row",
+                                align_items="center",
+                                gap=6,
+                            ),
+                        ):
+                            if is_selected:
+                                me.icon("check", style=me.Style(color=text_color))
+                            me.text(style.label, style=me.Style(color=text_color))
+
+        with me.box(
+            style=me.Style(
+                padding=me.Padding.all(16),
+                justify_content="center",
+                display="flex",
+            ),
+        ):
+            with me.content_button(
+                on_click=on_click_motion_portraits,
+                type="flat",
+                key="generate_motion_portrait_button",
+                disabled=state.is_loading or not state.reference_image_display_url,
+            ), me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    align_items="center",
+                    gap=2,
+                ),
+            ):
+                if state.is_loading:
+                    me.progress_spinner(diameter=20, stroke_width=3)
+                    me.text("Generating...")
+                else:
+                    me.icon("portrait")
+                    me.text("Create Moving Portrait")
+
+            me.box(style=me.Style(height=24))
+
+        if (
+            state.is_loading
+            or state.result_video_display_url
+            or state.error_message
+            or state.generated_scene_direction
+        ):
+            with me.box(style=_BOX_STYLE_CENTER_DISTRIBUTED_MARGIN):
+                if state.is_loading:
+                    state.gif_display_url = ""
                     with me.box(
                         style=me.Style(
                             display="flex",
-                            flex_direction="row",
-                            align_items="center",
-                            gap=2,
-                        )
+                            flex_direction="column",
+                            justify_content="center",  # Horizontal center
+                            align_items="center",  # Vertical center
+                            height=350,  # Give it a height to center within
+                            width="100%",
+                        ),
                     ):
-                        if state.is_loading:
-                            me.progress_spinner(diameter=20, stroke_width=3)
-                            me.text("Generating...")
-                        else:
-                            me.icon("portrait")
-                            me.text("Create Moving Portrait")
-
-                me.box(style=me.Style(height=24))
-
-            if (
-                state.is_loading
-                or state.result_video_display_url
-                or state.error_message
-                or state.generated_scene_direction
-            ):
-                with me.box(style=_BOX_STYLE_CENTER_DISTRIBUTED_MARGIN):
-                    if state.is_loading:
-                        state.gif_display_url = ""
-                        with me.box(
-                            style=me.Style(
-                                display="flex",
-                                flex_direction="column",
-                                justify_content="center",  # Horizontal center
-                                align_items="center",  # Vertical center
-                                height=350,  # Give it a height to center within
-                                width="100%",
-                            )
-                        ):
-                            me.text(
-                                "Generating your moving portrait, please wait...",
-                                style=me.Style(
-                                    font_size="1.1em",
-                                    margin=me.Margin(bottom=16),
-                                ),
-                            )
-                            me.progress_spinner(diameter=40)
-                    elif state.result_video_display_url:
                         me.text(
-                            "Motion Portrait",
+                            "Generating your moving portrait, please wait...",
                             style=me.Style(
-                                font_size="1.2em",
-                                font_weight="bold",
-                                margin=me.Margin(bottom=10),
+                                font_size="1.1em",
+                                margin=me.Margin(bottom=16),
                             ),
                         )
-                        video_url = state.result_video_display_url
-                        print(f"Displaying result video: {video_url}")
-                        me.video(
-                            src=video_url,
-                            style=me.Style(
-                                width="100%",
-                                max_width="480px"
-                                if state.aspect_ratio == "9:16"
-                                else "720px",
-                                border_radius=12,
-                                margin=me.Margin(top=8),
-                            ),
+                        me.progress_spinner(diameter=40)
+                elif state.result_video_display_url:
+                    me.text(
+                        "Motion Portrait",
+                        style=me.Style(
+                            font_size="1.2em",
+                            font_weight="bold",
+                            margin=me.Margin(bottom=10),
+                        ),
+                    )
+                    video_url = state.result_video_display_url
+                    print(f"Displaying result video: {video_url}")
+                    me.video(
+                        src=video_url,
+                        style=me.Style(
+                            width="100%",
+                            max_width="480px"
+                            if state.aspect_ratio == "9:16"
+                            else "720px",
+                            border_radius=12,
+                            margin=me.Margin(top=8),
+                        ),
+                    )
+                    if state.timing:
+                        me.text(
+                            state.timing,
+                            style=me.Style(margin=me.Margin(top=10), font_size="0.9em"),
                         )
-                        if state.timing:
-                            me.text(
-                                state.timing,
-                                style=me.Style(
-                                    margin=me.Margin(top=10), font_size="0.9em"
-                                ),
-                            )
-                            
-                        me.button("Convert to GIF", key=state.result_video_gcs_uri, on_click=on_convert_to_gif_click, disabled=state.is_converting_gif)
-                        
-                        if state.is_converting_gif:
-                            with me.box(style=me.Style(display="flex", justify_content="center")):
-                                me.progress_spinner()
-                                
-                        
-                    if state.gif_display_url:
-                        with me.box(
-                            style=me.Style(
-                                display="flex",
-                                flex_direction="column",
-                                align_items="center",
-                                gap=10,
-                            )
-                        ):
-                            me.text("Video as GIF:", type="headline-5")
-                            me.image(
-                                src=state.gif_display_url,
-                                style=me.Style(width="100%", max_width="480px", border_radius=8),
-                            )
 
-                    if state.generated_scene_direction and not state.is_loading:
-                        with me.expansion_panel(title="Generated Scene Direction"):
+                    me.button(
+                        "Convert to GIF",
+                        key=state.result_video_gcs_uri,
+                        on_click=on_convert_to_gif_click,
+                        disabled=state.is_converting_gif,
+                    )
+
+                    if state.is_converting_gif:
+                        with me.box(
+                            style=me.Style(display="flex", justify_content="center"),
+                        ):
+                            me.progress_spinner()
+
+                if state.gif_display_url:
+                    with me.box(
+                        style=me.Style(
+                            display="flex",
+                            flex_direction="column",
+                            align_items="center",
+                            gap=10,
+                        ),
+                    ):
+                        me.text("Video as GIF:", type="headline-5")
+                        me.image(
+                            src=state.gif_display_url,
+                            style=me.Style(
+                                width="100%", max_width="480px", border_radius=8,
+                            ),
+                        )
+
+                if state.generated_scene_direction and not state.is_loading:
+                    with me.expansion_panel(title="Generated Scene Direction"):
                         #     me.text(state.character_description)
                         # me.text(
                         #     "Generated Scene Direction:",
@@ -501,35 +493,35 @@ def motion_portraits_content(app_state: me.state):
                         #         margin=me.Margin(top=15, bottom=5),
                         #     ),
                         # )
-                            me.text(
-                                state.generated_scene_direction,
-                                style=me.Style(
-                                    white_space="pre-wrap",
-                                    font_family="monospace",
-                                    background=me.theme_var("sys-color-surface-container"),
-                                    padding=me.Padding.all(10),
-                                    border_radius=8,
-                                ),
-                            )
-
-                    if (
-                        state.show_error_dialog
-                        and state.error_message
-                        and not state.is_loading
-                    ):
                         me.text(
-                            "Error",
+                            state.generated_scene_direction,
                             style=me.Style(
-                                font_size="1.2em",
-                                font_weight="bold",
-                                color="red",
-                                margin=me.Margin(top=15, bottom=5),
+                                white_space="pre-wrap",
+                                font_family="monospace",
+                                background=me.theme_var("sys-color-surface-container"),
+                                padding=me.Padding.all(10),
+                                border_radius=8,
                             ),
                         )
-                        me.text(
-                            state.error_message,
-                            style=me.Style(color="red", white_space="pre-wrap"),
-                        )
+
+                if (
+                    state.show_error_dialog
+                    and state.error_message
+                    and not state.is_loading
+                ):
+                    me.text(
+                        "Error",
+                        style=me.Style(
+                            font_size="1.2em",
+                            font_weight="bold",
+                            color="red",
+                            margin=me.Margin(top=15, bottom=5),
+                        ),
+                    )
+                    me.text(
+                        state.error_message,
+                        style=me.Style(color="red", white_space="pre-wrap"),
+                    )
 
 
 def on_convert_to_gif_click(e: me.ClickEvent):
@@ -547,6 +539,7 @@ def on_convert_to_gif_click(e: me.ClickEvent):
     finally:
         state.is_converting_gif = False
         yield
+
 
 @track_click(element_id="portraits_clear_button")
 def on_click_clear_reference_image(e: me.ClickEvent):
@@ -685,7 +678,7 @@ def on_open_selfie_dialog(e: me.ClickEvent):
 def on_selfie_capture(e: me.WebEvent):
     state = me.state(PageState)
     state.show_selfie_dialog = False
-    
+
     # The data is a base64-encoded data URL, e.g., "data:image/png;base64,iVBORw0KGgo..."
     data_url = e.value["value"]
     # Simple split to get the actual base64 data
@@ -695,7 +688,7 @@ def on_selfie_capture(e: me.WebEvent):
         mime_type = header.split(";")[0].split(":")[1]
         # Decode the base64 string
         image_data = base64.b64decode(encoded)
-        
+
         # Store to GCS
         gcs_uri = store_to_gcs(
             folder="selfies",
@@ -703,7 +696,7 @@ def on_selfie_capture(e: me.WebEvent):
             mime_type=mime_type,
             contents=image_data,
         )
-        
+
         # Update state
         state.reference_image_gcs = gcs_uri
         state.reference_image_display_url = create_display_url(gcs_uri)
@@ -714,8 +707,6 @@ def on_selfie_capture(e: me.WebEvent):
         state.show_error_dialog = True
 
     yield
-
-
 
 
 def on_click_upload(e: me.UploadEvent):
@@ -731,14 +722,14 @@ def on_click_upload(e: me.UploadEvent):
     state.reference_image_mime_type = e.file.mime_type
     contents = e.file.getvalue()
     destination_blob_name = store_to_gcs(
-        "uploads", e.file.name, e.file.mime_type, contents
+        "uploads", e.file.name, e.file.mime_type, contents,
     )
     state.reference_image_gcs = destination_blob_name
     # url
     state.reference_image_display_url = create_display_url(destination_blob_name)
     # log
     print(
-        f"{destination_blob_name} with contents len {len(contents)} of type {e.file.mime_type} uploaded to {config.GENMEDIA_BUCKET}."
+        f"{destination_blob_name} with contents len {len(contents)} of type {e.file.mime_type} uploaded to {config.GENMEDIA_BUCKET}.",
     )
 
 
@@ -809,7 +800,7 @@ Do not describe the frame. There should be no lip movement like speaking, but th
 
     try:
         print(
-            f"Generating scene direction for {state.reference_image_gcs} with prompt:\n{final_prompt_for_llm}"
+            f"Generating scene direction for {state.reference_image_gcs} with prompt:\n{final_prompt_for_llm}",
         )
         scene_direction_for_video = generate_scene_direction(
             final_prompt_for_llm,
@@ -834,7 +825,7 @@ Do not describe the frame. There should be no lip movement like speaking, but th
             reference_image_gcs=state.reference_image_gcs,
             reference_image_mime_type=state.reference_image_mime_type,
             person_generation="allow_adult",
-            video_count=1
+            video_count=1,
         )
 
         gcs_uri, _ = generate_video(request)
@@ -853,7 +844,7 @@ Do not describe the frame. There should be no lip movement like speaking, but th
 
     except Exception as err:
         print(
-            f"Exception during motion portrait generation: {type(err).__name__}: {err}"
+            f"Exception during motion portrait generation: {type(err).__name__}: {err}",
         )
         current_error_message = f"An unexpected error occurred: {err}"
 
@@ -879,7 +870,7 @@ Do not describe the frame. There should be no lip movement like speaking, but th
                     last_reference_image=None,
                     user_email=app_state.user_email,
                     mime_type="video/mp4",
-                )
+                ),
             )
         except Exception as meta_err:
             print(f"CRITICAL: Failed to store metadata: {meta_err}")
@@ -907,19 +898,19 @@ Do not describe the frame. There should be no lip movement like speaking, but th
     reraise=True,
 )
 def generate_scene_direction(
-    prompt: str, reference_image_gcs: str, image_mime_type: str
+    prompt: str, reference_image_gcs: str, image_mime_type: str,
 ) -> str:
     """Generate scene direction with Gemini."""
     print(
-        f"Generating scene direction. Prompt length: {len(prompt)}, Image GCS: {reference_image_gcs}, MIME: {image_mime_type}"
+        f"Generating scene direction. Prompt length: {len(prompt)}, Image GCS: {reference_image_gcs}, MIME: {image_mime_type}",
     )
     if not reference_image_gcs:
         raise ValueError(
-            "Reference image GCS URI cannot be empty for scene direction generation."
+            "Reference image GCS URI cannot be empty for scene direction generation.",
         )
     if not image_mime_type:
         print(
-            "Warning: image_mime_type is empty, defaulting to image/png. This might cause issues."
+            "Warning: image_mime_type is empty, defaulting to image/png. This might cause issues.",
         )
         image_mime_type = "image/png"
 
@@ -942,24 +933,23 @@ def generate_scene_direction(
 
         if hasattr(response, "text") and response.text:
             print(
-                f"Scene direction generated successfully (from .text): {response.text[:100]}..."
+                f"Scene direction generated successfully (from .text): {response.text[:100]}...",
             )
             return response.text
-        elif (
+        if (
             response.candidates
             and response.candidates[0].content.parts
             and response.candidates[0].content.parts[0].text
         ):
             text_response = response.candidates[0].content.parts[0].text
             print(
-                f"Scene direction generated successfully (from candidates): {text_response[:100]}..."
+                f"Scene direction generated successfully (from candidates): {text_response[:100]}...",
             )
             return text_response
-        else:
-            print(f"Unexpected response structure from Gemini: {response}")
-            raise ValueError(
-                "Failed to extract text from Gemini response for scene direction."
-            )
+        print(f"Unexpected response structure from Gemini: {response}")
+        raise ValueError(
+            "Failed to extract text from Gemini response for scene direction.",
+        )
 
     except Exception as e:
         print(f"Error in generate_scene_direction: {type(e).__name__} - {e}")
@@ -998,5 +988,15 @@ def selfie_dialog():
             with me.box(style=me.Style(padding=me.Padding.all(16))):
                 me.text("Take a Selfie", type="headline-6")
                 selfie_camera(on_capture=on_selfie_capture)
-                with me.box(style=me.Style(display="flex", justify_content="flex-end", margin=me.Margin(top=16))):
-                    me.button("Cancel", on_click=lambda e: setattr(state, "show_selfie_dialog", False), type="flat")
+                with me.box(
+                    style=me.Style(
+                        display="flex",
+                        justify_content="flex-end",
+                        margin=me.Margin(top=16),
+                    ),
+                ):
+                    me.button(
+                        "Cancel",
+                        on_click=lambda e: setattr(state, "show_selfie_dialog", False),
+                        type="flat",
+                    )

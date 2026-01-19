@@ -1,6 +1,7 @@
 import json
-import mesop as me
 import typing
+
+import mesop as me
 
 from common.metadata import MediaItem
 
@@ -34,7 +35,9 @@ def get_pills_for_item(item: MediaItem, https_url: str) -> str:
             pills.append({"label": f"{item.duration} sec"})
     elif effective_media_type == "image":
         pills.append({"label": "Image"})
-        if item.model and ("vto" in item.model.lower() or "virtual-try-on" in item.model.lower()):
+        if item.model and (
+            "vto" in item.model.lower() or "virtual-try-on" in item.model.lower()
+        ):
             pills.append({"label": "vto"})
         if item.aspect:
             pills.append({"label": item.aspect})
@@ -56,6 +59,8 @@ def media_tile(
     media_type: str | None,
     https_url: str,
     pills_json: str = "[]",
+    controls: bool = False,
+    selected: bool = False,
     on_click: typing.Callable[[me.WebEvent], None] | None = None,
     key: str | None = None,
 ):
@@ -77,6 +82,8 @@ def media_tile(
             "thumbnailSrc": https_url if effective_media_type != "audio" else "",
             "audioSrc": https_url if effective_media_type == "audio" else "",
             "pillsJson": pills_json,
+            "controls": controls,
+            "selected": selected,
         },
         events={
             "clickEvent": on_click,

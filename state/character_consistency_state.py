@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mesop as me
 from dataclasses import field
+
+import mesop as me
+
 
 @me.stateclass
 class CharacterConsistencyState:
     """State for the Character Consistency page."""
+
     uploaded_image_urls: list[str] = field(default_factory=list)
     scene_prompt: str = ""
     candidate_image_urls: list[str] = field(default_factory=list)

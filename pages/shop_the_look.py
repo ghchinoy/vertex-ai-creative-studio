@@ -14,7 +14,6 @@
 
 import mesop as me
 
-import models.shop_the_look_workflow as shop_the_look_workflow
 from components.header import header
 from components.page_scaffold import (
     page_frame,
@@ -25,7 +24,7 @@ from components.shop_the_look.look_selection import look_selection
 from components.shop_the_look.model_selection import model_selection
 from components.shop_the_look.results_display import results_display
 from components.tab_nav import Tab, tab_group
-from models.shop_the_look_handlers import on_click_vto_look
+from models import shop_the_look_workflow
 from state.shop_the_look_state import PageState
 from state.state import AppState
 
@@ -35,16 +34,20 @@ from state.state import AppState
     title="Shop the Look",
 )
 def page():
-    with page_scaffold(page_name="shop_the_look"): # pylint: disable=E1129:not-context-manager
+    with page_scaffold(page_name="shop_the_look"):  # pylint: disable=E1129:not-context-manager
         with page_frame():  # pylint: disable=E1129:not-context-manager
-            header("Shop the Look", icon="apparel", current_status=me.state(PageState).current_status)
+            header(
+                "Shop the Look",
+                icon="apparel",
+                current_status=me.state(PageState).current_status,
+            )
             with me.box(
                 style=me.Style(
                     display="flex",
                     flex_direction="column",
                     gap=15,
                     width="100%",
-                )
+                ),
             ):
                 build_tab_nav()
 
@@ -116,6 +119,3 @@ def on_tab_click(e: me.ClickEvent):
 
     next(on_click_clear_reference_image())
     state.selected_tab_index = int(tab_index)
-
-
-

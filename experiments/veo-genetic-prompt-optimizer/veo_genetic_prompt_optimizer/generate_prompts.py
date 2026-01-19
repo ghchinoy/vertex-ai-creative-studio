@@ -1,21 +1,18 @@
-# -*- coding: utf-8 -*-
-"""
-This script generates augmented prompts based on an optimized metaprompt.
+"""This script generates augmented prompts based on an optimized metaprompt.
 """
 
 import json
 import os
-import time
 import random
-from typing import List, Dict, Any, Optional
-
-from google import genai
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
-from rewrite_prompt_for_safety import sanitize_prompt
+from typing import Any
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
+from google import genai
+from rewrite_prompt_for_safety import sanitize_prompt
+
 load_dotenv()
 
 # --- Configuration ---
@@ -25,6 +22,7 @@ LOCATION = os.getenv("LOCATION")
 GEMINI_MODEL_ID = os.getenv("GEMINI_MODEL_ID")
 MAX_WORKERS = os.cpu_count()
 
+
 def get_genai_client() -> genai.Client:
     """Initializes and returns a GenAI client."""
     try:
@@ -33,7 +31,10 @@ def get_genai_client() -> genai.Client:
         print(f"Error initializing GenAI client: {e}")
         raise
 
-def _generate_content_with_retry(client: genai.Client, *args, **kwargs) -> genai.types.GenerateContentResponse:
+
+def _generate_content_with_retry(
+    client: genai.Client, *args, **kwargs,
+) -> genai.types.GenerateContentResponse:
     """Wrapper for generate_content with exponential backoff."""
     max_retries = 5
     base_delay = 2
@@ -44,7 +45,9 @@ def _generate_content_with_retry(client: genai.Client, *args, **kwargs) -> genai
             if "resource exhausted" in str(e).lower():
                 if n < max_retries - 1:
                     delay = base_delay * (2**n) + random.uniform(0, 1)
-                    print(f"Resource exhausted error. Retrying in {delay:.2f} seconds...")
+                    print(
+                        f"Resource exhausted error. Retrying in {delay:.2f} seconds...",
+                    )
                     time.sleep(delay)
                 else:
                     print("Max retries reached. Raising exception.")
@@ -52,7 +55,10 @@ def _generate_content_with_retry(client: genai.Client, *args, **kwargs) -> genai
             else:
                 raise e
 
-def generate_with_gemini(client: genai.Client, prompt_text: str, image_path: Optional[str] = None) -> str:
+
+def generate_with_gemini(
+    client: genai.Client, prompt_text: str, image_path: str | None = None,
+) -> str:
     """Generic function to call Gemini with a specific configuration, optionally including an image."""
     parts = [genai.types.Part.from_text(text=prompt_text)]
     if image_path:
@@ -60,7 +66,9 @@ def generate_with_gemini(client: genai.Client, prompt_text: str, image_path: Opt
             with open(image_path, "rb") as image_file:
                 image_data = image_file.read()
                 parts.append(genai.types.Part.from_text(text="Image to animate:"))
-                parts.append(genai.types.Part.from_bytes(data=image_data, mime_type="image/jpeg"))
+                parts.append(
+                    genai.types.Part.from_bytes(data=image_data, mime_type="image/jpeg"),
+                )
         except FileNotFoundError:
             print(f"  - Image file not found: {image_path}")
             return ""
@@ -71,70 +79,90 @@ def generate_with_gemini(client: genai.Client, prompt_text: str, image_path: Opt
         "top_p": 0.95,
         "max_output_tokens": 65535,
         "safety_settings": [
-            genai.types.SafetySetting(category="HARM_CATEGORY_HATE_SPEECH", threshold="OFF"),
-            genai.types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="OFF"),
-            genai.types.SafetySetting(category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="OFF"),
-            genai.types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="OFF"),
+            genai.types.SafetySetting(
+                category="HARM_CATEGORY_HATE_SPEECH", threshold="OFF",
+            ),
+            genai.types.SafetySetting(
+                category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="OFF",
+            ),
+            genai.types.SafetySetting(
+                category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="OFF",
+            ),
+            genai.types.SafetySetting(
+                category="HARM_CATEGORY_HARASSMENT", threshold="OFF",
+            ),
         ],
-        "thinking_config": genai.types.ThinkingConfig(thinking_budget=-1)
+        "thinking_config": genai.types.ThinkingConfig(thinking_budget=-1),
     }
     config = genai.types.GenerateContentConfig(**config_dict)
     try:
-        response = _generate_content_with_retry(client, model=GEMINI_MODEL_ID, contents=contents, config=config)
+        response = _generate_content_with_retry(
+            client, model=GEMINI_MODEL_ID, contents=contents, config=config,
+        )
         return response.text
     except Exception as e:
         print(f"  - Gemini API call failed: {e}")
         return ""
 
-def augment_prompt(client: genai.Client, prompt_data: Dict[str, Any], optimized_metaprompt: str) -> Dict[str, Any]:
+
+def augment_prompt(
+    client: genai.Client, prompt_data: dict[str, Any], optimized_metaprompt: str,
+) -> dict[str, Any]:
     """Generates and sanitizes an augmented prompt, handling optional images."""
     original_prompt = prompt_data["prompt"]
     image_path = prompt_data.get("image_path")
-    
-    print(f"Augmenting prompt: '{original_prompt}'" + (f" with image {image_path}" if image_path else ""))
-    
+
+    print(
+        f"Augmenting prompt: '{original_prompt}'"
+        + (f" with image {image_path}" if image_path else ""),
+    )
+
     full_prompt = f"{optimized_metaprompt}\n\nOriginal Prompt: {original_prompt}\n\nYour output should be solely the augmented prompt text, nothing else."
     augmented_prompt = generate_with_gemini(client, full_prompt, image_path=image_path)
-    
+
     result = {
         "original_prompt": original_prompt,
         "augmented_prompt": "",
-        "augmented_prompt_unsanitized": ""
+        "augmented_prompt_unsanitized": "",
     }
     if image_path:
         result["image_path"] = image_path
 
     if augmented_prompt:
         result["augmented_prompt_unsanitized"] = augmented_prompt.strip()
-        print(f"  - Sanitizing augmented prompt...")
+        print("  - Sanitizing augmented prompt...")
         sanitized_prompt = sanitize_prompt(client, augmented_prompt)
         result["augmented_prompt"] = sanitized_prompt.strip()
-    
+
     return result
+
 
 def main():
     """Main function to generate augmented prompts."""
     client = get_genai_client()
 
     try:
-        with open('optimization_history.json', 'r') as f:
+        with open("optimization_history.json") as f:
             history = json.load(f)
         last_generation = history[-1]
-        optimized_metaprompt = last_generation['best_parent']['metaprompt']
+        optimized_metaprompt = last_generation["best_parent"]["metaprompt"]
     except (FileNotFoundError, json.JSONDecodeError, IndexError, KeyError) as e:
-        print(f"Error loading or parsing 'optimization_history.json' to get metaprompt: {e}. Exiting.")
+        print(
+            f"Error loading or parsing 'optimization_history.json' to get metaprompt: {e}. Exiting.",
+        )
         return
 
     try:
-        with open('original_prompts.json', 'r') as f:
+        with open("original_prompts.json") as f:
             original_prompts_data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f"Error loading or parsing 'original_prompts.json': {e}. Exiting.")
         return
 
     base_prompts = [
-        item for item in original_prompts_data
-        if isinstance(item, dict) and 'prompt' in item
+        item
+        for item in original_prompts_data
+        if isinstance(item, dict) and "prompt" in item
     ]
 
     if not base_prompts:
@@ -143,7 +171,12 @@ def main():
 
     augmented_prompts = []
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_prompt = {executor.submit(augment_prompt, client, prompt_data, optimized_metaprompt): prompt_data for prompt_data in base_prompts}
+        future_to_prompt = {
+            executor.submit(
+                augment_prompt, client, prompt_data, optimized_metaprompt,
+            ): prompt_data
+            for prompt_data in base_prompts
+        }
         for future in as_completed(future_to_prompt):
             prompt_data = future_to_prompt[future]
             try:
@@ -156,10 +189,11 @@ def main():
             except Exception as exc:
                 print(f"'{prompt_data['prompt']}' generated an exception: {exc}")
 
-    with open('augmented_prompts.json', 'w') as f:
+    with open("augmented_prompts.json", "w") as f:
         json.dump(augmented_prompts, f, indent=4)
 
     print("\nAugmented prompts saved to 'augmented_prompts.json'")
+
 
 if __name__ == "__main__":
     main()

@@ -14,7 +14,7 @@
 """Application factory for creating the FastAPI app and on_load handler."""
 
 import logging
-from typing import Callable, Generator
+from collections.abc import Callable, Generator
 
 import mesop as me
 from fastapi import FastAPI
@@ -28,7 +28,6 @@ root_logger = logging.getLogger()
 root_logger.addFilter(UnknownHandlerIdFilter())
 
 
-
 def create_app():
     """Create the FastAPI app instance."""
     app = FastAPI()
@@ -36,11 +35,11 @@ def create_app():
 
 
 def create_on_load_handler(
-    user_email: str, session_id: str
-) -> Callable[[LoadEvent], Generator[None, None, None] | None]:
+    user_email: str, session_id: str,
+) -> Callable[[LoadEvent], Generator[None] | None]:
     """Create the on_load event handler."""
 
-    def on_load(e: LoadEvent) -> Generator[None, None, None] | None:
+    def on_load(e: LoadEvent) -> Generator[None] | None:
         """On load event."""
         s = me.state(AppState)
         s.user_email = user_email

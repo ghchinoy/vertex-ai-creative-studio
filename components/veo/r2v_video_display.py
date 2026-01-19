@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Callable
+from collections.abc import Callable
+
 import mesop as me
+from state.veo_and_me_state import PageState  # Correct state import
 
 from common.utils import gcs_uri_to_https_url
-from state.veo_and_me_state import PageState  # Correct state import
+
 from ..video_thumbnail.video_thumbnail import video_thumbnail
 
 
@@ -31,24 +33,40 @@ def r2v_video_display(on_thumbnail_click: Callable):
             flex_direction="column",
             align_items="center",
             width="100%",
-        )
+        ),
     ):
         if state.is_loading:
-            with me.box(style=me.Style(display="flex", justify_content="center", margin=me.Margin(top=24))):
+            with me.box(
+                style=me.Style(
+                    display="flex", justify_content="center", margin=me.Margin(top=24),
+                ),
+            ):
                 me.progress_spinner()
-            me.text(state.timing if state.timing else "Generating video...", style=me.Style(margin=me.Margin(top=16)))
+            me.text(
+                state.timing if state.timing else "Generating video...",
+                style=me.Style(margin=me.Margin(top=16)),
+            )
             return
 
         if not state.result_videos:
-            me.text("Your generated videos will appear here.", style=me.Style(padding=me.Padding.all(24), color=me.theme_var("on-surface-variant")))
+            me.text(
+                "Your generated videos will appear here.",
+                style=me.Style(
+                    padding=me.Padding.all(24), color=me.theme_var("on-surface-variant"),
+                ),
+            )
             return
 
         # Determine the main video to display
-        main_video_url = state.selected_video_url if state.selected_video_url else state.result_videos[0]
+        main_video_url = (
+            state.selected_video_url
+            if state.selected_video_url
+            else state.result_videos[0]
+        )
 
         # Main video player
         me.video(
-            key=main_video_url, # Add key to force re-render
+            key=main_video_url,  # Add key to force re-render
             src=gcs_uri_to_https_url(main_video_url),
             style=me.Style(
                 border_radius=12,
@@ -68,7 +86,7 @@ def r2v_video_display(on_thumbnail_click: Callable):
                 align_items="center",
                 justify_content="center",
                 padding=me.Padding(top=10),
-            )
+            ),
         ):
             me.text(state.timing)
 
@@ -82,7 +100,7 @@ def r2v_video_display(on_thumbnail_click: Callable):
                     justify_content="center",
                     margin=me.Margin(top=16),
                     flex_wrap="wrap",
-                )
+                ),
             ):
                 for url in state.result_videos:
                     is_selected = url == main_video_url

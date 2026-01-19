@@ -14,19 +14,27 @@
 
 import os
 import time
-import google.genai as genai
+
+from google import genai
 from google.genai import types as genai_types
 from PIL import Image
-from prompts import VEO_PROMPT
+
 import config
+from prompts import VEO_PROMPT
+
 
 def initialize_clients():
     """Initializes and returns clients for Gemini and VEO, which are used
     for prompt generation and video generation respectively.
     """
-    gemini_client = genai.Client(vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION)
-    veo_client = genai.Client(vertexai=True, project=config.PROJECT_ID, location=config.VEO_LOCATION)
+    gemini_client = genai.Client(
+        vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION,
+    )
+    veo_client = genai.Client(
+        vertexai=True, project=config.PROJECT_ID, location=config.VEO_LOCATION,
+    )
     return gemini_client, veo_client
+
 
 def generate_video(gemini_client, veo_client, image_path, output_dir):
     """Generates and saves a single video based on a reference image. This
@@ -44,7 +52,7 @@ def generate_video(gemini_client, veo_client, image_path, output_dir):
             model=config.MULTIMODAL_MODEL_NAME,
             contents=[VEO_PROMPT, pil_image],
             config=genai_types.GenerateContentConfig(
-                thinking_config=genai_types.ThinkingConfig(thinking_budget=-1)
+                thinking_config=genai_types.ThinkingConfig(thinking_budget=-1),
             ),
         )
         video_prompt = video_prompt_response.text.strip()
@@ -78,14 +86,17 @@ def generate_video(gemini_client, veo_client, image_path, output_dir):
 
         with open(video_path, "wb") as f:
             f.write(video_data)
-        
+
         return video_path
 
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return None
 
-def generate_video_from_best_image(output_path: str, best_image_path: str) -> str | None:
+
+def generate_video_from_best_image(
+    output_path: str, best_image_path: str,
+) -> str | None:
     """Generates a single video from the selected best image. This is the final
     step in the workflow, creating the video from the outpainted image.
     """
@@ -93,5 +104,5 @@ def generate_video_from_best_image(output_path: str, best_image_path: str) -> st
     os.makedirs(output_path, exist_ok=True)
 
     video_path = generate_video(gemini_client, veo_client, best_image_path, output_path)
-    
+
     return video_path

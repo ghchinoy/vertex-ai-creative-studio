@@ -18,6 +18,8 @@ import mesop as me
 from state.state import AppState
 from state.veo_state import PageState
 from ..video_thumbnail.video_thumbnail import video_thumbnail
+from ..pill import pill
+from ..media_tile.media_tile import media_tile
 from models.video_processing import convert_mp4_to_gif
 from common.utils import https_url_to_gcs_uri, create_display_url
 from config.veo_models import get_veo_model_config
@@ -60,18 +62,28 @@ def video_display(on_thumbnail_click: Callable, on_click_extend: Callable):
                 max_height="85vh",
                 margin=me.Margin(left="auto", right="auto"),
                 aspect_ratio=aspect_ratio_css,
+                position="relative", # Allow for absolute positioning of badge
             )
         ):
-            me.video(
+            media_tile(
                 key=main_video_url,
-                src=main_video_url,
-                style=me.Style(
-                    border_radius=12,
-                    width="100%",
-                    height="100%",
-                    display="block",
-                ),
+                media_type="video",
+                https_url=main_video_url,
+                controls=True,
             )
+            
+            # 4K badge overlay (Hidden by default to avoid confusion with video content)
+            # To enable, uncomment the block below.
+            # if state.resolution == "4k":
+            #     with me.box(
+            #         style=me.Style(
+            #             position="absolute",
+            #             top=16,
+            #             right=16,
+            #             z_index=1,
+            #         )
+            #     ):
+            #         pill(label="4K Ultra HD", pill_type="resolution_4k")
 
         # Find the corresponding GCS URI for the selected video URL to pass to the GIF converter.
         try:
@@ -144,9 +156,10 @@ def video_display(on_thumbnail_click: Callable, on_click_extend: Callable):
                 for url in state.result_display_urls:
                     is_selected = url == main_video_url
                     with me.box(style=me.Style(height="90px", width="160px")):
-                        video_thumbnail(
+                        media_tile(
                             key=url,
-                            video_src=url,
+                            media_type="video",
+                            https_url=url,
                             selected=is_selected,
                             on_click=on_thumbnail_click,
                         )

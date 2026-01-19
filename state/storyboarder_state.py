@@ -13,34 +13,36 @@
 # limitations under the License.
 
 from dataclasses import field
+
 import mesop as me
+
 
 @me.stateclass
 class PageState:
     """Storyboarder Page State"""
-    
+
     # Input
     prompt: str = ""
     uploaded_image_gcs_uris: list[str] = field(default_factory=list)
     uploaded_image_display_urls: list[str] = field(default_factory=list)
-    
+
     # Image Generation
     generated_image_urls: list[str] = field(default_factory=list)
     generated_image_gcs_uris: list[str] = field(default_factory=list)
     image_captions: list[str] = field(default_factory=list)
     is_generating_images: bool = False
-    
+
     # Video Generation
     is_generating_video: bool = False
     video_generation_status: str = ""
-    generated_video_clips: list[str] = field(default_factory=list) # List of GCS URIs
+    generated_video_clips: list[str] = field(default_factory=list)  # List of GCS URIs
     final_video_uri: str = ""
     final_video_display_url: str = ""
-    
+
     # Settings
     aspect_ratio: str = "16:9"
     num_images: int = 4
-    
+
     # UI
     show_snackbar: bool = False
     snackbar_message: str = ""

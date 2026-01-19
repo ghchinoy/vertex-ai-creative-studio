@@ -12,28 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import field
-import random
 import logging
+import random
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import field
 
 import mesop as me
-
-from common.metadata import update_elo_ratings
-from config.default import Default
-from prompts.utils import PromptManager
-from state.state import AppState
-from components.header import header
-
-from models.set_up import ModelSetup, load_default_models
-
 from models.gemini_model import (
     generate_content,
     generate_images,
 )
-from models.generate import images_from_flux, images_from_imagen, images_from_stable_diffusion, study_fetch
+from models.generate import (
+    images_from_flux,
+    images_from_imagen,
+    images_from_stable_diffusion,
+    study_fetch,
+)
+from models.set_up import ModelSetup, load_default_models
+from prompts.utils import PromptManager
 
+from common.metadata import update_elo_ratings
+from components.header import header
+from config.default import Default
+from state.state import AppState
 
 # Initialize configuration
 client, model_id = ModelSetup.init()
@@ -43,7 +45,12 @@ prompt_manager = PromptManager()
 logging.basicConfig(level=logging.DEBUG)
 
 
-IMAGEN_MODELS = [config.MODEL_IMAGEN2, config.MODEL_IMAGEN3_FAST, config.MODEL_IMAGEN3, config.MODEL_IMAGEN32,]
+IMAGEN_MODELS = [
+    config.MODEL_IMAGEN2,
+    config.MODEL_IMAGEN3_FAST,
+    config.MODEL_IMAGEN3,
+    config.MODEL_IMAGEN32,
+]
 GEMINI_MODELS = [config.MODEL_GEMINI2]
 
 
@@ -61,7 +68,7 @@ class PageState:
     arena_textarea_key: int = 0
     arena_model1: str = ""
     arena_model2: str = ""
-    arena_output: list[str] = field(default_factory=lambda: [])
+    arena_output: list[str] = field(default_factory=list)
     chosen_model: str = ""
     study: str = "live"
     study_models: list[str] = field(default_factory=list)
@@ -82,7 +89,7 @@ def arena_images(input: str, study: str):
     logging.info("prompt: %s", prompt)
     if state.image_negative_prompt_input:
         logging.info("negative prompt: %s", state.image_negative_prompt_input)
-    
+
     with ThreadPoolExecutor() as executor:  # Create a thread pool
         futures = []
         if study == "live":
@@ -95,7 +102,7 @@ def arena_images(input: str, study: str):
                         state.arena_model1,
                         prompt,
                         state.image_aspect_ratio,
-                    )
+                    ),
                 )
             elif state.arena_model1.startswith(config.MODEL_GEMINI2):
                 logging.info("model 1: %s", state.arena_model1)
@@ -103,7 +110,7 @@ def arena_images(input: str, study: str):
                     executor.submit(
                         generate_images,
                         prompt,
-                    )
+                    ),
                 )
             elif state.arena_model1.startswith(config.MODEL_FLUX1):
                 if config.MODEL_FLUX1_ENDPOINT_ID:
@@ -114,7 +121,7 @@ def arena_images(input: str, study: str):
                             state.arena_model1,
                             prompt,
                             state.image_aspect_ratio,
-                        )
+                        ),
                     )
                 else:
                     logging.error("no endpoint defined for %s", state.arena_model1)
@@ -127,7 +134,7 @@ def arena_images(input: str, study: str):
                             state.arena_model1,
                             prompt,
                             state.image_aspect_ratio,
-                        )
+                        ),
                     )
                 else:
                     logging.error("no endpoint defined for %s", state.arena_model1)
@@ -141,7 +148,7 @@ def arena_images(input: str, study: str):
                         state.arena_model2,
                         prompt,
                         state.image_aspect_ratio,
-                    )
+                    ),
                 )
             elif state.arena_model2.startswith(config.MODEL_GEMINI2):
                 logging.info("model 2: %s", state.arena_model2)
@@ -149,7 +156,7 @@ def arena_images(input: str, study: str):
                     executor.submit(
                         generate_images,
                         prompt,
-                    )
+                    ),
                 )
             elif state.arena_model2.startswith(config.MODEL_FLUX1):
                 if config.MODEL_FLUX1_ENDPOINT_ID:
@@ -160,7 +167,7 @@ def arena_images(input: str, study: str):
                             state.arena_model2,
                             prompt,
                             state.image_aspect_ratio,
-                        )
+                        ),
                     )
                 else:
                     logging.error("no endpoint defined for %s", state.arena_model2)
@@ -173,33 +180,28 @@ def arena_images(input: str, study: str):
                             state.arena_model2,
                             prompt,
                             state.image_aspect_ratio,
-                        )
+                        ),
                     )
                 else:
                     logging.error("no endpoint defined for %s", state.arena_model2)
         # Fetch images from study
         else:
-            futures.extend([
-                executor.submit(
-                    study_fetch,
-                    state.arena_model1,
-                    prompt
-                ),
-                executor.submit(
-                    study_fetch,
-                    state.arena_model2,
-                    prompt
-                )
-            ])
-        
+            futures.extend(
+                [
+                    executor.submit(study_fetch, state.arena_model1, prompt),
+                    executor.submit(study_fetch, state.arena_model2, prompt),
+                ],
+            )
+
         for future in as_completed(futures):  # Wait for tasks to complete
             try:
                 result = future.result()  # Get the result of each task
                 state.arena_output.extend(
-                    result
+                    result,
                 )  # Assuming images_from_imagen returns a list
             except Exception as e:
-                logging.error(f"Error during image generation: {e}")
+                logging.exception(f"Error during image generation: {e}")
+
 
 def on_click_reload_arena(e: me.ClickEvent):  # pylint: disable=unused-argument
     """Reload arena handler"""
@@ -232,7 +234,14 @@ def on_click_arena_vote(e: me.ClickEvent):
     state.chosen_model = model_name
     yield
     # update the elo ratings
-    update_elo_ratings(state.arena_model1, state.arena_model2, model_name, state.arena_output, state.arena_prompt, state.study)
+    update_elo_ratings(
+        state.arena_model1,
+        state.arena_model2,
+        model_name,
+        state.arena_output,
+        state.arena_prompt,
+        state.study,
+    )
     yield
     time.sleep(int(Default.SHOW_RESULTS_PAUSE_TIME))
     yield
@@ -266,7 +275,6 @@ def generate_welcome() -> str:
 
 def arena_page_content(app_state: me.state):
     """Arena Mesop Page"""
-
     page_state = me.state(PageState)
     prompt_manager.prompts_location = app_state.study_prompts_location
     page_state.study = app_state.study
@@ -280,7 +288,9 @@ def arena_page_content(app_state: me.state):
         app_state.welcome_message = generate_welcome()
     if not page_state.arena_prompt:
         page_state.arena_prompt = prompt_manager.random_prompt()
-        page_state.arena_model1, page_state.arena_model2 = random.sample(app_state.study_models, 2)
+        page_state.arena_model1, page_state.arena_model2 = random.sample(
+            app_state.study_models, 2,
+        )
         arena_images(page_state.arena_prompt, app_state.study)
 
     with me.box(
@@ -289,208 +299,240 @@ def arena_page_content(app_state: me.state):
             flex_direction="column",
             height="100%",
         ),
+    ), me.box(
+        style=me.Style(
+            background=me.theme_var("background"),
+            height="100%",
+            overflow_y="scroll",
+            margin=me.Margin(bottom=20),
+        ),
+    ), me.box(
+        style=me.Style(
+            background=me.theme_var("background"),
+            padding=me.Padding(top=24, left=24, right=24, bottom=24),
+            display="flex",
+            flex_direction="column",
+        ),
     ):
+        header(
+            "Arena"
+            + (
+                f" [Active Study: {app_state.study}]"
+                if app_state.study != "live"
+                else ""
+            ),
+            "stadium",
+        )
+
+        # welcome message
         with me.box(
             style=me.Style(
-                background=me.theme_var("background"),
-                height="100%",
-                overflow_y="scroll",
-                margin=me.Margin(bottom=20),
-            )
+                flex_grow=1,
+                display="flex",
+                align_items="center",
+                justify_content="center",
+            ),
+            on_click=reload_welcome,
         ):
+            me.text(
+                app_state.welcome_message,
+                style=me.Style(
+                    width="80vw",
+                    font_size="12pt",
+                    font_style="italic",
+                    color="gray",
+                ),
+            )
+
+        me.box(style=me.Style(height="16px"))
+
+        with me.box(
+            style=me.Style(
+                margin=me.Margin(left="auto", right="auto"),
+                width="min(1024px, 100%)",
+                gap="24px",
+                flex_grow=1,
+                display="flex",
+                flex_wrap="wrap",
+                flex_direction="column",
+                align_items="center",
+            ),
+        ):
+            # Prompt
             with me.box(
                 style=me.Style(
-                    background=me.theme_var("background"),
-                    padding=me.Padding(top=24, left=24, right=24, bottom=24),
                     display="flex",
                     flex_direction="column",
-                )
+                    align_items="center",
+                    width="85%",
+                ),
             ):
-                header("Arena" + (f" [Active Study: {app_state.study}]" if app_state.study != "live" else ""), "stadium")
-
-                # welcome message
-                with me.box(
+                me.text(
+                    "Select the output you prefer for the given prompt",
                     style=me.Style(
-                        flex_grow=1,
-                        display="flex",
-                        align_items="center",
-                        justify_content="center",
+                        font_weight=500,
+                        font_size="20px",
+                        text_transform="uppercase",
                     ),
-                    on_click=reload_welcome,
-                ):
-                    me.text(
-                        app_state.welcome_message,
-                        style=me.Style(
-                            width="80vw",
-                            font_size="12pt",
-                            font_style="italic",
-                            color="gray",
-                        ),
-                    )
+                )
+                me.box(style=me.Style(height=16))
+                me.text(
+                    page_state.arena_prompt, style=me.Style(font_size="20pt"),
+                )
 
-                me.box(style=me.Style(height="16px"))
-
-                with me.box(
-                    style=me.Style(
-                        margin=me.Margin(left="auto", right="auto"),
-                        width="min(1024px, 100%)",
-                        gap="24px",
-                        flex_grow=1,
-                        display="flex",
-                        flex_wrap="wrap",
-                        flex_direction="column",
-                        align_items="center",
-                    )
-                ):
-                    # Prompt
+            # Image outputs
+            with me.box(style=_BOX_STYLE):
+                if page_state.is_loading:
                     with me.box(
                         style=me.Style(
-                            display="flex",
-                            flex_direction="column",
-                            align_items="center",
-                            width="85%",
-                        )
+                            display="grid",
+                            justify_content="center",
+                            justify_items="center",
+                        ),
                     ):
-                        me.text(
-                            "Select the output you prefer for the given prompt",
-                            style=me.Style(font_weight=500, font_size="20px", text_transform="uppercase"),
-                        )
-                        me.box(style=me.Style(height=16))
-                        me.text(page_state.arena_prompt, style=me.Style(font_size="20pt"))
+                        me.progress_spinner()
+                if len(page_state.arena_output) != 0:
+                    with me.box(
+                        style=me.Style(
+                            display="grid",
+                            justify_content="center",
+                            justify_items="center",
+                        ),
+                    ):
+                        # Generated images row
+                        with me.box(
+                            style=me.Style(
+                                flex_wrap="wrap", display="flex", gap="15px",
+                            ),
+                        ):
+                            for idx, img in enumerate(
+                                page_state.arena_output, start=1,
+                            ):
+                                print(f"===> idx: {idx}, img: {img}")
+                                model_name = f"arena_model{idx}"
+                                model_value = getattr(page_state, model_name)
 
-                    # Image outputs
-                    with me.box(style=_BOX_STYLE):
-                        if page_state.is_loading:
-                            with me.box(
-                                style=me.Style(
-                                    display="grid",
-                                    justify_content="center",
-                                    justify_items="center",
+                                replace_url = (
+                                    "https://storage.mtls.cloud.google.com/"
                                 )
-                            ):
-                                me.progress_spinner()
-                        if len(page_state.arena_output) != 0:
-                            with me.box(
-                                style=me.Style(
-                                    display="grid",
-                                    justify_content="center",
-                                    justify_items="center",
-                                )
-                            ):
-                                # Generated images row
+                                if Default.PUBLIC_BUCKET:
+                                    replace_url = (
+                                        "https://storage.googleapis.com/"
+                                    )
+                                img_url = img.replace("gs://", replace_url)
                                 with me.box(
                                     style=me.Style(
-                                        flex_wrap="wrap", display="flex", gap="15px"
-                                    )
+                                        align_items="center",
+                                        justify_content="center",
+                                        display="flex",
+                                        flex_direction="column",
+                                    ),
                                 ):
-                                    for idx, img in enumerate(page_state.arena_output, start=1):
-                                        print(f"===> idx: {idx}, img: {img}")
-                                        model_name = f"arena_model{idx}"
-                                        model_value = getattr(page_state, model_name)
-
-                                        replace_url = "https://storage.mtls.cloud.google.com/"
-                                        if Default.PUBLIC_BUCKET:
-                                            replace_url = "https://storage.googleapis.com/"
-                                        img_url = img.replace(
-                                            "gs://",
-                                            replace_url
-                                        )
-                                        with me.box(
-                                            style=me.Style(align_items="center", justify_content="center", display="flex", flex_direction="column"),
+                                    image_border_style = me.Style(
+                                        width="450px",
+                                        margin=me.Margin(top=10),
+                                        border_radius="35px",
+                                    )
+                                    if page_state.chosen_model:
+                                        if (
+                                            page_state.chosen_model
+                                            == model_value
                                         ):
+                                            # green border
                                             image_border_style = me.Style(
                                                 width="450px",
                                                 margin=me.Margin(top=10),
                                                 border_radius="35px",
+                                                border=me.Border().all(
+                                                    me.BorderSide(
+                                                        color="green",
+                                                        style="inset",
+                                                        width="5px",
+                                                    ),
+                                                ),
                                             )
-                                            if page_state.chosen_model:
-                                                if page_state.chosen_model == model_value:
-                                                    # green border
-                                                    image_border_style = me.Style(
-                                                        width="450px",
-                                                        margin=me.Margin(top=10),
-                                                        border_radius="35px",
-                                                        border=me.Border().all(me.BorderSide(color="green", style="inset", width="5px"))
-                                                    )
-                                                else:
-                                                    # opaque
-                                                    image_border_style = me.Style(
-                                                        width="450px",
-                                                        margin=me.Margin(top=10),
-                                                        border_radius="35px",
-                                                        opacity=0.5,
-                                                    )
-                                            me.image(
-                                                src=f"{img_url}",
-                                                style=image_border_style,
+                                        else:
+                                            # opaque
+                                            image_border_style = me.Style(
+                                                width="450px",
+                                                margin=me.Margin(top=10),
+                                                border_radius="35px",
+                                                opacity=0.5,
                                             )
-                                            
-                                            if page_state.chosen_model:
-                                                text_style = me.Style()
-                                                if page_state.chosen_model == model_value:
-                                                    text_style = me.Style(font_weight="bold")
-                                                me.text(model_value, style=text_style)
-                                            else:
-                                                me.box(style=me.Style(height=18))
-
-                                me.box(style=me.Style(height=15))
-
-                                if len(page_state.arena_output) != 2:
-                                    disabled_choice = True
-                                else:
-                                    disabled_choice = False
-
-                                with me.box(
-                                    style=me.Style(
-                                        flex_direction="row",
-                                        display="flex",
-                                        gap=50,
+                                    me.image(
+                                        src=f"{img_url}",
+                                        style=image_border_style,
                                     )
-                                ):
-                                    # left choice button
-                                    with me.content_button(
-                                        type="flat",
-                                        key="arena_model1",
-                                        on_click=on_click_arena_vote,
-                                        disabled=disabled_choice,
-                                    ):
-                                        with me.box(
-                                            style=me.Style(
-                                                display="flex", align_items="center"
-                                            )
+
+                                    if page_state.chosen_model:
+                                        text_style = me.Style()
+                                        if (
+                                            page_state.chosen_model
+                                            == model_value
                                         ):
-                                            me.icon("arrow_left")
-                                            me.text("left")
-                                    # skip button
-                                    me.button(
-                                        label="skip",
-                                        type="stroked",
-                                        on_click=on_click_reload_arena,
-                                    )
-                                    # right choice button
-                                    with me.content_button(
-                                        type="flat",
-                                        key="arena_model2",
-                                        on_click=on_click_arena_vote,
-                                        disabled=disabled_choice,
-                                    ):
-                                        with me.box(
-                                            style=me.Style(
-                                                display="flex", align_items="center"
+                                            text_style = me.Style(
+                                                font_weight="bold",
                                             )
-                                        ):
-                                            me.text("right")
-                                            me.icon("arrow_right")
+                                        me.text(model_value, style=text_style)
+                                    else:
+                                        me.box(style=me.Style(height=18))
+
+                        me.box(style=me.Style(height=15))
+
+                        if len(page_state.arena_output) != 2:
+                            disabled_choice = True
                         else:
+                            disabled_choice = False
+
+                        with me.box(
+                            style=me.Style(
+                                flex_direction="row",
+                                display="flex",
+                                gap=50,
+                            ),
+                        ):
+                            # left choice button
+                            with me.content_button(
+                                type="flat",
+                                key="arena_model1",
+                                on_click=on_click_arena_vote,
+                                disabled=disabled_choice,
+                            ), me.box(
+                                style=me.Style(
+                                    display="flex", align_items="center",
+                                ),
+                            ):
+                                me.icon("arrow_left")
+                                me.text("left")
                             # skip button
                             me.button(
                                 label="skip",
                                 type="stroked",
                                 on_click=on_click_reload_arena,
                             )
-                    # show user choice
-                    if page_state.chosen_model:
-                        me.text(f"You voted {page_state.chosen_model}")
+                            # right choice button
+                            with me.content_button(
+                                type="flat",
+                                key="arena_model2",
+                                on_click=on_click_arena_vote,
+                                disabled=disabled_choice,
+                            ), me.box(
+                                style=me.Style(
+                                    display="flex", align_items="center",
+                                ),
+                            ):
+                                me.text("right")
+                                me.icon("arrow_right")
+                else:
+                    # skip button
+                    me.button(
+                        label="skip",
+                        type="stroked",
+                        on_click=on_click_reload_arena,
+                    )
+            # show user choice
+            if page_state.chosen_model:
+                me.text(f"You voted {page_state.chosen_model}")
 
 
 _BOX_STYLE = me.Style(

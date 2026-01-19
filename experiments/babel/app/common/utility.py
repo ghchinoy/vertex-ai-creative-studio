@@ -11,9 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Common methods """
+"""Common methods"""
 
 from config.default import reference_voices
+
 
 def get_uri_by_key_name(name: str, key_name: str):
     """Gets the key value for a given voice name.
@@ -25,6 +26,7 @@ def get_uri_by_key_name(name: str, key_name: str):
 
     Returns:
       The URI of the voice if found, or None if not found.
+
     """
     for voice in reference_voices:
         if voice["name"] == name:

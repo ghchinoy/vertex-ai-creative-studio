@@ -18,11 +18,11 @@ It includes a class with a static method to initialize the `genai` client with
 the appropriate project ID, location, and model ID.
 """
 
-from typing import Optional
+
 from dotenv import load_dotenv
 from google import genai
-from config.default import Default
 
+from config.default import Default
 
 load_dotenv(override=True)
 
@@ -32,9 +32,9 @@ class ModelSetup:
 
     @staticmethod
     def init(
-        project_id: Optional[str] = None,
-        location: Optional[str] = None,
-        model_id: Optional[str] = None,
+        project_id: str | None = None,
+        location: str | None = None,
+        model_id: str | None = None,
     ):
         """Initializes the generative AI client.
 
@@ -52,6 +52,7 @@ class ModelSetup:
 
         Raises:
             ValueError: If any of the required parameters are not set.
+
         """
         config = Default()
         if not project_id:

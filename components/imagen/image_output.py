@@ -13,16 +13,15 @@
 # limitations under the License.
 
 import mesop as me
-from components.styles import _BOX_STYLE
 
-from state.imagen_state import PageState
-from components.svg_icon.svg_icon import svg_icon
-
-from components.edit_button.edit_button import edit_button
-from components.veo_button.veo_button import veo_button
-from components.media_tile.media_tile import media_tile, get_pills_for_item
 from common.metadata import MediaItem
 from common.utils import create_display_url
+from components.edit_button.edit_button import edit_button
+from components.media_tile.media_tile import get_pills_for_item, media_tile
+from components.styles import _BOX_STYLE
+from components.svg_icon.svg_icon import svg_icon
+from components.veo_button.veo_button import veo_button
+from state.imagen_state import PageState
 
 
 @me.component
@@ -31,7 +30,7 @@ def image_output():
     state = me.state(PageState)
     print(f"Rendering image_output, commentary: {state.image_commentary}")
     with me.box(style=_BOX_STYLE):
-        #me.text("Output", style=me.Style(font_weight=500))
+        # me.text("Output", style=me.Style(font_weight=500))
         me.box(style=me.Style(height=10))
 
         if state.is_loading:
@@ -42,7 +41,7 @@ def image_output():
                     align_items="center",
                     flex_direction="column",
                     min_height="200px",
-                )
+                ),
             ):
                 me.progress_spinner()
                 me.text(
@@ -56,7 +55,7 @@ def image_output():
                     display="flex",
                     flex_direction="column",
                     align_items="center",
-                )
+                ),
             ):
                 with me.box(
                     style=me.Style(
@@ -64,19 +63,35 @@ def image_output():
                         flex_wrap="wrap",
                         gap="15px",
                         justify_content="center",
-                    )
+                    ),
                 ):
                     for img_uri in state.image_output:
                         if img_uri:
-                            with me.box(style=me.Style(display="flex", flex_direction="column", gap=8)):
+                            with me.box(
+                                style=me.Style(
+                                    display="flex", flex_direction="column", gap=8,
+                                ),
+                            ):
                                 # Use media_tile to handle gs:// URIs natively via Firebase SDK
                                 with me.box(style=me.Style(height=300, width=300)):
                                     media_tile(
                                         media_type="image",
                                         https_url=create_display_url(img_uri),
-                                        pills_json=get_pills_for_item(MediaItem(gcsuri=img_uri, media_type="image"), img_uri),
+                                        pills_json=get_pills_for_item(
+                                            MediaItem(
+                                                gcsuri=img_uri, media_type="image",
+                                            ),
+                                            img_uri,
+                                        ),
                                     )
-                                with me.box(style=me.Style(display="flex", flex_direction="row", gap=8, justify_content="center")):
+                                with me.box(
+                                    style=me.Style(
+                                        display="flex",
+                                        flex_direction="row",
+                                        gap=8,
+                                        justify_content="center",
+                                    ),
+                                ):
                                     edit_button(gcs_uri=img_uri)
                                     veo_button(gcs_uri=img_uri)
                 if state.imagen_watermark:
@@ -86,7 +101,7 @@ def image_output():
                             flex_direction="row",
                             align_items="center",
                             margin=me.Margin(top=15),
-                        )
+                        ),
                     ):
                         svg_icon(icon_name="digitalWatermarkIcon")
                         me.text(
@@ -105,7 +120,7 @@ def image_output():
                                 align_items="center",
                                 gap="8px",
                                 margin=me.Margin(bottom=10),
-                            )
+                            ),
                         ):
                             me.icon("assistant")
                             me.text(
@@ -115,7 +130,7 @@ def image_output():
                         me.markdown(
                             text=state.image_commentary,
                             style=me.Style(
-                                padding=me.Padding(left=15, right=15, bottom=15)
+                                padding=me.Padding(left=15, right=15, bottom=15),
                             ),
                         )
         else:

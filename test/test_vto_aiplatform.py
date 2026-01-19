@@ -1,9 +1,10 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from models.vto import generate_vto_image
+
 
 def test_generate_vto_image_aiplatform(gcs_bucket_for_tests):
     """Tests the generate_vto_image function using the aiplatform client."""

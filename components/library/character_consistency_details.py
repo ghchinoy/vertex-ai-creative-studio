@@ -13,30 +13,31 @@
 # limitations under the License.
 """Component for displaying character consistency details."""
 
+import os
+from collections.abc import Callable
+
 import mesop as me
+
 from common.metadata import MediaItem
 from common.utils import gcs_uri_to_https_url
-import os
 from components.download_button.download_button import download_button
-
-from typing import Callable
 
 
 @me.component
 def character_consistency_details(item: MediaItem, on_click_permalink: Callable):
     """Renders the details for a character consistency item."""
-    gcs_uri = item.gcsuri if item.gcsuri else (item.gcs_uris[0] if item.gcs_uris else None)
+    gcs_uri = (
+        item.gcsuri if item.gcsuri else (item.gcs_uris[0] if item.gcs_uris else None)
+    )
     item_display_url = gcs_uri_to_https_url(gcs_uri)
-    
+
     with me.box(
         style=me.Style(
             display="flex",
             flex_direction="column",
             gap=12,
-
-        )
+        ),
     ):
-
         if item.media_type == "character_consistency" and item.best_candidate_image:
             me.video(
                 src=item_display_url,
@@ -52,9 +53,7 @@ def character_consistency_details(item: MediaItem, on_click_permalink: Callable)
             best_candidate_url = gcs_uri_to_https_url(item.best_candidate_image)
             me.text(
                 "Best Candidate Image:",
-                style=me.Style(
-                    font_weight="500", margin=me.Margin(top=8)
-                ),
+                style=me.Style(font_weight="500", margin=me.Margin(top=8)),
             )
             me.image(
                 src=best_candidate_url,
@@ -68,18 +67,12 @@ def character_consistency_details(item: MediaItem, on_click_permalink: Callable)
             if item.source_character_images:
                 me.text(
                     "Source Images:",
-                    style=me.Style(
-                        font_weight="500", margin=me.Margin(top=8)
-                    ),
+                    style=me.Style(font_weight="500", margin=me.Margin(top=8)),
                 )
                 with me.box(
-                    style=me.Style(
-                        display="flex", flex_direction="row", gap=10
-                    )
+                    style=me.Style(display="flex", flex_direction="row", gap=10),
                 ):
-                    for src_image_uri in item.source_character_images[
-                        :3
-                    ]:
+                    for src_image_uri in item.source_character_images[:3]:
                         src_url = gcs_uri_to_https_url(src_image_uri)
                         me.image(
                             src=src_url,
@@ -90,7 +83,14 @@ def character_consistency_details(item: MediaItem, on_click_permalink: Callable)
                                 margin=me.Margin(top=4),
                             ),
                         )
-            with me.box(style=me.Style(display="flex", flex_direction="row", gap=10, margin=me.Margin(top=16))):
+            with me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    gap=10,
+                    margin=me.Margin(top=16),
+                ),
+            ):
                 with me.content_button(
                     on_click=on_click_permalink,
                     key=item.id or "",  # Ensure key is not None
@@ -101,11 +101,11 @@ def character_consistency_details(item: MediaItem, on_click_permalink: Callable)
                             flex_direction="row",
                             align_items="center",
                             gap=5,
-                        )
+                        ),
                     ):
                         me.icon(icon="link")
                         me.text("permalink")
 
                 if item.gcsuri:
-                    filename = os.path.basename(item.gcsuri.split('?')[0])
+                    filename = os.path.basename(item.gcsuri.split("?")[0])
                     download_button(url=item.gcsuri, filename=filename)

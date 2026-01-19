@@ -15,13 +15,13 @@
 """A test page for comparing signed URL vs. proxy caching performance."""
 
 from dataclasses import field
+
 import mesop as me
 
 from common.metadata import MediaItem, get_media_for_page
 from common.utils import create_display_url
 from components.header import header
 from components.page_scaffold import page_frame, page_scaffold
-from config.default import Default as cfg
 
 
 @me.stateclass
@@ -37,7 +37,9 @@ def on_load(e: me.LoadEvent):
         state.is_loading = True
         yield
         # get_media_for_page returns a single list of items, not a tuple to be unpacked.
-        items = get_media_for_page(page=1, media_per_page=15, type_filters=["images"], sort_by_timestamp=True)
+        items = get_media_for_page(
+            page=1, media_per_page=15, type_filters=["images"], sort_by_timestamp=True,
+        )
 
         if items:
             state.media_items = items
@@ -55,10 +57,9 @@ def on_load(e: me.LoadEvent):
 )
 def page():
     """Render the test page."""
-    with page_scaffold(page_name="test_proxy_caching"):
-        with page_frame():
-            header("Proxy Caching vs. Signed URLs", "cached")
-            page_content()
+    with page_scaffold(page_name="test_proxy_caching"), page_frame():
+        header("Proxy Caching vs. Signed URLs", "cached")
+        page_content()
 
 
 def page_content():
@@ -69,7 +70,7 @@ def page_content():
         """This page demonstrates the performance difference between two methods of displaying private GCS images.
 
 - **Signed URLs:** Secure but not cacheable by the browser. Notice how they re-download every time you reload the page.
-- **Proxy Endpoint:** Secure and cacheable. Notice how they load instantly from the browser cache on the second page load."""
+- **Proxy Endpoint:** Secure and cacheable. Notice how they load instantly from the browser cache on the second page load.""",
     )
 
     if state.is_loading:
@@ -78,32 +79,42 @@ def page_content():
 
     with me.box(style=me.Style(margin=me.Margin(top=24))):
         # Method 1: Signed URLs (Not Cached)
-        me.text("Method 1: `USE_MEDIA_PROXY=False` (Direct GCS links, not cached by proxy)", type="headline-5")
+        me.text(
+            "Method 1: `USE_MEDIA_PROXY=False` (Direct GCS links, not cached by proxy)",
+            type="headline-5",
+        )
         with me.box(
             style=me.Style(
-                display="flex", flex_wrap="wrap", gap=16, margin=me.Margin(top=16)
-            )
+                display="flex", flex_wrap="wrap", gap=16, margin=me.Margin(top=16),
+            ),
         ):
             for item in state.media_items:
                 gcs_uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
                 if gcs_uri:
                     me.image(
                         src=create_display_url(gcs_uri),
-                        style=me.Style(height=150, width=150, object_fit="cover", border_radius=8),
+                        style=me.Style(
+                            height=150, width=150, object_fit="cover", border_radius=8,
+                        ),
                     )
 
     with me.box(style=me.Style(margin=me.Margin(top=32))):
         # Method 2: Proxy Endpoint
-        me.text("Method 2: `USE_MEDIA_PROXY=True` (Proxy Endpoint, cached)", type="headline-5")
+        me.text(
+            "Method 2: `USE_MEDIA_PROXY=True` (Proxy Endpoint, cached)",
+            type="headline-5",
+        )
         with me.box(
             style=me.Style(
-                display="flex", flex_wrap="wrap", gap=16, margin=me.Margin(top=16)
-            )
+                display="flex", flex_wrap="wrap", gap=16, margin=me.Margin(top=16),
+            ),
         ):
             for item in state.media_items:
                 gcs_uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
                 if gcs_uri:
                     me.image(
                         src=create_display_url(gcs_uri),
-                        style=me.Style(height=150, width=150, object_fit="cover", border_radius=8),
+                        style=me.Style(
+                            height=150, width=150, object_fit="cover", border_radius=8,
+                        ),
                     )

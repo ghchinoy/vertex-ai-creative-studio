@@ -1,29 +1,28 @@
-""" Generate Video using Veo """
+"""Generate Video using Veo"""
+
 import os
 import time
-from typing import Dict
 
 import google.auth
 import google.auth.transport.requests
-import mediapy as media
 import requests
 from google.cloud import aiplatform_v1beta1 as aiplatform
-from google.protobuf import json_format
 
 # from google.protobuf.struct_pb2 import Value
 
 
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = "us-central1"
-#VEO = "veo-2.0-generate-exp"
+# VEO = "veo-2.0-generate-exp"
 VEO = "veo-2.0-generate-001"
 api_regional_endpoint = f"{LOCATION}-aiplatform.googleapis.com"
-veo_model = f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{VEO}"
+veo_model = (
+    f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{VEO}"
+)
 
 video_model = f"https://us-central1-aiplatform.googleapis.com/v1beta1/projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{VEO}"
 prediction_endpoint = f"{video_model}:predictLongRunning"
 fetch_endpoint = f"{video_model}:fetchPredictOperation"
-
 
 
 def compose_videogen_request(
@@ -35,7 +34,7 @@ def compose_videogen_request(
     sample_count,
     enable_prompt_rewriting,
 ):
-    """ Create a JSON Request for Veo """
+    """Create a JSON Request for Veo"""
     instance = {"prompt": prompt}
     if image_uri:
         instance["image"] = {"gcsUri": image_uri, "mimeType": "png"}
@@ -53,9 +52,9 @@ def compose_videogen_request(
 
 
 def text_to_video(prompt, seed, aspect_ratio, sample_count, output_gcs, enable_pr):
-    """ Text to Video """
+    """Text to Video"""
     req = compose_videogen_request(
-        prompt, None, output_gcs, seed, aspect_ratio, sample_count, enable_pr
+        prompt, None, output_gcs, seed, aspect_ratio, sample_count, enable_pr,
     )
     resp = send_request_to_google_api(prediction_endpoint, req)
     print(resp)
@@ -63,11 +62,11 @@ def text_to_video(prompt, seed, aspect_ratio, sample_count, output_gcs, enable_p
 
 
 def image_to_video(
-    prompt, image_gcs, seed, aspect_ratio, sample_count, output_gcs, enable_pr
+    prompt, image_gcs, seed, aspect_ratio, sample_count, output_gcs, enable_pr,
 ):
-    """ Image to Video """
+    """Image to Video"""
     req = compose_videogen_request(
-        prompt, image_gcs, output_gcs, seed, aspect_ratio, sample_count, enable_pr
+        prompt, image_gcs, output_gcs, seed, aspect_ratio, sample_count, enable_pr,
     )
     resp = send_request_to_google_api(prediction_endpoint, req)
     print(resp)
@@ -75,30 +74,28 @@ def image_to_video(
 
 
 def t2v(prompt, seed, aspect_ratio, sample_count, output_gcs, enable_pr):
-    """ Text to Video, using the AI Platform service Prediction client"""
+    """Text to Video, using the AI Platform service Prediction client"""
     req = compose_videogen_request(
-        prompt, None, output_gcs, seed, aspect_ratio, sample_count, enable_pr
+        prompt, None, output_gcs, seed, aspect_ratio, sample_count, enable_pr,
     )
-    resp = predict_veo_model( req)
+    resp = predict_veo_model(req)
     print(resp)
     return fetch_operation(resp["name"])
 
 
-def predict_veo_model(
-    data=None
-):
-    """ AI Platform Prediction Service Client """
+def predict_veo_model(data=None):
+    """AI Platform Prediction Service Client"""
     client_options = {"api_endpoint": api_regional_endpoint}
     client = aiplatform.PredictionServiceClient(client_options=client_options)
 
     print(api_regional_endpoint)
-    #print(f"Instances: {data['instances']}")
-    #print(f"Parameters: {data['parameters']}")
+    # print(f"Instances: {data['instances']}")
+    # print(f"Parameters: {data['parameters']}")
     print(veo_model)
 
     response = client.predict(
-        endpoint=veo_model, 
-        instances=data["instances"], 
+        endpoint=veo_model,
+        instances=data["instances"],
         parameters=data["parameters"],
     )
     print("response")
@@ -111,8 +108,7 @@ def predict_veo_model(
 
 
 def send_request_to_google_api(api_endpoint, data=None):
-    """
-    Sends an HTTP request to a Google API endpoint.
+    """Sends an HTTP request to a Google API endpoint.
 
     Args:
         api_endpoint: The URL of the Google API endpoint.
@@ -120,8 +116,8 @@ def send_request_to_google_api(api_endpoint, data=None):
 
     Returns:
         The response from the Google API.
-    """
 
+    """
     # Get access token calling API
     creds, project = google.auth.default()
     auth_req = google.auth.transport.requests.Request()
@@ -139,19 +135,19 @@ def send_request_to_google_api(api_endpoint, data=None):
 
 
 def fetch_operation(lro_name):
-    """ Long Running Operation fetch """
+    """Long Running Operation fetch"""
     request = {"operationName": lro_name}
     # The generation usually takes 2 minutes. Loop 30 times, around 5 minutes.
     for i in range(30):
         resp = send_request_to_google_api(fetch_endpoint, request)
-        if "done" in resp and resp["done"]:
+        if resp.get("done"):
             return resp
         print(f"{i:4d} waiting ... {resp}")
         time.sleep(10)
 
 
 def show_video(op):
-    """ show video """
+    """Show video"""
     print(op)
     gcs_uri = ""
     if op["response"]:
@@ -159,20 +155,21 @@ def show_video(op):
             for video in op["response"]["generatedSamples"]:
                 gcs_uri = video["video"]["uri"]
         elif "videos" in op["response"] and op["response"]["videos"]:
-            #elif op["response"]["videos"]:
-                # veo-2.0-generate-001
-                videos = op["response"]["videos"]
-                print(f"Videos: {len(videos)}")
-                for video in videos:
-                    print(f"> {video}")
-                    gcs_uri = video["gcsUri"]
+            # elif op["response"]["videos"]:
+            # veo-2.0-generate-001
+            videos = op["response"]["videos"]
+            print(f"Videos: {len(videos)}")
+            for video in videos:
+                print(f"> {video}")
+                gcs_uri = video["gcsUri"]
         else:
             print(f"something else has happened: {op['response']}")
         file_name = gcs_uri.split("/")[-1]
         print("Video generated - use the following to copy locally")
         print(f"gcloud storage cp {gcs_uri} {file_name}")
 
-#prompt = "A high-speed, low-angle tracking shot shows Megatron and Optimus Prime, in full metallic transformer mode, snowboarding down a snowy mountain, both intensely focused. Megatron unleashes a powerful ollie, kicking up a spray of snow, while Optimus counters with a smooth 180, his metallic limbs adjusting with surprising fluidity. The sunlight glints off their metallic surfaces as they carve through the fresh powder, the mountain backdrop a mix of dark green and white. They are engaged in a fierce battle of skill, each trying to outdo the other with gravity defying tricks and speed.  A cinematic wide shot captures Optimus Prime and Megatron, rendered as highly detailed metallic transformers, snowboarding down a steep slope, with dramatic backlighting illuminating them. The scene is awash in cool blues and whites. Megatron launches into an aerial flip, his body contorting mid-air, while Optimus Prime executes a precise 180, carving a perfect arc into the snow. The camera tracks their descent, their every move a demonstration of power and skill, the snow spraying beneath their boards as they engage in a fierce and competitive battle.  A dynamic POV shot from the perspective of a snowboarder on a mountain shows two towering transformers, Optimus Prime and Megatron, snowboarding with intense speed. Megatron initiates a sharp ollie, catching air, as Optimus Prime executes a fast 180 turn, both demonstrating their agility. The background features snowy peaks and blue skies, with blurred snow banks rushing by. The camera shakes with the speed of their descent, highlighting the ferocity and the pure athletic skill being displayed by the transformers as they race downhill.  A medium shot captures Optimus Prime and Megatron, depicted as full metallic transformers, locked in a thrilling snowboarding duel on a bright, sunny day on a snow-covered hill. The background is a vast expanse of white snow. Megatron executes a series of rapid turns, spraying snow, while Optimus Prime counters with a series of ollies, maintaining speed. Their metallic forms are captured in sharp detail, the scene filled with a sense of speed and intensity, their rivalry on full display as they push each other to the limits." 
+
+# prompt = "A high-speed, low-angle tracking shot shows Megatron and Optimus Prime, in full metallic transformer mode, snowboarding down a snowy mountain, both intensely focused. Megatron unleashes a powerful ollie, kicking up a spray of snow, while Optimus counters with a smooth 180, his metallic limbs adjusting with surprising fluidity. The sunlight glints off their metallic surfaces as they carve through the fresh powder, the mountain backdrop a mix of dark green and white. They are engaged in a fierce battle of skill, each trying to outdo the other with gravity defying tricks and speed.  A cinematic wide shot captures Optimus Prime and Megatron, rendered as highly detailed metallic transformers, snowboarding down a steep slope, with dramatic backlighting illuminating them. The scene is awash in cool blues and whites. Megatron launches into an aerial flip, his body contorting mid-air, while Optimus Prime executes a precise 180, carving a perfect arc into the snow. The camera tracks their descent, their every move a demonstration of power and skill, the snow spraying beneath their boards as they engage in a fierce and competitive battle.  A dynamic POV shot from the perspective of a snowboarder on a mountain shows two towering transformers, Optimus Prime and Megatron, snowboarding with intense speed. Megatron initiates a sharp ollie, catching air, as Optimus Prime executes a fast 180 turn, both demonstrating their agility. The background features snowy peaks and blue skies, with blurred snow banks rushing by. The camera shakes with the speed of their descent, highlighting the ferocity and the pure athletic skill being displayed by the transformers as they race downhill.  A medium shot captures Optimus Prime and Megatron, depicted as full metallic transformers, locked in a thrilling snowboarding duel on a bright, sunny day on a snow-covered hill. The background is a vast expanse of white snow. Megatron executes a series of rapid turns, spraying snow, while Optimus Prime counters with a series of ollies, maintaining speed. Their metallic forms are captured in sharp detail, the scene filled with a sense of speed and intensity, their rivalry on full display as they push each other to the limits."
 # prompt = """Introduction of the G-Wagon: A sleek, dark-colored G-Wagon is introduced. It's not parked idly. We see it confidently navigating the snowy streets, with its headlights cutting through the falling snow. Emphasize its powerful presence and capability. Close-ups on the tires gripping the snow, the robust frame, and the iconic G-Wagon design elements.
 
 # We glimpse a sophisticated, well-dressed individual (male, 35-50) behind the wheel. They are focused, confident, and in control. Quick shots of them making a call on a high-end phone, checking market data on a tablet, or reviewing documents. Their expressions suggest they are managing complex, high-stakes situations.
@@ -190,8 +187,6 @@ def show_video(op):
 # """
 
 
-
-
 # Stadium Allegient prompt
 
 prompt = """Award-winning drone footage from above Allegiant Stadium during a Google-sponsored concert. The initial frame showcases the stage, now alive with activity. The band is in full swing, silhouettes against the backdrop of dazzling stage lights that shift from intense blues to vibrant greens, yellows and reds. Sound systems deliver booming basslines that shake the crowd. The camera smoothly pans up and back, revealing the stadium entirely filled with cheering attendees, caught up in the sonic wave. The drone glides through the stadium, capturing the full scale of the event, with laser beams crisscrossing the crowd. High-definition screens display the Google wordmark alongside the Google logo, and morph into a stylish Google Cloud logo – a vibrant cloud rendered in distinct Google colors, blue, green, yellow, and red, creating a visual spectacle, mirroring the frenetic energy on stage.
@@ -202,17 +197,15 @@ prompt = """show the shoe getting chopped in half, the guillotine's steampunk ge
 
 
 aspect_ratio = "16:9"  # @param ["16:9", "9:16"]
-output_gcs = (
-    "gs://genai-blackbelt-fishfooding-ghchinoy/videos"  
-)
+output_gcs = "gs://genai-blackbelt-fishfooding-ghchinoy/videos"
 rewrite_prompt = False
 seed = 120
 sample_count = 1
 
 # Stadium image
 source_gcs = (
-    #"gs://ghchinoy-genai-sa-assets-flat/1741753524889/sample_2.png"
-    #"gs://genai-blackbelt-fishfooding-ghchinoy/images/imagen_allegiant_003.png"
+    # "gs://ghchinoy-genai-sa-assets-flat/1741753524889/sample_2.png"
+    # "gs://genai-blackbelt-fishfooding-ghchinoy/images/imagen_allegiant_003.png"
     "gs://genai-blackbelt-fishfooding-genmedia/shoe_chop.png"
 )
 # Travel image
@@ -224,16 +217,18 @@ source_gcs = (
 start_time = time.time()  # Record the starting time
 
 # HTTP API
-#op = text_to_video(prompt, seed, aspect_ratio, sample_count, output_gcs, rewrite_prompt)
-#show_video(op)
+# op = text_to_video(prompt, seed, aspect_ratio, sample_count, output_gcs, rewrite_prompt)
+# show_video(op)
 
 # HTTP API
-op = image_to_video(prompt, source_gcs, seed, aspect_ratio, sample_count, output_gcs, rewrite_prompt)
+op = image_to_video(
+    prompt, source_gcs, seed, aspect_ratio, sample_count, output_gcs, rewrite_prompt,
+)
 show_video(op)
 
 # PredictionServiceClient
-#op = t2v(prompt, seed, aspect_ratio, sample_count, output_gcs, rewrite_prompt)
-#show_video(op)
+# op = t2v(prompt, seed, aspect_ratio, sample_count, output_gcs, rewrite_prompt)
+# show_video(op)
 
 end_time = time.time()  # Record the ending time
 execution_time = end_time - start_time  # Calculate the elapsed time

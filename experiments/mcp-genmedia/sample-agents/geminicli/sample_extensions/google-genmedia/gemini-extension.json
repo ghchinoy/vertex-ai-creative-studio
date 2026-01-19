@@ -3,6 +3,15 @@
   "version": "1.0.0",
 
   "mcpServers": {
+    "gemini-multimodal": {
+      "command": "mcp-gemini-go",
+      "env": {
+        "MCP_REQUEST_MAX_TOTAL_TIMEOUT": "240000",
+        "MCP_SERVER_REQUEST_TIMEOUT": "30000",
+        "GENMEDIA_BUCKET": "YOUR_GOOGLE_CLOUD_STORGE_BUCKET",
+        "PROJECT_ID": "YOUR_GOOGLE_CLOUD_PROJECT_ID"
+      }
+    },
     "veo": {
       "command": "mcp-veo-go",
       "env": {

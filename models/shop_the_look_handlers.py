@@ -22,11 +22,12 @@ from types import SimpleNamespace
 import mesop as me
 import requests
 
-import models.shop_the_look_workflow as shop_the_look_workflow
 from common.metadata import MediaItem, add_media_item_to_firestore
 from common.storage import download_from_gcs
+from common.utils import create_display_url
 from common.workflows import WorkflowStepResult
 from config.default import Default
+from models import shop_the_look_workflow
 from models.gemini import (
     describe_images_and_look,
     final_image_critic,
@@ -35,7 +36,6 @@ from models.gemini import (
 from models.shop_the_look_models import ProgressionImage, ProgressionImages
 from models.veo import image_to_video
 from models.vto import generate_vto_image
-from common.utils import create_display_url
 from state.shop_the_look_state import PageState
 from state.state import AppState
 
@@ -97,7 +97,7 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
             print(f"Response: {response_data}")
 
             if response_data.get("raiMediaFilteredCount", 0) > 0 and response_data.get(
-                "raiMediaFilteredReasons"
+                "raiMediaFilteredReasons",
             ):
                 # Extract the first reason provided
                 filter_reason = response_data["raiMediaFilteredReasons"][0]
@@ -108,12 +108,15 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
             else:
                 # Extract GCS URI from different possible locations
                 if (
-                    "generatedSamples" in response_data
-                    and response_data["generatedSamples"]
+                    response_data.get("generatedSamples")
                 ):
                     # print(f"Generated Samples: {response_data["generatedSamples"]}")
-                    gcs_uri = response_data["generatedSamples"][0].get("video", {}).get("uri", "")
-                elif "videos" in response_data and response_data["videos"]:
+                    gcs_uri = (
+                        response_data["generatedSamples"][0]
+                        .get("video", {})
+                        .get("uri", "")
+                    )
+                elif response_data.get("videos"):
                     # print(f"Videos: {response_data["videos"]}")
                     gcs_uri = response_data["videos"][0].get("gcsUri", "")
 
@@ -130,7 +133,9 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
                     state.result_video_gcs_uri = ""  # Ensure no video is shown
         else:
             # Handle cases where 'done' is false or response structure is unexpected
-            current_error_message = "Unexpected API response structure or operation not done."
+            current_error_message = (
+                "Unexpected API response structure or operation not done."
+            )
             print(f"Error: {current_error_message}")
             state.result_video = ""
 
@@ -165,7 +170,7 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
         try:
             item_to_log = MediaItem(
                 user_email=app_state.user_email,
-                timestamp=datetime.datetime.now(datetime.timezone.utc),
+                timestamp=datetime.datetime.now(datetime.UTC),
                 prompt=state.veo_prompt_input,
                 original_prompt=state.veo_prompt_input,
                 model=state.veo_model,
@@ -226,7 +231,7 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
             filter(
                 lambda critic_record: not critic_record.accurate,
                 state.final_critic.image_accuracy,
-            )
+            ),
         )
 
         failed_article_paths = [
@@ -240,7 +245,7 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
         articles_for_vto = look_articles
 
     images_to_process = shop_the_look_workflow.get_model_records(
-        state.selected_model.model_id
+        state.selected_model.model_id,
     )
 
     status_prefix = {
@@ -317,10 +322,12 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
                 ]
 
                 reference_image_bytes_list = list(
-                    executor.map(download_from_gcs, potential_images)
+                    executor.map(download_from_gcs, potential_images),
                 )
 
-                state.current_status = f"{status_prefix}Selecting best image of {row.article_type}..."
+                state.current_status = (
+                    f"{status_prefix}Selecting best image of {row.article_type}..."
+                )
                 yield
 
                 byte_lookup = article_image_bytes_list[
@@ -363,7 +370,9 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
                     state.result_image_display_url = create_display_url(last_best_image)
                 elif i == len(look_articles):
                     state.alternate_gcs_uris.append(last_best_image)
-                    state.alternate_display_urls.append(create_display_url(last_best_image))
+                    state.alternate_display_urls.append(
+                        create_display_url(last_best_image),
+                    )
 
                 state.reference_image_gcs_model = last_best_image
                 yield
@@ -371,7 +380,7 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
     if e.key == "primary" or e.key == "retry":
         with concurrent.futures.ThreadPoolExecutor() as executor:
             final_image_bytes_list = list(
-                executor.map(download_from_gcs, [state.result_image_gcs_uri])
+                executor.map(download_from_gcs, [state.result_image_gcs_uri]),
             )
             state.current_status = "Critic evaluation in progress..."
             yield
@@ -386,7 +395,7 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
             yield
 
             if not state.final_critic.accurate and state.retry_counter < int(
-                state.max_retry
+                state.max_retry,
             ):
                 new_event = SimpleNamespace(key="retry")
                 yield from on_click_vto_look(new_event)

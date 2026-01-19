@@ -15,21 +15,20 @@
 from __future__ import annotations
 
 import base64
-from dataclasses import field
 from typing import TYPE_CHECKING, Any
 
 import mesop as me
 from absl import logging
-from components.header import header
-from config.default import Default
-from components import constants
-from state.state import AppState
-from models import image_models
-from common import utils as helpers
-
-from common.storage import store_to_gcs
 from google.cloud import storage
+
+from common import utils as helpers
+from common.storage import store_to_gcs
+from components import constants
+from components.header import header
 from components.page_scaffold import page_frame, page_scaffold
+from config.default import Default
+from models import image_models
+from state.state import AppState
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -83,7 +82,7 @@ class EditImagesPageState:
 
 
 def content(app_state: me.state):  # pylint: disable=unused-argument
-#def content(app_state: AppState) -> None:
+    # def content(app_state: AppState) -> None:
     app_state = me.state(AppState)
     page_state = me.state(EditImagesPageState)
     page_state.username = helpers.extract_username(app_state.user_email)
@@ -92,149 +91,147 @@ def content(app_state: me.state):  # pylint: disable=unused-argument
     logging.info("User email: %s", app_state.user_email)
 
     with page_frame():  # pylint: disable=not-context-manager
+        # Page Header
+        header("Edit Images", "edit")
 
-           
-            # Page Header
-            header("Edit Images", "edit")
-
-            # Page Contents
+        # Page Contents
+        with me.box(
+            style=me.Style(
+                margin=me.Margin(left="auto", right="auto"),
+                width="min(1024px, 100%)",
+                gap="24px",
+                display="flex",
+                flex_direction="column",
+            ),
+        ):
+            # Edit input & output
             with me.box(
                 style=me.Style(
-                    margin=me.Margin(left="auto", right="auto"),
-                    width="min(1024px, 100%)",
-                    gap="24px",
                     display="flex",
-                    flex_direction="column",
+                    flex_direction="row",
+                    gap=35,
+                    border_radius=20,
                 ),
             ):
-                # Edit input & output
+                with me.box(style=_BOX_STYLE):
+                    me.text("Upload Image", style=me.Style(font_weight="bold"))
+                    me.box(style=me.Style(height="12px"))
+                    if page_state.upload_file:
+                        me.image(
+                            src=f"data:{page_state.upload_file.mime_type};base64,{base64.b64encode(page_state.upload_file.getvalue()).decode()}",
+                            style=me.Style(
+                                width="460px",
+                                border_radius=12,
+                                align_self="end",
+                                justify_content="center",
+                            ),
+                            key=str(page_state.upload_file_key),
+                        )
+                    else:
+                        me.box(
+                            style=me.Style(height="400px", width="460px"),
+                        )
+                    me.box(style=me.Style(height="12px"))
+                    me.uploader(
+                        label="Upload Image",
+                        accepted_file_types=["image/jpeg", "image/png"],
+                        on_upload=on_upload,
+                        type="flat",
+                        color="primary",
+                        style=me.Style(font_weight="bold"),
+                    )
+                with me.box(style=_BOX_STYLE):
+                    me.text(
+                        "Output Image",
+                        style=me.Style(font_weight="bold", align_self="top"),
+                    )
+                    me.box(style=me.Style(height="12px"))
+                    if page_state.is_loading:
+                        with me.box(
+                            style=me.Style(
+                                align_items="center",
+                                display="flex",
+                                justify_content="center",
+                                position="relative",
+                                top="25%",
+                            ),
+                        ):
+                            me.progress_spinner()
+                    else:
+                        if page_state.edit_uri:
+                            for idx, uri in enumerate(
+                                [page_state.edit_uri],
+                            ):
+                                me.image(
+                                    src=helpers.gcs_uri_to_https_url(uri),
+                                    style=me.Style(
+                                        align_self="end",
+                                        justify_content="center",
+                                        width="460px",
+                                        border_radius=12,
+                                    ),
+                                    key=f"edit_{idx}",
+                                )
+                        else:
+                            me.box(
+                                style=me.Style(
+                                    height="400px",
+                                    width="460px",
+                                ),
+                            )
+                        me.box(style=me.Style(height="12px"))
+                        me.box(style=me.Style(height="20px"))
+
+            # Edit controls
+            with me.box(style=_BOX_STYLE):
+                me.text("What do you want to do with this image?")
+                me.select(
+                    label="Edit mode",
+                    options=constants.EDIT_MODE_OPTIONS,
+                    key="edit_mode",
+                    on_selection_change=on_selection_change_edit_mode,
+                    value=page_state.edit_mode,
+                    placeholder=page_state.edit_mode_placeholder,
+                )
+                me.select(
+                    label="Mask Mode",
+                    options=constants.MASK_MODE_OPTIONS,
+                    key="mask_mode",
+                    disabled=page_state.mask_mode_disabled,
+                    on_selection_change=on_selection_change_mask_mode,
+                    value=page_state.mask_mode,
+                    placeholder=page_state.mask_mode_placeholder,
+                )
+                me.textarea(
+                    label="Describe what you want to insert in the selected zone.",
+                    key="prompt_input",
+                    on_blur=on_blur,
+                    rows=2,
+                    autosize=True,
+                    max_rows=5,
+                    style=me.Style(width="100%"),
+                    value=page_state.prompt_placeholder,
+                )
                 with me.box(
                     style=me.Style(
                         display="flex",
-                        flex_direction="row",
-                        gap=35,
-                        border_radius=20,
+                        justify_content="space-between",
                     ),
                 ):
-                    with me.box(style=_BOX_STYLE):
-                        me.text("Upload Image", style=me.Style(font_weight="bold"))
-                        me.box(style=me.Style(height="12px"))
-                        if page_state.upload_file:
-                            me.image(
-                                src=f"data:{page_state.upload_file.mime_type};base64,{base64.b64encode(page_state.upload_file.getvalue()).decode()}",
-                                style=me.Style(
-                                    width="460px",
-                                    border_radius=12,
-                                    align_self="end",
-                                    justify_content="center",
-                                ),
-                                key=str(page_state.upload_file_key),
-                            )
-                        else:
-                            me.box(
-                                style=me.Style(height="400px", width="460px"),
-                            )
-                        me.box(style=me.Style(height="12px"))
-                        me.uploader(
-                            label="Upload Image",
-                            accepted_file_types=["image/jpeg", "image/png"],
-                            on_upload=on_upload,
-                            type="flat",
-                            color="primary",
-                            style=me.Style(font_weight="bold"),
-                        )
-                    with me.box(style=_BOX_STYLE):
-                        me.text(
-                            "Output Image",
-                            style=me.Style(font_weight="bold", align_self="top"),
-                        )
-                        me.box(style=me.Style(height="12px"))
-                        if page_state.is_loading:
-                            with me.box(
-                                style=me.Style(
-                                    align_items="center",
-                                    display="flex",
-                                    justify_content="center",
-                                    position="relative",
-                                    top="25%",
-                                ),
-                            ):
-                                me.progress_spinner()
-                        else:
-                            if page_state.edit_uri:
-                                for idx, uri in enumerate(
-                                    [page_state.edit_uri],
-                                ):
-                                    me.image(
-                                        src=helpers.gcs_uri_to_https_url(uri),
-                                        style=me.Style(
-                                            align_self="end",
-                                            justify_content="center",
-                                            width="460px",
-                                            border_radius=12,
-                                        ),
-                                        key=f"edit_{idx}",
-                                    )
-                            else:
-                                me.box(
-                                    style=me.Style(
-                                        height="400px",
-                                        width="460px",
-                                    ),
-                                )
-                            me.box(style=me.Style(height="12px"))
-                            me.box(style=me.Style(height="20px"))
-
-                # Edit controls
-                with me.box(style=_BOX_STYLE):
-                    me.text("What do you want to do with this image?")
-                    me.select(
-                        label="Edit mode",
-                        options=constants.EDIT_MODE_OPTIONS,
-                        key="edit_mode",
-                        on_selection_change=on_selection_change_edit_mode,
-                        value=page_state.edit_mode,
-                        placeholder=page_state.edit_mode_placeholder,
+                    # Clear
+                    me.button(
+                        "Clear",
+                        color="primary",
+                        type="stroked",
+                        on_click=on_click_clear_images,
                     )
-                    me.select(
-                        label="Mask Mode",
-                        options=constants.MASK_MODE_OPTIONS,
-                        key="mask_mode",
-                        disabled=page_state.mask_mode_disabled,
-                        on_selection_change=on_selection_change_mask_mode,
-                        value=page_state.mask_mode,
-                        placeholder=page_state.mask_mode_placeholder,
+                    # Generate
+                    me.button(
+                        "Generate",
+                        color="primary",
+                        type="flat",
+                        on_click=on_click_image_edit,
                     )
-                    me.textarea(
-                        label="Describe what you want to insert in the selected zone.",
-                        key="prompt_input",
-                        on_blur=on_blur,
-                        rows=2,
-                        autosize=True,
-                        max_rows=5,
-                        style=me.Style(width="100%"),
-                        value=page_state.prompt_placeholder,
-                    )
-                    with me.box(
-                        style=me.Style(
-                            display="flex",
-                            justify_content="space-between",
-                        ),
-                    ):
-                        # Clear
-                        me.button(
-                            "Clear",
-                            color="primary",
-                            type="stroked",
-                            on_click=on_click_clear_images,
-                        )
-                        # Generate
-                        me.button(
-                            "Generate",
-                            color="primary",
-                            type="flat",
-                            on_click=on_click_image_edit,
-                        )
 
 
 def on_blur(event: me.InputBlurEvent) -> None:
@@ -261,7 +258,7 @@ async def on_upload(e: me.UploadEvent):
     state = me.state(EditImagesPageState)
     contents = e.file.getvalue()
     destination_blob_name = store_to_gcs(
-        "uploads", e.file.name, e.file.mime_type, contents
+        "uploads", e.file.name, e.file.mime_type, contents,
     )
     state.upload_uri = f"gs://{destination_blob_name}"
     state.upload_file_key += 1

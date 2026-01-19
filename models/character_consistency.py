@@ -15,8 +15,8 @@
 import concurrent.futures
 import io
 import logging
-import uuid
 import time
+import uuid
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -24,36 +24,32 @@ logger = logging.getLogger(__name__)
 
 from google import genai
 from google.genai import types
-from google.genai.types import GenerateContentConfig
 from PIL import Image as PIL_Image
 
 from common.metadata import MediaItem, add_media_item_to_firestore
 from common.storage import download_from_gcs, store_to_gcs
 from config.default import Default
-
 from models.gemini import (
+    generate_final_scene_prompt,
+    generate_image_from_prompt_and_images,
     get_facial_composite_profile,
     get_natural_language_description,
-    generate_final_scene_prompt,
     select_best_image,
-    generate_image_from_prompt_and_images,
 )
+
 from .character_consistency_models import (
-    BestImage,
-    FacialCompositeProfile,
-    GeneratedPrompts,
     WorkflowStepResult,
 )
 
 cfg = Default()
 
-from typing import Generator
+from collections.abc import Generator
+
 
 def generate_character_video(
-    user_email: str, reference_image_gcs_uris: list[str], scene_prompt: str
-) -> Generator[WorkflowStepResult, None, None]:
-    """
-    Orchestrates the entire character consistency workflow as a generator,
+    user_email: str, reference_image_gcs_uris: list[str], scene_prompt: str,
+) -> Generator[WorkflowStepResult]:
+    """Orchestrates the entire character consistency workflow as a generator,
     yielding the result of each step.
     """
     total_start_time = time.time()
@@ -71,7 +67,7 @@ def generate_character_video(
     reference_image_bytes_list = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
         reference_image_bytes_list = list(
-            executor.map(download_from_gcs, reference_image_gcs_uris)
+            executor.map(download_from_gcs, reference_image_gcs_uris),
         )
     step_duration = time.time() - step_start_time
     yield WorkflowStepResult(
@@ -92,9 +88,13 @@ def generate_character_video(
         data={},
     )
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        profiles = list(executor.map(get_facial_composite_profile, reference_image_bytes_list))
+        profiles = list(
+            executor.map(get_facial_composite_profile, reference_image_bytes_list),
+        )
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        all_descriptions = list(executor.map(get_natural_language_description, profiles))
+        all_descriptions = list(
+            executor.map(get_natural_language_description, profiles),
+        )
     character_description = all_descriptions[0]
     step_duration = time.time() - step_start_time
     yield WorkflowStepResult(
@@ -139,7 +139,11 @@ def generate_character_video(
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # Generate images with Imagen
         imagen_future = executor.submit(
-            _generate_imagen_candidates, reference_image_bytes_list, all_descriptions, final_prompt, negative_prompt
+            _generate_imagen_candidates,
+            reference_image_bytes_list,
+            all_descriptions,
+            final_prompt,
+            negative_prompt,
         )
         # Generate images with Gemini
         gemini_future = executor.submit(
@@ -151,11 +155,15 @@ def generate_character_video(
             file_prefix="candidate",
         )
 
-        imagen_candidate_gcs_uris, imagen_candidate_image_bytes_list = imagen_future.result()
+        imagen_candidate_gcs_uris, imagen_candidate_image_bytes_list = (
+            imagen_future.result()
+        )
         gemini_candidate_gcs_uris, _, _, _ = gemini_future.result()
 
     candidate_image_gcs_uris = imagen_candidate_gcs_uris + gemini_candidate_gcs_uris
-    candidate_image_bytes_list = imagen_candidate_image_bytes_list  # We don't have bytes from Gemini yet
+    candidate_image_bytes_list = (
+        imagen_candidate_image_bytes_list  # We don't have bytes from Gemini yet
+    )
 
     step_duration = time.time() - step_start_time
     yield WorkflowStepResult(
@@ -163,7 +171,10 @@ def generate_character_video(
         status="complete",
         message="Candidate images generated.",
         duration_seconds=step_duration,
-        data={"candidate_image_gcs_uris": candidate_image_gcs_uris, "candidate_image_bytes_list": candidate_image_bytes_list},
+        data={
+            "candidate_image_gcs_uris": candidate_image_gcs_uris,
+            "candidate_image_bytes_list": candidate_image_bytes_list,
+        },
     )
 
     # Step 5: Select the best image
@@ -176,7 +187,7 @@ def generate_character_video(
         data={},
     )
     best_image_selection = select_best_image(
-        reference_image_bytes_list, candidate_image_bytes_list, candidate_image_gcs_uris
+        reference_image_bytes_list, candidate_image_bytes_list, candidate_image_gcs_uris,
     )
     best_image_gcs_uri = best_image_selection.best_image_path
     step_duration = time.time() - step_start_time
@@ -215,7 +226,10 @@ def generate_character_video(
         status="complete",
         message="Image outpainted.",
         duration_seconds=step_duration,
-        data={"outpainted_image_gcs_uri": outpainted_image_gcs_uri, "outpainted_image_bytes": outpainted_image_bytes},
+        data={
+            "outpainted_image_gcs_uri": outpainted_image_gcs_uri,
+            "outpainted_image_bytes": outpainted_image_bytes,
+        },
     )
 
     # Step 7: Generate Video
@@ -227,7 +241,9 @@ def generate_character_video(
         duration_seconds=0,
         data={},
     )
-    video_bytes, veo_prompt = _generate_video_from_image(outpainted_image_bytes, scene_prompt)
+    video_bytes, veo_prompt = _generate_video_from_image(
+        outpainted_image_bytes, scene_prompt,
+    )
     video_gcs_uri = store_to_gcs(
         folder="character_consistency_videos",
         file_name=f"video_{uuid.uuid4()}.mp4",
@@ -264,9 +280,16 @@ def generate_character_video(
         generation_time=total_duration,
     )
     add_media_item_to_firestore(new_item)
-    logger.info("Workflow complete in %.2f seconds. MediaItem ID: %s", total_duration, new_item.id)
+    logger.info(
+        "Workflow complete in %.2f seconds. MediaItem ID: %s",
+        total_duration,
+        new_item.id,
+    )
 
-def _generate_imagen_candidates(reference_image_bytes_list, all_descriptions, final_prompt, negative_prompt):
+
+def _generate_imagen_candidates(
+    reference_image_bytes_list, all_descriptions, final_prompt, negative_prompt,
+):
     """Generates candidate images with Imagen."""
     client = genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
     edit_model = cfg.CHARACTER_CONSISTENCY_IMAGEN_MODEL
@@ -312,14 +335,14 @@ def _generate_imagen_candidates(reference_image_bytes_list, all_descriptions, fi
 
 
 def _generate_video_from_image(
-    image_bytes: bytes, provided_prompt: str | None = None
+    image_bytes: bytes, provided_prompt: str | None = None,
 ) -> tuple[bytes, str]:
     """Generates a video from an image."""
     gemini_client = genai.Client(
-        vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION
+        vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION,
     )
     veo_client = genai.Client(
-        vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION
+        vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION,
     )
 
     pil_image = PIL_Image.open(io.BytesIO(image_bytes))
@@ -332,14 +355,14 @@ def _generate_video_from_image(
     ]
     if provided_prompt:
         gemini_contents.insert(
-            1, f"the user has provided this prompt as a starter {provided_prompt}"
+            1, f"the user has provided this prompt as a starter {provided_prompt}",
         )
 
     video_prompt_response = gemini_client.models.generate_content(
         model=cfg.CHARACTER_CONSISTENCY_GEMINI_MODEL,
         contents=gemini_contents,
         config=genai.types.GenerateContentConfig(
-            thinking_config=genai.types.ThinkingConfig(thinking_budget=-1)
+            thinking_config=genai.types.ThinkingConfig(thinking_budget=-1),
         ),
     )
     video_prompt = video_prompt_response.text.strip()
@@ -372,9 +395,9 @@ def _generate_video_from_image(
 
     return operation.response.generated_videos[0].video.video_bytes, video_prompt
 
+
 def _outpaint_image(image_bytes: bytes, prompt: str) -> bytes:
-    """
-    Performs outpainting on an image to a 16:9 aspect ratio.
+    """Performs outpainting on an image to a 16:9 aspect ratio.
     """
     client = genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
     edit_model = cfg.CHARACTER_CONSISTENCY_IMAGEN_MODEL
@@ -399,7 +422,7 @@ def _outpaint_image(image_bytes: bytes, prompt: str) -> bytes:
     mask_for_api = types.Image(image_bytes=_get_bytes_from_pil(mask_pil_outpaint))
 
     raw_ref_image = types.RawReferenceImage(
-        reference_image=image_for_api, reference_id=0
+        reference_image=image_for_api, reference_id=0,
     )
     mask_ref_image = types.MaskReferenceImage(
         reference_id=1,
@@ -424,11 +447,13 @@ def _outpaint_image(image_bytes: bytes, prompt: str) -> bytes:
 
     return edited_image_response.generated_images[0].image.image_bytes
 
+
 def _get_bytes_from_pil(image: PIL_Image.Image) -> bytes:
     """Gets the image bytes from a PIL Image object."""
     byte_io_png = io.BytesIO()
     image.save(byte_io_png, "PNG")
     return byte_io_png.getvalue()
+
 
 def _pad_to_target_size(
     source_image,
@@ -443,17 +468,17 @@ def _pad_to_target_size(
     target_size_w, target_size_h = target_size
 
     insert_pt_x = (target_size_w - orig_image_size_w) // 2 + int(
-        horizontal_offset_ratio * target_size_w
+        horizontal_offset_ratio * target_size_w,
     )
     insert_pt_y = (target_size_h - orig_image_size_h) // 2 + int(
-        vertical_offset_ratio * target_size_h
+        vertical_offset_ratio * target_size_h,
     )
     insert_pt_x = min(insert_pt_x, target_size_w - orig_image_size_w)
     insert_pt_y = min(insert_pt_y, target_size_h - orig_image_size_h)
 
     if mode == "RGB":
         source_image_padded = PIL_Image.new(
-            mode, target_size, color=(fill_val, fill_val, fill_val)
+            mode, target_size, color=(fill_val, fill_val, fill_val),
         )
     elif mode == "L":
         source_image_padded = PIL_Image.new(mode, target_size, color=(fill_val))
@@ -462,6 +487,7 @@ def _pad_to_target_size(
 
     source_image_padded.paste(source_image, (insert_pt_x, insert_pt_y))
     return source_image_padded
+
 
 def _pad_image_and_mask(
     image_pil: PIL_Image.Image,

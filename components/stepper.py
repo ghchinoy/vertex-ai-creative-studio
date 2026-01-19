@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Callable
+from collections.abc import Callable
 
 import mesop as me
 
@@ -25,7 +25,9 @@ def stepper(
     on_change: Callable[[int], None],
 ):
     """A custom stepper component styled to look like Angular Material."""
-    with me.box(style=me.Style(display="flex", flex_direction="row", align_items="center")):
+    with me.box(
+        style=me.Style(display="flex", flex_direction="row", align_items="center"),
+    ):
         for i, step_label in enumerate(steps):
             step_number = i + 1
             is_active = step_number == current_step
@@ -60,9 +62,12 @@ def stepper(
                         display="flex",
                         justify_content="center",
                         align_items="center",
-                    )
+                    ),
                 ):
-                    me.text(str(step_number), style=me.Style(font_size=12, font_weight="bold"))
+                    me.text(
+                        str(step_number),
+                        style=me.Style(font_size=12, font_weight="bold"),
+                    )
                 me.text(
                     step_label,
                     style=me.Style(

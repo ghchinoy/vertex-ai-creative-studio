@@ -14,28 +14,43 @@
 
 import os
 import time
-import google.genai as genai
+
+from google import genai
 from google.genai import types as genai_types
 from PIL import Image
-from prompts import EXTEND_VIDEO_PROMPT
+
 import config
+from prompts import EXTEND_VIDEO_PROMPT
+
 
 def initialize_clients():
     """Initializes and returns clients for Gemini and VEO, which are used
     for prompt generation and video generation respectively.
     """
-    gemini_client = genai.Client(vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION)
-    veo_client = genai.Client(vertexai=True, project=config.PROJECT_ID, location=config.VEO_LOCATION)
+    gemini_client = genai.Client(
+        vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION,
+    )
+    veo_client = genai.Client(
+        vertexai=True, project=config.PROJECT_ID, location=config.VEO_LOCATION,
+    )
     return gemini_client, veo_client
 
-def generate_video(gemini_client, veo_client, image_path, context_image_path, output_dir, next_scene_prompt, character_description, best_scene_description):
-    """
-    Generates a video by first creating a detailed prompt with Gemini and
+
+def generate_video(
+    gemini_client,
+    veo_client,
+    image_path,
+    context_image_path,
+    output_dir,
+    next_scene_prompt,
+    character_description,
+    best_scene_description,
+):
+    """Generates a video by first creating a detailed prompt with Gemini and
     then generating the video with Veo using multiple references.
     """
     try:
-
-        print('image_path ---->',image_path)
+        print("image_path ---->", image_path)
         # --- Prepare Image Objects ---
         scene_image = Image.open(image_path)
         character_image = Image.open(context_image_path)
@@ -46,7 +61,7 @@ def generate_video(gemini_client, veo_client, image_path, context_image_path, ou
         # ==============================================================================
         # STEP 1: GENERATE THE CINEMATIC PROMPT USING YOUR MASTER PROMPT
         # ==============================================================================
-        
+
         # Assemble your "director's notes" with the specific details for this task.
         user_data_for_prompt = f"""
         **Input 1: The Character Description (The "Who").**
@@ -66,17 +81,17 @@ def generate_video(gemini_client, veo_client, image_path, context_image_path, ou
             # The contents are the instructions, followed by the specific data.
             contents=[EXTEND_VIDEO_PROMPT, user_data_for_prompt],
         )
-        
+
         video_prompt = prompt_generation_response.text.strip()
         print(f"✅ Cinematic Prompt Generated:\n---\n{video_prompt}\n---")
 
         # ==============================================================================
         # STEP 2: GENERATE THE VIDEO USING THE NEW PROMPT AND REFERENCE IMAGES
         # ==============================================================================
-        
+
         print("Generating video with Veo...")
 
-        print('scene_image ---->',scene_image)
+        print("scene_image ---->", scene_image)
         input_image = genai_types.Image.from_file(location=image_path)
         operation = veo_client.models.generate_videos(
             model=config.VEO_MODEL_NAME,
@@ -106,7 +121,7 @@ def generate_video(gemini_client, veo_client, image_path, context_image_path, ou
 
         with open(video_path, "wb") as f:
             f.write(video_data)
-        
+
         print(f"✅ Video successfully saved to: {video_path}")
         return video_path
 
@@ -114,13 +129,30 @@ def generate_video(gemini_client, veo_client, image_path, context_image_path, ou
         print(f"An unexpected error occurred in generate_video: {e}")
         return None
 
-def generate_video_from_last_frame(output_path: str, last_frame_path: str, character_image_path: str, next_scene_prompt: str, character_description: str, best_scene_description: str) -> str | None:
+
+def generate_video_from_last_frame(
+    output_path: str,
+    last_frame_path: str,
+    character_image_path: str,
+    next_scene_prompt: str,
+    character_description: str,
+    best_scene_description: str,
+) -> str | None:
     """Generates a single video from the selected best image. This is the final
     step in the workflow, creating the video from the outpainted image.
     """
     gemini_client, veo_client = initialize_clients()
     os.makedirs(output_path, exist_ok=True)
 
-    video_path = generate_video(gemini_client, veo_client, last_frame_path,character_image_path, output_path, next_scene_prompt, character_description, best_scene_description)
-    
+    video_path = generate_video(
+        gemini_client,
+        veo_client,
+        last_frame_path,
+        character_image_path,
+        output_path,
+        next_scene_prompt,
+        character_description,
+        best_scene_description,
+    )
+
     return video_path

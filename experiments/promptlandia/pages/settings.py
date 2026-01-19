@@ -21,14 +21,14 @@ improvement and evaluation tasks, providing transparency into its own workings.
 import html
 
 import mesop as me
-
-from components.header import header
 from models.prompts import (
+    PROMPT_HEALTH_CHECKLIST,
     PROMPT_IMPROVEMENT_INSTRUCTIONS,
     PROMPT_IMPROVEMENT_PLANNING_INSTRUCTIONS,
-    PROMPT_HEALTH_CHECKLIST,
     VIDEO_PROMPT_HEALTH_CHECKLIST,
 )
+
+from components.header import header
 
 
 @me.stateclass
@@ -41,79 +41,77 @@ def settings_page_content(app_state: me.state):
 
     Args:
         app_state: The global application state.
-    """
 
+    """
     with me.box(
         style=me.Style(
             display="flex",
             flex_direction="column",
             height="100%",
         ),
+    ), me.box(
+        style=me.Style(
+            background=me.theme_var("background"),
+            height="100%",
+            overflow_y="scroll",
+            margin=me.Margin(bottom=20),
+        ),
+    ), me.box(
+        style=me.Style(
+            background=me.theme_var("background"),
+            padding=me.Padding(top=24, left=24, right=24, bottom=24),
+            display="flex",
+            flex_direction="column",
+        ),
     ):
-        with me.box(
-            style=me.Style(
-                background=me.theme_var("background"),
-                height="100%",
-                overflow_y="scroll",
-                margin=me.Margin(bottom=20),
+        header("Settings", "settings")
+
+        me.text("Settings for Promptlandia")
+        me.box(style=me.Style(height=32))
+
+        with me.box():
+            me.text(
+                "Prompt Improvement Instructions",
+                style=me.Style(font_weight="bold"),
             )
-        ):
-            with me.box(
-                style=me.Style(
-                    background=me.theme_var("background"),
-                    padding=me.Padding(top=24, left=24, right=24, bottom=24),
-                    display="flex",
-                    flex_direction="column",
+            me.box(style=me.Style(height=8))
+            with me.box(style=PROMPT_BOX_STYLE):
+                me.markdown(text=html.escape(PROMPT_IMPROVEMENT_INSTRUCTIONS))
+
+        me.box(style=me.Style(height=32))
+
+        with me.box():
+            me.text(
+                "Prompt Planning Instructions",
+                style=me.Style(font_weight="bold"),
+            )
+            me.box(style=me.Style(height=8))
+            with me.box(style=PROMPT_BOX_STYLE):
+                me.markdown(
+                    text=html.escape(PROMPT_IMPROVEMENT_PLANNING_INSTRUCTIONS),
                 )
-            ):
-                header("Settings", "settings")
 
-                me.text("Settings for Promptlandia")
-                me.box(style=me.Style(height=32))
+        me.box(style=me.Style(height=32))
 
-                with me.box():
-                    me.text(
-                        "Prompt Improvement Instructions",
-                        style=me.Style(font_weight="bold"),
-                    )
-                    me.box(style=me.Style(height=8))
-                    with me.box(style=PROMPT_BOX_STYLE):
-                        me.markdown(text=html.escape(PROMPT_IMPROVEMENT_INSTRUCTIONS))
+        with me.box():
+            me.text(
+                "Prompt Health Checklist",
+                style=me.Style(font_weight="bold"),
+            )
+            me.box(style=me.Style(height=8))
+            with me.box(style=PROMPT_BOX_STYLE):
+                me.markdown(text=html.escape(PROMPT_HEALTH_CHECKLIST))
 
-                me.box(style=me.Style(height=32))
+        me.box(style=me.Style(height=32))
 
-                with me.box():
-                    me.text(
-                        "Prompt Planning Instructions",
-                        style=me.Style(font_weight="bold"),
-                    )
-                    me.box(style=me.Style(height=8))
-                    with me.box(style=PROMPT_BOX_STYLE):
-                        me.markdown(
-                            text=html.escape(PROMPT_IMPROVEMENT_PLANNING_INSTRUCTIONS)
-                        )
-
-                me.box(style=me.Style(height=32))
-
-                with me.box():
-                    me.text(
-                        "Prompt Health Checklist",
-                        style=me.Style(font_weight="bold"),
-                    )
-                    me.box(style=me.Style(height=8))
-                    with me.box(style=PROMPT_BOX_STYLE):
-                        me.markdown(text=html.escape(PROMPT_HEALTH_CHECKLIST))
-
-                me.box(style=me.Style(height=32))
-
-                with me.box():
-                    me.text(
-                        "Video Prompt Health Checklist",
-                        style=me.Style(font_weight="bold"),
-                    )
-                    me.box(style=me.Style(height=8))
-                    with me.box(style=PROMPT_BOX_STYLE):
-                        me.markdown(text=html.escape(VIDEO_PROMPT_HEALTH_CHECKLIST))
+        with me.box():
+            me.text(
+                "Video Prompt Health Checklist",
+                style=me.Style(font_weight="bold"),
+            )
+            me.box(style=me.Style(height=8))
+            with me.box(style=PROMPT_BOX_STYLE):
+                me.markdown(text=html.escape(VIDEO_PROMPT_HEALTH_CHECKLIST))
 
 
 PROMPT_BOX_STYLE = me.Style(

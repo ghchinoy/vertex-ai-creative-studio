@@ -15,10 +15,10 @@
 """Service for managing Prompt Templates."""
 
 import json
-from datetime import datetime, timezone
-from typing import List, Literal, Optional
+from datetime import UTC, datetime
+from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from common.metadata import db
 
@@ -26,7 +26,7 @@ from common.metadata import db
 class PromptTemplate(BaseModel):
     """Data model for a single Prompt Template."""
 
-    id: Optional[str] = None
+    id: str | None = None
     key: str
     label: str
     prompt: str
@@ -34,9 +34,9 @@ class PromptTemplate(BaseModel):
     template_type: Literal["image", "text"]
     attribution: str
     is_default: bool = False
-    references: Optional[list[str]] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    references: list[str] | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class PromptTemplateService:
@@ -49,7 +49,7 @@ class PromptTemplateService:
         """Loads a list of default templates from a JSON file."""
         templates = []
         try:
-            with open(path, "r") as f:
+            with open(path) as f:
                 data = json.load(f)
                 for item in data:
                     # Ensure the template matches the expected type for this context
@@ -61,12 +61,12 @@ class PromptTemplateService:
             print(f"Warning: Could not decode JSON from {path}")
         except Exception as e:
             print(
-                f"Warning: An unexpected error occurred loading templates from {path}: {e}"
+                f"Warning: An unexpected error occurred loading templates from {path}: {e}",
             )
         return templates
 
     def load_templates(
-        self, config_path: str, template_type: str
+        self, config_path: str, template_type: str,
     ) -> list[PromptTemplate]:
         """Loads default templates from a JSON file and combines them with user-created templates from Firestore."""
         default_templates = self._load_from_json(config_path, template_type)
@@ -77,14 +77,16 @@ class PromptTemplateService:
             try:
                 # Simplified query to avoid needing a composite index
                 query = db.collection("prompt_templates").where(
-                    "template_type", "==", template_type
+                    "template_type", "==", template_type,
                 )
                 for doc in query.stream():
                     try:
-                        user_templates.append(PromptTemplate(**doc.to_dict(), id=doc.id))
+                        user_templates.append(
+                            PromptTemplate(**doc.to_dict(), id=doc.id),
+                        )
                     except Exception as e:
                         print(
-                            f"Warning: Skipping invalid prompt template from Firestore ({doc.id}): {e}"
+                            f"Warning: Skipping invalid prompt template from Firestore ({doc.id}): {e}",
                         )
             except Exception as e:
                 # This can happen if the collection doesn't exist or indexes are missing.
@@ -98,7 +100,7 @@ class PromptTemplateService:
 
         # Sort the final list in Python
         final_list = sorted(
-            all_templates_map.values(), key=lambda t: (t.category, t.label)
+            all_templates_map.values(), key=lambda t: (t.category, t.label),
         )
 
         return final_list
@@ -111,13 +113,13 @@ class PromptTemplateService:
         # Load defaults from both files
         default_templates.extend(
             self._load_from_json(
-                "config/text_prompt_templates.json", template_type="text"
-            )
+                "config/text_prompt_templates.json", template_type="text",
+            ),
         )
         default_templates.extend(
             self._load_from_json(
-                "config/image_prompt_templates.json", template_type="image"
-            )
+                "config/image_prompt_templates.json", template_type="image",
+            ),
         )
 
         # Load all from Firestore
@@ -127,10 +129,12 @@ class PromptTemplateService:
                 query = db.collection("prompt_templates")
                 for doc in query.stream():
                     try:
-                        user_templates.append(PromptTemplate(**doc.to_dict(), id=doc.id))
+                        user_templates.append(
+                            PromptTemplate(**doc.to_dict(), id=doc.id),
+                        )
                     except Exception as e:
                         print(
-                            f"Warning: Skipping invalid prompt template from Firestore ({doc.id}): {e}"
+                            f"Warning: Skipping invalid prompt template from Firestore ({doc.id}): {e}",
                         )
             except Exception as e:
                 print(f"Warning: Could not load templates from Firestore: {e}")
@@ -142,18 +146,17 @@ class PromptTemplateService:
 
         # Sort the final list in Python
         final_list = sorted(
-            all_templates_map.values(), key=lambda t: (t.category, t.label)
+            all_templates_map.values(), key=lambda t: (t.category, t.label),
         )
         return final_list
 
     def add_template(self, template: PromptTemplate) -> PromptTemplate:
-        """
-        Adds a new template to the Firestore collection.
+        """Adds a new template to the Firestore collection.
         """
         if not db:
             raise ConnectionError("Firestore client is not initialized.")
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         template.created_at = now
         template.updated_at = now
 
@@ -172,7 +175,7 @@ class PromptTemplateService:
         if not db:
             raise ConnectionError("Firestore client is not initialized.")
 
-        updates["updated_at"] = datetime.now(timezone.utc)
+        updates["updated_at"] = datetime.now(UTC)
 
         doc_ref = db.collection(self.collection_name).document(template_id)
         doc_ref.update(updates)

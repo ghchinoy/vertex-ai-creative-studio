@@ -13,19 +13,15 @@
 # limitations under the License.
 """A test library page using the new media_tile component."""
 
-import concurrent.futures
 import datetime
 import json
-import urllib.parse
 from dataclasses import asdict, dataclass, field
-from typing import List, Optional
 
 import mesop as me
 
 from common.analytics import log_ui_click
 from common.metadata import MediaItem, get_media_for_page, get_media_item_by_id
 from common.utils import create_display_url, https_url_to_gcs_uri
-from components.dialog import dialog
 from components.header import header
 from components.interior_design.storyboard_video_tile import storyboard_video_tile
 from components.library.image_details import CarouselState
@@ -34,7 +30,7 @@ from components.media_detail_viewer.media_detail_viewer import media_detail_view
 from components.media_tile.media_tile import get_pills_for_item, media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.scroll_sentinel.scroll_sentinel import scroll_sentinel
-from components.veo.extend_dialog import extend_dialog, VeoExtendDialogState
+from components.veo.extend_dialog import VeoExtendDialogState, extend_dialog
 from config.default import Default as cfg
 from state.state import AppState
 
@@ -45,19 +41,21 @@ class PageState:
     """State for the library page."""
 
     is_loading: bool = True
-    media_items: List[MediaItem] = field(default_factory=list)
+    media_items: list[MediaItem] = field(default_factory=list)
     show_details_dialog: bool = False
-    selected_media_item_id: Optional[str] = None
+    selected_media_item_id: str | None = None
     initial_load_complete: bool = False
     current_page: int = 1
     all_items_loaded: bool = False
     user_filter: str = "mine"  # "all" or "mine"
     type_filters: list[str] = field(
-        default_factory=lambda: ["all"]
+        default_factory=lambda: ["all"],
     )  # "all", "images", "videos", "audio"
     error_filter: str = "all"  # "all", "no_errors", "only_errors"
     tour_dialog_active_tab: str = "details"
-    extend_dialog_state: VeoExtendDialogState = field(default_factory=VeoExtendDialogState)
+    extend_dialog_state: VeoExtendDialogState = field(
+        default_factory=VeoExtendDialogState,
+    )
 
 
 def on_load(e: me.LoadEvent):
@@ -105,11 +103,10 @@ def _load_media(pagestate: PageState, is_filter_change: bool = False):
 
     if not new_items:
         pagestate.all_items_loaded = True
+    elif is_filter_change:
+        pagestate.media_items = new_items
     else:
-        if is_filter_change:
-            pagestate.media_items = new_items
-        else:
-            pagestate.media_items.extend(new_items)
+        pagestate.media_items.extend(new_items)
 
     pagestate.is_loading = False
     yield
@@ -179,7 +176,7 @@ def library_content():
                 flex_direction="row",
                 gap=10,
                 margin=me.Margin(bottom=20),
-            )
+            ),
         ):
             me.button_toggle(
                 value=pagestate.type_filters,
@@ -216,11 +213,11 @@ def library_content():
                 grid_template_columns="repeat(auto-fill, minmax(300px, 1fr))",
                 gap="16px",
                 width="100%",
-            )
+            ),
         ):
             if not pagestate.media_items and not pagestate.is_loading:
                 with me.box(
-                    style=me.Style(padding=me.Padding.all(20), text_align="center")
+                    style=me.Style(padding=me.Padding.all(20), text_align="center"),
                 ):
                     me.text("No media items found for the selected filters.")
             else:
@@ -283,12 +280,16 @@ def on_extend_click(e: me.WebEvent):
         # Use common utility to handle various URL formats
         gcs_path = https_url_to_gcs_uri(proxy_url)
         print(f"DEBUG: Extracted GCS Path: {gcs_path}")
-        
+
         # Open the extend dialog
         state.extend_dialog_state.is_open = True
         state.extend_dialog_state.input_video_uri = gcs_path
-        print(f"DEBUG: Set extend_dialog_state.is_open = {state.extend_dialog_state.is_open}")
-        print(f"DEBUG: Set extend_dialog_state.input_video_uri = {state.extend_dialog_state.input_video_uri}")
+        print(
+            f"DEBUG: Set extend_dialog_state.is_open = {state.extend_dialog_state.is_open}",
+        )
+        print(
+            f"DEBUG: Set extend_dialog_state.input_video_uri = {state.extend_dialog_state.input_video_uri}",
+        )
     yield
 
 
@@ -298,16 +299,15 @@ def on_close_extend_dialog(e: me.ClickEvent):
     # Check if we should refresh the library (if generation succeeded)
     if state.extend_dialog_state.generated_video_uri:
         yield from _load_media(state, is_filter_change=True)
-    
+
     # Reset dialog state
-    state.extend_dialog_state = VeoExtendDialogState() 
+    state.extend_dialog_state = VeoExtendDialogState()
     yield
 
 
 @me.component
 def library_dialog(pagestate: PageState):
-    """
-    Renders the details dialog. Fetches the item on-demand to avoid state issues.
+    """Renders the details dialog. Fetches the item on-demand to avoid state issues.
     """
     # The dialog is always in the DOM, just hidden/shown via is_open.
     # We only fetch and render the content if an item is selected.
@@ -327,7 +327,7 @@ def library_dialog(pagestate: PageState):
 
                 db = FirebaseClient().get_client()
                 doc_ref = db.collection("interior_design_storyboards").document(
-                    item_to_display.storyboard_id
+                    item_to_display.storyboard_id,
                 )
                 doc = doc_ref.get()
                 if doc.exists:
@@ -335,7 +335,7 @@ def library_dialog(pagestate: PageState):
                     render_tour_detail_dialog(storyboard=doc.to_dict())
                 else:
                     me.text(
-                        f"Error: Could not find storyboard with ID: {item_to_display.storyboard_id}"
+                        f"Error: Could not find storyboard with ID: {item_to_display.storyboard_id}",
                     )
             else:
                 # Pass the freshly fetched item as a parameter
@@ -399,14 +399,14 @@ def render_tour_detail_dialog(storyboard: dict):
 
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=24, margin=me.Margin(top=16)
-            )
+                display="flex", flex_direction="row", gap=24, margin=me.Margin(top=16),
+            ),
         ):
             # Left Column: Video and Carousel
             with me.box(
                 style=me.Style(
-                    flex_grow=1, display="flex", flex_direction="column", gap=16
-                )
+                    flex_grow=1, display="flex", flex_direction="column", gap=16,
+                ),
             ):
                 final_video_uri = storyboard.get("final_video_uri")
                 if final_video_uri:
@@ -424,14 +424,14 @@ def render_tour_detail_dialog(storyboard: dict):
                             gap=16,
                             overflow_x="auto",
                             padding=me.Padding(top=8, bottom=16),
-                        )
+                        ),
                     ):
                         for item in storyboard.get("storyboard_items", []):
                             if item.get("generated_video_uri"):
                                 storyboard_video_tile(
                                     key=item["room_name"],
                                     video_url=create_display_url(
-                                        item["generated_video_uri"]
+                                        item["generated_video_uri"],
                                     ),
                                     room_name=item["room_name"],
                                     on_click=lambda e: None,
@@ -440,22 +440,22 @@ def render_tour_detail_dialog(storyboard: dict):
             # Right Column: Metadata with Tabs
             with me.box(
                 style=me.Style(
-                    width=300, flex_shrink=0, max_height="80vh", overflow_y="auto"
-                )
+                    width=300, flex_shrink=0, max_height="80vh", overflow_y="auto",
+                ),
             ):
                 # Tab header
                 with me.box(
                     style=me.Style(
                         display="flex",
                         border=me.Border.all(
-                            me.BorderSide(color=me.theme_var("outline-variant"))
+                            me.BorderSide(color=me.theme_var("outline-variant")),
                         ),
                         margin=me.Margin(bottom=16),
-                    )
+                    ),
                 ):
                     with me.content_button(
                         on_click=lambda e: setattr(
-                            pagestate, "tour_dialog_active_tab", "details"
+                            pagestate, "tour_dialog_active_tab", "details",
                         ),
                         style=me.Style(
                             border=me.Border.all(me.BorderSide(width=0)),
@@ -476,13 +476,13 @@ def render_tour_detail_dialog(storyboard: dict):
                                         color=me.theme_var("primary")
                                         if pagestate.tour_dialog_active_tab == "details"
                                         else "transparent",
-                                    )
+                                    ),
                                 ),
                             ),
                         )
                     with me.content_button(
                         on_click=lambda e: setattr(
-                            pagestate, "tour_dialog_active_tab", "raw"
+                            pagestate, "tour_dialog_active_tab", "raw",
                         ),
                         style=me.Style(
                             border=me.Border.all(me.BorderSide(width=0)),
@@ -503,7 +503,7 @@ def render_tour_detail_dialog(storyboard: dict):
                                         color=me.theme_var("primary")
                                         if pagestate.tour_dialog_active_tab == "raw"
                                         else "transparent",
-                                    )
+                                    ),
                                 ),
                             ),
                         )
@@ -522,7 +522,7 @@ def render_tour_detail_dialog(storyboard: dict):
                 justify_content="flex-end",
                 gap=8,
                 margin=me.Margin(top=24),
-            )
+            ),
         ):
             me.button("Close", on_click=on_close_details_dialog, type="stroked")
             me.button(
@@ -581,7 +581,7 @@ def render_default_detail_dialog(item: MediaItem):
         metadata_json=json.dumps(metadata),
         id=item.id,
         raw_metadata_json=json.dumps(
-            asdict(item), indent=2, default=json_default_serializer
+            asdict(item), indent=2, default=json_default_serializer,
         ),
         on_edit_click=handle_edit_click,
         on_veo_click=on_veo_click,
@@ -616,11 +616,7 @@ def render_default_detail_dialog(item: MediaItem):
         i2v_frames.append(item.last_reference_image)
     if i2v_frames:
         # Use a more specific title if it's interpolation
-        title = (
-            "Interpolation Frames"
-            if item.last_reference_image
-            else "Source Frame"
-        )
+        title = "Interpolation Frames" if item.last_reference_image else "Source Frame"
         _render_source_section(title, i2v_frames)
 
     # Virtual Try-On
@@ -643,7 +639,7 @@ def render_default_detail_dialog(item: MediaItem):
 
 
 @me.component
-def _render_source_section(title: str, uris: List[str]):
+def _render_source_section(title: str, uris: list[str]):
     """Helper to render a titled section of source asset tiles."""
     if not uris:
         return
@@ -656,7 +652,7 @@ def _render_source_section(title: str, uris: List[str]):
                 grid_template_columns="repeat(auto-fill, minmax(200px, 1fr))",
                 gap="16px",
                 margin=me.Margin(top=16),
-            )
+            ),
         ):
             for source_uri in uris:
                 # Construct the display URL
@@ -684,7 +680,6 @@ def _render_source_section(title: str, uris: List[str]):
                 )
 
 
-
 def on_continue_styling_click(e: me.ClickEvent):
     """Navigates the user to the interior design page to continue styling."""
     storyboard_id = e.key
@@ -697,6 +692,7 @@ def on_continue_styling_click(e: me.ClickEvent):
         )
 
     yield
+
 
 def on_view_rotation_project_click(e: me.ClickEvent):
     """Navigates the user to the object rotation page to view a project."""

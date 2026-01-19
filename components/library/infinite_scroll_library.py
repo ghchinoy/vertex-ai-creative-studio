@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mesop as me
 import typing
+
+import mesop as me
 
 
 @me.web_component(path="./infinite_scroll_library.js")
@@ -25,18 +26,17 @@ def infinite_scroll_library(
     on_image_selected: typing.Callable[[me.WebEvent], None],
     key: str | None = None,
 ):
-  """
-  A web component for displaying a library of images with infinite scroll.
-  """
-  return me.insert_web_component(
-    key=key,
-    name="infinite-scroll-library",
-    properties={
-        "items": items,
-        "hasMoreItems": has_more_items,
-    },
-    events={
-        "loadMoreEvent": on_load_more,
-        "imageSelectedEvent": on_image_selected,
-    },
-  )
+    """A web component for displaying a library of images with infinite scroll.
+    """
+    return me.insert_web_component(
+        key=key,
+        name="infinite-scroll-library",
+        properties={
+            "items": items,
+            "hasMoreItems": has_more_items,
+        },
+        events={
+            "loadMoreEvent": on_load_more,
+            "imageSelectedEvent": on_image_selected,
+        },
+    )

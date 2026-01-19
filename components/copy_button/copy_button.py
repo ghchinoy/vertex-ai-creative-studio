@@ -16,6 +16,7 @@
 
 import mesop as me
 
+
 @me.web_component(path="./copy_button.js")
 def copy_button(
     *,

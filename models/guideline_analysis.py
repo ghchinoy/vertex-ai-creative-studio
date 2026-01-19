@@ -13,12 +13,13 @@
 # limitations under the License.
 """Model logic for guideline analysis."""
 
-from models.gemini import generate_critique_questions, client, types
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+
 from config.default import Default
+from models.gemini import client, generate_critique_questions, types
 
 # Prompts from test/brandguard/samples.py
-BAS_RUBRIC_GENERATION_PROMPT = '''
+BAS_RUBRIC_GENERATION_PROMPT = """
 Given a brand guideline with multiple criteria and additional free-text guidance, your task is to create a set of precise Yes/No questions to check for compliance. This is for a Brand Alignment Scorecard (BAS).
 
 Generate a list of Yes/No questions based on both the brand criteria and the additional guidance provided.
@@ -74,10 +75,10 @@ Avoid showing any text other than the brand logo. Do not show the product in a b
 {additional_guidance}
 
 **Answer:**
-'''
+"""
 
 
-DSG_RUBRIC_GENERATION_PROMPT = '''
+DSG_RUBRIC_GENERATION_PROMPT = """
 You are an expert quality assurance tester for AI-generated media.
 Given a source prompt, your task is to create a set of precise Yes/No questions to check for two things:
 1.  **Prompt Fidelity (DSG):** Is each key component of the source prompt present in the asset? This is for a Davidsonian Scene Graph (DSG) analysis.
@@ -149,7 +150,8 @@ Given a source prompt, your task is to create a set of precise Yes/No questions 
 {source_prompt}
 
 **Answer:**
-'''
+"""
+
 
 class QA(BaseModel):
     criterion_id: str
@@ -157,10 +159,14 @@ class QA(BaseModel):
     justification: str
     answer: str
 
+
 class QAList(BaseModel):
     qas: list[QA]
 
-def _generate_questions_from_prompt(prompt_template: str, image_uri: str | None = None, **kwargs) -> list[str]:
+
+def _generate_questions_from_prompt(
+    prompt_template: str, image_uri: str | None = None, **kwargs,
+) -> list[str]:
     """Helper to generate questions from a given prompt template."""
     cfg = Default()
     model_name = cfg.MODEL_ID
@@ -170,7 +176,7 @@ def _generate_questions_from_prompt(prompt_template: str, image_uri: str | None 
         temperature=0.2,
     )
     prompt = prompt_template.format(**kwargs)
-    
+
     if image_uri:
         prompt += "\n\n**REFERENCE IMAGE:**\nA reference image has been provided. Use this image to extract additional visual criteria (e.g., specific color shades, logo placement style, lighting mood) that should be enforced."
 
@@ -179,7 +185,7 @@ def _generate_questions_from_prompt(prompt_template: str, image_uri: str | None 
         contents.append(types.Part.from_uri(file_uri=image_uri, mime_type="image/png"))
 
     response = client.models.generate_content(
-        model=model_name, contents=contents, config=config
+        model=model_name, contents=contents, config=config,
     )
     try:
         qa_list = QAList.model_validate_json(response.text)
@@ -189,28 +195,34 @@ def _generate_questions_from_prompt(prompt_template: str, image_uri: str | None 
         print(f"Raw response: {response.text}")
         return []
 
+
 def generate_dsg_gqm_questions(source_prompt: str) -> list[str]:
     """Generates DSG and GQM questions from a source prompt."""
     if not source_prompt:
         return []
     return _generate_questions_from_prompt(
-        DSG_RUBRIC_GENERATION_PROMPT, source_prompt=source_prompt
+        DSG_RUBRIC_GENERATION_PROMPT, source_prompt=source_prompt,
     )
 
-def generate_bas_questions(prompt: str, additional_guidance: str, image_uri: str | None = None) -> list[str]:
+
+def generate_bas_questions(
+    prompt: str, additional_guidance: str, image_uri: str | None = None,
+) -> list[str]:
     """Generates BAS questions from a prompt."""
     if not prompt:
         return []
     # Use the same prompt for both criteria and additional guidance for simplicity
     return _generate_questions_from_prompt(
-        BAS_RUBRIC_GENERATION_PROMPT, 
-        criteria=prompt, 
+        BAS_RUBRIC_GENERATION_PROMPT,
+        criteria=prompt,
         additional_guidance=additional_guidance,
-        image_uri=image_uri
+        image_uri=image_uri,
     )
 
 
-def generate_guideline_criteria(prompt: str, additional_guidance: str, reference_image_uri: str | None = None) -> dict[str, list[str]]:
+def generate_guideline_criteria(
+    prompt: str, additional_guidance: str, reference_image_uri: str | None = None,
+) -> dict[str, list[str]]:
     """Generates a dictionary of critique questions based on a prompt."""
     if not prompt:
         return {}
@@ -218,9 +230,9 @@ def generate_guideline_criteria(prompt: str, additional_guidance: str, reference
     general_criteria = generate_critique_questions(prompt=prompt, image_descriptions=[])
     dsg_gqm_criteria = generate_dsg_gqm_questions(source_prompt=prompt)
     bas_criteria = generate_bas_questions(
-        prompt=prompt, 
+        prompt=prompt,
         additional_guidance=additional_guidance,
-        image_uri=reference_image_uri
+        image_uri=reference_image_uri,
     )
 
     return {

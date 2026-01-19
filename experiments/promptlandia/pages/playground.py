@@ -21,7 +21,7 @@ generative AI model.
 
 import random
 import time
-from typing import Callable
+from collections.abc import Callable
 
 import mesop as me
 
@@ -63,6 +63,7 @@ def playground_page_content(app_state: me.state):
 
     Args:
         app_state: The global application state.
+
     """
     state = me.state(PageState)
 
@@ -71,7 +72,7 @@ def playground_page_content(app_state: me.state):
         me.text("Get code", type="headline-5")
         if "gemini" in state.selected_model:
             me.text(
-                "Use the following code in your application to request a model response."
+                "Use the following code in your application to request a model response.",
             )
             with me.box(style=_STYLE_CODE_BOX):
                 me.markdown(
@@ -82,11 +83,11 @@ def playground_page_content(app_state: me.state):
                         stop_sequences=make_stop_sequence_str(state.stop_sequences),
                         token_limit=state.token_limit,
                         temperature=state.temperature,
-                    )
+                    ),
                 )
         else:
             me.text(
-                "You can use the following code to start integrating your current prompt and settings into your application."
+                "You can use the following code to start integrating your current prompt and settings into your application.",
             )
             with me.box(style=_STYLE_CODE_BOX):
                 me.markdown(
@@ -96,33 +97,32 @@ def playground_page_content(app_state: me.state):
                         stop_sequences=make_stop_sequence_str(state.stop_sequences),
                         token_limit=state.token_limit,
                         temperature=state.temperature,
-                    )
+                    ),
                 )
         me.button(label="Close", type="raised", on_click=on_click_modal)
 
     # Main content
     with me.box(style=_STYLE_CONTAINER):
         # Main Header
-        with me.box(style=_STYLE_MAIN_HEADER):
-            with me.box(style=_STYLE_TITLE_BOX):
-                me.text(
-                    state.title,
-                    type="headline-6",
-                    style=me.Style(line_height="24px", margin=me.Margin(bottom=0)),
-                )
+        with me.box(style=_STYLE_MAIN_HEADER), me.box(style=_STYLE_TITLE_BOX):
+            me.text(
+                state.title,
+                type="headline-6",
+                style=me.Style(line_height="24px", margin=me.Margin(bottom=0)),
+            )
 
         # Toolbar Header
         with me.box(style=_STYLE_CONFIG_HEADER):
             icon_button(
-                icon="code", tooltip="Code", label="CODE", on_click=on_click_show_code
+                icon="code", tooltip="Code", label="CODE", on_click=on_click_show_code,
             )
 
         # Main Content
         with me.box(style=_STYLE_MAIN_COLUMN):
             # Prompt Tab
             with tab_box(  # pylint: disable=not-context-manager
-                header="Prompt", key="prompt_tab"
-            ):  
+                header="Prompt", key="prompt_tab",
+            ):
                 me.textarea(
                     label="Write your prompt here, insert media and then click Submit",
                     # Workaround: update key to clear input.
@@ -139,7 +139,7 @@ def playground_page_content(app_state: me.state):
                     me.markdown(state.response)
                 else:
                     me.markdown(
-                        "The model will generate a response after you click Submit."
+                        "The model will generate a response after you click Submit.",
                     )
 
         # LLM Config
@@ -159,10 +159,10 @@ def playground_page_content(app_state: me.state):
                 me.select(
                     options=[
                         me.SelectOption(
-                            label="us-central1 (Iowa)", value="us-central1"
+                            label="us-central1 (Iowa)", value="us-central1",
                         ),
                         me.SelectOption(
-                            label="us-east4 (North Virginia)", value="us-east4"
+                            label="us-east4 (North Virginia)", value="us-east4",
                         ),
                     ],
                     label="Region",
@@ -216,9 +216,8 @@ def playground_page_content(app_state: me.state):
                 with me.content_button(
                     style=me.Style(margin=me.Margin(left=10)),
                     on_click=on_click_add_stop_sequence,
-                ):
-                    with me.tooltip(message="Add stop Sequence"):
-                        me.icon(icon="add_circle")
+                ), me.tooltip(message="Add stop Sequence"):
+                    me.icon(icon="add_circle")
 
             # Stop sequence "chips"
             for index, sequence in enumerate(state.stop_sequences):
@@ -237,13 +236,12 @@ def playground_page_content(app_state: me.state):
 @me.component
 def icon_button(*, icon: str, label: str, tooltip: str, on_click: Callable):
     """Icon button with text and tooltip."""
-    with me.content_button(on_click=on_click):
-        with me.tooltip(message=tooltip):
-            with me.box(style=me.Style(display="flex")):
-                me.icon(icon=icon)
-                me.text(
-                    label, style=me.Style(line_height="24px", margin=me.Margin(left=5))
-                )
+    with me.content_button(on_click=on_click), me.tooltip(message=tooltip):
+        with me.box(style=me.Style(display="flex")):
+            me.icon(icon=icon)
+            me.text(
+                label, style=me.Style(line_height="24px", margin=me.Margin(left=5)),
+            )
 
 
 @me.content_component
@@ -257,24 +255,23 @@ def tab_box(*, header: str, key: str):
             key=key,
             on_click=on_click_tab_header,
             style=me.Style(padding=_DEFAULT_PADDING, border=_DEFAULT_BORDER),
-        ):
-            with me.box(style=me.Style(display="flex")):
-                me.icon(
-                    icon="keyboard_arrow_down" if tab_open else "keyboard_arrow_right"
-                )
-                me.text(
-                    header,
-                    style=me.Style(
-                        line_height="24px", margin=me.Margin(left=5), font_weight="bold"
-                    ),
-                )
+        ), me.box(style=me.Style(display="flex")):
+            me.icon(
+                icon="keyboard_arrow_down" if tab_open else "keyboard_arrow_right",
+            )
+            me.text(
+                header,
+                style=me.Style(
+                    line_height="24px", margin=me.Margin(left=5), font_weight="bold",
+                ),
+            )
         # Tab Content
         with me.box(
             style=me.Style(
                 padding=_DEFAULT_PADDING,
                 border=_DEFAULT_BORDER,
                 display="block" if tab_open else "none",
-            )
+            ),
         ):
             me.slot()
 
@@ -501,6 +498,7 @@ def _make_modal_background_style(modal_open: bool) -> me.Style:
 
     Args:
       modal_open: Whether the modal is open.
+
     """
     return me.Style(
         display="block" if modal_open else "none",
@@ -516,7 +514,7 @@ def _make_modal_background_style(modal_open: bool) -> me.Style:
 
 _DEFAULT_PADDING = me.Padding.all(15)
 _DEFAULT_BORDER = me.Border.all(
-    me.BorderSide(color=me.theme_var("outline-variant"), width=1, style="solid")
+    me.BorderSide(color=me.theme_var("outline-variant"), width=1, style="solid"),
 )
 
 _STYLE_INPUT_WIDTH = me.Style(width="100%")

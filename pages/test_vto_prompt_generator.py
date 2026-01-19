@@ -18,7 +18,6 @@ from dataclasses import field
 from pathlib import Path
 
 import mesop as me
-import mesop.labs as mel
 
 from common.metadata import add_media_item
 from common.utils import create_display_url
@@ -51,7 +50,7 @@ class PageState:
 
     def __post_init__(self):
         config_path = Path(__file__).parent.parent / "config/virtual_model_options.json"
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             self._options = json.load(f)
 
 
@@ -73,11 +72,11 @@ def page():
                     justify_content="space-between",
                     align_items="center",
                     margin=me.Margin(bottom=16),
-                )
+                ),
             ):
                 me.text("About The Virtual Model Generator", type="headline-6")
                 with me.box(
-                    on_click=on_close_info_dialog, style=me.Style(cursor="pointer")
+                    on_click=on_close_info_dialog, style=me.Style(cursor="pointer"),
                 ):
                     me.icon("close")
             me.markdown(
@@ -103,10 +102,11 @@ It is crucial to describe gender based on presentation rather than identity beca
                 gap=20,
                 margin=me.Margin(bottom=20),
                 align_items="flex-start",
-            )
+            ),
         ):
-             me.markdown(
-                text="""This tool helps create more inclusive and representative virtual models by incorporating the Monk Skin Tone Scale, a 10-point scale designed to be more representative of a wider range of skin tones. By allowing you to select a specific skin tone, we can generate models that more accurately reflect the diversity of your users. You can learn more about the Monk Skin Tone Scale and its recommended practices [here](https://skintone.google/recommended-practices).""")
+            me.markdown(
+                text="""This tool helps create more inclusive and representative virtual models by incorporating the Monk Skin Tone Scale, a 10-point scale designed to be more representative of a wider range of skin tones. By allowing you to select a specific skin tone, we can generate models that more accurately reflect the diversity of your users. You can learn more about the Monk Skin Tone Scale and its recommended practices [here](https://skintone.google/recommended-practices).""",
+            )
 
         # --- CONTROLS ---
         with me.box(
@@ -116,7 +116,7 @@ It is crucial to describe gender based on presentation rather than identity beca
                 gap=20,
                 margin=me.Margin(bottom=20),
                 align_items="flex-start",
-            )
+            ),
         ):
             with me.box(style=me.Style(flex_grow=1)):
                 me.textarea(
@@ -127,7 +127,7 @@ It is crucial to describe gender based on presentation rather than identity beca
                     style=me.Style(width="100%"),
                 )
             with me.box(
-                style=me.Style(display="flex", flex_direction="column", gap=10)
+                style=me.Style(display="flex", flex_direction="column", gap=10),
             ):
                 me.select(
                     label="Gender Presentation",
@@ -139,13 +139,13 @@ It is crucial to describe gender based on presentation rather than identity beca
                     on_selection_change=on_gender_select,
                 )
             with me.box(
-                style=me.Style(display="flex", flex_direction="column", gap=10)
+                style=me.Style(display="flex", flex_direction="column", gap=10),
             ):
                 me.select(
                     label="Monk Skin Tone",
                     options=[
                         me.SelectOption(
-                            label=f"{mst['name']} ({mst['hex']})", value=mst["name"]
+                            label=f"{mst['name']} ({mst['hex']})", value=mst["name"],
                         )
                         for mst in state._options.get("MST", [])
                     ],
@@ -154,7 +154,7 @@ It is crucial to describe gender based on presentation rather than identity beca
                 )
                 if state.selected_mst_orb_url:
                     with me.box(
-                        style=me.Style(display="flex", justify_content="center")
+                        style=me.Style(display="flex", justify_content="center"),
                     ):
                         me.image(
                             src=state.selected_mst_orb_url,
@@ -172,7 +172,7 @@ It is crucial to describe gender based on presentation rather than identity beca
                 display="grid",
                 grid_template_columns="repeat(auto-fill, minmax(250px, 1fr))",
                 gap=15,
-            )
+            ),
         ):
             for preset in state._options.get("silhouette_presets", []):
                 with me.box(
@@ -186,7 +186,7 @@ It is crucial to describe gender based on presentation rather than identity beca
                                 color=me.theme_var("primary")
                                 if state.selected_silhouette_name == preset["name"]
                                 else me.theme_var("outline"),
-                            )
+                            ),
                         ),
                         background=me.theme_var("primary-container")
                         if state.selected_silhouette_name == preset["name"]
@@ -201,11 +201,11 @@ It is crucial to describe gender based on presentation rather than identity beca
 
         with me.box(
             style=me.Style(
-                display="flex", gap=10, margin=me.Margin(top=20), align_items="center"
-            )
+                display="flex", gap=10, margin=me.Margin(top=20), align_items="center",
+            ),
         ):
             me.button(
-                "Generate Matrix", on_click=on_click_generate_matrix, type="raised"
+                "Generate Matrix", on_click=on_click_generate_matrix, type="raised",
             )
             me.button("I'm Feeling Lucky", on_click=on_click_randomize, type="flat")
             me.button(
@@ -228,7 +228,7 @@ It is crucial to describe gender based on presentation rather than identity beca
                     background=me.theme_var("surface-container-lowest"),
                     padding=me.Padding.all(15),
                     border_radius=8,
-                )
+                ),
             ):
                 me.text("Generated Description", type="subtitle-2")
                 me.text(state.generated_description)
@@ -244,8 +244,8 @@ It is crucial to describe gender based on presentation rather than identity beca
             )
             with me.box(
                 style=me.Style(
-                    display="grid", grid_template_columns="repeat(3, 1fr)", gap=10
-                )
+                    display="grid", grid_template_columns="repeat(3, 1fr)", gap=10,
+                ),
             ):
                 for image_row in state.generated_images:
                     for image_url in image_row:
@@ -297,7 +297,7 @@ def on_click_randomize(e: me.ClickEvent):
         "name"
     ]
     state.selected_silhouette_name = random.choice(
-        state._options.get("silhouette_presets", [])
+        state._options.get("silhouette_presets", []),
     )["name"]
     selected_mst_obj = random.choice(state._options.get("MST", []))
     state.selected_mst = selected_mst_obj["name"]
@@ -333,7 +333,7 @@ def on_click_generate_matrix(e: me.ClickEvent):
         None,
     )
     selected_mst_obj = next(
-        (m for m in state._options["MST"] if m["name"] == state.selected_mst), None
+        (m for m in state._options["MST"] if m["name"] == state.selected_mst), None,
     )
 
     if not selected_gender_obj or not selected_silhouette_obj or not selected_mst_obj:

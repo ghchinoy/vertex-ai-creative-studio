@@ -14,6 +14,7 @@
 
 import json
 import os
+
 import pytest
 from google import genai
 from google.genai import types
@@ -51,18 +52,18 @@ MOCK_ISSUES = [
     {
         "number": 101,
         "title": "Bug: Application crashes on startup",
-        "body": "When I launch the app, it crashes immediately with a NullPointerException."
+        "body": "When I launch the app, it crashes immediately with a NullPointerException.",
     },
     {
         "number": 102,
         "title": "Feature Request: Add dark mode",
-        "body": "It would be great to have a dark mode for better visibility at night."
+        "body": "It would be great to have a dark mode for better visibility at night.",
     },
     {
         "number": 103,
         "title": "Docs: Fix typo in README",
-        "body": "There is a typo in the installation instructions."
-    }
+        "body": "There is a typo in the installation instructions.",
+    },
 ]
 
 MOCK_LABELS = [
@@ -72,57 +73,67 @@ MOCK_LABELS = [
     "priority/p0",
     "priority/p1",
     "priority/p2",
-    "status/needs-triage"
+    "status/needs-triage",
 ]
+
 
 @pytest.fixture(scope="module")
 def gemini_client():
     """Initializes the Gemini client for testing."""
     project_id = os.environ.get("PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT")
     location = os.environ.get("LOCATION", "us-central1")
-    
+
     if not project_id:
         pytest.skip("PROJECT_ID or GOOGLE_CLOUD_PROJECT environment variable not set.")
-    
+
     return genai.Client(
         vertexai=True,
         project=project_id,
         location=location,
     )
 
+
 @pytest.mark.parametrize("iteration", range(5))
 def test_triage_prompt_no_markdown(gemini_client, iteration):
-    """
-    Tests that the triage prompt produces valid JSON without markdown formatting.
+    """Tests that the triage prompt produces valid JSON without markdown formatting.
     Running multiple iterations to ensure consistency.
     """
     model_id = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
-    
+
     # Construct the full prompt with simulated environment variables
-    full_prompt = PROMPT_TEMPLATE + f"\n\n[SIMULATED ENV VARS]\nISSUES_TO_TRIAGE={json.dumps(MOCK_ISSUES)}\nAVAILABLE_LABELS={','.join(MOCK_LABELS)}\n"
-    
+    full_prompt = (
+        PROMPT_TEMPLATE
+        + f"\n\n[SIMULATED ENV VARS]\nISSUES_TO_TRIAGE={json.dumps(MOCK_ISSUES)}\nAVAILABLE_LABELS={','.join(MOCK_LABELS)}\n"
+    )
+
     try:
         response = gemini_client.models.generate_content(
             model=model_id,
             contents=full_prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.1
-            )
+            config=types.GenerateContentConfig(temperature=0.1),
         )
         output = response.text
-        
+
         # Assertion 1: Check for markdown code blocks
-        assert "```" not in output, f"Output contained markdown code blocks (Iteration {iteration}):\n{output}"
-        
+        assert "```" not in output, (
+            f"Output contained markdown code blocks (Iteration {iteration}):\n{output}"
+        )
+
         # Assertion 2: Check for valid JSON
         try:
             parsed_json = json.loads(output)
             assert isinstance(parsed_json, list), "Output JSON should be a list"
             if parsed_json:
-                assert "issue_number" in parsed_json[0], "JSON objects should have 'issue_number'"
-                assert "labels_to_set" in parsed_json[0], "JSON objects should have 'labels_to_set'"
+                assert "issue_number" in parsed_json[0], (
+                    "JSON objects should have 'issue_number'"
+                )
+                assert "labels_to_set" in parsed_json[0], (
+                    "JSON objects should have 'labels_to_set'"
+                )
         except json.JSONDecodeError as e:
-            pytest.fail(f"Output was not valid JSON (Iteration {iteration}): {e}\nOutput:\n{output}")
-            
+            pytest.fail(
+                f"Output was not valid JSON (Iteration {iteration}): {e}\nOutput:\n{output}",
+            )
+
     except Exception as e:
         pytest.fail(f"Gemini API call failed: {e}")

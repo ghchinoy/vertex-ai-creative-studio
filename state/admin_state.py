@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from dataclasses import dataclass
+
 import mesop as me
-from dataclasses import dataclass, field
-from typing import List, Optional
+
 
 @me.stateclass
 @dataclass
 class AdminState:
-    active_tab: str = "users" # "users" or "logs"
+    active_tab: str = "users"  # "users" or "logs"
     show_add_user_dialog: bool = False
     show_edit_user_dialog: bool = False
     selected_user_email: str = ""

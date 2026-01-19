@@ -1,12 +1,11 @@
-"""
-Component for generating and displaying the 3D view.
+"""Component for generating and displaying the 3D view.
 """
 
-from typing import Callable
+from collections.abc import Callable
+
 import mesop as me
 
 from common.utils import create_display_url
-
 
 IMAGE_PLACEHOLDER_STYLE = me.Style(
     width=400,
@@ -29,8 +28,7 @@ def generated_3d_view(
     is_generating: bool,
     on_generate: Callable,
 ):
-    """
-    Component for generating and displaying the 3D view.
+    """Component for generating and displaying the 3D view.
     """
     with me.box(
         style=me.Style(
@@ -38,7 +36,7 @@ def generated_3d_view(
             flex_direction="column",
             gap=10,
             align_items="center",
-        )
+        ),
     ):
         me.text("Generated 3D View", type="headline-6")
         with me.box(
@@ -48,12 +46,13 @@ def generated_3d_view(
                 gap=8,
                 align_items="center",
                 min_height=48,
-            )
+            ),
         ):
             me.button(
                 "Generate 3D View",
                 on_click=on_generate,
-                disabled=not (storyboard and storyboard.get("original_floor_plan_uri")) or is_generating,
+                disabled=not (storyboard and storyboard.get("original_floor_plan_uri"))
+                or is_generating,
                 type="raised",
             )
         with me.box(style=IMAGE_PLACEHOLDER_STYLE):

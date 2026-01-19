@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mesop as me
-
 from dataclasses import field
 
+import mesop as me
+
 from config.default import Default
-from models.set_up import load_default_models
 
 cnfg = Default()
 
@@ -28,7 +27,7 @@ class AppState:
 
     theme_mode: str = "light"
     sidenav_open: bool = True
-    
+
     welcome_message: str = "Welcome to Arena!"
 
     name: str = "Google Cloud Next 2025 Attendee"  # Default name for the user

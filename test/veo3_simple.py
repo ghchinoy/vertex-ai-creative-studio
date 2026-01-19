@@ -57,7 +57,9 @@ while not operation_fast.done:
     print(f"Operation in progress: {operation_fast}")
 
 end_time_fast = time.time()
-print(f"Time taken for {video_model_fast}: {end_time_fast - start_time_fast:.2f} seconds")
+print(
+    f"Time taken for {video_model_fast}: {end_time_fast - start_time_fast:.2f} seconds",
+)
 
 if operation_fast.response:
     video_fast = operation_fast.result.generated_videos[0].video.uri

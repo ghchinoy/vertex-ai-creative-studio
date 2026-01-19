@@ -11,24 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Gemini model methods """
+"""Gemini model methods"""
 
-from tenacity import (
-    retry,
-    wait_exponential,
-    stop_after_attempt,
-    retry_if_exception_type,
-)
-
-from google import genai
 from google.genai.types import (
     GenerateContentConfig,
 )
-from google.genai.errors import ClientError
-import vertexai
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from models.set_up import ModelSetup
-
 
 # Initialize configuration
 client, model_id = ModelSetup.init()
@@ -37,15 +32,14 @@ MODEL_ID = model_id
 
 @retry(
     wait=wait_exponential(
-        multiplier=2, min=1, max=25
+        multiplier=2, min=1, max=25,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
     retry=retry_if_exception_type(Exception),  # Retry on all exceptions
     reraise=True,  # re-raise the last exception if all retries fail
 )
 def generate_images(prompt: str) -> list[str]:
-    """generate image content"""
-
+    """Generate image content"""
     try:
         response = client.models.generate_content(
             model=MODEL_ID,
@@ -64,15 +58,14 @@ def generate_images(prompt: str) -> list[str]:
 
 @retry(
     wait=wait_exponential(
-        multiplier=2, min=1, max=25
+        multiplier=2, min=1, max=25,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
     retry=retry_if_exception_type(Exception),  # Retry on all exceptions
     reraise=True,  # re-raise the last exception if all retries fail
 )
 def generate_content(prompt: str) -> str:
-    """generate text content"""
-
+    """Generate text content"""
     try:
         response = client.models.generate_content(
             model=MODEL_ID,

@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import logging
+
 import requests
+
 from common.analytics import track_model_call
 from config.default import Default
 from config.veo_models import get_veo_model_config
@@ -22,13 +24,11 @@ from models.requests import VideoGenerationRequest
 logger = logging.getLogger(__name__)
 config = Default()
 
+
 def start_async_veo_job(
-    request: VideoGenerationRequest,
-    user_email: str,
-    mode: str = "t2v"
+    request: VideoGenerationRequest, user_email: str, mode: str = "t2v",
 ) -> dict:
-    """
-    Initiates an asynchronous Veo generation job via the API.
+    """Initiates an asynchronous Veo generation job via the API.
     Handles analytics logging and API error checking.
 
     Args:
@@ -41,13 +41,16 @@ def start_async_veo_job(
 
     Raises:
         Exception: If the API call fails.
+
     """
     api_url = f"{config.API_BASE_URL}/api/veo/generate_async"
     headers = {"X-Goog-Authenticated-User-Email": user_email}
-    
+
     # Determine model name for analytics
     model_config = get_veo_model_config(request.model_version_id)
-    model_name_for_analytics = model_config.model_name if model_config else request.model_version_id
+    model_name_for_analytics = (
+        model_config.model_name if model_config else request.model_version_id
+    )
 
     try:
         with track_model_call(
@@ -63,7 +66,7 @@ def start_async_veo_job(
             response = requests.post(api_url, json=request_json, headers=headers)
             response.raise_for_status()
             return response.json()
-            
+
     except Exception as e:
         logger.error(f"Failed to start Veo job: {e}")
         raise e

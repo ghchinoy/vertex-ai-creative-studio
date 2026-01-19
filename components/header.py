@@ -15,8 +15,8 @@ import typing
 
 import mesop as me
 
-from components.svg_icon.svg_icon import svg_icon
 from components.pill import pill
+from components.svg_icon.svg_icon import svg_icon
 
 
 @me.component

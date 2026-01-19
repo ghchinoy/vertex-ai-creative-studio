@@ -1,6 +1,7 @@
 import { LitElement, css, html } from "https://cdn.jsdelivr.net/npm/lit/+esm";
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onIdTokenChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 class AuthHandler extends LitElement {
   static styles = css`
@@ -56,6 +57,7 @@ class AuthHandler extends LitElement {
       errorMessage: { type: String },
       cachedPhotoUrl: { type: String },
       user: { state: true },
+      _resolvedPhotoUrl: { state: true },
     };
   }
 
@@ -66,6 +68,7 @@ class AuthHandler extends LitElement {
     this.autoLogin = false;
     this.errorMessage = "";
     this.cachedPhotoUrl = "";
+    this._resolvedPhotoUrl = "";
     this.user = null;
     this._app = null;
     this._boundHandleExternalLogin = this._handleExternalLogin.bind(this);
@@ -87,6 +90,12 @@ class AuthHandler extends LitElement {
     }
     if (changedProperties.has('autoLogin') && this.autoLogin && !this.user) {
         this._handleLogin();
+    }
+    if (changedProperties.has('cachedPhotoUrl') || changedProperties.has('user')) {
+        const urlToResolve = this.cachedPhotoUrl || (this.user ? this.user.photoURL : "");
+        this._resolveUrl(urlToResolve).then(url => {
+            this._resolvedPhotoUrl = url;
+        });
     }
   }
 
@@ -198,6 +207,40 @@ class AuthHandler extends LitElement {
       }
   }
 
+  async _resolveUrl(url) {
+      if (!url) return "";
+      if (url.startsWith("gs://")) {
+          try {
+              let app;
+              try {
+                  app = getApp();
+              } catch (e) {
+                  // App not initialized yet.
+                  app = window.genMediaFirebaseApp;
+              }
+
+              if (!app) {
+                  // Retry once after 500ms
+                  await new Promise(r => setTimeout(r, 500));
+                  try { app = getApp(); } catch (e) { app = window.genMediaFirebaseApp; }
+              }
+
+              if (!app) {
+                  console.error("Firebase app not found");
+                  return "";
+              }
+
+              const storage = getStorage(app);
+              const storageRef = ref(storage, url);
+              return await getDownloadURL(storageRef);
+          } catch (e) {
+              console.error("Error resolving GCS URL:", url, e);
+              return "";
+          }
+      }
+      return url;
+  }
+
   _handleImageError(e) {
       if (e.target.dataset.errorHandled) return;
       // Fallback to a generic user icon if the Google avatar fails (e.g. 429)
@@ -220,7 +263,7 @@ class AuthHandler extends LitElement {
             ${this.errorMessage ? html`<div class="error-msg">${this.errorMessage}</div>` : ""}
             <div class="user-info">
                 <img class="user-avatar" 
-                     src="${this.cachedPhotoUrl || this.user.photoURL}" 
+                     src="${this._resolvedPhotoUrl || this.cachedPhotoUrl || (this.user ? this.user.photoURL : "")}" 
                      alt="${this.user.displayName}" 
                      title="${this.user.email}"
                      @error="${this._handleImageError}">

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()

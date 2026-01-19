@@ -59,7 +59,9 @@ def poll_operation(operation, description=""):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run specific steps of the VEO generation process.")
+    parser = argparse.ArgumentParser(
+        description="Run specific steps of the VEO generation process.",
+    )
     parser.add_argument(
         "--step",
         type=int,
@@ -115,7 +117,7 @@ def main():
             poll_operation(i2v_operation, "Image-to-Video")
         else:
             print(
-                f"Skipping Image-to-Video: Input GCS URI not found or invalid in '{I2V_GCS_URI}'"
+                f"Skipping Image-to-Video: Input GCS URI not found or invalid in '{I2V_GCS_URI}'",
             )
             print("Please update the I2V_GCS_URI variable to test this feature.")
 
@@ -128,9 +130,7 @@ def main():
             and INTERPOLATE_LAST_FRAME_GCS_URI
             and "gs://" in INTERPOLATE_LAST_FRAME_GCS_URI
         ):
-            interpolate_prompt = (
-                "a hand reaches in and places a glass of milk next to the plate of cookies"
-            )
+            interpolate_prompt = "a hand reaches in and places a glass of milk next to the plate of cookies"
             print(f"Prompt: '{interpolate_prompt}'")
             print(f"First Frame: '{INTERPOLATE_FIRST_FRAME_GCS_URI}'")
             print(f"Last Frame: '{INTERPOLATE_LAST_FRAME_GCS_URI}'")
@@ -138,12 +138,12 @@ def main():
                 model=video_model,
                 prompt=interpolate_prompt,
                 image=types.Image(
-                    gcs_uri=INTERPOLATE_FIRST_FRAME_GCS_URI, mime_type="image/png"
+                    gcs_uri=INTERPOLATE_FIRST_FRAME_GCS_URI, mime_type="image/png",
                 ),
                 config=types.GenerateVideosConfig(
                     aspect_ratio="9:16",
                     last_frame=types.Image(
-                        gcs_uri=INTERPOLATE_LAST_FRAME_GCS_URI, mime_type="image/png"
+                        gcs_uri=INTERPOLATE_LAST_FRAME_GCS_URI, mime_type="image/png",
                     ),
                     number_of_videos=1,
                     duration_seconds=7,
@@ -156,7 +156,7 @@ def main():
         else:
             print("Skipping Interpolation: Input GCS URIs not found or invalid.")
             print(
-                "Please update INTERPOLATE_FIRST_FRAME_GCS_URI and INTERPOLATE_LAST_FRAME_GCS_URI to test this feature."
+                "Please update INTERPOLATE_FIRST_FRAME_GCS_URI and INTERPOLATE_LAST_FRAME_GCS_URI to test this feature.",
             )
 
     # --- 4. Extend Video ---

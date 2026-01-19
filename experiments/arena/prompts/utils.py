@@ -11,8 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Utility functions for prompts """
+"""Utility functions for prompts"""
+
 from __future__ import annotations
+
 import json
 import random
 
@@ -23,12 +25,14 @@ from config.default import Default
 
 config = Default()
 
+
 class PromptManager:
     """Singleton class to manage and provide image generation prompts"""
+
     _instance = None
 
     _prompts_location: str = config.DEFAULT_PROMPTS
-    
+
     @property
     def prompts_location(self) -> str:
         return self._prompts_location
@@ -48,14 +52,14 @@ class PromptManager:
 
     def _load_prompts(self):
         """Loads prompts from the GCS blob into memory. Falls back to default prompt list."""
-        self.prompts = {"prompts": []} #initialize to empty list to avoid errors.
+        self.prompts = {"prompts": []}  # initialize to empty list to avoid errors.
         try:
             if self.prompts_location.startswith("gs://"):
                 prompt_file = download_gcs_blob(gs_uri=self.prompts_location)
                 prompt_file = prompt_file.decode("utf-8")
                 self.prompts = json.loads(prompt_file)
             else:
-                with open(config.DEFAULT_PROMPTS, "r") as f:
+                with open(config.DEFAULT_PROMPTS) as f:
                     self.prompts = json.load(f)
 
         except gapic_exceptions.NotFound:
@@ -67,10 +71,10 @@ class PromptManager:
 
         except json.JSONDecodeError as e:
             print("Error: Requested blob is not a valid JSON. ", e)
-        
+
         except UnicodeDecodeError as e:
             print("Error: Failed to decode requested blob. ", e)
-        
+
         except FileNotFoundError:
             print("Error: imagen_prompts.json not found.")
 
@@ -78,8 +82,8 @@ class PromptManager:
         """Returns a random image generation prompt."""
         if self.prompts and self.prompts["prompts"]:
             return random.choice(self.prompts["prompts"])
-        else:
-            return "Default prompt: No prompts available."  # Handle empty prompt list
+        return "Default prompt: No prompts available."  # Handle empty prompt list
+
 
 if __name__ == "__main__":
     prompt_manager = PromptManager()

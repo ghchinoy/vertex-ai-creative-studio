@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from dataclasses import field
+
 import mesop as me
 
 from models.shop_the_look_models import (
@@ -42,7 +43,7 @@ class PageState:
 
     reference_image_gcs_model: str = ""
     reference_image_display_url_model: str = ""
-    
+
     before_image_gcs_uri: str = ""
     before_image_display_url: str = ""
 
@@ -51,7 +52,7 @@ class PageState:
     result_image_display_url: str = ""
     result_video_gcs_uri: str = ""
     result_video_display_url: str = ""
-    
+
     result_gcs_uris: list[str] = field(default_factory=list)
     result_display_urls: list[str] = field(default_factory=list)
 
@@ -76,11 +77,9 @@ class PageState:
             "retry_progression": True,
             "progression": True,
             "alternate": True,
-        }
+        },
     )
-    veo_prompt_input: str = (
-        "Wide angle shot from a high-angle ceiling perspective captures a sleek model confidently striding down a brightly lit runway. Her full figure is elegantly presented, with every detail of her avant-garde ensemble visible, but the primary focus is drawn to her meticulously designed footwear. The shoes, perhaps gleaming architectural platforms or intricately embellished heels, are highlighted by the stark, dramatic spotlights illuminating the pristine runway below. The long, clean lines of the catwalk stretch into the distance, with the blurred, indistinct forms of the audience fading into the background, ensuring all attention remains on the model's powerful stride and the striking statement of her shoes. The elevated viewpoint offers a unique, almost abstract, composition that emphasizes the geometry of the runway and the singular importance of the footwear. The camera shot should be from 20 feet away."
-    )
+    veo_prompt_input: str = "Wide angle shot from a high-angle ceiling perspective captures a sleek model confidently striding down a brightly lit runway. Her full figure is elegantly presented, with every detail of her avant-garde ensemble visible, but the primary focus is drawn to her meticulously designed footwear. The shoes, perhaps gleaming architectural platforms or intricately embellished heels, are highlighted by the stark, dramatic spotlights illuminating the pristine runway below. The long, clean lines of the catwalk stretch into the distance, with the blurred, indistinct forms of the audience fading into the background, ensuring all attention remains on the model's powerful stride and the striking statement of her shoes. The elevated viewpoint offers a unique, almost abstract, composition that emphasizes the geometry of the runway and the singular importance of the footwear. The camera shot should be from 20 feet away."
     generate_alternate_views: bool
     selected_model: ModelRecord
     generate_video: bool = True

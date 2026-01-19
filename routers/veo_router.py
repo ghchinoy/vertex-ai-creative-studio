@@ -13,11 +13,13 @@
 # limitations under the License.
 
 from fastapi import APIRouter, BackgroundTasks, Request
+
+from common.metadata import get_media_item_by_id
 from models.requests import VideoGenerationRequest
 from services.veo_service import create_initial_job, process_veo_generation_task
-from common.metadata import get_media_item_by_id
 
 router = APIRouter(prefix="/api/veo", tags=["veo"])
+
 
 @router.post("/generate_async")
 async def generate_veo_async(
@@ -25,8 +27,7 @@ async def generate_veo_async(
     background_tasks: BackgroundTasks,
     req: Request,
 ):
-    """
-    Initiates an asynchronous Veo video generation task.
+    """Initiates an asynchronous Veo video generation task.
     Returns a job ID immediately.
     """
     # Extract user email from the request scope, set by middleware
@@ -51,10 +52,10 @@ async def generate_veo_async(
     # 3. Return the tracking number immediately
     return {"job_id": job_id, "status": "pending"}
 
+
 @router.get("/job/{job_id}")
 async def get_veo_job_status(job_id: str):
-    """
-    Checks the status of a Veo generation job.
+    """Checks the status of a Veo generation job.
     """
     item = get_media_item_by_id(job_id)
     if not item:

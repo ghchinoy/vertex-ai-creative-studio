@@ -43,6 +43,7 @@ class AppState:
                 self.session_id = request.environ.get("MESOP_SESSION_ID", "")
                 # Fallback role lookup if needed, but middleware should handle it
                 from common.auth import get_user_role
+
                 self.role = get_user_role(user_email)
         except:
             # Fallback for when not in a request context (e.g. initial load)
@@ -62,7 +63,7 @@ def theme_toggle_button():
                     width=1,
                     style="solid",
                     color=me.theme_var("outline-variant"),
-                )
+                ),
             ),
             border_radius=9999,
             padding=me.Padding(top=8, right=16, bottom=8, left=16),
@@ -73,7 +74,7 @@ def theme_toggle_button():
     ):
         me.text(me.state(AppState).theme_mode)
         me.icon(
-            "dark_mode" if me.state(AppState).theme_mode == "light" else "light_mode"
+            "dark_mode" if me.state(AppState).theme_mode == "light" else "light_mode",
         )
 
 
@@ -82,6 +83,7 @@ def toggle_theme(event: me.ClickEvent):
 
     Args:
         event: The Mesop click event.
+
     """
     app_state = me.state(AppState)
     if app_state.theme_mode == "light":
@@ -91,107 +93,108 @@ def toggle_theme(event: me.ClickEvent):
 
     yield
 
+
 def get_app_state() -> AppState:
     """-
     Returns the current application state.
     """
     return me.state(AppState)
 
+
 def get_user_email() -> str:
-    """
-    Returns the current user's email.
+    """Returns the current user's email.
     """
     return me.state(AppState).user_email
 
+
 def get_session_id() -> str:
-    """
-    Returns the current session ID.
+    """Returns the current session ID.
     """
     return me.state(AppState).session_id
 
+
 def is_sidenav_open() -> bool:
-    """
-    Returns whether the sidenav is open.
+    """Returns whether the sidenav is open.
     """
     return me.state(AppState).sidenav_open
 
+
 def set_sidenav_open(is_open: bool):
-    """
-    Sets the sidenav open state.
+    """Sets the sidenav open state.
     """
     me.state(AppState).sidenav_open = is_open
 
+
 def toggle_sidenav():
-    """
-    Toggles the sidenav open state.
+    """Toggles the sidenav open state.
     """
     me.state(AppState).sidenav_open = not me.state(AppState).sidenav_open
     yield
 
+
 def get_theme_mode() -> str:
-    """
-    Returns the current theme mode.
+    """Returns the current theme mode.
     """
     return me.state(AppState).theme_mode
 
+
 def set_theme_mode(mode: str):
-    """
-    Sets the theme mode.
+    """Sets the theme mode.
     """
     me.state(AppState).theme_mode = mode
     yield
 
+
 def get_user_and_session_info() -> tuple[str, str]:
-    """
-    Returns the current user's email and session ID.
+    """Returns the current user's email and session ID.
     """
     app_state = me.state(AppState)
     return app_state.user_email, app_state.session_id
 
+
 def update_user_and_session_info(user_email: str, session_id: str):
-    """
-    Updates the user's email and session ID in the application state.
+    """Updates the user's email and session ID in the application state.
     """
     app_state = me.state(AppState)
     app_state.user_email = user_email
     app_state.session_id = session_id
     yield
 
+
 def is_logged_in() -> bool:
-    """
-    Returns whether the user is logged in.
+    """Returns whether the user is logged in.
     """
     return me.state(AppState).user_email != "anonymous@google.com"
 
+
 def get_current_user_id() -> str:
-    """
-    Returns the current user's ID.
+    """Returns the current user's ID.
     """
     return me.state(AppState).user_email
 
+
 def get_current_session_id() -> str:
-    """
-    Returns the current session ID.
+    """Returns the current session ID.
     """
     return me.state(AppState).session_id
 
+
 def set_current_user_id(user_id: str):
-    """
-    Sets the current user's ID.
+    """Sets the current user's ID.
     """
     me.state(AppState).user_email = user_id
     yield
 
+
 def set_current_session_id(session_id: str):
-    """
-    Sets the current session ID.
+    """Sets the current session ID.
     """
     me.state(AppState).session_id = session_id
     yield
 
+
 def reset_app_state():
-    """
-    Resets the application state.
+    """Resets the application state.
     """
     app_state = me.state(AppState)
     app_state.sidenav_open = False
@@ -200,22 +203,22 @@ def reset_app_state():
     app_state.session_id = ""
     yield
 
+
 def initialize_app_state():
-    """
-    Initializes the application state.
+    """Initializes the application state.
     """
     reset_app_state()
     yield
 
+
 def get_state():
-    """
-    Returns the current application state.
+    """Returns the current application state.
     """
     return me.state(AppState)
 
+
 def update_state(new_state: AppState):
-    """
-    Updates the application state.
+    """Updates the application state.
     """
     app_state = me.state(AppState)
     app_state.sidenav_open = new_state.sidenav_open

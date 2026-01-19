@@ -11,26 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Journey Voices Mesop Page """
+"""Journey Voices Mesop Page"""
 
-from dataclasses import field
-import logging
 import json
-#from typing import List, TypedDict, Any, cast
+import logging
+
+# from typing import List, TypedDict, Any, cast
 import urllib
+from dataclasses import field
 
 import google.auth
 import google.auth.transport.requests as googlerequests
 import google.oauth2.id_token
-
 import mesop as me
 
-from config.default import Default, BabelMetadata
-#from set_up.set_up import VoicesSetup
-
-#from components.page_scaffold import page_scaffold, page_frame
-from components.styles import CONTENT_STYLE, BACKGROUND_COLOR
-
+# from set_up.set_up import VoicesSetup
+# from components.page_scaffold import page_scaffold, page_frame
+from components.styles import BACKGROUND_COLOR, CONTENT_STYLE
+from config.default import BabelMetadata, Default
 
 logging.basicConfig(level=logging.DEBUG)
 config = Default()
@@ -44,15 +42,15 @@ class PageState:
     is_loading: bool = False
     statement: str = ""
     audio_output_uri: str = ""
-    audio_output_infos: list[str] = field(default_factory=lambda: [])  # pylint: disable=invalid-field-call
-    audio_output_metadata: list[BabelMetadata] = field(default_factory=lambda: [])  # pylint: disable=invalid-field-call
+    audio_output_infos: list[str] = field(default_factory=list)  # pylint: disable=invalid-field-call
+    audio_output_metadata: list[BabelMetadata] = field(default_factory=list)  # pylint: disable=invalid-field-call
     audio_status: str = ""
 
 
 def chirphd_voices_page(app_state: me.state):
     """Chirp HD Voices page"""
     state = me.state(PageState)
-    #app_state = me.state(app_state)
+    # app_state = me.state(app_state)
 
     # with page_scaffold():  # pylint: disable=not-context-manager
     #   with page_frame():  # pylint: disable=not-context-manager
@@ -71,7 +69,7 @@ def chirphd_voices_page(app_state: me.state):
             me.progress_spinner()
         elif state.audio_output_metadata:
             with me.box(
-                style=me.Style(display="grid", grid_template_columns="1fr 1fr")
+                style=me.Style(display="grid", grid_template_columns="1fr 1fr"),
             ):
                 # for uri in state.audio_output_infos:
                 #  me.audio(src=uri)
@@ -80,29 +78,28 @@ def chirphd_voices_page(app_state: me.state):
                     key=lambda voice: voice["language_code"],
                 )
                 for item in sorted_metadata:
-                    #print(item)
+                    # print(item)
                     audio_url = f"{BUCKET_PATH}/{item['audio_path']}"
-                    #print(audio_url)
+                    # print(audio_url)
                     with me.box(
                         style=me.Style(
                             display="flex",
                             flex_direction="column",
                             gap=5,
                             padding=me.Padding(top=10, left=10, right=10, bottom=12),
-                        )
+                        ),
                     ):
                         me.text(
-                            f"{item["language_code"]} ({item["gender"].lower()}, {item["voice_name"]})",
+                            f"{item['language_code']} ({item['gender'].lower()}, {item['voice_name']})",
                             style=me.Style(font_weight="bold"),
                         )
                         me.audio(src=audio_url)
                         me.text(item["text"])
 
 
-
 @me.component
 def subtle_chat_input_journey():
-    """input component"""
+    """Input component"""
     with me.box(
         style=me.Style(
             border_radius=16,
@@ -110,12 +107,12 @@ def subtle_chat_input_journey():
             background=BACKGROUND_COLOR,
             display="flex",
             width="100%",
-        )
+        ),
     ):
         with me.box(
             style=me.Style(
                 flex_grow=1,
-            )
+            ),
         ):
             me.native_textarea(
                 autosize=True,
@@ -146,15 +143,13 @@ def subtle_chat_input_journey():
 
 
 def on_blur_statement(e: me.InputBlurEvent):
-    """updates the statement to synthesize"""
-
+    """Updates the statement to synthesize"""
     state = me.state(PageState)
     state.statement = e.value
 
 
 def on_click_clear_babel(e: me.ClickEvent):  # pylint: disable=unused-argument
-    """clear babel input event"""
-
+    """Clear babel input event"""
     state = me.state(PageState)
     state.is_loading = False
     state.audio_output_infos.clear()
@@ -162,10 +157,11 @@ def on_click_clear_babel(e: me.ClickEvent):  # pylint: disable=unused-argument
 
 
 def on_click_babel(e: me.ClickEvent):  # pylint: disable=unused-argument
-    """invokes the babel endpoint
+    """Invokes the babel endpoint
 
     Args:
         e (me.ClickEvent): event click
+
     """
     state = me.state(PageState)
     state.is_loading = True

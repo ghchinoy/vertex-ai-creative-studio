@@ -41,125 +41,122 @@ def model_selection():
             gap=10,
             align_items="center",
             width="100%",
-        )
+        ),
     ):
         me.text(
             text="Choose a Model",
             type="headline-2",
         )
-    with me.box():
+    with me.box(), me.box(
+        style=me.Style(
+            height="100%",
+            width="100%",
+            display="flex",
+            flex_direction="row",
+            flex_wrap="wrap",
+        ),
+    ):
         with me.box(
             style=me.Style(
-                height="100%",
-                width="100%",
                 display="flex",
                 flex_direction="row",
-                flex_wrap="wrap",
-            )
+                gap=5,
+                align_items="left",
+            ),
+        ), me.box(
+            style=me.Style(
+                position="relative",
+                height="100%",
+                margin=me.Margin(left=7, top=7),
+                cursor="pointer",
+            ),
+            key="model",
         ):
+            me.uploader(
+                label="",
+                accepted_file_types=["image/jpeg", "image/png"],
+                on_upload=on_upload_model_image,
+                type="flat",
+                color="primary",
+                style=me.Style(
+                    position="relative",
+                    cursor="pointer",
+                    width="200px",
+                    height="200px",
+                    object_fit="cover",
+                    border_radius="5px",
+                    box_shadow="0 2px 4px rgba(0,0,0,0.1)",
+                    background="#FFFFFF",
+                ),
+                key="model",
+                multiple=True,
+            )
+            me.icon(
+                "add",
+                style=me.Style(
+                    color="black",
+                    position="absolute",
+                    top="35px",
+                    left="35px",
+                    width="35px",
+                    height="35px",
+                    font_size="35px",
+                    pointer_events="none",
+                ),
+            )
+            me.icon(
+                "person_outline",
+                style=me.Style(
+                    color="black",
+                    position="absolute",
+                    top="50px",
+                    left="55px",
+                    width="100px",
+                    height="100px",
+                    font_size="100px",
+                    pointer_events="none",
+                ),
+            )
+            me.text(
+                text="Add Model",
+                style=me.Style(
+                    position="absolute",
+                    text_align="center",
+                    bottom="45px",
+                    left="55px",
+                    font_size="20px",
+                    pointer_events="none",
+                ),
+            )
+
+        for model in state.models:
             with me.box(
                 style=me.Style(
                     display="flex",
                     flex_direction="row",
                     gap=5,
                     align_items="left",
-                )
+                ),
+            ), me.box(
+                key=f"{model.model_image}",
+                style=me.Style(
+                    position="relative",
+                    height="100%",
+                    margin=me.Margin(left=7, top=7),
+                    cursor="pointer",
+                ),
+                on_click=on_model_click,
             ):
-                with me.box(
+                me.image(
+                    src=create_display_url(model.model_image),
                     style=me.Style(
-                        position="relative",
-                        height="100%",
-                        margin=me.Margin(left=7, top=7),
-                        cursor="pointer",
+                        object_fit="cover",
+                        border_radius="5px",
+                        box_shadow="0 2px 4px rgba(0,0,0,0.1)",
+                        max_height="200px",
+                        height="auto",
                     ),
-                    key="model",
-                ):
-                    me.uploader(
-                        label="",
-                        accepted_file_types=["image/jpeg", "image/png"],
-                        on_upload=on_upload_model_image,
-                        type="flat",
-                        color="primary",
-                        style=me.Style(
-                            position="relative",
-                            cursor="pointer",
-                            width="200px",
-                            height="200px",
-                            object_fit="cover",
-                            border_radius="5px",
-                            box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                            background="#FFFFFF",
-                        ),
-                        key="model",
-                        multiple=True,
-                    )
-                    me.icon(
-                        "add",
-                        style=me.Style(
-                            color="black",
-                            position="absolute",
-                            top="35px",
-                            left="35px",
-                            width="35px",
-                            height="35px",
-                            font_size="35px",
-                            pointer_events="none",
-                        ),
-                    )
-                    me.icon(
-                        "person_outline",
-                        style=me.Style(
-                            color="black",
-                            position="absolute",
-                            top="50px",
-                            left="55px",
-                            width="100px",
-                            height="100px",
-                            font_size="100px",
-                            pointer_events="none",
-                        ),
-                    )
-                    me.text(
-                        text="Add Model",
-                        style=me.Style(
-                            position="absolute",
-                            text_align="center",
-                            bottom="45px",
-                            left="55px",
-                            font_size="20px",
-                            pointer_events="none",
-                        ),
-                    )
-
-            for model in state.models:
-                with me.box(
-                    style=me.Style(
-                        display="flex",
-                        flex_direction="row",
-                        gap=5,
-                        align_items="left",
-                    )
-                ):
-                    with me.box(
-                        key=f"{model.model_image}",
-                        style=me.Style(
-                            position="relative",
-                            height="100%",
-                            margin=me.Margin(left=7, top=7),
-                            cursor="pointer",
-                        ),
-                        on_click=on_model_click,
-                    ):
-                        me.image(
-                            src=create_display_url(model.model_image),
-                            style=me.Style(
-                                object_fit="cover",
-                                border_radius="5px",
-                                box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                                max_height="200px",
-                                height="auto",
-                            ),
-                        )
+                )
 
 
 def on_model_click(e: me.ClickEvent):
@@ -169,6 +166,7 @@ def on_model_click(e: me.ClickEvent):
 
     Args:
         e: The Mesop click event, where e.key is the GCS URI of the image.
+
     """
     state = me.state(PageState)
     state.reference_image_gcs_model = e.key
@@ -192,6 +190,7 @@ def on_upload_model_image(e: me.UploadEvent):
 
     Args:
         e: The Mesop upload event containing the file(s).
+
     """
     state = me.state(PageState)
 

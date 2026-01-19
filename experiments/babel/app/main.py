@@ -23,13 +23,13 @@ import mesop as me
 from fastapi import FastAPI
 from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.staticfiles import StaticFiles
-from pages.about import about_page, settings_page
 from pages.chirphd_voices import chirphd_voices_page
 from pages.explore import explore_page
-from pages.welcome import welcome_page
 from set_up.set_up import VoicesSetup
-from state.state import AppState
 
+from pages.about import about_page, settings_page
+from pages.welcome import welcome_page
+from state.state import AppState
 
 # set up Mesop to be hosted via FastAPI
 app = FastAPI()
@@ -41,7 +41,7 @@ app.mount("/static", StaticFiles(directory="local_assets"), name="static")
 app.mount(
     "/",
     WSGIMiddleware(
-        me.create_wsgi_app(debug_mode=os.environ.get("DEBUG_MODE", "") == "true")
+        me.create_wsgi_app(debug_mode=os.environ.get("DEBUG_MODE", "") == "true"),
     ),
 )
 
@@ -64,7 +64,7 @@ content_pages = [
 
 
 def show_page(page_name: str):
-    """show page switcher"""
+    """Show page switcher"""
     match page_name:
         case "welcome":
             welcome_page_reference()
@@ -85,7 +85,7 @@ def on_click_page_choice(e: me.ClickEvent):
     state = me.state(AppState)
     print(f"Clicked on: {e.key}")
     page = next(
-        (item for item in content_pages if item["name"] == e.key), state.current_page
+        (item for item in content_pages if item["name"] == e.key), state.current_page,
     )
     print(f"Found: {page}")
     print(f"current page: {page['name']}")
@@ -193,7 +193,7 @@ def babel():
                 on_click=toggle_theme,
             ):
                 me.icon(
-                    "light_mode" if me.theme_brightness() == "dark" else "dark_mode"
+                    "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
                 )
                 # content area
 
@@ -207,128 +207,122 @@ def babel():
                 background=me.theme_var("surface-container-lowest"),
                 border_radius="0 30px 0 0",
             ),
-        ):
-            with me.box(style=me.Style(display="flex", flex_direction="column")):
-                # Home: Journey Voices
-                with me.content_button(
-                    style=me.Style(align_content="start"),
-                    on_click=on_click_page_choice,
-                    key="home",
-                ):
-                    with me.box(
-                        style=me.Style(
-                            display="flex",
-                            flex_direction="row",
-                            gap=5,
-                            align_items="center",
-                        )
-                    ):
-                        me.icon(
-                            "equalizer",
-                        )
-                        if not state.sidenav_open:
-                            me.text(
-                                "Chirp 3: HD",
-                            )
-
-                with me.content_button(
-                    style=me.Style(align_content="start"),
-                    on_click=on_click_page_choice,
-                    key="welcome",
-                ):
-                    with me.box(
-                        style=me.Style(
-                            display="flex",
-                            flex_direction="row",
-                            gap=5,
-                            align_items="center",
-                        )
-                    ):
-                        me.icon(
-                            "spa",
-                        )
-                        if not state.sidenav_open:
-                            me.text(
-                                "Welcome",
-                            )
-
-                with me.content_button(
-                    style=me.Style(align_content="start"),
-                    on_click=on_click_page_choice,
-                    key="world_tour",
-                ):
-                    with me.box(
-                        style=me.Style(
-                            display="flex",
-                            flex_direction="row",
-                            gap=5,
-                            align_items="center",
-                        )
-                    ):
-                        me.icon(
-                            "explore",
-                        )
-                        if not state.sidenav_open:
-                            me.text(
-                                "Explore",
-                            )
-
-                # Bottom buttons
-                with me.box(
-                    style=me.Style(
-                        position="absolute",
-                        bottom=8,
+        ), me.box(style=me.Style(display="flex", flex_direction="column")):
+            # Home: Journey Voices
+            with me.content_button(
+                style=me.Style(align_content="start"),
+                on_click=on_click_page_choice,
+                key="home",
+            ), me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    gap=5,
+                    align_items="center",
+                ),
+            ):
+                me.icon(
+                    "equalizer",
+                )
+                if not state.sidenav_open:
+                    me.text(
+                        "Chirp 3: HD",
                     )
-                ):
-                    # About
-                    with me.content_button(
-                        style=me.Style(align_content="start"),
-                        on_click=on_click_page_choice,
-                        key="about",
-                    ):
-                        with me.box(
-                            style=me.Style(
-                                display="flex",
-                                flex_direction="row",
-                                gap=5,
-                                align_items="center",
-                            )
-                        ):
-                            me.icon(
-                                "info",
-                            )
-                            if not state.sidenav_open:
-                                me.text(
-                                    "About",
-                                )
 
-                    # Settings
-                    with me.content_button(
-                        style=me.Style(align_content="start"),
-                        on_click=on_click_page_choice,
-                        key="settings",
-                    ):
-                        with me.box(
-                            style=me.Style(
-                                display="flex",
-                                flex_direction="row",
-                                gap=5,
-                                align_items="center",
-                            )
-                        ):
-                            me.icon(
-                                "settings",
-                            )
-                            if not state.sidenav_open:
-                                me.text(
-                                    "Settings",
-                                )
+            with me.content_button(
+                style=me.Style(align_content="start"),
+                on_click=on_click_page_choice,
+                key="welcome",
+            ), me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    gap=5,
+                    align_items="center",
+                ),
+            ):
+                me.icon(
+                    "spa",
+                )
+                if not state.sidenav_open:
+                    me.text(
+                        "Welcome",
+                    )
+
+            with me.content_button(
+                style=me.Style(align_content="start"),
+                on_click=on_click_page_choice,
+                key="world_tour",
+            ), me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    gap=5,
+                    align_items="center",
+                ),
+            ):
+                me.icon(
+                    "explore",
+                )
+                if not state.sidenav_open:
+                    me.text(
+                        "Explore",
+                    )
+
+            # Bottom buttons
+            with me.box(
+                style=me.Style(
+                    position="absolute",
+                    bottom=8,
+                ),
+            ):
+                # About
+                with me.content_button(
+                    style=me.Style(align_content="start"),
+                    on_click=on_click_page_choice,
+                    key="about",
+                ), me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        gap=5,
+                        align_items="center",
+                    ),
+                ):
+                    me.icon(
+                        "info",
+                    )
+                    if not state.sidenav_open:
+                        me.text(
+                            "About",
+                        )
+
+                # Settings
+                with me.content_button(
+                    style=me.Style(align_content="start"),
+                    on_click=on_click_page_choice,
+                    key="settings",
+                ), me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        gap=5,
+                        align_items="center",
+                    ),
+                ):
+                    me.icon(
+                        "settings",
+                    )
+                    if not state.sidenav_open:
+                        me.text(
+                            "Settings",
+                        )
 
         # primary content
         with me.box(
             style=me.Style(
                 margin=me.Margin(
-                    left=SIDENAV_MAX_WIDTH if state.sidenav_open else SIDENAV_MIN_WIDTH
+                    left=SIDENAV_MAX_WIDTH if state.sidenav_open else SIDENAV_MIN_WIDTH,
                 ),
                 padding=me.Padding(top=10, left=10, right=10, bottom=0),
             ),

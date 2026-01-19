@@ -14,8 +14,9 @@
 
 """A lightbox-style dialog component."""
 
-import mesop as me
 import typing
+
+import mesop as me
 
 
 @me.content_component
@@ -26,7 +27,6 @@ def lightbox_dialog(
     key: str | None = None,
 ):
     """Render a lightbox-style dialog that covers most of the screen."""
-
     with me.box(
         key=key,
         style=me.Style(
@@ -41,36 +41,35 @@ def lightbox_dialog(
             width="100%",
             z_index=1000,
         ),
+    ), me.box(
+        style=me.Style(
+            background=me.theme_var("surface"),
+            border_radius=12,
+            box_shadow=me.theme_var("shadow_elevation_2"),
+            display="flex",
+            flex_direction="column",
+            width="90vw",
+            height="90vh",
+            position="relative",
+        ),
     ):
+        with me.content_button(
+            on_click=on_close,
+            style=me.Style(
+                position="absolute",
+                top=12,
+                right=12,
+                z_index=1,  # Ensure it's above the content
+            ),
+        ):
+            me.icon("close")
+
+        # Slot for the main content, with padding and scrolling
         with me.box(
             style=me.Style(
-                background=me.theme_var("surface"),
-                border_radius=12,
-                box_shadow=me.theme_var("shadow_elevation_2"),
-                display="flex",
-                flex_direction="column",
-                width="90vw",
-                height="90vh",
-                position="relative",
-            )
+                padding=me.Padding.all(24),
+                height="100%",
+                overflow_y="auto",
+            ),
         ):
-            with me.content_button(
-                on_click=on_close,
-                style=me.Style(
-                    position="absolute",
-                    top=12,
-                    right=12,
-                    z_index=1, # Ensure it's above the content
-                ),
-            ):
-                me.icon("close")
-
-            # Slot for the main content, with padding and scrolling
-            with me.box(
-                style=me.Style(
-                    padding=me.Padding.all(24),
-                    height="100%",
-                    overflow_y="auto",
-                )
-            ):
-                me.slot()
+            me.slot()

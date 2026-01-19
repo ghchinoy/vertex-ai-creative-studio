@@ -12,17 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections.abc import Callable
+
 import mesop as me
-from typing import Callable
+
 from components.media_tile.media_tile import media_tile
 
+
 @me.component
-def image_thumbnail(image_uri: str, index: int, on_remove: Callable, icon_size: int = 18):
+def image_thumbnail(
+    image_uri: str, index: int, on_remove: Callable, icon_size: int = 18,
+):
     # Calculate the container dimension based on the icon size.
     # This creates a consistent 4px "padding" on all sides.
     box_dimension = icon_size + 8
-    
-    with me.box(style=me.Style(position="relative", width=100, height=100, display="flex", overflow="hidden", border_radius=8)):
+
+    with me.box(
+        style=me.Style(
+            position="relative",
+            width=100,
+            height=100,
+            display="flex",
+            overflow="hidden",
+            border_radius=8,
+        ),
+    ):
         if image_uri and image_uri.startswith("gs://"):
             media_tile(
                 media_type="image",
@@ -38,11 +52,15 @@ def image_thumbnail(image_uri: str, index: int, on_remove: Callable, icon_size: 
                     border_radius=8,
                     object_fit="cover",
                     border=me.Border.all(
-                        me.BorderSide(width=1, style="solid", color=me.theme_var("outline-variant"))
+                        me.BorderSide(
+                            width=1,
+                            style="solid",
+                            color=me.theme_var("outline-variant"),
+                        ),
                     ),
                 ),
             )
-        
+
         with me.box(
             on_click=on_remove,
             key=str(index),
@@ -61,4 +79,10 @@ def image_thumbnail(image_uri: str, index: int, on_remove: Callable, icon_size: 
                 height=box_dimension,
             ),
         ):
-            me.icon("close", style=me.Style(font_size=icon_size, transform="translate(2px, 3px)",))
+            me.icon(
+                "close",
+                style=me.Style(
+                    font_size=icon_size,
+                    transform="translate(2px, 3px)",
+                ),
+            )

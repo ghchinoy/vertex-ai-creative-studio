@@ -12,31 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import concurrent.futures
-import uuid
+import os
+
 from google import genai
 from google.genai import types
 from google.genai.types import GenerateContentConfig
-import config
-from typing import List
-from utils.select_best import select_best_image
 from utils.outpainting import outpaint_image
 from utils.schemas import FacialCompositeProfile, GeneratedPrompts
+from utils.select_best import select_best_image
+
+import config
 
 # Initialize clients
-client = genai.Client(vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION)
+client = genai.Client(
+    vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION,
+)
 
 edit_model = config.IMAGEN_MODEL_NAME
 
+
 def _get_description_for_image(image_path: str) -> str:
-    """
-    Analyzes a single image to extract a detailed facial profile and then
+    """Analyzes a single image to extract a detailed facial profile and then
     generates a natural language description from that profile. This is the
     first step in creating a consistent character representation.
     """
     model_name = "gemini-2.5-pro"
-    
+
     # Step 1: Extract the structured FacialCompositeProfile
     profile_config = GenerateContentConfig(
         response_mime_type="application/json",
@@ -45,12 +47,13 @@ def _get_description_for_image(image_path: str) -> str:
     )
     profile_prompt_parts = [
         "You are a forensic analyst. Analyze the following image and extract a detailed, structured facial profile.",
-        types.Part.from_bytes(data=types.Image.from_file(location=image_path).image_bytes, mime_type="image/png")
+        types.Part.from_bytes(
+            data=types.Image.from_file(location=image_path).image_bytes,
+            mime_type="image/png",
+        ),
     ]
     profile_response = client.models.generate_content(
-        model=model_name,
-        contents=profile_prompt_parts,
-        config=profile_config
+        model=model_name, contents=profile_prompt_parts, config=profile_config,
     )
     profile = FacialCompositeProfile.model_validate_json(profile_response.text)
 
@@ -63,15 +66,15 @@ def _get_description_for_image(image_path: str) -> str:
     {profile.model_dump_json(indent=2)}
     """
     description_response = client.models.generate_content(
-        model=model_name,
-        contents=[description_prompt],
-        config=description_config
+        model=model_name, contents=[description_prompt], config=description_config,
     )
     return description_response.text.strip()
 
-def _generate_final_scene_prompt(base_description: str, user_prompt: str) -> GeneratedPrompts:
-    """
-    Generates a detailed, photorealistic prompt to place a described person
+
+def _generate_final_scene_prompt(
+    base_description: str, user_prompt: str,
+) -> GeneratedPrompts:
+    """Generates a detailed, photorealistic prompt to place a described person
     in a novel scene. It combines the character's description with the user's
     desired scenario to create a prompt suitable for Imagen.
     """
@@ -100,15 +103,15 @@ def _generate_final_scene_prompt(base_description: str, user_prompt: str) -> Gen
     """
 
     response = client.models.generate_content(
-        model=model_name,
-        contents=[meta_prompt],
-        config=config
+        model=model_name, contents=[meta_prompt], config=config,
     )
     return GeneratedPrompts.model_validate_json(response.text)
 
-def generate_images_and_select_best(image_paths: List[str], prompt: str) -> tuple[str, str, List[str]]:
-    """
-    The core function of the image generation step. It takes the reference
+
+def generate_images_and_select_best(
+    image_paths: list[str], prompt: str,
+) -> tuple[str, str, list[str]]:
+    """The core function of the image generation step. It takes the reference
     images and a scenario, generates a new set of images, selects the best one
     for character consistency, and then out-paints it to create the final
     scene for video generation.
@@ -131,8 +134,8 @@ def generate_images_and_select_best(image_paths: List[str], prompt: str) -> tupl
                 config=types.SubjectReferenceConfig(
                     subject_type="SUBJECT_TYPE_PERSON",
                     subject_description=all_descriptions[i],
-                )
-            )
+                ),
+            ),
         )
 
     # Generate the final, scene-focused prompt
@@ -153,8 +156,7 @@ def generate_images_and_select_best(image_paths: List[str], prompt: str) -> tupl
             person_generation="allow_all",
             safety_filter_level="block_few",
             negative_prompt=negative_prompt,
-        )
-    
+        ),
     )
 
     generated_image_paths = []
@@ -165,8 +167,10 @@ def generate_images_and_select_best(image_paths: List[str], prompt: str) -> tupl
 
     # Select the best image
     best_image_selection = select_best_image(image_paths, generated_image_paths)
-    
+
     # Outpaint the best image to create the final scene
-    outpainted_image_path = outpaint_image(best_image_selection.best_image_path, final_prompt)
+    outpainted_image_path = outpaint_image(
+        best_image_selection.best_image_path, final_prompt,
+    )
 
     return output_dir, outpainted_image_path, generated_image_paths

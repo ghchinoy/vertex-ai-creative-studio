@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import mesop as me
+from state.veo_and_me_state import PageState
 
 from components.image_thumbnail import image_thumbnail
 from components.library.library_chooser_button import library_chooser_button
-from state.veo_and_me_state import PageState
 
 
 @me.component
@@ -50,7 +50,7 @@ def r2v_uploader(
                             icon_size=16,
                         )
                     elif not asset_uploader_disabled and i == len(
-                        state.r2v_reference_images
+                        state.r2v_reference_images,
                     ):
                         _uploader_placeholder(
                             on_upload=on_r2v_asset_add,
@@ -81,7 +81,9 @@ def r2v_uploader(
 
 
 @me.component
-def _uploader_placeholder(on_upload, on_library_select, key_prefix: str, disabled: bool):
+def _uploader_placeholder(
+    on_upload, on_library_select, key_prefix: str, disabled: bool,
+):
     """A placeholder box with uploader and library chooser buttons."""
     with me.box(
         style=me.Style(
@@ -92,7 +94,7 @@ def _uploader_placeholder(on_upload, on_library_select, key_prefix: str, disable
                     width=1,
                     style="dashed",
                     color=me.theme_var("outline"),
-                )
+                ),
             ),
             border_radius=8,
             display="flex",
@@ -101,7 +103,7 @@ def _uploader_placeholder(on_upload, on_library_select, key_prefix: str, disable
             justify_content="center",
             gap=8,
             opacity=0.5 if disabled else 1.0,
-        )
+        ),
     ):
         me.uploader(
             label="Add Image",
@@ -126,11 +128,9 @@ def _empty_placeholder():
             height=100,
             width=100,
             border=me.Border.all(
-                me.BorderSide(
-                    width=1, style="dashed", color=me.theme_var("outline")
-                )
+                me.BorderSide(width=1, style="dashed", color=me.theme_var("outline")),
             ),
             border_radius=8,
             opacity=0.5,
-        )
+        ),
     )

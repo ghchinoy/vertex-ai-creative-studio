@@ -16,18 +16,18 @@ import datetime
 import logging
 
 from common.metadata import MediaItem, add_media_item_to_firestore, get_media_item_by_id
+from config.veo_models import get_veo_model_config
 from models.requests import VideoGenerationRequest
 from models.veo import generate_video
-from config.veo_models import get_veo_model_config
 from models.video_processing import get_video_duration
 
 logger = logging.getLogger(__name__)
 
+
 def process_veo_generation_task(
-    job_id: str, request_data: VideoGenerationRequest, user_email: str
+    job_id: str, request_data: VideoGenerationRequest, user_email: str,
 ):
-    """
-    Background task to process Veo video generation.
+    """Background task to process Veo video generation.
     Updates Firestore with status changes.
     """
     logger.info(f"Starting background task for job {job_id}")
@@ -47,7 +47,9 @@ def process_veo_generation_task(
                 # For extensions, the resulting video is longer than the requested 'duration_seconds' (which is just the extension amount)
                 # So we inspect the actual generated file to get the true total duration.
                 actual_duration = get_video_duration(video_uris[0])
-                logger.info(f"Corrected duration for extended video: {actual_duration}s")
+                logger.info(
+                    f"Corrected duration for extended video: {actual_duration}s",
+                )
             except Exception as e:
                 logger.warning(f"Could not verify duration of extended video: {e}")
 
@@ -67,7 +69,9 @@ def _update_job_status(job_id: str, status: str):
         add_media_item_to_firestore(item)
 
 
-def _complete_job(job_id: str, video_uris: list[str], resolution: str, duration: float = None):
+def _complete_job(
+    job_id: str, video_uris: list[str], resolution: str, duration: float = None,
+):
     """Helper to mark a job as complete with results."""
     item = get_media_item_by_id(job_id)
     if item:
@@ -75,24 +79,26 @@ def _complete_job(job_id: str, video_uris: list[str], resolution: str, duration:
         item.gcs_uris = video_uris
         item.gcsuri = video_uris[0] if video_uris else None
         item.resolution = resolution
-        
+
         if duration is not None:
             item.duration = duration
-            
+
         # Calculate generation time if possible, or just use now - timestamp
         if item.timestamp:
-             # Ensure both are offset-aware or both are offset-naive.
-             # Firestore timestamps are usually UTC.
-             now = datetime.datetime.now(datetime.timezone.utc)
-             # Handle potential string timestamp from legacy data if not fully parsed
-             start_time = item.timestamp
-             if isinstance(start_time, str):
-                 try:
-                     start_time = datetime.datetime.fromisoformat(start_time.replace("Z", "+00:00"))
-                 except ValueError:
-                     start_time = now # Fallback
+            # Ensure both are offset-aware or both are offset-naive.
+            # Firestore timestamps are usually UTC.
+            now = datetime.datetime.now(datetime.UTC)
+            # Handle potential string timestamp from legacy data if not fully parsed
+            start_time = item.timestamp
+            if isinstance(start_time, str):
+                try:
+                    start_time = datetime.datetime.fromisoformat(
+                        start_time.replace("Z", "+00:00"),
+                    )
+                except ValueError:
+                    start_time = now  # Fallback
 
-             item.generation_time = (now - start_time).total_seconds()
+            item.generation_time = (now - start_time).total_seconds()
 
         add_media_item_to_firestore(item)
 
@@ -114,7 +120,7 @@ def create_initial_job(request: VideoGenerationRequest, user_email: str) -> str:
     # Infer mode
     mode = "t2v"
     source_uris = []
-    
+
     if request.video_input_gcs:
         mode = "video_extension"
         source_uris.append(request.video_input_gcs)
@@ -127,7 +133,7 @@ def create_initial_job(request: VideoGenerationRequest, user_email: str) -> str:
 
     item = MediaItem(
         user_email=user_email,
-        timestamp=datetime.datetime.now(datetime.timezone.utc),
+        timestamp=datetime.datetime.now(datetime.UTC),
         status="pending",
         prompt=request.prompt,
         model=model_name,

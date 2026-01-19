@@ -17,13 +17,12 @@ import json
 import mesop as me
 
 from common.analytics import log_page_view
-from components.welcome_hero.welcome_hero import welcome_hero
-from components.page_scaffold import on_theme_load, on_auth_state_change
-from components.theme_manager.theme_manager import theme_manager
-from components.auth_handler import auth_handler
-from components.snackbar import snackbar
 from common.auth import get_user_avatar
 from common.utils import create_display_url
+from components.auth_handler import auth_handler
+from components.page_scaffold import on_auth_state_change, on_theme_load
+from components.theme_manager.theme_manager import theme_manager
+from components.welcome_hero.welcome_hero import welcome_hero
 from config.default import Default as cfg
 from state.state import AppState
 
@@ -41,7 +40,7 @@ def on_load(e: me.LoadEvent):
 def on_tile_click(e: me.WebEvent):
     app_state = me.state(AppState)
     page_state = me.state(PageState)
-    
+
     if e.value["route"] == "login":
         page_state.show_login = True
         yield
@@ -63,12 +62,16 @@ def page():
     page_state = me.state(PageState)
     log_page_view(page_name="welcome", session_id=app_state.session_id)
 
-    is_logged_in = app_state.user_email and app_state.user_email != "anonymous@google.com"
+    is_logged_in = (
+        app_state.user_email and app_state.user_email != "anonymous@google.com"
+    )
 
     theme_manager(theme=app_state.theme_mode, on_theme_load=on_theme_load)
 
     # Wrap auth_handler in a high z-index box so it stays on top of the fixed hero
-    with me.box(style=me.Style(position="fixed", top=0, right=0, z_index=1000, width="100%")):
+    with me.box(
+        style=me.Style(position="fixed", top=0, right=0, z_index=1000, width="100%"),
+    ):
         # Need auth_handler to handle the login event
         firebase_config = {
             "apiKey": cfg().FIREBASE_API_KEY,
@@ -81,7 +84,9 @@ def page():
         }
         # Fetch cached avatar if it exists
         cached_avatar_uri = get_user_avatar(app_state.user_email)
-        cached_photo_url = create_display_url(cached_avatar_uri) if cached_avatar_uri else ""
+        cached_photo_url = (
+            create_display_url(cached_avatar_uri) if cached_avatar_uri else ""
+        )
 
         auth_handler.auth_handler(
             firebase_config=firebase_config,
@@ -93,16 +98,30 @@ def page():
     # Define tiles based on auth state
     if not is_logged_in:
         tiles_data = [
-            {"label": "Sign in to Get Started", "icon": "login", "route": "login", "border": True},
+            {
+                "label": "Sign in to Get Started",
+                "icon": "login",
+                "route": "login",
+                "border": True,
+            },
             {"label": "Veo", "route": "/veo", "disabled": True},
-            {"label": "Gemini Image Generation", "icon": "banana", "route": "/nano-banana", "disabled": True},
+            {
+                "label": "Gemini Image Generation",
+                "icon": "banana",
+                "route": "/nano-banana",
+                "disabled": True,
+            },
             {"label": "Lyria", "route": "/lyria", "disabled": True},
         ]
     else:
         tiles_data = [
             {"icon": "home", "route": "/home"},
             {"label": "Veo", "route": "/veo"},
-            {"label": "Gemini Image Generation", "icon": "banana", "route": "/nano-banana"},
+            {
+                "label": "Gemini Image Generation",
+                "icon": "banana",
+                "route": "/nano-banana",
+            },
             {"label": "Lyria", "route": "/lyria"},
             {"label": "Speech", "route": "/home"},
             {"label": "Workflows", "route": "/home"},

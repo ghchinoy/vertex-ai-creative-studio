@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
 
 import mesop as me
 
-from config.default import get_welcome_page_config, Default
 from components.styles import (
     _FANCY_TEXT_GRADIENT,
     DEFAULT_MENU_STYLE,
@@ -24,6 +22,7 @@ from components.styles import (
     SIDENAV_MIN_WIDTH,
 )
 from components.svg_icon.svg_icon import svg_icon
+from config.default import Default, get_welcome_page_config
 from state.state import AppState
 
 cfg = Default()
@@ -42,7 +41,7 @@ def on_click_title(e: me.ClickEvent):
 
 
 def navigate_to(e: me.ClickEvent):
-    """navigate to a specific page"""
+    """Navigate to a specific page"""
     s = me.state(AppState)
     route_to_navigate = e.key  # The key of the content_button is the route
     if route_to_navigate:
@@ -55,14 +54,18 @@ def navigate_to(e: me.ClickEvent):
 
 
 @me.component
-def sidenav(current_page: Optional[str]):
+def sidenav(current_page: str | None):
     """Render side navigation"""
     app_state = me.state(AppState)
 
     WELCOME_PAGE = get_welcome_page_config()
     # Partition the list based on the 'align' key
-    top_nav_items = [p for p in WELCOME_PAGE if p.get("route") and p.get("align") != "bottom"]
-    bottom_nav_items = [p for p in WELCOME_PAGE if p.get("route") and p.get("align") == "bottom"]
+    top_nav_items = [
+        p for p in WELCOME_PAGE if p.get("route") and p.get("align") != "bottom"
+    ]
+    bottom_nav_items = [
+        p for p in WELCOME_PAGE if p.get("route") and p.get("align") == "bottom"
+    ]
 
     with me.sidenav(
         opened=True,
@@ -78,7 +81,7 @@ def sidenav(current_page: Optional[str]):
                 display="flex",
                 flex_direction="column",
                 gap=5,
-                height="calc(100% - 32px)", # Adjust height for margin
+                height="calc(100% - 32px)",  # Adjust height for margin
             ),
         ):
             with me.box(
@@ -92,15 +95,15 @@ def sidenav(current_page: Optional[str]):
                 with me.content_button(
                     type="icon",
                     on_click=on_sidenav_menu_click,
-                ):
-                    with me.box():
-                        with me.tooltip(message="Expand menu"):
-                            me.icon(icon="menu")
+                ), me.box(), me.tooltip(message="Expand menu"):
+                    me.icon(icon="menu")
                 if app_state.sidenav_open:
-                    with me.box(on_click=on_click_title, style=me.Style(cursor="pointer")):
+                    with me.box(
+                        on_click=on_click_title, style=me.Style(cursor="pointer"),
+                    ):
                         me.text("GENMEDIA STUDIO", style=_FANCY_TEXT_GRADIENT)
-            
-            me.box(style=me.Style(height=16)) # spacer
+
+            me.box(style=me.Style(height=16))  # spacer
 
             # Render top navigation items
             for page in top_nav_items:
@@ -147,12 +150,11 @@ def menu_item(
     item_id: str,
     icon: str,
     text: str,
-    route: Optional[str],
+    route: str | None,
     minimized: bool = True,
     content_style: me.Style = DEFAULT_MENU_STYLE,
 ):
-    """render menu item"""
-
+    """Render menu item"""
     is_clickable = bool(route)
     button_key = route if is_clickable else f"item_{item_id}"
 
@@ -167,15 +169,14 @@ def menu_item(
             me.icon(icon=icon_name)
 
     if minimized:  # minimized
-        with me.tooltip(message=text):
-            with me.content_button(
-                key=button_key,
-                on_click=navigate_to if is_clickable else None,
-                style=content_style,
-                type="icon",
-                disabled=not is_clickable,
-            ):
-                render_icon(icon)
+        with me.tooltip(message=text), me.content_button(
+            key=button_key,
+            on_click=navigate_to if is_clickable else None,
+            style=content_style,
+            type="icon",
+            disabled=not is_clickable,
+        ):
+            render_icon(icon)
 
     else:  # expanded
         with me.content_button(
@@ -183,17 +184,16 @@ def menu_item(
             on_click=navigate_to,
             style=content_style,
             disabled=not is_clickable,
+        ), me.box(
+            style=me.Style(
+                display="flex",
+                flex_direction="row",
+                gap=5,
+                align_items="center",
+            ),
         ):
-            with me.box(
-                style=me.Style(
-                    display="flex",
-                    flex_direction="row",
-                    gap=5,
-                    align_items="center",
-                ),
-            ):
-                render_icon(icon)
-                me.text(text, style=me.Style(text_align="left"))
+            render_icon(icon)
+            me.text(text, style=me.Style(text_align="left"))
 
 
 def toggle_theme(e: me.ClickEvent):  # pylint: disable=unused-argument
@@ -217,39 +217,36 @@ def theme_toggle_icon(key: int, icon: str, text: str, min: bool = True):
                 gap=5,
                 align_items="center",
             ),
-        ):
-            with me.content_button(
-                key=str(key),
-                on_click=toggle_theme,
-                type="icon",
-            ):
-                with me.tooltip(message=text):
-                    me.icon(
-                        "light_mode" if me.theme_brightness() == "dark" else "dark_mode"
-                    )
+        ), me.content_button(
+            key=str(key),
+            on_click=toggle_theme,
+            type="icon",
+        ), me.tooltip(message=text):
+            me.icon(
+                "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
+            )
 
     else:  # expanded
         with me.content_button(
             key=str(key),
             on_click=toggle_theme,
+        ), me.box(
+            style=me.Style(
+                display="flex",
+                flex_direction="row",
+                gap=5,
+                align_items="center",
+            ),
         ):
-            with me.box(
-                style=me.Style(
-                    display="flex",
-                    flex_direction="row",
-                    gap=5,
-                    align_items="center",
-                ),
-            ):
-                me.icon(
-                    "light_mode" if me.theme_brightness() == "dark" else "dark_mode"
-                )
-                me.text(
-                    "Light mode" if me.theme_brightness() == "dark" else "Dark mode"
-                )
+            me.icon(
+                "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
+            )
+            me.text(
+                "Light mode" if me.theme_brightness() == "dark" else "Dark mode",
+            )
 
 
 MENU_BOTTOM = me.Style(
-    margin=me.Margin(top="auto"), # Pushes the container to the bottom
+    margin=me.Margin(top="auto"),  # Pushes the container to the bottom
     padding=me.Padding(bottom=12),
 )

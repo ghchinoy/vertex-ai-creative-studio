@@ -14,8 +14,8 @@
 
 
 import functools
-import logging
 import json
+import logging
 import os
 import time
 from contextlib import contextmanager
@@ -63,8 +63,10 @@ def get_logger(name: str):
         logger.addHandler(handler)
     return logger
 
+
 # Central analytics logger
 analytics_logger = get_logger("genmedia.analytics")
+
 
 def log_page_view(page_name: str, session_id: str = None):
     """Logs a page view event."""
@@ -73,9 +75,12 @@ def log_page_view(page_name: str, session_id: str = None):
         "page_name": page_name,
         "session_id": session_id,
     }
-    analytics_logger.info(f"Page view: {page_name}", extra={'extra_data': extra_data})
+    analytics_logger.info(f"Page view: {page_name}", extra={"extra_data": extra_data})
 
-def log_ui_click(element_id: str, page_name: str, session_id: str = None, extras: dict = None):
+
+def log_ui_click(
+    element_id: str, page_name: str, session_id: str = None, extras: dict = None,
+):
     """Logs a UI click event."""
     extra_data = {
         "event_type": "ui_click",
@@ -85,9 +90,14 @@ def log_ui_click(element_id: str, page_name: str, session_id: str = None, extras
     }
     if extras:
         extra_data.update(extras)
-    analytics_logger.info(f"UI Click: {element_id} on {page_name}", extra={'extra_data': extra_data})
+    analytics_logger.info(
+        f"UI Click: {element_id} on {page_name}", extra={"extra_data": extra_data},
+    )
 
-def log_model_call(model_name: str, status: str, duration_ms: float = 0, details: dict = None):
+
+def log_model_call(
+    model_name: str, status: str, duration_ms: float = 0, details: dict = None,
+):
     """Logs a generative model call event."""
     try:
         state = me.state(AppState)
@@ -101,16 +111,20 @@ def log_model_call(model_name: str, status: str, duration_ms: float = 0, details
     extra_data = {
         "event_type": "model_call",
         "model_name": model_name,
-        "status": status, # e.g., "success", "failure"
+        "status": status,  # e.g., "success", "failure"
         "duration_ms": round(duration_ms, 2),
         "page_name": page_name,
         "session_id": session_id,
         "details": details or {},
     }
-    analytics_logger.info(f"Model Call: {model_name} ({status})", extra={'extra_data': extra_data})
+    analytics_logger.info(
+        f"Model Call: {model_name} ({status})", extra={"extra_data": extra_data},
+    )
+
 
 def track_click(element_id: str):
     """Decorator to log a UI click event on an event handler."""
+
     def decorator(handler_function):
         @functools.wraps(handler_function)
         def wrapper(*args, **kwargs):
@@ -118,11 +132,14 @@ def track_click(element_id: str):
             log_ui_click(
                 element_id=element_id,
                 page_name=state.current_page,
-                session_id=state.session_id
+                session_id=state.session_id,
             )
             return handler_function(*args, **kwargs)
+
         return wrapper
+
     return decorator
+
 
 @contextmanager
 def track_model_call(model_name: str, **kwargs):
@@ -131,8 +148,15 @@ def track_model_call(model_name: str, **kwargs):
     try:
         yield
         duration_ms = (time.time() - start_time) * 1000
-        log_model_call(model_name, status="success", duration_ms=duration_ms, details=kwargs)
+        log_model_call(
+            model_name, status="success", duration_ms=duration_ms, details=kwargs,
+        )
     except Exception as e:
         duration_ms = (time.time() - start_time) * 1000
-        log_model_call(model_name, status="failure", duration_ms=duration_ms, details={"error": str(e), **kwargs})
-        raise # Re-raise the exception after logging
+        log_model_call(
+            model_name,
+            status="failure",
+            duration_ms=duration_ms,
+            details={"error": str(e), **kwargs},
+        )
+        raise  # Re-raise the exception after logging

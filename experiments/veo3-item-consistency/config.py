@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,9 +24,9 @@ IMAGEN_LOCATION = os.getenv("IMAGEN_LOCATION")
 VEO_LOCATION = os.getenv("VEO_LOCATION")
 INPUT_DIR = os.getenv("INPUT_DIR")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR")
-VIDEO_FILE_PATH=os.getenv("VIDEO_FILE_PATH")
-EXTENDED_VIDEO_FILE_PATH=os.getenv("EXTENDED_VIDEO_FILE_PATH")
-CONTEXT_IMAGE=os.getenv("CONTEXT_IMAGE")
+VIDEO_FILE_PATH = os.getenv("VIDEO_FILE_PATH")
+EXTENDED_VIDEO_FILE_PATH = os.getenv("EXTENDED_VIDEO_FILE_PATH")
+CONTEXT_IMAGE = os.getenv("CONTEXT_IMAGE")
 
 MULTIMODAL_MODEL_NAME = "gemini-2.5-pro"
 VEO_MODEL_NAME = "veo-3.0-generate-preview"

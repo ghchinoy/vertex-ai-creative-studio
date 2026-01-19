@@ -14,7 +14,7 @@
 
 """A reusable component for displaying page information dialogs."""
 
-from typing import Callable
+from collections.abc import Callable
 
 import mesop as me
 
@@ -35,6 +35,7 @@ def info_dialog(
         info_data: A dictionary containing 'title' and 'description' keys. Can be None.
         on_close: The event handler to call when the close button is clicked.
         default_title: The title of the page to use in the dialog header.
+
     """
     print(f"DEBUG: info_dialog component rendering, is_open = {is_open}")
     # Always render the underlying dialog component and pass `is_open` to it.

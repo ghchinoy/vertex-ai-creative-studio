@@ -13,19 +13,21 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List, Optional
+
 
 @dataclass
 class ImagenModelConfig:
     """Configuration for a specific Imagen model version."""
+
     model_name: str
     display_name: str
-    supported_aspect_ratios: List[str]
+    supported_aspect_ratios: list[str]
     max_samples: int
     default_samples: int
 
+
 # This list is the single source of truth for all Imagen model configurations.
-IMAGEN_MODELS: List[ImagenModelConfig] = [
+IMAGEN_MODELS: list[ImagenModelConfig] = [
     ImagenModelConfig(
         model_name="imagen-3.0-fast-generate-001",
         display_name="Imagen 3 Fast",
@@ -63,8 +65,9 @@ IMAGEN_MODELS: List[ImagenModelConfig] = [
     ),
 ]
 
+
 # Helper function to easily find a model's config by its model_name.
-def get_imagen_model_config(model_name: str) -> Optional[ImagenModelConfig]:
+def get_imagen_model_config(model_name: str) -> ImagenModelConfig | None:
     """Finds and returns the configuration for a given Imagen model name."""
     for model in IMAGEN_MODELS:
         if model.model_name == model_name:

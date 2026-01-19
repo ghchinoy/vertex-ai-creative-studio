@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mesop as me
 import typing
+
+import mesop as me
 
 
 @me.web_component(path="./video_infinite_scroll_library.js")
@@ -22,21 +23,22 @@ def video_infinite_scroll_library(
     items: list[dict],
     has_more_items: bool,
     on_load_more: typing.Callable[[me.WebEvent], None],
-    on_image_selected: typing.Callable[[me.WebEvent], None], # Keep same name for compatibility
+    on_image_selected: typing.Callable[
+        [me.WebEvent], None,
+    ],  # Keep same name for compatibility
     key: str | None = None,
 ):
-  """
-  A web component for displaying a library of videos with infinite scroll.
-  """
-  return me.insert_web_component(
-    key=key,
-    name="video-infinite-scroll-library",
-    properties={
-        "items": items,
-        "hasMoreItems": has_more_items,
-    },
-    events={
-        "loadMoreEvent": on_load_more,
-        "imageSelectedEvent": on_image_selected,
-    },
-  )
+    """A web component for displaying a library of videos with infinite scroll.
+    """
+    return me.insert_web_component(
+        key=key,
+        name="video-infinite-scroll-library",
+        properties={
+            "items": items,
+            "hasMoreItems": has_more_items,
+        },
+        events={
+            "loadMoreEvent": on_load_more,
+            "imageSelectedEvent": on_image_selected,
+        },
+    )

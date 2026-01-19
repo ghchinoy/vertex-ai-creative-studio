@@ -21,14 +21,11 @@ def header(title: str, icon: str):
         style=me.Style(
             display="flex",
             justify_content="space-between",
+        ),
+    ), me.box(style=me.Style(display="flex", flex_direction="row", gap=5)):
+        me.icon(icon=icon)
+        me.text(
+            title,
+            type="headline-5",
+            style=me.Style(font_family="Google Sans"),
         )
-    ):
-        with me.box(
-            style=me.Style(display="flex", flex_direction="row", gap=5)
-        ):
-            me.icon(icon=icon)
-            me.text(
-                title,
-                type="headline-5",
-                style=me.Style(font_family="Google Sans"),
-            )

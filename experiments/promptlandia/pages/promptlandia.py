@@ -55,8 +55,8 @@ def promptlandia_page_content(app_state: me.state):
 
     Args:
         app_state: The global application state.
-    """
 
+    """
     state = me.state(PageState)
 
     with me.box(
@@ -65,83 +65,133 @@ def promptlandia_page_content(app_state: me.state):
             flex_direction="column",
             height="100%",
         ),
+    ), me.box(
+        style=me.Style(
+            background=me.theme_var("background"),
+            height="100%",
+            overflow_y="scroll",
+            margin=me.Margin(bottom=20),
+        ),
+    ), me.box(
+        style=me.Style(
+            background=me.theme_var("background"),
+            padding=me.Padding(top=24, left=24, right=24, bottom=24),
+            display="flex",
+            flex_direction="column",
+        ),
     ):
-        with me.box(
-            style=me.Style(
-                background=me.theme_var("background"),
-                height="100%",
-                overflow_y="scroll",
-                margin=me.Margin(bottom=20),
-            )
-        ):
+        header("Promptlandia", "try")
+        me.text("Improve an existing prompt")
+        me.box(style=me.Style(height=32))
+
+        # Existing prompt entry
+        if not state.processing_status:
             with me.box(
                 style=me.Style(
-                    background=me.theme_var("background"),
-                    padding=me.Padding(top=24, left=24, right=24, bottom=24),
-                    display="flex",
-                    flex_direction="column",
-                )
+                    width="100%",
+                    # padding=me.Padding().all(16),
+                    # margin=me.Margin().all(20),
+                ),
             ):
-                header("Promptlandia", "try")
-                me.text("Improve an existing prompt")
-                me.box(style=me.Style(height=32))
+                me.text("Existing prompt", style=me.Style(font_weight="bold"))
+                me.box(style=me.Style(height=8))
+                with me.box(
+                    style=me.Style(
+                        display="grid",
+                        flex_direction="row",
+                        gap=5,
+                        align_items="center",
+                        width="100%",
+                    ),
+                ):
+                    gemini_system_prompt_input()
+                    gemini_prompt_input()
 
-                # Existing prompt entry
-                if not state.processing_status:
+                me.box(style=me.Style(height=16))
+                if state.extracted_parameters:
                     with me.box(
                         style=me.Style(
-                            width="100%",
-                            # padding=me.Padding().all(16),
-                            # margin=me.Margin().all(20),
-                        )
+                            display="flex",
+                            flex_direction="row",
+                            gap=4,
+                            padding=me.Padding(left=16),
+                        ),
                     ):
-                        me.text("Existing prompt", style=me.Style(font_weight="bold"))
-                        me.box(style=me.Style(height=8))
-                        with me.box(
+                        me.text(
+                            "Detected parameters:",
                             style=me.Style(
-                                display="grid",
-                                flex_direction="row",
-                                gap=5,
-                                align_items="center",
-                                width="100%",
-                            )
-                        ):
-                            gemini_system_prompt_input()
-                            gemini_prompt_input()
+                                color=me.theme_var("on-tertiary-container"),
+                            ),
+                        )
+                        me.text(
+                            f"{state.extracted_parameters}",
+                            style=me.Style(
+                                color=me.theme_var("on-secondary-container"),
+                            ),
+                        )
 
-                        me.box(style=me.Style(height=16))
-                        if state.extracted_parameters:
-                            with me.box(
-                                style=me.Style(
-                                    display="flex",
-                                    flex_direction="row",
-                                    gap=4,
-                                    padding=me.Padding(left=16),
-                                )
-                            ):
-                                me.text(
-                                    "Detected parameters:",
-                                    style=me.Style(
-                                        color=me.theme_var("on-tertiary-container"),
-                                    ),
-                                )
-                                me.text(
-                                    f"{state.extracted_parameters}",
-                                    style=me.Style(
-                                        color=me.theme_var("on-secondary-container"),
-                                    ),
-                                )
+            me.box(style=me.Style(height=16))
 
-                    me.box(style=me.Style(height=16))
+            me.text(
+                "What would you like to improve",
+                style=me.Style(font_weight="bold"),
+            )
+            me.box(style=me.Style(height=8))
+            gemini_improvement_prompt_input()
 
+            me.box(style=me.Style(height=16))
+
+            with me.box(
+                style=me.Style(
+                    align_items="center",
+                    display="flex",
+                    flex_direction="row",
+                    justify_content="center",
+                ),
+            ):
+                me.button("Clear", on_click=on_click_clear_prompt)
+                me.button(
+                    "Improve prompt",
+                    on_click=on_click_generate_content,
+                    color="primary",
+                    type="flat",
+                )
+
+        else:
+            with me.box(
+                style=me.Style(display="flex", flex_direction="column"),
+            ):
+                if state.processing:
                     me.text(
-                        "What would you like to improve",
-                        style=me.Style(font_weight="bold"),
+                        "Improving prompt", style=me.Style(font_weight="bold"),
                     )
                     me.box(style=me.Style(height=8))
-                    gemini_improvement_prompt_input()
+                    with me.box(
+                        style=me.Style(
+                            display="flex", flex_direction="row", gap=5,
+                        ),
+                    ):
+                        me.progress_spinner(diameter=16)
+                        me.text(state.processing_status)
 
-                    me.box(style=me.Style(height=16))
+                else:
+                    me.text("USER", style=me.Style(font_weight="bold"))
+                    me.box(style=me.Style(height=8))
+                    with me.box(
+                        style=me.Style(
+                            display="grid",
+                            flex_direction="row",
+                            gap=5,
+                            align_items="center",
+                            width="100%",
+                            background=BACKGROUND_COLOR,
+                            border_radius=16,
+                            padding=me.Padding.all(8),
+                        ),
+                    ):
+                        me.markdown(text=state.improved_prompt_response)
+
+                    me.box(style=me.Style(height=8))
 
                     with me.box(
                         style=me.Style(
@@ -153,62 +203,10 @@ def promptlandia_page_content(app_state: me.state):
                     ):
                         me.button("Clear", on_click=on_click_clear_prompt)
                         me.button(
-                            "Improve prompt",
+                            "Redo improvement",
                             on_click=on_click_generate_content,
-                            color="primary",
-                            type="flat",
+                            type="stroked",
                         )
-
-                else:
-                    with me.box(
-                        style=me.Style(display="flex", flex_direction="column")
-                    ):
-                        if state.processing:
-                            me.text(
-                                "Improving prompt", style=me.Style(font_weight="bold")
-                            )
-                            me.box(style=me.Style(height=8))
-                            with me.box(
-                                style=me.Style(
-                                    display="flex", flex_direction="row", gap=5
-                                ),
-                            ):
-                                me.progress_spinner(diameter=16)
-                                me.text(state.processing_status)
-
-                        else:
-                            me.text("USER", style=me.Style(font_weight="bold"))
-                            me.box(style=me.Style(height=8))
-                            with me.box(
-                                style=me.Style(
-                                    display="grid",
-                                    flex_direction="row",
-                                    gap=5,
-                                    align_items="center",
-                                    width="100%",
-                                    background=BACKGROUND_COLOR,
-                                    border_radius=16,
-                                    padding=me.Padding.all(8),
-                                )
-                            ):
-                                me.markdown(text=state.improved_prompt_response)
-
-                            me.box(style=me.Style(height=8))
-
-                            with me.box(
-                                style=me.Style(
-                                    align_items="center",
-                                    display="flex",
-                                    flex_direction="row",
-                                    justify_content="center",
-                                ),
-                            ):
-                                me.button("Clear", on_click=on_click_clear_prompt)
-                                me.button(
-                                    "Redo improvement",
-                                    on_click=on_click_generate_content,
-                                    type="stroked",
-                                )
 
 
 @me.component
@@ -222,32 +220,31 @@ def gemini_prompt_input():
             background=BACKGROUND_COLOR,
             display="flex",
             width="100%",
-        )
+        ),
+    ), me.box(
+        style=me.Style(
+            flex_grow=1,
+        ),
     ):
-        with me.box(
+        me.native_textarea(
+            autosize=True,
+            min_rows=10,
+            placeholder="prompt",
             style=me.Style(
-                flex_grow=1,
-            )
-        ):
-            me.native_textarea(
-                autosize=True,
-                min_rows=10,
-                placeholder="prompt",
-                style=me.Style(
-                    padding=me.Padding(top=16, left=16),
-                    background=BACKGROUND_COLOR,
-                    outline="none",
-                    width="100%",
-                    overflow_y="auto",
-                    border=me.Border.all(
-                        me.BorderSide(style="none"),
-                    ),
-                    color=me.theme_var("foreground"),
+                padding=me.Padding(top=16, left=16),
+                background=BACKGROUND_COLOR,
+                outline="none",
+                width="100%",
+                overflow_y="auto",
+                border=me.Border.all(
+                    me.BorderSide(style="none"),
                 ),
-                on_blur=on_blur_prompt,
-                key=str(page_state.prompt_textarea_key),
-                value=page_state.prompt_placeholder,
-            )
+                color=me.theme_var("foreground"),
+            ),
+            on_blur=on_blur_prompt,
+            key=str(page_state.prompt_textarea_key),
+            value=page_state.prompt_placeholder,
+        )
         # with me.content_button(type="icon"):
         #  me.icon("upload")
         # with me.content_button(type="icon"):
@@ -266,14 +263,14 @@ def gemini_prompt_input():
 
 
 def extract_double_braces(text):
-    """
-    Extracts all phrases enclosed in double curly braces from a string.
+    """Extracts all phrases enclosed in double curly braces from a string.
 
     Args:
       text: The input string.
 
     Returns:
       A list of strings containing the extracted phrases, or an empty list if none are found.
+
     """
     pattern = r"\{\{(.*?)\}\}"  # Non-greedy matching
     matches = re.findall(pattern, text)
@@ -285,6 +282,7 @@ def on_blur_prompt(e: me.InputBlurEvent):
 
     Args:
         e: The Mesop InputBlurEvent.
+
     """
     page_state = me.state(PageState)
     page_state.extracted_parameters = extract_double_braces(e.value)
@@ -302,32 +300,31 @@ def gemini_system_prompt_input():
             background=BACKGROUND_COLOR,
             display="flex",
             width="100%",
-        )
+        ),
+    ), me.box(
+        style=me.Style(
+            flex_grow=1,
+        ),
     ):
-        with me.box(
+        me.native_textarea(
+            autosize=True,
+            min_rows=4,
+            placeholder="system prompt",
             style=me.Style(
-                flex_grow=1,
-            )
-        ):
-            me.native_textarea(
-                autosize=True,
-                min_rows=4,
-                placeholder="system prompt",
-                style=me.Style(
-                    padding=me.Padding(top=16, left=16),
-                    background=BACKGROUND_COLOR,
-                    outline="none",
-                    width="100%",
-                    overflow_y="auto",
-                    border=me.Border.all(
-                        me.BorderSide(style="none"),
-                    ),
-                    color=me.theme_var("foreground"),
+                padding=me.Padding(top=16, left=16),
+                background=BACKGROUND_COLOR,
+                outline="none",
+                width="100%",
+                overflow_y="auto",
+                border=me.Border.all(
+                    me.BorderSide(style="none"),
                 ),
-                on_blur=on_blur_system_prompt,
-                key=str(page_state.system_prompt_textarea_key),
-                value=page_state.system_prompt_placeholder,
-            )
+                color=me.theme_var("foreground"),
+            ),
+            on_blur=on_blur_system_prompt,
+            key=str(page_state.system_prompt_textarea_key),
+            value=page_state.system_prompt_placeholder,
+        )
         # with me.content_button(type="icon"):
         #  me.icon("upload")
         # with me.content_button(type="icon"):
@@ -350,6 +347,7 @@ def on_blur_system_prompt(e: me.InputBlurEvent):
 
     Args:
         e: The Mesop InputBlurEvent.
+
     """
     me.state(PageState).system_prompt_input = e.value
 
@@ -365,32 +363,31 @@ def gemini_improvement_prompt_input():
             background=BACKGROUND_COLOR,
             display="flex",
             width="100%",
-        )
+        ),
+    ), me.box(
+        style=me.Style(
+            flex_grow=1,
+        ),
     ):
-        with me.box(
+        me.native_textarea(
+            autosize=True,
+            min_rows=4,
+            # placeholder="system prompt",
             style=me.Style(
-                flex_grow=1,
-            )
-        ):
-            me.native_textarea(
-                autosize=True,
-                min_rows=4,
-                # placeholder="system prompt",
-                style=me.Style(
-                    padding=me.Padding(top=16, left=16),
-                    background=BACKGROUND_COLOR,
-                    outline="none",
-                    width="100%",
-                    overflow_y="auto",
-                    border=me.Border.all(
-                        me.BorderSide(style="none"),
-                    ),
-                    color=me.theme_var("foreground"),
+                padding=me.Padding(top=16, left=16),
+                background=BACKGROUND_COLOR,
+                outline="none",
+                width="100%",
+                overflow_y="auto",
+                border=me.Border.all(
+                    me.BorderSide(style="none"),
                 ),
-                on_blur=on_blur_improvement_prompt,
-                key=str(page_state.improvement_prompt_textarea_key),
-                value=page_state.improvement_prompt_placeholder,
-            )
+                color=me.theme_var("foreground"),
+            ),
+            on_blur=on_blur_improvement_prompt,
+            key=str(page_state.improvement_prompt_textarea_key),
+            value=page_state.improvement_prompt_placeholder,
+        )
         # with me.content_button(type="icon"):
         #  me.icon("upload")
         # with me.content_button(type="icon"):
@@ -413,6 +410,7 @@ def on_blur_improvement_prompt(e: me.InputBlurEvent):
 
     Args:
         e: The Mesop InputBlurEvent.
+
     """
     me.state(PageState).improvement_prompt_input = e.value
 
@@ -429,6 +427,7 @@ def on_click_generate_content(e: me.ClickEvent):  # pylint: disable=unused-argum
 
     Args:
         e: The Mesop ClickEvent.
+
     """
     page_state = me.state(PageState)
     page_state.improved_prompt_response = ""
@@ -491,6 +490,7 @@ def gemini_plan_and_improve(
 
     Returns:
         The improved prompt as a string.
+
     """
     plan = gemini_thinking_thoughts(
         system_prompt=system_prompt,
@@ -519,6 +519,7 @@ def on_click_clear_prompt(e: me.ClickEvent):
 
     Args:
         e: The Mesop ClickEvent.
+
     """
     state = me.state(PageState)
 

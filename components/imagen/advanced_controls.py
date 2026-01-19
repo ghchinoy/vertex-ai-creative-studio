@@ -15,9 +15,9 @@
 import mesop as me
 
 from common.analytics import log_ui_click
-from state.state import AppState
-from state.imagen_state import PageState
 from config.imagen_models import get_imagen_model_config
+from state.imagen_state import PageState
+from state.state import AppState
 
 
 @me.component
@@ -29,52 +29,49 @@ def advanced_controls():
     if not selected_config:
         return
 
-    with me.box(style=_BOX_STYLE):
-        with me.accordion():
-            with me.expansion_panel(
-                title="Advanced Controls",
-                expanded=state.show_advanced,
-                on_toggle=on_advanced_toggle,
-            ):
-                with me.box(
-                    style=me.Style(
-                        display="flex",
-                        flex_direction="row",
-                        flex_wrap="wrap",
-                        gap="16px",
-                        margin=me.Margin(top=16),
-                    )
-                ):
-                    me.input(
-                        label="Negative prompt phrases",
-                        on_blur=on_blur_image_negative_prompt,
-                        value=state.image_negative_prompt_input,
-                        key=str(state.image_negative_prompt_key),
-                        style=me.Style(min_width="300px", flex_grow=2),
-                    )
-                    me.select(
-                        label="Number of images",
-                        value=str(state.imagen_image_count),
-                        options=[
-                            me.SelectOption(label=str(i), value=str(i))
-                            for i in range(1, selected_config.max_samples + 1)
-                        ],
-                        on_selection_change=on_select_image_count,
-                        style=me.Style(min_width="155px", flex_grow=1),
-                    )
-                    me.checkbox(
-                        label="Watermark (SynthID)",
-                        checked=state.imagen_watermark,
-                        disabled=True,
-                        key="imagen_watermark",
-                    )
-                    me.input(
-                        label="Seed (0 for random)",
-                        value=str(state.imagen_seed),
-                        on_blur=on_blur_imagen_seed,
-                        type="number",
-                        style=me.Style(min_width="155px", flex_grow=1),
-                    )
+    with me.box(style=_BOX_STYLE), me.accordion(), me.expansion_panel(
+        title="Advanced Controls",
+        expanded=state.show_advanced,
+        on_toggle=on_advanced_toggle,
+    ), me.box(
+        style=me.Style(
+            display="flex",
+            flex_direction="row",
+            flex_wrap="wrap",
+            gap="16px",
+            margin=me.Margin(top=16),
+        ),
+    ):
+        me.input(
+            label="Negative prompt phrases",
+            on_blur=on_blur_image_negative_prompt,
+            value=state.image_negative_prompt_input,
+            key=str(state.image_negative_prompt_key),
+            style=me.Style(min_width="300px", flex_grow=2),
+        )
+        me.select(
+            label="Number of images",
+            value=str(state.imagen_image_count),
+            options=[
+                me.SelectOption(label=str(i), value=str(i))
+                for i in range(1, selected_config.max_samples + 1)
+            ],
+            on_selection_change=on_select_image_count,
+            style=me.Style(min_width="155px", flex_grow=1),
+        )
+        me.checkbox(
+            label="Watermark (SynthID)",
+            checked=state.imagen_watermark,
+            disabled=True,
+            key="imagen_watermark",
+        )
+        me.input(
+            label="Seed (0 for random)",
+            value=str(state.imagen_seed),
+            on_blur=on_blur_imagen_seed,
+            type="number",
+            style=me.Style(min_width="155px", flex_grow=1),
+        )
 
 
 def on_blur_image_negative_prompt(e: me.InputBlurEvent):
@@ -103,7 +100,7 @@ def on_select_image_count(e: me.SelectSelectionChangeEvent):
         state.imagen_image_count = int(e.value)
     except ValueError:
         print(
-            f"Invalid value for image count: {e.value}. Defaulting or handling error."
+            f"Invalid value for image count: {e.value}. Defaulting or handling error.",
         )
         state.imagen_image_count = 4  # Or some other default / error state handling
 
@@ -144,7 +141,7 @@ _BOX_STYLE = me.Style(
     background=me.theme_var("surface"),
     border_radius=12,
     box_shadow=me.theme_var("shadow_elevation_2"),
-    #padding=me.Padding.all(16),
+    # padding=me.Padding.all(16),
     display="flex",
     flex_direction="column",
     margin=me.Margin(bottom=28),

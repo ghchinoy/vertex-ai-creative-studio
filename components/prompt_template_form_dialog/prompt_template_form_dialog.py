@@ -14,12 +14,13 @@
 
 """Dialog for viewing and editing a PromptTemplate."""
 
-from typing import Callable, Literal
+from collections.abc import Callable
+from typing import Literal
 
 import mesop as me
 
-from components.dialog import dialog
 from common.utils import create_display_url
+from components.dialog import dialog
 
 
 @me.stateclass
@@ -110,7 +111,7 @@ def prompt_template_form_dialog(
                     display="flex",
                     flex_direction="column",
                     gap=16,
-                )
+                ),
             ):
                 me.text(title, type="headline-5")
 
@@ -148,9 +149,7 @@ def prompt_template_form_dialog(
                         me.input(
                             label="Type",
                             value=state.template_type,
-                            on_blur=lambda e: setattr(
-                                state, "template_type", e.value
-                            ),
+                            on_blur=lambda e: setattr(state, "template_type", e.value),
                         )
                         me.textarea(
                             label="Prompt",
@@ -181,7 +180,7 @@ def prompt_template_form_dialog(
                             border_radius=8,
                             max_height="300px",
                             overflow_y="auto",
-                        )
+                        ),
                     ):
                         me.text(template["prompt"])
 
@@ -193,8 +192,8 @@ def prompt_template_form_dialog(
                 )
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="row", gap=8, flex_wrap="wrap"
-                    )
+                        display="flex", flex_direction="row", gap=8, flex_wrap="wrap",
+                    ),
                 ):
                     for ref_uri in template["references"]:
                         me.image(
@@ -213,7 +212,7 @@ def prompt_template_form_dialog(
                     justify_content="flex-end",
                     gap=8,
                     margin=me.Margin(top=24),
-                )
+                ),
             ):
                 me.button("Close", on_click=handle_close, type="stroked")
                 if is_editable:

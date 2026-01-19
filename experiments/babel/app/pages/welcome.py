@@ -13,28 +13,25 @@
 # limitations under the License.
 """Journey Voices Mesop Page"""
 
-from dataclasses import field
-import logging
 import json
+import logging
 import random
 
 # from typing import List, TypedDict, Any, cast
 import urllib
+from dataclasses import field
 
 import google.auth
 import google.auth.transport.requests as googlerequests
 import google.oauth2.id_token
-
 import mesop as me
-
-from state.state import AppState
-from config.default import Default, BabelMetadata
+from set_up.set_up import Voice
 
 # from set_up.set_up import VoicesSetup
-
 # from components.page_scaffold import page_scaffold, page_frame
-from components.styles import CONTENT_STYLE, BACKGROUND_COLOR
-from set_up.set_up import Voice
+from components.styles import BACKGROUND_COLOR, CONTENT_STYLE
+from config.default import BabelMetadata, Default
+from state.state import AppState
 
 logging.basicConfig(level=logging.DEBUG)
 config = Default()
@@ -47,27 +44,27 @@ class PageState:
 
     # pylint: disable=invalid-field-call
     welcome_statement: str = "Welcome, everyone, to today's exciting event!"
-    voices: list[Voice] = field(default_factory=lambda: [])
+    voices: list[Voice] = field(default_factory=list)
 
     is_loading: bool = False
     statement: str = ""
     audio_output_uri: str = ""
-    audio_output_infos: list[str] = field(default_factory=lambda: [])
-    audio_output_metadata: list[BabelMetadata] = field(default_factory=lambda: [])
+    audio_output_infos: list[str] = field(default_factory=list)
+    audio_output_metadata: list[BabelMetadata] = field(default_factory=list)
     audio_status: str = ""
     loaded: bool = False
     # pylint: disable=invalid-field-call
 
 
 def get_chosen_voices():
-    """
-    Filters a list of Voice dictionaries, keeping only those whose name contains "Puck" or "Leda".
+    """Filters a list of Voice dictionaries, keeping only those whose name contains "Puck" or "Leda".
 
     Args:
         voices: A list of Voice dictionaries.
 
     Returns:
         A new list of Voice dictionaries, filtered based on the name.
+
     """
     app_state = me.state(AppState)
     print(f"there are {len(app_state.voices)} total voices")
@@ -80,8 +77,7 @@ def get_chosen_voices():
 
 
 def filter_babel_metadata(filepath: str) -> list[BabelMetadata]:
-    """
-    Reads a JSON file, filters the 'audio_metadata' list to keep only entries
+    """Reads a JSON file, filters the 'audio_metadata' list to keep only entries
     with voice_name containing "Puck" or "Leda", and returns the filtered data as a List[BabelMetadata].
 
     Args:
@@ -89,9 +85,10 @@ def filter_babel_metadata(filepath: str) -> list[BabelMetadata]:
 
     Returns:
         A List[BabelMetadata] containing the filtered data.
+
     """
     try:
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             data = json.load(f)
     except FileNotFoundError:
         print(f"Error: File '{filepath}' not found.")
@@ -126,16 +123,16 @@ FANCY_1 = me.Style(
     background=(
         "linear-gradient(74deg,#4285f4 0%,#9b72cb 9%,#d96570 20%,#d96570 24%,#9b72cb 35%,#4285f4 44%,#9b72cb 50%,#d96570 56%, #fff 75%, #fff 100%)"
         " text"
-    )
+    ),
 )
 FANCY_2 = me.Style(
     text_align="center",
     color="transparent",
     background=(
-        "linear-gradient(72.83deg,#4285f4 11.63%,#9b72cb 40.43%,#d96570 68.07%)"
-        " text"
+        "linear-gradient(72.83deg,#4285f4 11.63%,#9b72cb 40.43%,#d96570 68.07%) text"
     ),
 )
+
 
 def welcome_page(app_state: me.state):
     """Welcome Voices page"""
@@ -165,17 +162,13 @@ def welcome_page(app_state: me.state):
         # subtle_chat_input_journey()
 
         if state.is_loading:
-            with me.box(
-                style=me.Style(
-                    text_align="center"
-                )
-            ):
+            with me.box(style=me.Style(text_align="center")):
                 me.progress_spinner()
         elif state.audio_output_metadata:
             with me.box(
                 style=me.Style(
-                    display="grid", grid_template_columns="1fr 1fr", text_align="center"
-                )
+                    display="grid", grid_template_columns="1fr 1fr", text_align="center",
+                ),
             ):
                 # for uri in state.audio_output_infos:
                 #  me.audio(src=uri)
@@ -193,10 +186,10 @@ def welcome_page(app_state: me.state):
                             flex_direction="column",
                             gap=5,
                             padding=me.Padding(top=10, left=10, right=10, bottom=12),
-                        )
+                        ),
                     ):
                         me.text(
-                            f"{item["language_code"]} ({item["gender"].lower()}, {item["voice_name"]})",
+                            f"{item['language_code']} ({item['gender'].lower()}, {item['voice_name']})",
                             style=me.Style(font_weight="bold"),
                         )
                         me.audio(src=audio_url)
@@ -205,7 +198,7 @@ def welcome_page(app_state: me.state):
 
 @me.component
 def subtle_chat_input_journey():
-    """input component"""
+    """Input component"""
     with me.box(
         style=me.Style(
             border_radius=16,
@@ -213,12 +206,12 @@ def subtle_chat_input_journey():
             background=BACKGROUND_COLOR,
             display="flex",
             width="100%",
-        )
+        ),
     ):
         with me.box(
             style=me.Style(
                 flex_grow=1,
-            )
+            ),
         ):
             me.native_textarea(
                 autosize=True,
@@ -249,15 +242,13 @@ def subtle_chat_input_journey():
 
 
 def on_blur_statement(e: me.InputBlurEvent):
-    """updates the statement to synthesize"""
-
+    """Updates the statement to synthesize"""
     state = me.state(PageState)
     state.statement = e.value
 
 
 def on_click_clear_babel(e: me.ClickEvent):  # pylint: disable=unused-argument
-    """clear babel input event"""
-
+    """Clear babel input event"""
     state = me.state(PageState)
     state.is_loading = False
     state.audio_output_infos.clear()
@@ -265,7 +256,7 @@ def on_click_clear_babel(e: me.ClickEvent):  # pylint: disable=unused-argument
 
 
 def regenerate_welcome(e: me.ClickEvent):  # pylint: disable=unused-argument
-    """ regenerate welcome statement """
+    """Regenerate welcome statement"""
     state = me.state(PageState)
     state.is_loading = True
     state.audio_output_infos.clear()
@@ -274,8 +265,8 @@ def regenerate_welcome(e: me.ClickEvent):  # pylint: disable=unused-argument
     greetings = [
         "Welcome to today's event!",
         "Welcome, everyone, to today's exciting event!",
-        "Welcome!", 
-        "Welcome to Chirp 3 H D!", 
+        "Welcome!",
+        "Welcome to Chirp 3 H D!",
         "Welcome, great to see you!",
         "Welcome to Chirp 3: HD!",
         "Welcome!",
@@ -305,9 +296,8 @@ def regenerate_welcome(e: me.ClickEvent):  # pylint: disable=unused-argument
     yield
 
 
-
 def generate_audio(statement: str):
-    """ Generates audio given a statement"""
+    """Generates audio given a statement"""
     post_object = {"statement": statement}
     print(post_object)
     endpoint = f"{config.BABEL_ENDPOINT}/babel"
@@ -333,17 +323,18 @@ def generate_audio(statement: str):
     bindata = str(json.dumps(post_object)).encode("utf-8")
     response = urllib.request.urlopen(req, bindata)
     response_as_string = response.read().decode("utf-8")
-    #print(response_as_string)
+    # print(response_as_string)
 
     data = json.loads(response_as_string)
     return data
 
 
 def on_click_babel(e: me.ClickEvent):  # pylint: disable=unused-argument
-    """invokes the babel endpoint
+    """Invokes the babel endpoint
 
     Args:
         e (me.ClickEvent): event click
+
     """
     state = me.state(PageState)
     state.is_loading = True

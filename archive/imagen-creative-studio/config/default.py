@@ -11,10 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Default Configuration for Creative Studio """
+"""Default Configuration for Creative Studio"""
 
 import os
 from dataclasses import dataclass, field
+
 from vertexai.generative_models import HarmBlockThreshold
 
 from models.image_models import ImageModel
@@ -67,16 +68,16 @@ class Config:
             "color_tone",
             "lighting",
             "composition",
-        ]
+        ],
     )
     gemini_settings: GeminiModelConfig = field(
-        default_factory=GeminiModelConfig, init=False
+        default_factory=GeminiModelConfig, init=False,
     )
     display_image_models: list[ImageModel] = field(
         default_factory=lambda: [
             {"display": "Imagen 3 Fast", "model_name": Config.MODEL_IMAGEN3_FAST},
             {"display": "Imagen 3", "model_name": Config.MODEL_IMAGEN3},
-        ]
+        ],
     )
 
     def __post_init__(self):

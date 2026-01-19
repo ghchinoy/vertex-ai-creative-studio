@@ -15,7 +15,6 @@
 """Data structures for the Interior Design feature."""
 
 from dataclasses import dataclass, field
-import datetime
 
 
 @dataclass

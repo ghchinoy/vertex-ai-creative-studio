@@ -93,7 +93,7 @@ COMPOSITION_OPTIONS = [
     me.SelectOption(label="Knolling", value="Knolling"),
     me.SelectOption(label="Landscape photography", value="Landscape photography"),
     me.SelectOption(
-        label="Photographed through window", value="Photographed through window"
+        label="Photographed through window", value="Photographed through window",
     ),
     me.SelectOption(label="Shallow depth of field", value="Shallow depth of field"),
     me.SelectOption(label="Shot from above", value="Shot from above"),

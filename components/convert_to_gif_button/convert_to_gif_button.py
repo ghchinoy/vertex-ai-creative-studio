@@ -13,7 +13,9 @@
 # limitations under the License.
 
 """Python wrapper for the Convert to GIF Lit component."""
+
 import mesop as me
+
 
 @me.web_component(path="./convert_to_gif_button.js")
 def convert_to_gif_button(

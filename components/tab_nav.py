@@ -17,8 +17,8 @@
 - Extend/Modify it for your specific use case.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 import mesop as me
 
@@ -41,13 +41,13 @@ def load(e: me.LoadEvent):
 @me.stateclass
 class State:
     selected_tab_index: int = 0
-    disabled_tab_indexes: set[int] = field(default_factory=lambda: {1}) # pylint: disable=invalid-field-call
+    disabled_tab_indexes: set[int] = field(default_factory=lambda: {1})  # pylint: disable=invalid-field-call
 
 
 @me.page(
     on_load=load,
     security_policy=me.SecurityPolicy(
-        allowed_iframe_parents=["https://mesop-dev.github.io"]
+        allowed_iframe_parents=["https://mesop-dev.github.io"],
     ),
     path="/tab_group",
 )
@@ -73,6 +73,7 @@ def tab_group(tabs: list[Tab], on_tab_click: Callable):
     Args:
       tabs: Metadata for rendering tabs for the tab group
       on_tab_click: Event to handle what happens when a tab header is clicked
+
     """
     tab_header(tabs, on_tab_click)
     tab_content(tabs)
@@ -86,10 +87,10 @@ def tab_header(tabs: list[Tab], on_tab_click: Callable):
             display="flex",
             border=me.Border(
                 bottom=me.BorderSide(
-                    width=1, style="solid", color=me.theme_var("outline-variant")
-                )
+                    width=1, style="solid", color=me.theme_var("outline-variant"),
+                ),
             ),
-        )
+        ),
     ):
         for index, tab in enumerate(tabs):
             if tab.visible:
@@ -125,7 +126,7 @@ def make_tab_style(selected: bool, disabled: bool, tab_width: str) -> me.Style:
     elif selected:
         style.background = me.theme_var("surface-container")
         style.border = me.Border(
-            bottom=me.BorderSide(width=2, style="solid", color=me.theme_var("primary"))
+            bottom=me.BorderSide(width=2, style="solid", color=me.theme_var("primary")),
         )
         style.cursor = "default"
     style.width = tab_width

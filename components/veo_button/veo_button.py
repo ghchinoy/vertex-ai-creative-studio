@@ -19,6 +19,7 @@ import mesop as me
 from common.analytics import log_ui_click
 from state.state import AppState
 
+
 def on_send_to_veo(e: me.ClickEvent):
     """Navigates to the Veo page with the selected image as a query parameter."""
     app_state = me.state(AppState)
@@ -38,14 +39,15 @@ def on_send_to_veo(e: me.ClickEvent):
         )
     yield
 
+
 @me.component
 def veo_button(gcs_uri: str):
-    """
-    A reusable button that navigates to the Veo page with the provided
+    """A reusable button that navigates to the Veo page with the provided
     image GCS URI.
 
     Args:
         gcs_uri: The Google Cloud Storage URI of the image to send to Veo.
+
     """
     with (
         me.content_button(
@@ -58,7 +60,7 @@ def veo_button(gcs_uri: str):
                 flex_direction="row",
                 align_items="center",
                 gap=8,
-            )
+            ),
         ),
     ):
         me.icon("slideshow")

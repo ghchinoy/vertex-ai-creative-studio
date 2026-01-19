@@ -15,21 +15,23 @@
 """Model logic for the Object Rotation feature."""
 
 import uuid
+
 from common.analytics import get_logger
 from config.firebase_config import FirebaseClient
 
 db = FirebaseClient().get_client()
 logger = get_logger(__name__)
 
+
 def save_object_rotation_project(project: dict) -> dict:
-    """
-    Creates or updates an Object Rotation project document in Firestore.
+    """Creates or updates an Object Rotation project document in Firestore.
 
     Args:
         project: A dictionary representing the project.
 
     Returns:
         The project dictionary, now with an 'id' if it was new.
+
     """
     if "id" not in project or not project.get("id"):
         project["id"] = str(uuid.uuid4())
@@ -41,7 +43,9 @@ def save_object_rotation_project(project: dict) -> dict:
 
 
 import asyncio
+
 from models.gemini import generate_image_from_prompt_and_images
+
 
 async def _generate_single_view(prompt: str, image_uri: str) -> str:
     """Helper to generate one view and return the URI."""
@@ -49,14 +53,17 @@ async def _generate_single_view(prompt: str, image_uri: str) -> str:
         generate_image_from_prompt_and_images,
         prompt=prompt,
         images=[image_uri],
-        aspect_ratio="1:1", # Assuming a square aspect ratio for product views
+        aspect_ratio="1:1",  # Assuming a square aspect ratio for product views
         gcs_folder="object_rotation_views",
     )
     if not gcs_uris:
         raise Exception(f"Failed to generate view for prompt: {prompt}")
     return gcs_uris[0]
 
-async def generate_product_views(product_description: str, image_uri: str) -> dict[str, str]:
+
+async def generate_product_views(
+    product_description: str, image_uri: str,
+) -> dict[str, str]:
     """Generates four views of a product concurrently."""
     logger.info(f"Generating four views for source image: {image_uri}")
 
@@ -70,7 +77,7 @@ async def generate_product_views(product_description: str, image_uri: str) -> di
     }
 
     tasks = [
-        _generate_single_view(prompt, image_uri) 
+        _generate_single_view(prompt, image_uri)
         for prompt in views_to_generate.values()
     ]
 
@@ -82,22 +89,27 @@ async def generate_product_views(product_description: str, image_uri: str) -> di
     return result
 
 
-from models.requests import VideoGenerationRequest, APIReferenceImage
-from models.veo import generate_video
 from config.veo_models import get_veo_model_config
+from models.requests import APIReferenceImage, VideoGenerationRequest
+from models.veo import generate_video
+
 
 def generate_rotation_video(product_views: dict[str, str]) -> str:
     """Generates a 360 rotation video from the front, back, and left views."""
     logger.info("Generating 360 rotation video from views.")
 
     if not all(k in product_views for k in ["front", "back", "left"]):
-        raise ValueError("Missing required views (front, back, left) for video generation.")
+        raise ValueError(
+            "Missing required views (front, back, left) for video generation.",
+        )
 
     # Use a model version that supports r2v, driven by config
     model_version = "3.1"
     model_config = get_veo_model_config(model_version)
     if not model_config:
-        raise ValueError(f"Could not find configuration for VEO model version: {model_version}")
+        raise ValueError(
+            f"Could not find configuration for VEO model version: {model_version}",
+        )
 
     prompt = (
         "Create a seamless, 360-degree rotating video of the product. "
@@ -115,7 +127,9 @@ def generate_rotation_video(product_views: dict[str, str]) -> str:
         prompt=prompt,
         duration_seconds=model_config.default_duration,
         video_count=1,
-        aspect_ratio=model_config.supported_aspect_ratios[0], # Use the first supported ratio
+        aspect_ratio=model_config.supported_aspect_ratios[
+            0
+        ],  # Use the first supported ratio
         resolution="720p",
         enhance_prompt=True,
         model_version_id=model_version,
@@ -129,6 +143,3 @@ def generate_rotation_video(product_views: dict[str, str]) -> str:
         raise Exception("Failed to generate rotation video.")
 
     return video_uris[0]
-
-
-

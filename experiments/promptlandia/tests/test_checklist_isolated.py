@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import json
-import re
 import os
+import re
 
 
 # This function is copied directly from pages/checklist.py to avoid dependency issues
@@ -51,10 +51,10 @@ def extract_json_from_markdown(response: str):
 def test_extract_json_from_sample():
     # Construct the absolute path to the sample file
     sample_file_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "samples", "output.md")
+        os.path.join(os.path.dirname(__file__), "..", "samples", "output.md"),
     )
 
-    with open(sample_file_path, "r") as f:
+    with open(sample_file_path) as f:
         response = f.read()
 
     combined_json = extract_json_from_markdown(response)

@@ -12,22 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import logging
+import os
+
 from moviepy import VideoFileClip
 
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 
+
 def extract_first_frame(video_path: str, output_image_path: str) -> bool:
-    """
-    Extracts the first frame of a video and saves it as an image.
+    """Extracts the first frame of a video and saves it as an image.
 
     Args:
         video_path (str): The path to the input video file.
         output_image_path (str): The path to save the output image file.
+
     Returns:
         bool: True if the frame was extracted successfully, False otherwise.
+
     """
     if not os.path.exists(video_path):
         logger.error(f"Error: Video file not found at {video_path}")
@@ -43,15 +46,17 @@ def extract_first_frame(video_path: str, output_image_path: str) -> bool:
         logger.error(f"An error occurred while extracting the frame: {e}")
         return False
 
+
 def extract_last_frame(video_path: str, output_image_path: str) -> bool:
-    """
-    Extracts the last frame of a video and saves it as an image.
+    """Extracts the last frame of a video and saves it as an image.
 
     Args:
         video_path (str): The path to the input video file.
         output_image_path (str): The path to save the output image file.
+
     Returns:
         bool: True if the frame was extracted successfully, False otherwise.
+
     """
     if not os.path.exists(video_path):
         logger.error(f"Error: Video file not found at {video_path}")
@@ -66,7 +71,7 @@ def extract_last_frame(video_path: str, output_image_path: str) -> bool:
             else:
                 # Fallback for clips without fps, though less precise
                 last_frame_time = clip.duration - 0.01
-            
+
             # Ensure the time is not negative
             last_frame_time = max(0, last_frame_time)
 
@@ -77,14 +82,18 @@ def extract_last_frame(video_path: str, output_image_path: str) -> bool:
         logger.error(f"An error occurred while extracting the frame: {e}")
         return False
 
+
 if __name__ == "__main__":
     # Configure logging for standalone execution
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
 
     # --- Configuration for standalone execution ---
     # This is an example of how to use the functions.
     # You would replace these paths with your actual video file.
-    
+
     # Example: After running main.py, you might use the downloaded video.
     INPUT_VIDEO = "video/Google I⧸O '25 Keynote.mp4"
     OUTPUT_FIRST_FRAME = "first_frame.jpg"
@@ -93,8 +102,10 @@ if __name__ == "__main__":
     if os.path.exists(INPUT_VIDEO):
         logger.info("--- Testing First Frame Extraction ---")
         extract_first_frame(INPUT_VIDEO, OUTPUT_FIRST_FRAME)
-        
+
         logger.info("\n--- Testing Last Frame Extraction ---")
         extract_last_frame(INPUT_VIDEO, OUTPUT_LAST_FRAME)
     else:
-        logger.warning(f"Example video not found at '{INPUT_VIDEO}'. Please update the path.")
+        logger.warning(
+            f"Example video not found at '{INPUT_VIDEO}'. Please update the path.",
+        )

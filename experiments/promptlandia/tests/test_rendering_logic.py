@@ -13,15 +13,14 @@
 # limitations under the License.
 
 import json
-import re
 import os
+import re
 
 # --- Test Logic (without Pydantic) ---
 
 
 def parse_evaluation_markdown(markdown_text: str) -> dict:
-    """
-    Parses the markdown output from the evaluation prompt into a dict
+    """Parses the markdown output from the evaluation prompt into a dict
     that can be used for rendering.
     """
     sections = re.split(r"# Prompt analysis for ", markdown_text)
@@ -54,7 +53,7 @@ def parse_evaluation_markdown(markdown_text: str) -> dict:
                     "Issue Found": (
                         f"**Location:** {json_data.get('location_in_prompt', 'N/A')}\n\n"
                         f"**Rationale:** {json_data.get('rationale', 'N/A')}"
-                    )
+                    ),
                 }
                 category_data = {
                     "items": {"Issue Found": True},
@@ -65,7 +64,7 @@ def parse_evaluation_markdown(markdown_text: str) -> dict:
                 category_data = {
                     "items": {"Issue Found": False},
                     "details": {
-                        "Issue Found": "Could not parse details for this category."
+                        "Issue Found": "Could not parse details for this category.",
                     },
                     "explanation": "There was an error parsing the response from the model.",
                 }
@@ -84,12 +83,12 @@ def test_parser_logic():
     ]
     for sample_file in sample_files:
         sample_file_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", sample_file)
+            os.path.join(os.path.dirname(__file__), "..", sample_file),
         )
         if not os.path.exists(sample_file_path):
             print(f"Sample file not found: {sample_file_path}")
             continue
-        with open(sample_file_path, "r") as f:
+        with open(sample_file_path) as f:
             response = f.read()
         if not response.strip():
             print(f"Sample file is empty: {sample_file}")
@@ -110,7 +109,7 @@ def test_parser_logic():
             assert "explanation" in parsed_dict["Typos"]
 
         print(
-            f"\nSuccessfully parsed markdown for {sample_file} and assertions passed!"
+            f"\nSuccessfully parsed markdown for {sample_file} and assertions passed!",
         )
 
 

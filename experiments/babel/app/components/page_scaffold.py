@@ -11,11 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Page Scaffold Mesop Component"""
+"""Page Scaffold Mesop Component"""
 
 import mesop as me
 
-from state.state import AppState
 from components.side_nav import sidenav
 from components.styles import (
     MAIN_COLUMN_STYLE,
@@ -24,12 +23,12 @@ from components.styles import (
     SIDENAV_MAX_WIDTH,
     SIDENAV_MIN_WIDTH,
 )
+from state.state import AppState
 
 
 @me.content_component
 def page_scaffold():
-    """page scaffold component"""
-
+    """Page scaffold component"""
     app_state = me.state(AppState)
 
     sidenav("")
@@ -43,22 +42,20 @@ def page_scaffold():
                 left=SIDENAV_MAX_WIDTH if app_state.sidenav_open else SIDENAV_MIN_WIDTH,
             ),
         ),
+    ), me.box(
+        style=me.Style(
+            background=me.theme_var("background"),
+            height="100%",
+            overflow_y="scroll",
+            margin=me.Margin(bottom=20),
+        ),
     ):
-        with me.box(
-            style=me.Style(
-                background=me.theme_var("background"),
-                height="100%",
-                overflow_y="scroll",
-                margin=me.Margin(bottom=20),
-            )
-        ):
-            me.slot()
+        me.slot()
 
 
 @me.content_component
 def page_frame():
     """Page Frame"""
-    with me.box(style=MAIN_COLUMN_STYLE):
-        with me.box(style=PAGE_BACKGROUND_STYLE):
-            with me.box(style=PAGE_BACKGROUND_PADDING_STYLE):
-                me.slot()
+    with me.box(style=MAIN_COLUMN_STYLE), me.box(style=PAGE_BACKGROUND_STYLE):
+        with me.box(style=PAGE_BACKGROUND_PADDING_STYLE):
+            me.slot()

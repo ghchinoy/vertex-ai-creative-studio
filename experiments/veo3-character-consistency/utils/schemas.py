@@ -12,15 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pydantic import BaseModel, Field
-from typing import List, Optional
 from enum import Enum
+
+from pydantic import BaseModel, Field
+
 
 # --- Enumerations for Constrained Choices ---
 class SexEnum(str, Enum):
     MALE = "Male"
     FEMALE = "Female"
     INDETERMINATE = "Indeterminate / Androgynous"
+
 
 class AncestryEnum(str, Enum):
     WHITE_CAUCASIAN = "White / Caucasian"
@@ -34,12 +36,14 @@ class AncestryEnum(str, Enum):
     PACIFIC_ISLANDER = "Pacific Islander"
     MIXED_RACE_AMBIGUOUS = "Mixed Race / Ambiguous"
 
+
 class FacialBuildEnum(str, Enum):
     SLENDER = "Slender / Bony"
     ATHLETIC = "Athletic / Toned"
     AVERAGE = "Average"
     HEAVY_SET = "Heavy-set / Fleshy"
     GAUNT = "Gaunt / Emaciated"
+
 
 class FaceShapeEnum(str, Enum):
     OVAL = "Oval"
@@ -50,6 +54,7 @@ class FaceShapeEnum(str, Enum):
     RECTANGULAR_LONG = "Rectangular / Long"
     TRIANGULAR = "Triangular"
 
+
 class HairLengthEnum(str, Enum):
     BALD_SHAVED = "Bald / Shaved"
     BUZZ_CUT = "Buzz cut"
@@ -59,11 +64,13 @@ class HairLengthEnum(str, Enum):
     SHOULDER_LENGTH = "Shoulder-length"
     LONG = "Long (past shoulders)"
 
+
 class HairTextureEnum(str, Enum):
     STRAIGHT = "Straight"
     WAVY = "Wavy"
     CURLY = "Curly"
     KINKY_COILY = "Kinky / Coily"
+
 
 class HairlineEnum(str, Enum):
     STRAIGHT = "Straight"
@@ -71,6 +78,7 @@ class HairlineEnum(str, Enum):
     WIDOWS_PEAK = "Widow's Peak"
     RECEDING = "Receding"
     UNEVEN = "Uneven"
+
 
 class EyeShapeEnum(str, Enum):
     ALMOND = "Almond"
@@ -81,11 +89,13 @@ class EyeShapeEnum(str, Enum):
     MONOLID = "Monolid"
     DEEP_SET = "Deep-set"
 
+
 class EyebrowShapeEnum(str, Enum):
     STRAIGHT = "Straight"
     ARCHED = "Arched"
     CURVED = "Curved"
     ANGLED = "Angled"
+
 
 class FacialHairTypeEnum(str, Enum):
     CLEAN_SHAVEN = "Clean-shaven"
@@ -93,6 +103,7 @@ class FacialHairTypeEnum(str, Enum):
     MOUSTACHE = "Moustache"
     BEARD = "Beard"
     GOATEE = "Goatee"
+
 
 # --- Nested Feature Models ---
 class OverallImpression(BaseModel):
@@ -102,12 +113,14 @@ class OverallImpression(BaseModel):
     facial_build: FacialBuildEnum
     most_memorable_feature: str
 
+
 class HeadAndFaceStructure(BaseModel):
     face_shape: FaceShapeEnum
     forehead_description: str
     cheekbones_description: str
     jawline_description: str
     chin_description: str
+
 
 class HairFeatures(BaseModel):
     color: str
@@ -117,37 +130,44 @@ class HairFeatures(BaseModel):
     hairline: HairlineEnum
     density_and_condition: str
 
+
 class EyeAndEyebrowFeatures(BaseModel):
     eyebrow_description: str
     eye_color: str
     eye_shape: EyeShapeEnum
     eye_details: str
 
+
 class NoseFeatures(BaseModel):
     bridge_description: str
     tip_description: str
     nostril_description: str
 
+
 class MouthAndLipFeatures(BaseModel):
     lip_fullness: str
     mouth_shape: str
     resting_expression: str
-    teeth_description: Optional[str]
+    teeth_description: str | None
+
 
 class SkinFeatures(BaseModel):
     complexion_and_tone: str
     texture_and_condition: str
-    distinguishing_marks: List[str]
+    distinguishing_marks: list[str]
+
 
 class FacialHairFeatures(BaseModel):
     type: FacialHairTypeEnum
     style_and_condition: str
     color: str
 
+
 class AccessoryFeatures(BaseModel):
-    eyeglasses: Optional[str]
-    headwear: Optional[str]
-    piercings: List[str]
+    eyeglasses: str | None
+    headwear: str | None
+    piercings: list[str]
+
 
 # --- The Master Schema ---
 class FacialCompositeProfile(BaseModel):
@@ -158,10 +178,15 @@ class FacialCompositeProfile(BaseModel):
     nose: NoseFeatures
     mouth_and_lips: MouthAndLipFeatures
     skin: SkinFeatures
-    facial_hair: Optional[FacialHairFeatures]
-    accessories: Optional[AccessoryFeatures]
+    facial_hair: FacialHairFeatures | None
+    accessories: AccessoryFeatures | None
+
 
 # --- Prompt Generation Schema ---
 class GeneratedPrompts(BaseModel):
-    prompt: str = Field(description="A detailed, photorealistic prompt for an image generation model.")
-    negative_prompt: str = Field(description="A prompt describing unwanted elements to exclude from the generated image.")
+    prompt: str = Field(
+        description="A detailed, photorealistic prompt for an image generation model.",
+    )
+    negative_prompt: str = Field(
+        description="A prompt describing unwanted elements to exclude from the generated image.",
+    )

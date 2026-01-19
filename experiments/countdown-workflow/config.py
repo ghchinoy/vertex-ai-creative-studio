@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import logging
+import os
+
 from dotenv import load_dotenv
 
 # Load environment variables from .env file at the project root
@@ -48,15 +49,17 @@ REVERSE_ENGINEERING_MODEL: str = "gemini-2.5-pro"
 
 # --- Logging Configuration ---
 LOG_LEVEL: int = logging.INFO
-LOG_FORMAT: str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 LOG_FILE: str = "app.log"
 
 # --- Skip rev eng config ---
-SKIP_REVERSE_ENGINEERING=True
+SKIP_REVERSE_ENGINEERING = True
+
 
 def setup_logging() -> None:
     """Configures the basic logging for the application."""
-    logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT, handlers=[
-        logging.FileHandler(LOG_FILE),
-        logging.StreamHandler()
-    ])
+    logging.basicConfig(
+        level=LOG_LEVEL,
+        format=LOG_FORMAT,
+        handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()],
+    )

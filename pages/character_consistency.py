@@ -12,24 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 from dataclasses import field
-import json
 
 import mesop as me
 
-from common.metadata import get_media_item_by_id
 from common.storage import store_to_gcs
 from common.utils import create_display_url
+from components.dialog import dialog
 from components.header import header
 from components.page_scaffold import page_frame, page_scaffold
 from models.character_consistency import generate_character_video
-from state.character_consistency_state import CharacterConsistencyState
 from state.state import AppState
-from config.default import ABOUT_PAGE_CONTENT
-from components.dialog import dialog
-from components.library.events import LibrarySelectionChangeEvent
-from components.library.library_chooser_button import library_chooser_button
 
 logger = logging.getLogger(__name__)
 
@@ -48,10 +43,10 @@ class PageState:
     """Character Consistency Page State"""
 
     uploaded_image_gcs_uris: list[str] = field(default_factory=list)  # pylint: disable=invalid-field-call
-    uploaded_image_display_urls: list[str] = field(default_factory=list) # pylint: disable=invalid-field-call
+    uploaded_image_display_urls: list[str] = field(default_factory=list)  # pylint: disable=invalid-field-call
     scene_prompt: str = ""
-    candidate_image_gcs_uris: list[str] = field(default_factory=list) # pylint: disable=invalid-field-call
-    candidate_image_display_urls: list[str] = field(default_factory=list) # pylint: disable=invalid-field-call
+    candidate_image_gcs_uris: list[str] = field(default_factory=list)  # pylint: disable=invalid-field-call
+    candidate_image_display_urls: list[str] = field(default_factory=list)  # pylint: disable=invalid-field-call
     best_image_gcs_uri: str = ""
     best_image_display_url: str = ""
     outpainted_image_gcs_uri: str = ""
@@ -65,11 +60,17 @@ class PageState:
     info_dialog_open: bool = False
 
 
-with open("config/about_content.json", "r") as f:
+with open("config/about_content.json") as f:
     about_content = json.load(f)
     CHARACTER_CONSISTENCY_INFO = next(
-        (s for s in about_content["sections"] if s.get("id") == "character_consistency"), None
+        (
+            s
+            for s in about_content["sections"]
+            if s.get("id") == "character_consistency"
+        ),
+        None,
     )
+
 
 def character_consistency_page_content():
     """UI for the Character Consistency page."""
@@ -77,7 +78,7 @@ def character_consistency_page_content():
 
     if state.info_dialog_open:
         with dialog(is_open=state.info_dialog_open):  # pylint: disable=not-context-manager
-            me.text(f'About {CHARACTER_CONSISTENCY_INFO["title"]}', type="headline-4")
+            me.text(f"About {CHARACTER_CONSISTENCY_INFO['title']}", type="headline-4")
             me.markdown(CHARACTER_CONSISTENCY_INFO["description"])
             me.divider()
             me.text("Current Settings", type="headline-6")
@@ -86,101 +87,160 @@ def character_consistency_page_content():
                 me.button("Close", on_click=close_info_dialog, type="flat")
 
     with page_frame():  # pylint: disable=not-context-manager
-            header("Character Consistency", "person", show_info_button=True, on_info_click=open_info_dialog)
+        header(
+            "Character Consistency",
+            "person",
+            show_info_button=True,
+            on_info_click=open_info_dialog,
+        )
 
-            with me.box(style=me.Style(margin=me.Margin.symmetric(vertical=20))):
-                me.uploader(
-                    label="Upload Reference Images",
-                    on_upload=on_upload,
-                    multiple=True,
-                    style=me.Style(width="100%"),
-                )
-
-            if state.uploaded_image_display_urls:
-                with me.box(style=me.Style(display="flex", flex_wrap="wrap", gap=10, justify_content="center")):
-                    for uri in state.uploaded_image_display_urls:
-                        me.image(
-                            src=uri,
-                            style=me.Style(width=200, height=200, object_fit="contain", border_radius="12px",
-                                box_shadow="0 2px 4px rgba(0,0,0,0.1)"),
-                        )
-
-            me.textarea(
-                label="Scene Prompt",
-                rows=3,
-                on_input=on_prompt_input,
+        with me.box(style=me.Style(margin=me.Margin.symmetric(vertical=20))):
+            me.uploader(
+                label="Upload Reference Images",
+                on_upload=on_upload,
+                multiple=True,
                 style=me.Style(width="100%"),
             )
 
-            with me.box(style=me.Style(display="flex", flex_direction="row", gap=16, justify_content="center")):
-                me.button(
-                    "Generate",
-                    on_click=on_generate_click,
-                    disabled=state.is_generating,
-                    type="flat",
-                )
-                me.button(
-                    "Clear",
-                    on_click=on_clear,
-                    disabled=state.is_generating,
-                    type="stroked",
-                )
+        if state.uploaded_image_display_urls:
+            with me.box(
+                style=me.Style(
+                    display="flex", flex_wrap="wrap", gap=10, justify_content="center",
+                ),
+            ):
+                for uri in state.uploaded_image_display_urls:
+                    me.image(
+                        src=uri,
+                        style=me.Style(
+                            width=200,
+                            height=200,
+                            object_fit="contain",
+                            border_radius="12px",
+                            box_shadow="0 2px 4px rgba(0,0,0,0.1)",
+                        ),
+                    )
 
-            me.text(
-                state.status_message,
-                style=me.Style(margin=me.Margin.symmetric(vertical=10)),
+        me.textarea(
+            label="Scene Prompt",
+            rows=3,
+            on_input=on_prompt_input,
+            style=me.Style(width="100%"),
+        )
+
+        with me.box(
+            style=me.Style(
+                display="flex", flex_direction="row", gap=16, justify_content="center",
+            ),
+        ):
+            me.button(
+                "Generate",
+                on_click=on_generate_click,
+                disabled=state.is_generating,
+                type="flat",
+            )
+            me.button(
+                "Clear",
+                on_click=on_clear,
+                disabled=state.is_generating,
+                type="stroked",
             )
 
-            if state.total_generation_time > 0:
-                me.text(f"Total generation time: {state.total_generation_time:.2f} seconds")
+        me.text(
+            state.status_message,
+            style=me.Style(margin=me.Margin.symmetric(vertical=10)),
+        )
 
-            if state.candidate_image_display_urls:
-                me.text("Candidate Images", type="headline-5")
+        if state.total_generation_time > 0:
+            me.text(f"Total generation time: {state.total_generation_time:.2f} seconds")
+
+        if state.candidate_image_display_urls:
+            me.text("Candidate Images", type="headline-5")
+            with me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_wrap="wrap",
+                    gap=10,
+                    justify_content="center",
+                ),
+            ):
+                for url in state.candidate_image_display_urls:
+                    me.image(
+                        src=url,
+                        style=me.Style(
+                            width=200,
+                            height=200,
+                            border_radius="12px",
+                            box_shadow="0 2px 4px rgba(0,0,0,0.1)",
+                        ),
+                    )
+
+        with me.box(
+            style=me.Style(
+                display="flex", flex_direction="row", gap=16, justify_content="center",
+            ),
+        ):
+            if state.best_image_display_url:
                 with me.box(
                     style=me.Style(
                         display="flex",
-                        flex_wrap="wrap",
-                        gap=10,
+                        flex_direction="column",
+                        gap=4,
                         justify_content="center",
-                    )
+                    ),
                 ):
-                    for url in state.candidate_image_display_urls:
-                        me.image(
-                            src=url,
-                            style=me.Style(
-                                width=200,
-                                height=200,
-                                border_radius="12px",
-                                box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                            ),
-                        )
+                    me.text("Best Image", type="headline-5")
+                    me.image(
+                        src=state.best_image_display_url,
+                        style=me.Style(
+                            width=400,
+                            height=400,
+                            object_fit="contain",
+                            border_radius="12px",
+                            box_shadow="0 2px 4px rgba(0,0,0,0.1)",
+                        ),
+                    )
 
-            with me.box(style=me.Style(display="flex", flex_direction="row", gap=16, justify_content="center")):
-                if state.best_image_display_url:
-                    with me.box(style=me.Style(display="flex", flex_direction="column", gap=4, justify_content="center")):
-                        me.text("Best Image", type="headline-5")
-                        me.image(
-                            src=state.best_image_display_url,
-                            style=me.Style(width=400, height=400, object_fit="contain", border_radius="12px",
-                                    box_shadow="0 2px 4px rgba(0,0,0,0.1)",),
-                        )
+            if state.outpainted_image_display_url:
+                with me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="column",
+                        gap=4,
+                        justify_content="center",
+                    ),
+                ):
+                    me.text("Outpainted Image", type="headline-5")
+                    me.image(
+                        src=state.outpainted_image_display_url,
+                        style=me.Style(
+                            width=600,
+                            height=338,
+                            object_fit="contain",
+                            border_radius="12px",
+                            box_shadow="0 2px 4px rgba(0,0,0,0.1)",
+                        ),
+                    )
 
-                if state.outpainted_image_display_url:
-                    with me.box(style=me.Style(display="flex", flex_direction="column", gap=4, justify_content="center")):
-                        me.text("Outpainted Image", type="headline-5")
-                        me.image(
-                            src=state.outpainted_image_display_url,
-                            style=me.Style(width=600, height=338, object_fit="contain", border_radius="12px",
-                                    box_shadow="0 2px 4px rgba(0,0,0,0.1)",),
-                        )
+        with me.box(
+            style=me.Style(
+                display="flex", flex_direction="row", gap=16, justify_content="center",
+            ),
+        ):
+            if state.final_video_display_url:
+                with me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="column",
+                        gap=12,
+                        justify_content="center",
+                    ),
+                ):
+                    me.text("Final Video", type="headline-5")
+                    me.video(
+                        src=state.final_video_display_url,
+                        style=me.Style(width=600, height=338),
+                    )
 
-            with me.box(style=me.Style(display="flex", flex_direction="row", gap=16, justify_content="center")):
-                if state.final_video_display_url:
-                    with me.box(style=me.Style(display="flex", flex_direction="column", gap=12, justify_content="center")):
-                        me.text("Final Video", type="headline-5")
-                        me.video(
-                            src=state.final_video_display_url, style=me.Style(width=600, height=338)
-                        )
 
 def on_upload(e: me.UploadEvent):
     """Handle image uploads."""
@@ -201,6 +261,7 @@ def on_prompt_input(e: me.InputEvent):
     """Handle prompt input."""
     state = me.state(PageState)
     state.scene_prompt = e.value
+
 
 def on_generate_click(e: me.ClickEvent):
     """Handle generate button click."""
@@ -226,7 +287,9 @@ def on_generate_click(e: me.ClickEvent):
                 if "candidate_image_gcs_uris" in step_result.data:
                     gcs_uris = step_result.data["candidate_image_gcs_uris"]
                     state.candidate_image_gcs_uris = gcs_uris
-                    state.candidate_image_display_urls = [create_display_url(uri) for uri in gcs_uris]
+                    state.candidate_image_display_urls = [
+                        create_display_url(uri) for uri in gcs_uris
+                    ]
                 if "best_image_gcs_uri" in step_result.data:
                     gcs_uri = step_result.data["best_image_gcs_uri"]
                     state.best_image_gcs_uri = gcs_uri
@@ -241,7 +304,9 @@ def on_generate_click(e: me.ClickEvent):
                     state.final_video_display_url = create_display_url(gcs_uri)
             yield
 
-        state.status_message = f"Workflow complete! Total time: {state.total_generation_time:.2f} seconds"
+        state.status_message = (
+            f"Workflow complete! Total time: {state.total_generation_time:.2f} seconds"
+        )
 
     except Exception as e:
         logger.error("Error generating character video", exc_info=True)
@@ -249,6 +314,7 @@ def on_generate_click(e: me.ClickEvent):
 
     state.is_generating = False
     yield
+
 
 def on_clear(e: me.ClickEvent):
     """Clear the state of the page."""
@@ -269,11 +335,13 @@ def on_clear(e: me.ClickEvent):
     state.total_generation_time = 0.0
     yield
 
+
 def open_info_dialog(e: me.ClickEvent):
     """Open the info dialog."""
     state = me.state(PageState)
     state.info_dialog_open = True
     yield
+
 
 def close_info_dialog(e: me.ClickEvent):
     """Close the info dialog."""

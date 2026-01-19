@@ -202,3 +202,8 @@ FIREBASE_MEASUREMENT_ID=
 # [OPTIONAL] Gemini model used in the Character Consistency workflow.
 # Default: Same as MODEL_ID
 # CHARACTER_CONSISTENCY_GEMINI_MODEL=
+
+# [OPTIONAL] Comma-separated list of email domains allowed to access the application.
+# Used as a fallback if a user is not explicitly added to the 'users' collection.
+# Example: google.com,gmail.com
+# DOMAIN_ALLOWLIST=

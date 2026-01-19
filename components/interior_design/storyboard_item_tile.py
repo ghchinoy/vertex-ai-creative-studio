@@ -1,9 +1,9 @@
-"""
-Component for displaying a single item in the storyboard.
+"""Component for displaying a single item in the storyboard.
 """
 
+from collections.abc import Callable
+
 import mesop as me
-from typing import Callable
 
 from common.utils import create_display_url
 
@@ -15,10 +15,11 @@ def storyboard_item_tile(
     on_click: Callable,
     key: str,
 ):
+    """A simple tile for displaying a storyboard item.
     """
-    A simple tile for displaying a storyboard item.
-    """
-    display_url = create_display_url(image_url) if image_url.startswith("gs://") else image_url
+    display_url = (
+        create_display_url(image_url) if image_url.startswith("gs://") else image_url
+    )
     with me.box(
         key=key,
         on_click=on_click,
@@ -32,26 +33,25 @@ def storyboard_item_tile(
             border=me.Border.all(me.BorderSide(color=me.theme_var("outline-variant"))),
             flex_shrink=0,
         ),
+    ), me.box(
+        style=me.Style(
+            position="absolute",
+            bottom=0,
+            left=0,
+            right=0,
+            background="rgba(0, 0, 0, 0.6)",
+            padding=me.Padding(top=4, bottom=4, left=8, right=8),
+            border_radius="0 0 8px 8px",
+        ),
     ):
-        with me.box(
+        me.text(
+            room_name,
             style=me.Style(
-                position="absolute",
-                bottom=0,
-                left=0,
-                right=0,
-                background="rgba(0, 0, 0, 0.6)",
-                padding=me.Padding(top=4, bottom=4, left=8, right=8),
-                border_radius="0 0 8px 8px",
-            )
-        ):
-            me.text(
-                room_name,
-                style=me.Style(
-                    color="white",
-                    font_size=14,
-                    font_weight=500,
-                    overflow="hidden",
-                    text_overflow="ellipsis",
-                    white_space="nowrap",
-                ),
-            )
+                color="white",
+                font_size=14,
+                font_weight=500,
+                overflow="hidden",
+                text_overflow="ellipsis",
+                white_space="nowrap",
+            ),
+        )

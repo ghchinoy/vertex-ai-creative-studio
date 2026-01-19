@@ -15,10 +15,8 @@
 """A test page for concatenating videos using moviepy."""
 
 import datetime
-import time
-from dataclasses import field, dataclass
-from typing import Callable
-import concurrent.futures
+from collections.abc import Callable
+from dataclasses import dataclass, field
 
 import mesop as me
 
@@ -27,7 +25,7 @@ from common.metadata import (
     add_media_item_to_firestore,
 )
 from common.storage import store_to_gcs
-from components.dialog import dialog
+from common.utils import create_display_url
 from components.header import header
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
@@ -38,15 +36,14 @@ from models.video_processing import (
     layer_audio_on_video,
     process_videos,
 )
-from common.utils import create_display_url
 from state.state import AppState
 
 
 @me.stateclass
 class PageState:
     # Using a dict to store selected videos, keyed by chooser id (e.g., "video_1")
-    selected_videos: dict[str, str] = field(default_factory=dict) # pylint: disable=E3701:invalid-field-call
-    selected_videos_display_urls: dict[str, str] = field(default_factory=dict) # pylint: disable=E3701:invalid-field-call
+    selected_videos: dict[str, str] = field(default_factory=dict)  # pylint: disable=E3701:invalid-field-call
+    selected_videos_display_urls: dict[str, str] = field(default_factory=dict)  # pylint: disable=E3701:invalid-field-call
     concatenated_video_url: str = ""
     concatenated_video_display_url: str = ""
     gif_url: str = ""
@@ -87,8 +84,8 @@ VIDEO_PLACEHOLDER_STYLE = me.Style(
     title="Pixie Compositor",
 )
 def pixie_compositor_page():
-    with page_scaffold(page_name="pixie_compositor"): # pylint: disable=E1129:not-context-manager
-        with page_frame(): # pylint: disable=E1129:not-context-manager
+    with page_scaffold(page_name="pixie_compositor"):  # pylint: disable=E1129:not-context-manager
+        with page_frame():  # pylint: disable=E1129:not-context-manager
             header("Pixie Compositor", "auto_fix_high")
             page_content()
 
@@ -114,10 +111,10 @@ def _tab_group(tabs: list[Tab], on_tab_click: Callable, selected_tab_key: str):
             display="flex",
             border=me.Border(
                 bottom=me.BorderSide(
-                    width=1, style="solid", color=me.theme_var("outline-variant")
-                )
+                    width=1, style="solid", color=me.theme_var("outline-variant"),
+                ),
             ),
-        )
+        ),
     ):
         for tab in tabs:
             is_selected = tab.key == selected_tab_key
@@ -149,7 +146,7 @@ def _make_tab_style(selected: bool) -> me.Style:
     if selected:
         style.background = me.theme_var("surface-container")
         style.border = me.Border(
-            bottom=me.BorderSide(width=2, style="solid", color=me.theme_var("primary"))
+            bottom=me.BorderSide(width=2, style="solid", color=me.theme_var("primary")),
         )
         style.cursor = "default"
     return style
@@ -178,26 +175,29 @@ def render_video_video_tab():
     state = me.state(PageState)
     with me.box(
         style=me.Style(
-            display="flex", flex_direction="column", gap=20, margin=me.Margin(top=20)
-        )
+            display="flex", flex_direction="column", gap=20, margin=me.Margin(top=20),
+        ),
     ):
         me.text("Select two videos from the library to process.")
 
         # Video Selection Area
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=20, justify_content="center"
-            )
+                display="flex", flex_direction="row", gap=20, justify_content="center",
+            ),
         ):
             # Video 1 Selector
             with me.box(
-                style=me.Style(display="flex", flex_direction="column", gap=10)
+                style=me.Style(display="flex", flex_direction="column", gap=10),
             ):
                 me.text("Video 1")
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="row", gap=8, align_items="center"
-                    )
+                        display="flex",
+                        flex_direction="row",
+                        gap=8,
+                        align_items="center",
+                    ),
                 ):
                     me.uploader(
                         label="Upload Video",
@@ -213,7 +213,9 @@ def render_video_video_tab():
                 with me.box(style=VIDEO_PLACEHOLDER_STYLE):
                     if "video_1" in state.selected_videos_display_urls:
                         me.video(
-                            key=state.selected_videos["video_1"],  # Add key to force re-render
+                            key=state.selected_videos[
+                                "video_1"
+                            ],  # Add key to force re-render
                             src=state.selected_videos_display_urls["video_1"],
                             style=me.Style(
                                 height="100%",
@@ -228,13 +230,16 @@ def render_video_video_tab():
 
             # Video 2 Selector
             with me.box(
-                style=me.Style(display="flex", flex_direction="column", gap=10)
+                style=me.Style(display="flex", flex_direction="column", gap=10),
             ):
                 me.text("Video 2")
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="row", gap=8, align_items="center"
-                    )
+                        display="flex",
+                        flex_direction="row",
+                        gap=8,
+                        align_items="center",
+                    ),
                 ):
                     me.uploader(
                         label="Upload Video",
@@ -250,9 +255,13 @@ def render_video_video_tab():
                 with me.box(style=VIDEO_PLACEHOLDER_STYLE):
                     if "video_2" in state.selected_videos_display_urls:
                         me.video(
-                            key=state.selected_videos["video_2"],  # Add key to force re-render
+                            key=state.selected_videos[
+                                "video_2"
+                            ],  # Add key to force re-render
                             src=state.selected_videos_display_urls["video_2"],
-                            style=me.Style(height="100%", width="100%", border_radius=8),
+                            style=me.Style(
+                                height="100%", width="100%", border_radius=8,
+                            ),
                         )
                     else:
                         me.icon("movie")
@@ -305,7 +314,7 @@ def render_video_video_tab():
                     flex_direction="column",
                     align_items="center",
                     gap=10,
-                )
+                ),
             ):
                 me.video(
                     src=state.concatenated_video_display_url,
@@ -328,7 +337,7 @@ def render_video_video_tab():
                     flex_direction="column",
                     align_items="center",
                     gap=10,
-                )
+                ),
             ):
                 me.text("Video as GIF:", type="headline-5")
                 me.image(
@@ -341,26 +350,29 @@ def render_video_audio_tab():
     state = me.state(PageState)
     with me.box(
         style=me.Style(
-            display="flex", flex_direction="column", gap=20, margin=me.Margin(top=20)
-        )
+            display="flex", flex_direction="column", gap=20, margin=me.Margin(top=20),
+        ),
     ):
         me.text("Select a video and an audio file to layer.")
 
         # Media Selection Area
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=20, justify_content="center"
-            )
+                display="flex", flex_direction="row", gap=20, justify_content="center",
+            ),
         ):
             # Video Selector
             with me.box(
-                style=me.Style(display="flex", flex_direction="column", gap=10)
+                style=me.Style(display="flex", flex_direction="column", gap=10),
             ):
                 me.text("Video")
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="row", gap=8, align_items="center"
-                    )
+                        display="flex",
+                        flex_direction="row",
+                        gap=8,
+                        align_items="center",
+                    ),
                 ):
                     me.uploader(
                         label="Upload Video",
@@ -391,13 +403,16 @@ def render_video_audio_tab():
 
             # Audio Selector
             with me.box(
-                style=me.Style(display="flex", flex_direction="column", gap=10)
+                style=me.Style(display="flex", flex_direction="column", gap=10),
             ):
                 me.text("Audio")
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="row", gap=8, align_items="center"
-                    )
+                        display="flex",
+                        flex_direction="row",
+                        gap=8,
+                        align_items="center",
+                    ),
                 ):
                     me.uploader(
                         label="Upload Audio",
@@ -454,7 +469,7 @@ def render_video_audio_tab():
                     flex_direction="column",
                     align_items="center",
                     gap=10,
-                )
+                ),
             ):
                 me.video(
                     src=state.concatenated_video_display_url,
@@ -466,7 +481,7 @@ def on_upload_video_for_audio(e: me.UploadEvent):
     """Upload video handler for the audio tab."""
     state = me.state(PageState)
     gcs_url = store_to_gcs(
-        "pixie_compositor_uploads", e.file.name, e.file.mime_type, e.file.getvalue()
+        "pixie_compositor_uploads", e.file.name, e.file.mime_type, e.file.getvalue(),
     )
     state.selected_video_for_audio = gcs_url
     state.selected_video_for_audio_display_url = create_display_url(gcs_url)
@@ -484,7 +499,7 @@ def on_upload_audio(e: me.UploadEvent):
     """Upload audio handler for the audio tab."""
     state = me.state(PageState)
     gcs_url = store_to_gcs(
-        "pixie_compositor_uploads", e.file.name, e.file.mime_type, e.file.getvalue()
+        "pixie_compositor_uploads", e.file.name, e.file.mime_type, e.file.getvalue(),
     )
     state.selected_audio = gcs_url
     state.selected_audio_display_url = create_display_url(gcs_url)
@@ -509,7 +524,7 @@ def on_layer_audio_click(e: me.ClickEvent):
 
     try:
         processed_uri = layer_audio_on_video(
-            state.selected_video_for_audio, state.selected_audio
+            state.selected_video_for_audio, state.selected_audio,
         )
         state.concatenated_video_url = processed_uri
         state.concatenated_video_display_url = create_display_url(processed_uri)
@@ -519,12 +534,12 @@ def on_layer_audio_click(e: me.ClickEvent):
             MediaItem(
                 gcsuri=processed_uri,
                 user_email=app_state.user_email,
-                timestamp=datetime.datetime.now(datetime.timezone.utc),
+                timestamp=datetime.datetime.now(datetime.UTC),
                 mime_type="video/mp4",
                 source_uris=[state.selected_video_for_audio, state.selected_audio],
                 comment="Produced by Pixie Compositor: Video + Audio",
                 model="pixie-compositor-v1-audio-layer",
-            )
+            ),
         )
 
     except Exception as ex:
@@ -551,7 +566,7 @@ def on_upload_video_1(e: me.UploadEvent):
     """Upload video 1 handler."""
     state = me.state(PageState)
     gcs_url = store_to_gcs(
-        "pixie_compositor_uploads", e.file.name, e.file.mime_type, e.file.getvalue()
+        "pixie_compositor_uploads", e.file.name, e.file.mime_type, e.file.getvalue(),
     )
     state.selected_videos["video_1"] = gcs_url
     state.selected_videos_display_urls["video_1"] = create_display_url(gcs_url)
@@ -562,7 +577,7 @@ def on_upload_video_2(e: me.UploadEvent):
     """Upload video 2 handler."""
     state = me.state(PageState)
     gcs_url = store_to_gcs(
-        "pixie_compositor_uploads", e.file.name, e.file.mime_type, e.file.getvalue()
+        "pixie_compositor_uploads", e.file.name, e.file.mime_type, e.file.getvalue(),
     )
     state.selected_videos["video_2"] = gcs_url
     state.selected_videos_display_urls["video_2"] = create_display_url(gcs_url)
@@ -598,9 +613,7 @@ def on_process_click(e: me.ClickEvent):
             state.selected_videos["video_1"],
             state.selected_videos["video_2"],
         ]
-        processed_uri = process_videos(
-            video_uris_to_process, state.selected_transition
-        )
+        processed_uri = process_videos(video_uris_to_process, state.selected_transition)
         state.concatenated_video_url = processed_uri
         state.concatenated_video_display_url = create_display_url(processed_uri)
 
@@ -609,7 +622,7 @@ def on_process_click(e: me.ClickEvent):
             MediaItem(
                 gcsuri=processed_uri,
                 user_email=app_state.user_email,
-                timestamp=datetime.datetime.now(datetime.timezone.utc),
+                timestamp=datetime.datetime.now(datetime.UTC),
                 mime_type="video/mp4",
                 source_uris=video_uris_to_process,
                 comment=f"Produced by Pixie Compositor with {state.selected_transition} transition",
@@ -639,7 +652,9 @@ def on_convert_to_gif_click(e: me.ClickEvent):
     yield
 
     try:
-        gif_gcs_uri = convert_mp4_to_gif(state.concatenated_video_url, user_email=app_state.user_email)
+        gif_gcs_uri = convert_mp4_to_gif(
+            state.concatenated_video_url, user_email=app_state.user_email,
+        )
         state.gif_url = gif_gcs_uri
         state.gif_display_url = create_display_url(gif_gcs_uri)
     except Exception as ex:

@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mesop as me
 import typing
+
+import mesop as me
+
 
 @me.web_component(path="./auth_handler.js")
 def auth_handler(
@@ -25,8 +27,7 @@ def auth_handler(
     cached_photo_url: str = "",
     key: str | None = None,
 ):
-    """
-    Handles Firebase Authentication.
+    """Handles Firebase Authentication.
     """
     return me.insert_web_component(
         key=key,

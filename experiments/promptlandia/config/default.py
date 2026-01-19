@@ -21,6 +21,7 @@ application without modifying the code.
 
 import os
 from dataclasses import dataclass, field
+
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
@@ -39,6 +40,7 @@ class Default:
         LOCATION: The Google Cloud location to use for the generative AI model.
         MODEL_ID: The ID of the generative AI model to use.
         INIT_VERTEX: Whether to initialize the Vertex AI client.
+
     """
 
     PROJECT_ID: str = field(default_factory=lambda: os.environ.get("PROJECT_ID"))

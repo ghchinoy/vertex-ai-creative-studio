@@ -14,25 +14,26 @@
 
 import mesop as me
 
+
 @me.stateclass
 class PageState:
     """Character Sheet Page State"""
-    
+
     # Input
     original_image_gcs_uri: str = ""
     original_image_display_url: str = ""
     scenario_prompt: str = ""
-    
+
     # Asset Sheet Generation
     is_generating_sheet: bool = False
     asset_sheet_gcs_uri: str = ""
     asset_sheet_display_url: str = ""
-    
+
     # Scenario Generation
     is_generating_scenario: bool = False
     scenario_image_gcs_uri: str = ""
     scenario_image_display_url: str = ""
-    
+
     # UI
     show_snackbar: bool = False
     snackbar_message: str = ""

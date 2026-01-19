@@ -1,5 +1,7 @@
-import mesop as me
 import typing
+
+import mesop as me
+
 
 @me.web_component(path="./interactive_tile.js")
 def interactive_tile(

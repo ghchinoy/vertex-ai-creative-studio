@@ -13,19 +13,21 @@
 # limitations under the License.
 """Dialog mesop component"""
 
-from typing import Optional
 
 import mesop as me
 
 
 @me.content_component
-def dialog(is_open: bool, dialog_style: Optional[me.Style] = None, key: Optional[str] = None):
+def dialog(
+    is_open: bool, dialog_style: me.Style | None = None, key: str | None = None,
+):
     """Render a dialog component.
 
     Args:
       is_open: Whether the dialog is visible or not.
       dialog_style: Optional style to apply to the main dialog box container,
                     allowing overrides for width, max_width, etc.
+
     """
     # NOTE: Do NOT use `if not is_open: return`. A content component must always
     # have a path that calls `me.slot()`. Visibility is handled by the `display`
@@ -51,17 +53,39 @@ def dialog(is_open: bool, dialog_style: Optional[me.Style] = None, key: Optional
     # Manually create the final style, allowing `dialog_style` to override defaults.
     # This is necessary because me.Style objects are immutable and have no merge method.
     final_style = me.Style(
-        background=dialog_style.background if dialog_style and dialog_style.background is not None else defaults["background"],
-        border_radius=dialog_style.border_radius if dialog_style and dialog_style.border_radius is not None else defaults["border_radius"],
-        box_shadow=dialog_style.box_shadow if dialog_style and dialog_style.box_shadow is not None else defaults["box_shadow"],
-        display=dialog_style.display if dialog_style and dialog_style.display is not None else defaults["display"],
-        flex_direction=dialog_style.flex_direction if dialog_style and dialog_style.flex_direction is not None else defaults["flex_direction"],
-        max_height=dialog_style.max_height if dialog_style and dialog_style.max_height is not None else defaults["max_height"],
-        overflow_y=dialog_style.overflow_y if dialog_style and dialog_style.overflow_y is not None else defaults["overflow_y"],
-        padding=dialog_style.padding if dialog_style and dialog_style.padding is not None else defaults["padding"],
-        pointer_events=dialog_style.pointer_events if dialog_style and dialog_style.pointer_events is not None else defaults["pointer_events"],
-        width=dialog_style.width if dialog_style and dialog_style.width is not None else defaults["width"],
-        max_width=dialog_style.max_width if dialog_style and dialog_style.max_width is not None else defaults["max_width"],
+        background=dialog_style.background
+        if dialog_style and dialog_style.background is not None
+        else defaults["background"],
+        border_radius=dialog_style.border_radius
+        if dialog_style and dialog_style.border_radius is not None
+        else defaults["border_radius"],
+        box_shadow=dialog_style.box_shadow
+        if dialog_style and dialog_style.box_shadow is not None
+        else defaults["box_shadow"],
+        display=dialog_style.display
+        if dialog_style and dialog_style.display is not None
+        else defaults["display"],
+        flex_direction=dialog_style.flex_direction
+        if dialog_style and dialog_style.flex_direction is not None
+        else defaults["flex_direction"],
+        max_height=dialog_style.max_height
+        if dialog_style and dialog_style.max_height is not None
+        else defaults["max_height"],
+        overflow_y=dialog_style.overflow_y
+        if dialog_style and dialog_style.overflow_y is not None
+        else defaults["overflow_y"],
+        padding=dialog_style.padding
+        if dialog_style and dialog_style.padding is not None
+        else defaults["padding"],
+        pointer_events=dialog_style.pointer_events
+        if dialog_style and dialog_style.pointer_events is not None
+        else defaults["pointer_events"],
+        width=dialog_style.width
+        if dialog_style and dialog_style.width is not None
+        else defaults["width"],
+        max_width=dialog_style.max_width
+        if dialog_style and dialog_style.max_width is not None
+        else defaults["max_width"],
     )
 
     with me.box(
@@ -77,20 +101,18 @@ def dialog(is_open: bool, dialog_style: Optional[me.Style] = None, key: Optional
             position="fixed",
             width="100%",
             z_index=1000,
-        )
-    ):
-        with me.box(
-            style=me.Style(
-                display="flex",
-                align_items="center",
-                justify_content="center",
-                height="100%",
-                width="100%",
-                padding=me.Padding.all(20),
-            )
-        ):
-            with me.box(style=final_style):
-                me.slot()
+        ),
+    ), me.box(
+        style=me.Style(
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            height="100%",
+            width="100%",
+            padding=me.Padding.all(20),
+        ),
+    ), me.box(style=final_style):
+        me.slot()
 
 
 @me.content_component
@@ -98,7 +120,7 @@ def dialog_actions():
     """Helper component for rendering action buttons so they are right aligned."""
     with me.box(
         style=me.Style(
-            display="flex", justify_content="flex-end", margin=me.Margin(top=24), gap=8
-        )
+            display="flex", justify_content="flex-end", margin=me.Margin(top=24), gap=8,
+        ),
     ):
         me.slot()

@@ -13,12 +13,12 @@
 # limitations under the License.
 import mesop as me
 
+from common.metadata import get_elo_ratings
 from components.header import header
 from components.page_scaffold import (
-    page_scaffold,
     page_frame,
+    page_scaffold,
 )
-from common.metadata import get_elo_ratings
 
 
 def leaderboard_page_content(app_state: me.state):
@@ -30,15 +30,16 @@ def leaderboard_page_content(app_state: me.state):
             df = get_elo_ratings(app_state.study)
 
             with me.box(
-                style=me.Style(align_items="center", display="flex", justify_content="space-evenly")
-            ):
-                with me.box(style=me.Style(padding=me.Padding.all(10), width=500)):
-                    me.table(
-                        df,
-                        #on_click=on_click,
-                        header=me.TableHeader(sticky=True),
-                        columns={
-                            "NA": me.TableColumn(sticky=True),
-                            "Index": me.TableColumn(sticky=True),
-                        },
-                    )
+                style=me.Style(
+                    align_items="center", display="flex", justify_content="space-evenly",
+                ),
+            ), me.box(style=me.Style(padding=me.Padding.all(10), width=500)):
+                me.table(
+                    df,
+                    # on_click=on_click,
+                    header=me.TableHeader(sticky=True),
+                    columns={
+                        "NA": me.TableColumn(sticky=True),
+                        "Index": me.TableColumn(sticky=True),
+                    },
+                )

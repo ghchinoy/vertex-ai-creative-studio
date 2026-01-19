@@ -14,8 +14,9 @@
 
 """Python wrapper for the Scroll Sentinel Lit component."""
 
-import mesop as me
 import typing
+
+import mesop as me
 
 
 @me.web_component(path="./scroll_sentinel.js")

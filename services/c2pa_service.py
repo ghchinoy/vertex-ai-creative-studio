@@ -17,22 +17,25 @@
 import json
 import os
 import tempfile
+
 import c2pa
-from common.storage import download_from_gcs
+
 from common.analytics import analytics_logger
+from common.storage import download_from_gcs
+
 
 class C2PAService:
     """Service to handle C2PA operations."""
 
     def read_manifest(self, image_uri: str) -> dict | None:
-        """
-        Reads the C2PA manifest from a local file or GCS URI.
+        """Reads the C2PA manifest from a local file or GCS URI.
 
         Args:
             image_uri: Local path or gs:// URI to the image.
 
         Returns:
             The manifest store as a dictionary, or None if no manifest found or error.
+
         """
         local_path = image_uri
         is_temp = False
@@ -44,7 +47,7 @@ class C2PAService:
                 fd, local_path = tempfile.mkstemp(suffix=".png")
                 os.close(fd)
                 is_temp = True
-                
+
                 # Download content (bytes) and write to temp file
                 # We use download_from_gcs which returns bytes
                 image_bytes = download_from_gcs(image_uri)
@@ -77,6 +80,7 @@ class C2PAService:
             # Cleanup temp file if we created one
             if is_temp and os.path.exists(local_path):
                 os.remove(local_path)
+
 
 # Global instance
 c2pa_service = C2PAService()

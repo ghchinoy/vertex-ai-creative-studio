@@ -1,15 +1,16 @@
-import os
 import json
-import time
+import os
 import random
-from typing import Optional, Dict, Any
-from PIL import Image
-from google import genai
-from google.genai import types as genai_types
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
+from google import genai
+from google.genai import types as genai_types
+from PIL import Image
+
 load_dotenv()
 
 # --- Configuration ---
@@ -21,6 +22,7 @@ VEO_OUTPUT_DIR = "video_pairs"
 GENERATED_PROMPTS_JSON = "augmented_prompts.json"
 VIDEO_GEN_MAX_WORKERS = 4
 
+
 def get_genai_client() -> genai.Client:
     """Initializes and returns a GenAI client."""
     try:
@@ -29,16 +31,16 @@ def get_genai_client() -> genai.Client:
         print(f"Error initializing GenAI client: {e}")
         raise
 
+
 def generate_single_video(
     client: genai.Client,
     prompt_text: str,
     output_path: str,
-    image_path: Optional[str] = None,
+    image_path: str | None = None,
     max_retries=3,
-    enhance_prompt=False
+    enhance_prompt=False,
 ):
-    """
-    Generates a video from a prompt, optionally with an image.
+    """Generates a video from a prompt, optionally with an image.
     """
     if not prompt_text:
         print(f"Skipping video generation for {output_path} due to empty prompt.")
@@ -54,7 +56,9 @@ def generate_single_video(
                 aspect_ratio = "9:16" if height > width else "16:9"
             input_image = genai_types.Image.from_file(location=image_path)
         except FileNotFoundError:
-            print(f"Error: Image file not found at {image_path}. Skipping video generation.")
+            print(
+                f"Error: Image file not found at {image_path}. Skipping video generation.",
+            )
             return False
         except Exception as e:
             print(f"Error opening image {image_path}: {e}. Skipping video generation.")
@@ -77,7 +81,9 @@ def generate_single_video(
             if input_image:
                 generate_videos_kwargs["image"] = input_image
 
-            print(f"Submitting request for '{os.path.basename(output_path)}' (Attempt {attempt + 1}/{max_retries})...")
+            print(
+                f"Submitting request for '{os.path.basename(output_path)}' (Attempt {attempt + 1}/{max_retries})...",
+            )
             operation = client.models.generate_videos(**generate_videos_kwargs)
 
             print(f"  - Waiting for '{os.path.basename(output_path)}' to complete...")
@@ -87,10 +93,18 @@ def generate_single_video(
 
             if operation.error:
                 error_message = str(operation.error).lower()
-                print(f"  - Error generating video {os.path.basename(output_path)}: {operation.error}")
-                if ("internal error" in error_message or "resource exhausted" in error_message or "quota exceeded" in error_message) and attempt < max_retries - 1:
+                print(
+                    f"  - Error generating video {os.path.basename(output_path)}: {operation.error}",
+                )
+                if (
+                    "internal error" in error_message
+                    or "resource exhausted" in error_message
+                    or "quota exceeded" in error_message
+                ) and attempt < max_retries - 1:
                     delay = base_delay * (2**attempt) + random.uniform(0, 1)
-                    print(f"  - Retrying after operation error in {delay:.2f} seconds...")
+                    print(
+                        f"  - Retrying after operation error in {delay:.2f} seconds...",
+                    )
                     time.sleep(delay)
                     continue
                 return False
@@ -105,30 +119,40 @@ def generate_single_video(
 
         except Exception as e:
             error_message = str(e).lower()
-            print(f"Exception during video generation for {os.path.basename(output_path)}: {e}")
-            if ("internal error" in error_message or "resource exhausted" in error_message or "quota exceeded" in error_message) and attempt < max_retries - 1:
+            print(
+                f"Exception during video generation for {os.path.basename(output_path)}: {e}",
+            )
+            if (
+                "internal error" in error_message
+                or "resource exhausted" in error_message
+                or "quota exceeded" in error_message
+            ) and attempt < max_retries - 1:
                 delay = base_delay * (2**attempt) + random.uniform(0, 1)
                 print(f"  - Retrying after exception in {delay:.2f} seconds...")
                 time.sleep(delay)
                 continue
             return False
 
-    print(f"Failed to generate video {os.path.basename(output_path)} after {max_retries} attempts.")
+    print(
+        f"Failed to generate video {os.path.basename(output_path)} after {max_retries} attempts.",
+    )
     return False
 
-def process_prompt_item(client: genai.Client, prompt_item: Dict[str, Any]):
+
+def process_prompt_item(client: genai.Client, prompt_item: dict[str, Any]):
+    """Processes a single item from the prompts file to generate original and augmented videos.
     """
-    Processes a single item from the prompts file to generate original and augmented videos.
-    """
-    original_prompt = prompt_item.get('original_prompt')
-    augmented_prompt = prompt_item.get('augmented_prompt')
-    image_path = prompt_item.get('image_path')
+    original_prompt = prompt_item.get("original_prompt")
+    augmented_prompt = prompt_item.get("augmented_prompt")
+    image_path = prompt_item.get("image_path")
 
     if image_path:
         print(f"\n--- Processing Pair for Image: {image_path} ---")
         base_name = os.path.splitext(os.path.basename(image_path))[0]
     else:
-        sanitized_name = "".join(c for c in original_prompt if c.isalnum() or c in " _-").rstrip()
+        sanitized_name = "".join(
+            c for c in original_prompt if c.isalnum() or c in " _-"
+        ).rstrip()
         base_name = f"text_{sanitized_name.replace(' ', '_').lower()[:30]}"
         print(f"\n--- Processing Pair for Text Prompt: {base_name} ---")
 
@@ -141,26 +165,26 @@ def process_prompt_item(client: genai.Client, prompt_item: Dict[str, Any]):
             client,
             original_prompt,
             os.path.join(output_dir, "original.mp4"),
-            image_path=image_path
+            image_path=image_path,
         )
-    
+
     # Generate augmented video
     if augmented_prompt:
         generate_single_video(
             client,
             augmented_prompt,
             os.path.join(output_dir, "augmented.mp4"),
-            image_path=image_path
+            image_path=image_path,
         )
 
+
 def main():
-    """
-    Loads prompts and generates video pairs in parallel.
+    """Loads prompts and generates video pairs in parallel.
     """
     client = get_genai_client()
 
     try:
-        with open(GENERATED_PROMPTS_JSON, 'r') as f:
+        with open(GENERATED_PROMPTS_JSON) as f:
             prompts_data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f"Error loading {GENERATED_PROMPTS_JSON}: {e}. Exiting.")
@@ -174,7 +198,9 @@ def main():
     start_time = time.time()
 
     with ThreadPoolExecutor(max_workers=VIDEO_GEN_MAX_WORKERS) as executor:
-        futures = [executor.submit(process_prompt_item, client, item) for item in prompts_data]
+        futures = [
+            executor.submit(process_prompt_item, client, item) for item in prompts_data
+        ]
         for future in as_completed(futures):
             try:
                 future.result()
@@ -182,11 +208,12 @@ def main():
                 print(f"A video generation process failed: {e}")
 
     end_time = time.time()
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("### VIDEO GENERATION COMPLETE ###")
     print(f"Total time taken: {end_time - start_time:.2f} seconds.")
     print(f"Videos saved in '{VEO_OUTPUT_DIR}' directory.")
-    print("="*80)
+    print("=" * 80)
+
 
 if __name__ == "__main__":
     main()

@@ -12,6 +12,7 @@
 # limitations under the License.
 
 """Logger configuration for GenMedia Arena"""
+
 import logging
 
 
@@ -29,6 +30,7 @@ class LogLevel:
 
     def __repr__(self):
         return self._names.get(self.value, "UNKNOWN")
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -53,5 +55,5 @@ def log(message: str, level: LogLevel = LogLevel.ON):
         log_method(message)
     else:
         raise ValueError(
-            f"Invalid log level specified: {level}. Use LogLevel.ON, LogLevel.OFF, LogLevel.WARNING, or LogLevel.ERROR."
+            f"Invalid log level specified: {level}. Use LogLevel.ON, LogLevel.OFF, LogLevel.WARNING, or LogLevel.ERROR.",
         )

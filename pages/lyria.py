@@ -13,15 +13,15 @@
 # limitations under the License.
 """Lyria 2 mesop ui page"""
 
+import datetime  # Required for timestamp
 import json
 import time
-from typing import Optional
 from dataclasses import field
 
 import mesop as me
-import datetime # Required for timestamp
 
-from common.metadata import MediaItem, add_media_item_to_firestore # Updated import
+from common.metadata import MediaItem, add_media_item_to_firestore  # Updated import
+from common.utils import create_display_url
 from components.dialog import dialog, dialog_actions
 from components.header import header
 from components.page_scaffold import (
@@ -31,13 +31,13 @@ from components.page_scaffold import (
 from components.pill import pill
 from config.default import Default
 from config.rewriters import MUSIC_REWRITER
+from models.audio_analysis import analyze_audio_file
 from models.gemini import analyze_audio_with_gemini, rewriter
 from models.lyria import generate_music_with_lyria
-from models.audio_analysis import analyze_audio_file
 from state.state import AppState
-from common.utils import create_display_url
 
 cfg = Default()
+
 
 @me.page(path="/lyria", title="Lyria - GenMedia Creative Studio")
 def lyria_page():
@@ -80,11 +80,11 @@ class PageState:
     show_error_dialog: bool = False
     error_message: str = ""
 
-    audio_analysis_result_json: Optional[str] = None
+    audio_analysis_result_json: str | None = None
     analysis_error_message: str = ""
 
     info_dialog_open: bool = False
-    
+
     audio_metrics: AudioMetricsState = field(default_factory=AudioMetricsState)
     has_audio_metrics: bool = False
 
@@ -127,7 +127,7 @@ def lyria_content(app_state: me.state):
     pagestate = me.state(PageState)
 
     if pagestate.info_dialog_open:
-        with dialog(is_open=pagestate.info_dialog_open): # pylint: disable=not-context-manager
+        with dialog(is_open=pagestate.info_dialog_open):  # pylint: disable=not-context-manager
             me.text("About Lyria", type="headline-6")
             me.markdown(ABOUT_PAGE_CONTENT["sections"][2]["description"])
             me.divider()
@@ -137,194 +137,205 @@ def lyria_content(app_state: me.state):
                 me.button("Close", on_click=close_info_dialog, type="flat")
 
     with page_frame():  # pylint: disable=not-context-manager
-            header("Lyria", "music_note", show_info_button=True, on_info_click=open_info_dialog)
+        header(
+            "Lyria", "music_note", show_info_button=True, on_info_click=open_info_dialog,
+        )
 
-            with me.box(style=_BOX_STYLE):
+        with me.box(style=_BOX_STYLE):
+            me.text(
+                "Prompt for music generation",
+                style=me.Style(font_weight=500),
+            )
+            me.box(style=me.Style(height=16))
+            subtle_lyria_input()
+
+        me.box(style=me.Style(height=24))
+
+        # Primary Operation Loading Indicator (Lyria Generation or Rewriter)
+        if pagestate.is_loading:
+            with me.box(
+                style=me.Style(
+                    display="grid",
+                    justify_content="center",
+                    justify_items="center",
+                    padding=me.Padding.all(16),
+                ),
+            ):
+                me.progress_spinner()
                 me.text(
-                    "Prompt for music generation",
-                    style=me.Style(font_weight=500),
+                    pagestate.loading_operation_message,  # Display dynamic loading message
+                    style=me.Style(margin=me.Margin(top=8)),
                 )
-                me.box(style=me.Style(height=16))
-                subtle_lyria_input()
 
-            me.box(style=me.Style(height=24))
+        # Audio Player - Show if URI exists AND primary loading is done
+        if (
+            pagestate.music_display_url
+            and not pagestate.is_loading  # Check generic loading
+            and not pagestate.show_error_dialog
+        ):
+            with me.box(
+                style=me.Style(
+                    display="grid",
+                    justify_content="center",
+                    justify_items="center",
+                    margin=me.Margin(bottom=16),
+                ),
+            ):
+                me.audio(src=pagestate.music_display_url)
 
-            # Primary Operation Loading Indicator (Lyria Generation or Rewriter)
-            if pagestate.is_loading:
-                with me.box(
-                    style=me.Style(
-                        display="grid",
-                        justify_content="center",
-                        justify_items="center",
-                        padding=me.Padding.all(16),
-                    )
-                ):
-                    me.progress_spinner()
+        # Gemini Analysis Loading Indicator - Show if analyzing AND primary loading is done
+        if pagestate.is_analyzing and not pagestate.is_loading:
+            with me.box(
+                style=me.Style(
+                    display="grid",
+                    justify_content="center",
+                    justify_items="center",
+                    padding=me.Padding.all(16),
+                ),
+            ):
+                me.progress_spinner()
+                me.text(
+                    "Analyzing audio with Gemini...",
+                    style=me.Style(margin=me.Margin(top=8)),
+                )
+
+        # Analysis Display Area
+        if (
+            pagestate.audio_analysis_result_json
+            and not pagestate.is_analyzing
+            and not pagestate.is_loading
+        ):
+            try:
+                analysis = json.loads(pagestate.audio_analysis_result_json)
+                with me.box(style=_ANALYSIS_BOX_STYLE):
                     me.text(
-                        pagestate.loading_operation_message,  # Display dynamic loading message
-                        style=me.Style(margin=me.Margin(top=8)),
+                        "Music Critic",
+                        type="headline-5",
+                        style=me.Style(margin=me.Margin(bottom=12)),
                     )
+                    if analysis.get("genre-quality"):
+                        with me.box(style=me.Style(margin=me.Margin(bottom=10))):
+                            genre_list = analysis["genre-quality"]
 
-            # Audio Player - Show if URI exists AND primary loading is done
-            if (
-                pagestate.music_display_url
-                and not pagestate.is_loading  # Check generic loading
-                and not pagestate.show_error_dialog
-            ):
-                with me.box(
-                    style=me.Style(
-                        display="grid",
-                        justify_content="center",
-                        justify_items="center",
-                        margin=me.Margin(bottom=16),
-                    )
-                ):
-                    me.audio(src=pagestate.music_display_url)
+                            if isinstance(genre_list, list):
+                                with me.box(
+                                    style=me.Style(
+                                        display="flex",
+                                        flex_direction="row",
+                                        gap=5,
+                                        margin=me.Margin(bottom=5, top=10),
+                                    ),
+                                ):
+                                    # me.text(
+                                    #    "Genres / Qualities:",
+                                    #    style=me.Style(font_weight=450),
+                                    # )
+                                    for item in genre_list:
+                                        pill(item, pill_type="genre")
+                            else:
+                                me.text(str(genre_list))
 
-            # Gemini Analysis Loading Indicator - Show if analyzing AND primary loading is done
-            if pagestate.is_analyzing and not pagestate.is_loading:
-                with me.box(
-                    style=me.Style(
-                        display="grid",
-                        justify_content="center",
-                        justify_items="center",
-                        padding=me.Padding.all(16),
-                    )
-                ):
-                    me.progress_spinner()
-                    me.text(
-                        "Analyzing audio with Gemini...",
-                        style=me.Style(margin=me.Margin(top=8)),
-                    )
+                    with me.box(
+                        style=me.Style(
+                            margin=me.Margin(bottom=10),
+                            display="flex",
+                            flex_direction="row",
+                            gap=5,
+                        ),
+                    ):
+                        if analysis.get("audio-analysis"):
+                            with me.box(
+                                style=me.Style(
+                                    flex=1,
+                                    margin=me.Margin(bottom=10),
+                                    padding=me.Padding(right=10),
+                                ),
+                            ):
+                                me.text(
+                                    "Description", style=me.Style(font_weight="bold"),
+                                )
+                                me.markdown(analysis["audio-analysis"])
 
-            # Analysis Display Area
-            if (
-                pagestate.audio_analysis_result_json
-                and not pagestate.is_analyzing
-                and not pagestate.is_loading
-            ):
-                try:
-                    analysis = json.loads(pagestate.audio_analysis_result_json)
-                    with me.box(style=_ANALYSIS_BOX_STYLE):
-                        me.text(
-                            "Music Critic",
-                            type="headline-5",
-                            style=me.Style(margin=me.Margin(bottom=12)),
-                        )
-                        if analysis.get("genre-quality"):
-                            with me.box(style=me.Style(margin=me.Margin(bottom=10))):
-                                
+                        if analysis.get("prompt-alignment"):
+                            with me.box(
+                                style=me.Style(
+                                    flex=1,
+                                    margin=me.Margin(bottom=10),
+                                    padding=me.Padding(left=10),
+                                ),
+                            ):
+                                me.text(
+                                    "Prompt Alignment",
+                                    style=me.Style(font_weight="bold"),
+                                )
+                                me.markdown(analysis["prompt-alignment"])
 
-                                genre_list = analysis["genre-quality"]
-
-                                if isinstance(genre_list, list):
-                                    with me.box(
-                                        style=me.Style(
-                                            display="flex",
-                                            flex_direction="row",
-                                            gap=5,
-                                            margin=me.Margin(bottom=5, top=10),
-                                        )
-                                    ):
-                                        #me.text(
-                                        #    "Genres / Qualities:",
-                                        #    style=me.Style(font_weight=450),
-                                        #)
-                                        for item in genre_list:
-                                            pill(item, pill_type="genre")
-                                else:
-                                    me.text(str(genre_list))
-
-                        with me.box(style=me.Style(margin=me.Margin(bottom=10), display="flex", flex_direction="row", gap=5)):
-                            if analysis.get("audio-analysis"):
-                                with me.box(style=me.Style(flex=1, margin=me.Margin(bottom=10), padding=me.Padding(right=10))):
-                                    me.text(
-                                        "Description", style=me.Style(font_weight="bold")
-                                    )
-                                    me.markdown(analysis["audio-analysis"])
-
-                            if analysis.get("prompt-alignment"):
-                                with me.box(style=me.Style(flex=1, margin=me.Margin(bottom=10), padding=me.Padding(left=10))):
-                                    me.text(
-                                        "Prompt Alignment",
-                                        style=me.Style(font_weight="bold"),
-                                    )
-                                    me.markdown(analysis["prompt-alignment"])
-
-                        
-
-                        
-                except json.JSONDecodeError:
-                    with me.box(style=_ANALYSIS_ERROR_BOX_STYLE):
-                        me.text(
-                            "Audio Analysis Failed",
-                            type="headline-6",
-                            style=me.Style(
-                                color=me.theme_var("error"), margin=me.Margin(bottom=12)
-                            ),
-                        )
-                        me.text(
-                            "Error: Could not display analysis data (invalid format)."
-                        )
-
-            # Analysis Error Display
-            elif (
-                pagestate.analysis_error_message
-                and not pagestate.is_analyzing
-                and not pagestate.is_loading
-            ):
+            except json.JSONDecodeError:
                 with me.box(style=_ANALYSIS_ERROR_BOX_STYLE):
                     me.text(
                         "Audio Analysis Failed",
                         type="headline-6",
                         style=me.Style(
-                            color=me.theme_var("error"), margin=me.Margin(bottom=12)
+                            color=me.theme_var("error"), margin=me.Margin(bottom=12),
                         ),
                     )
-                    me.text(pagestate.analysis_error_message)
+                    me.text("Error: Could not display analysis data (invalid format).")
 
-            # Technical Metrics Display
-            if (
-                pagestate.has_audio_metrics
-                and not pagestate.is_analyzing
-                and not pagestate.is_loading
-            ):
-                with me.box(style=_ANALYSIS_BOX_STYLE):
-                    with me.expansion_panel(
-                        title="Technical Audio Metrics", icon="graphic_eq"
-                    ):
-                        metrics = pagestate.audio_metrics
-                        with me.box(
-                            style=me.Style(
-                                display="grid",
-                                grid_template_columns="1fr 1fr",
-                                gap=16,
-                                padding=me.Padding.all(16),
-                            )
-                        ):
-                            me.text(
-                                f"Duration: {metrics.duration_sec:.2f}s",
-                                style=me.Style(font_weight="bold"),
-                            )
-                            me.text(
-                                f"Tempo: {metrics.estimated_tempo_bpm:.1f} BPM",
-                                style=me.Style(font_weight="bold"),
-                            )
-                            me.text(f"Mean Pitch: {metrics.mean_pitch_hz:.1f} Hz")
-                            me.text(f"Pitch Range: {metrics.pitch_range_hz:.1f} Hz")
-
-            # Error Dialog for Generation Errors (Lyria errors)
-            with dialog(is_open=pagestate.show_error_dialog):  # pylint: disable=not-context-manager
+        # Analysis Error Display
+        elif (
+            pagestate.analysis_error_message
+            and not pagestate.is_analyzing
+            and not pagestate.is_loading
+        ):
+            with me.box(style=_ANALYSIS_ERROR_BOX_STYLE):
                 me.text(
-                    "Generation Error",
+                    "Audio Analysis Failed",
                     type="headline-6",
-                    style=me.Style(color=me.theme_var("error"), font_weight="bold"),
+                    style=me.Style(
+                        color=me.theme_var("error"), margin=me.Margin(bottom=12),
+                    ),
                 )
-                me.text(
-                    pagestate.error_message, style=me.Style(margin=me.Margin(top=16))
-                )
-                with dialog_actions():  # pylint: disable=not-context-manager
-                    me.button("Close", on_click=on_close_error_dialog, type="flat")
+                me.text(pagestate.analysis_error_message)
+
+        # Technical Metrics Display
+        if (
+            pagestate.has_audio_metrics
+            and not pagestate.is_analyzing
+            and not pagestate.is_loading
+        ):
+            with me.box(style=_ANALYSIS_BOX_STYLE), me.expansion_panel(
+                title="Technical Audio Metrics", icon="graphic_eq",
+            ):
+                metrics = pagestate.audio_metrics
+                with me.box(
+                    style=me.Style(
+                        display="grid",
+                        grid_template_columns="1fr 1fr",
+                        gap=16,
+                        padding=me.Padding.all(16),
+                    ),
+                ):
+                    me.text(
+                        f"Duration: {metrics.duration_sec:.2f}s",
+                        style=me.Style(font_weight="bold"),
+                    )
+                    me.text(
+                        f"Tempo: {metrics.estimated_tempo_bpm:.1f} BPM",
+                        style=me.Style(font_weight="bold"),
+                    )
+                    me.text(f"Mean Pitch: {metrics.mean_pitch_hz:.1f} Hz")
+                    me.text(f"Pitch Range: {metrics.pitch_range_hz:.1f} Hz")
+
+        # Error Dialog for Generation Errors (Lyria errors)
+        with dialog(is_open=pagestate.show_error_dialog):  # pylint: disable=not-context-manager
+            me.text(
+                "Generation Error",
+                type="headline-6",
+                style=me.Style(color=me.theme_var("error"), font_weight="bold"),
+            )
+            me.text(pagestate.error_message, style=me.Style(margin=me.Margin(top=16)))
+            with dialog_actions():  # pylint: disable=not-context-manager
+                me.button("Close", on_click=on_close_error_dialog, type="flat")
 
 
 @me.component
@@ -345,7 +356,7 @@ def subtle_lyria_input():
             background=me.theme_var("secondary-container"),
             display="flex",
             width="100%",
-        )
+        ),
     ):
         with me.box(style=me.Style(flex_grow=1)):
             me.native_textarea(
@@ -372,34 +383,31 @@ def subtle_lyria_input():
                 flex_direction="column",
                 gap=10,
                 padding=me.Padding(left=16, right=16, bottom=16),
-            )
+            ),
         ):
             with me.content_button(
                 type="icon",
                 on_click=on_click_lyria,
                 disabled=pagestate.is_loading or pagestate.is_analyzing,
-            ):
-                with me.box(style=icon_style):
-                    me.icon("music_note")
-                    me.text("Generate Audio")
+            ), me.box(style=icon_style):
+                me.icon("music_note")
+                me.text("Generate Audio")
             me.box(style=me.Style(height=5))
             with me.content_button(
                 type="icon",
                 on_click=on_click_lyria_rewriter,
                 disabled=pagestate.is_loading or pagestate.is_analyzing,
-            ):
-                with me.box(style=icon_style):
-                    me.icon("auto_awesome")
-                    me.text("Rewrite")
+            ), me.box(style=icon_style):
+                me.icon("auto_awesome")
+                me.text("Rewrite")
             me.box(style=me.Style(height=5))
             with me.content_button(
                 type="icon",
                 on_click=clear_music,
                 disabled=pagestate.is_loading or pagestate.is_analyzing,
-            ):
-                with me.box(style=icon_style):
-                    me.icon("clear")
-                    me.text("Clear")
+            ), me.box(style=icon_style):
+                me.icon("clear")
+                me.text("Clear")
 
 
 def on_blur_lyria_prompt(e: me.InputBlurEvent):
@@ -505,7 +513,7 @@ def on_click_lyria(e: me.ClickEvent):
         # --- Technical Audio Analysis ---
         try:
             print(
-                f"Starting technical audio analysis for: {gcs_uri_for_analysis_and_metadata}"
+                f"Starting technical audio analysis for: {gcs_uri_for_analysis_and_metadata}",
             )
             metrics = analyze_audio_file(gcs_uri_for_analysis_and_metadata)
             state.audio_metrics.mean_pitch_hz = metrics.mean_pitch_hz
@@ -525,7 +533,7 @@ def on_click_lyria(e: me.ClickEvent):
         # --- Gemini Analysis ---
         try:
             print(
-                f"Starting analysis with GCS URI: {gcs_uri_for_analysis_and_metadata}"
+                f"Starting analysis with GCS URI: {gcs_uri_for_analysis_and_metadata}",
             )
             analysis_result_dict = analyze_audio_with_gemini(
                 audio_uri=gcs_uri_for_analysis_and_metadata,
@@ -535,7 +543,7 @@ def on_click_lyria(e: me.ClickEvent):
                 state.audio_analysis_result_json = json.dumps(analysis_result_dict)
                 analysis_dict_for_metadata = analysis_result_dict
                 print(
-                    f"Analysis successful, stored as JSON. Dict: {analysis_result_dict}"
+                    f"Analysis successful, stored as JSON. Dict: {analysis_result_dict}",
                 )
             else:
                 state.analysis_error_message = "Analysis returned no result."
@@ -543,7 +551,7 @@ def on_click_lyria(e: me.ClickEvent):
 
         except Exception as analysis_err:
             print(f"Error during audio analysis: {analysis_err}")
-            state.analysis_error_message = f"Analysis failed: {str(analysis_err)}"
+            state.analysis_error_message = f"Analysis failed: {analysis_err!s}"
         finally:
             state.is_analyzing = False
             yield
@@ -552,7 +560,7 @@ def on_click_lyria(e: me.ClickEvent):
     execution_time = end_time - start_time
     state.timing = f"Generation time: {round(execution_time)} seconds"
     print(
-        f"Total process (generation + analysis attempt) took: {execution_time:.2f} seconds"
+        f"Total process (generation + analysis attempt) took: {execution_time:.2f} seconds",
     )
 
     logged_original_prompt = state.original_user_prompt
@@ -564,20 +572,28 @@ def on_click_lyria(e: me.ClickEvent):
 
     try:
         print(
-            f"Logging to metadata: API Prompt='{prompt_for_api}', Original='{logged_original_prompt}', Rewritten='{logged_rewritten_prompt}'"
+            f"Logging to metadata: API Prompt='{prompt_for_api}', Original='{logged_original_prompt}', Rewritten='{logged_rewritten_prompt}'",
         )
         item = MediaItem(
             user_email=app_state.user_email,
-            timestamp=datetime.datetime.now(datetime.timezone.utc),
+            timestamp=datetime.datetime.now(datetime.UTC),
             prompt=prompt_for_api,
             original_prompt=logged_original_prompt,
-            rewritten_prompt=logged_rewritten_prompt if logged_rewritten_prompt else None,
+            rewritten_prompt=logged_rewritten_prompt
+            if logged_rewritten_prompt
+            else None,
             model=cfg.LYRIA_MODEL_VERSION,
-            mime_type="audio/wav", # Lyria generates WAV
+            mime_type="audio/wav",  # Lyria generates WAV
             generation_time=execution_time,
-            error_message=lyria_error_message_for_metadata if lyria_error_message_for_metadata else None,
-            gcsuri=gcs_uri_for_analysis_and_metadata if generated_successfully and gcs_uri_for_analysis_and_metadata else None,
-            audio_analysis=json.dumps(analysis_dict_for_metadata) if analysis_dict_for_metadata else None,
+            error_message=lyria_error_message_for_metadata
+            if lyria_error_message_for_metadata
+            else None,
+            gcsuri=gcs_uri_for_analysis_and_metadata
+            if generated_successfully and gcs_uri_for_analysis_and_metadata
+            else None,
+            audio_analysis=json.dumps(analysis_dict_for_metadata)
+            if analysis_dict_for_metadata
+            else None,
             # duration might be available if analysis_dict_for_metadata contains it, or if Lyria API provides it
         )
         add_media_item_to_firestore(item)
@@ -620,11 +636,13 @@ def on_close_error_dialog(e: me.ClickEvent):
     state.error_message = ""
     yield
 
+
 def open_info_dialog(e: me.ClickEvent):
     """Open the info dialog."""
     state = me.state(PageState)
     state.info_dialog_open = True
     yield
+
 
 def close_info_dialog(e: me.ClickEvent):
     """Close the info dialog."""

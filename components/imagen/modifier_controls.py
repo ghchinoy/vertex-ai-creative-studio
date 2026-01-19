@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import mesop as me
-from components.styles import _BOX_STYLE
 
+from components.styles import _BOX_STYLE
 from state.imagen_state import PageState
 
 
@@ -22,112 +22,111 @@ from state.imagen_state import PageState
 def modifier_controls():
     """Image style modifier controls"""
     state = me.state(PageState)
-    with me.box(style=_BOX_STYLE):
-        with me.box(
-            style=me.Style(
-                display="flex",
-                justify_content="space-between",  # This might crowd if many items
-                flex_wrap="wrap",  # Allow wrapping for smaller screens
-                gap="8px",  # Use gap for spacing
-                width="100%",
-            )
-        ):
-            # Default Modifiers
-            me.select(
-                label="Aspect Ratio",
-                options=[
-                    me.SelectOption(label="1:1", value="1:1"),
-                    me.SelectOption(label="3:4", value="3:4"),
-                    me.SelectOption(label="4:3", value="4:3"),
-                    me.SelectOption(label="16:9", value="16:9"),
-                    me.SelectOption(label="9:16", value="9:16"),
-                ],
-                key="image_aspect_ratio",  # Match PageState attribute directly
-                on_selection_change=on_selection_change_modifier,
-                style=me.Style(min_width="160px", flex_grow=1),
-                value=state.image_aspect_ratio,
-            )
-            me.select(
-                label="Content Type",
-                options=[
-                    me.SelectOption(label="None", value="None"),
-                    me.SelectOption(label="Photo", value="Photo"),
-                    me.SelectOption(label="Art", value="Art"),
-                ],
-                key="image_content_type",  # Match PageState attribute
-                on_selection_change=on_selection_change_modifier,
-                style=me.Style(min_width="160px", flex_grow=1),
-                value=state.image_content_type,
-            )
+    with me.box(style=_BOX_STYLE), me.box(
+        style=me.Style(
+            display="flex",
+            justify_content="space-between",  # This might crowd if many items
+            flex_wrap="wrap",  # Allow wrapping for smaller screens
+            gap="8px",  # Use gap for spacing
+            width="100%",
+        ),
+    ):
+        # Default Modifiers
+        me.select(
+            label="Aspect Ratio",
+            options=[
+                me.SelectOption(label="1:1", value="1:1"),
+                me.SelectOption(label="3:4", value="3:4"),
+                me.SelectOption(label="4:3", value="4:3"),
+                me.SelectOption(label="16:9", value="16:9"),
+                me.SelectOption(label="9:16", value="9:16"),
+            ],
+            key="image_aspect_ratio",  # Match PageState attribute directly
+            on_selection_change=on_selection_change_modifier,
+            style=me.Style(min_width="160px", flex_grow=1),
+            value=state.image_aspect_ratio,
+        )
+        me.select(
+            label="Content Type",
+            options=[
+                me.SelectOption(label="None", value="None"),
+                me.SelectOption(label="Photo", value="Photo"),
+                me.SelectOption(label="Art", value="Art"),
+            ],
+            key="image_content_type",  # Match PageState attribute
+            on_selection_change=on_selection_change_modifier,
+            style=me.Style(min_width="160px", flex_grow=1),
+            value=state.image_content_type,
+        )
 
-            color_and_tone_options = [
-                me.SelectOption(label=c, value=c)
-                for c in [
-                    "None",
-                    "Black and white",
-                    "Cool tone",
-                    "Golden",
-                    "Monochromatic",
-                    "Muted color",
-                    "Pastel color",
-                    "Toned image",
-                ]
+        color_and_tone_options = [
+            me.SelectOption(label=c, value=c)
+            for c in [
+                "None",
+                "Black and white",
+                "Cool tone",
+                "Golden",
+                "Monochromatic",
+                "Muted color",
+                "Pastel color",
+                "Toned image",
             ]
-            me.select(
-                label="Color & Tone",
-                options=color_and_tone_options,
-                key="image_color_tone",  # Match PageState attribute
-                on_selection_change=on_selection_change_modifier,
-                style=me.Style(min_width="160px", flex_grow=1),
-                value=state.image_color_tone,
-            )
+        ]
+        me.select(
+            label="Color & Tone",
+            options=color_and_tone_options,
+            key="image_color_tone",  # Match PageState attribute
+            on_selection_change=on_selection_change_modifier,
+            style=me.Style(min_width="160px", flex_grow=1),
+            value=state.image_color_tone,
+        )
 
-            lighting_options = [
-                me.SelectOption(label=l, value=l)
-                for l in [
-                    "None",
-                    "Backlighting",
-                    "Dramatic light",
-                    "Golden hour",
-                    "Long-time exposure",
-                    "Low lighting",
-                    "Multiexposure",
-                    "Studio light",
-                    "Surreal lighting",
-                ]
+        lighting_options = [
+            me.SelectOption(label=l, value=l)
+            for l in [
+                "None",
+                "Backlighting",
+                "Dramatic light",
+                "Golden hour",
+                "Long-time exposure",
+                "Low lighting",
+                "Multiexposure",
+                "Studio light",
+                "Surreal lighting",
             ]
-            me.select(
-                label="Lighting",
-                options=lighting_options,
-                key="image_lighting",  # Match PageState attribute
-                on_selection_change=on_selection_change_modifier,
-                style=me.Style(min_width="160px", flex_grow=1),
-                value=state.image_lighting,
-            )
+        ]
+        me.select(
+            label="Lighting",
+            options=lighting_options,
+            key="image_lighting",  # Match PageState attribute
+            on_selection_change=on_selection_change_modifier,
+            style=me.Style(min_width="160px", flex_grow=1),
+            value=state.image_lighting,
+        )
 
-            composition_options = [
-                me.SelectOption(label=c, value=c)
-                for c in [
-                    "None",
-                    "Closeup",
-                    "Knolling",
-                    "Landscape photography",
-                    "Photographed through window",
-                    "Shallow depth of field",
-                    "Shot from above",
-                    "Shot from below",
-                    "Surface detail",
-                    "Wide angle",
-                ]
+        composition_options = [
+            me.SelectOption(label=c, value=c)
+            for c in [
+                "None",
+                "Closeup",
+                "Knolling",
+                "Landscape photography",
+                "Photographed through window",
+                "Shallow depth of field",
+                "Shot from above",
+                "Shot from below",
+                "Surface detail",
+                "Wide angle",
             ]
-            me.select(
-                label="Composition",
-                options=composition_options,
-                key="image_composition",  # Match PageState attribute
-                on_selection_change=on_selection_change_modifier,
-                style=me.Style(min_width="160px", flex_grow=1),
-                value=state.image_composition,
-            )
+        ]
+        me.select(
+            label="Composition",
+            options=composition_options,
+            key="image_composition",  # Match PageState attribute
+            on_selection_change=on_selection_change_modifier,
+            style=me.Style(min_width="160px", flex_grow=1),
+            value=state.image_composition,
+        )
 
 
 from common.analytics import log_ui_click
@@ -155,8 +154,8 @@ _BOX_STYLE = me.Style(
     background=me.theme_var("surface"),  # Use theme variable for background
     border_radius=12,
     box_shadow=me.theme_var("shadow_elevation_2"),  # Use theme variable for shadow
-    #padding=me.Padding.all(16),  # Simpler padding
+    # padding=me.Padding.all(16),  # Simpler padding
     display="flex",
     flex_direction="column",
-    #margin=me.Margin(bottom=28),
+    # margin=me.Margin(bottom=28),
 )

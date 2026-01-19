@@ -59,7 +59,7 @@ class PageState:
     include_bumper: bool = True
     selected_model: str = "3.1-preview"
     selected_duration: str = "8"  # Stored as string for select component
-    selected_scene_count: str = "1" # Stored as string
+    selected_scene_count: str = "1"  # Stored as string
 
     # Removed workflow_state from PageState to avoid potential serialization issues
     is_running: bool = False
@@ -75,12 +75,12 @@ class PageState:
     player2_8bit_gcs_uri: str = ""
     player2_sheet_display_url: str = ""
     player2_sheet_gcs_uri: str = ""
- 
+
     final_video_display_url: str = ""
 
     error_message: str = ""
     show_selfie_dialog: bool = False
-    active_uploader: str = "player1" # Tracks which player initiated the selfie dialog
+    active_uploader: str = "player1"  # Tracks which player initiated the selfie dialog
 
     start_time: float = 0.0
     total_duration: str = ""
@@ -94,6 +94,7 @@ def on_upload_p1(e: me.UploadEvent):
     state.player1_image_display_url = create_display_url(gcs_uri)
     yield
 
+
 def on_upload_p2(e: me.UploadEvent):
     state = me.state(PageState)
     data = e.file.getvalue()
@@ -101,6 +102,7 @@ def on_upload_p2(e: me.UploadEvent):
     state.player2_image_uri = gcs_uri
     state.player2_image_display_url = create_display_url(gcs_uri)
     yield
+
 
 def on_library_select(e: LibrarySelectionChangeEvent):
     state = me.state(PageState)
@@ -143,6 +145,7 @@ def on_duration_change(e: me.SelectSelectionChangeEvent):
     state.selected_duration = e.value
     yield
 
+
 def on_scene_count_change(e: me.SelectSelectionChangeEvent):
     state = me.state(PageState)
     state.selected_scene_count = e.value
@@ -150,7 +153,7 @@ def on_scene_count_change(e: me.SelectSelectionChangeEvent):
 
 
 def _run_video_generation_steps(
-    state: PageState, wf_state: RetroGameWorkflowState, app_state: AppState, theme: str
+    state: PageState, wf_state: RetroGameWorkflowState, app_state: AppState, theme: str,
 ):
     """Executes Step 3 (Video) and Step 4 (Bumper) and handles persistence."""
     # Step 3
@@ -213,14 +216,14 @@ def on_click_generate(e: me.ClickEvent):
 
     state.is_running = True
     state.error_message = ""
-    
+
     # Reset output display
     state.player1_8bit_display_url = ""
     state.player1_sheet_display_url = ""
     state.player2_8bit_display_url = ""
     state.player2_sheet_display_url = ""
     state.final_video_display_url = ""
-    
+
     state.current_step = "Initializing..."
     state.start_time = time.time()
     state.total_duration = ""
@@ -232,7 +235,9 @@ def on_click_generate(e: me.ClickEvent):
             user_email=app_state.user_email,
             theme=theme,
             player1_image_uri=state.player1_image_uri,
-            player2_image_uri=state.player2_image_uri if state.player2_image_uri else None,
+            player2_image_uri=state.player2_image_uri
+            if state.player2_image_uri
+            else None,
             theme_context=state.theme_context,
             include_bumper=state.include_bumper,
             model_version=state.selected_model,
@@ -247,14 +252,18 @@ def on_click_generate(e: me.ClickEvent):
         wf_state = step_1_generate_8bit(wf_state)
         if wf_state.status == "error":
             raise Exception(wf_state.error_message)
-            
+
         if wf_state.player1_8bit_uri:
             state.player1_8bit_gcs_uri = wf_state.player1_8bit_uri
-            state.player1_8bit_display_url = create_display_url(wf_state.player1_8bit_uri)
-            
+            state.player1_8bit_display_url = create_display_url(
+                wf_state.player1_8bit_uri,
+            )
+
         if wf_state.player2_8bit_uri:
             state.player2_8bit_gcs_uri = wf_state.player2_8bit_uri
-            state.player2_8bit_display_url = create_display_url(wf_state.player2_8bit_uri)
+            state.player2_8bit_display_url = create_display_url(
+                wf_state.player2_8bit_uri,
+            )
         yield
 
         # Step 2
@@ -265,12 +274,16 @@ def on_click_generate(e: me.ClickEvent):
             raise Exception(wf_state.error_message)
 
         if wf_state.player1_sheet_uri:
-            state.player1_sheet_gcs_uri = wf_state.player1_sheet_uri 
-            state.player1_sheet_display_url = create_display_url(wf_state.player1_sheet_uri)
-            
+            state.player1_sheet_gcs_uri = wf_state.player1_sheet_uri
+            state.player1_sheet_display_url = create_display_url(
+                wf_state.player1_sheet_uri,
+            )
+
         if wf_state.player2_sheet_uri:
             state.player2_sheet_gcs_uri = wf_state.player2_sheet_uri
-            state.player2_sheet_display_url = create_display_url(wf_state.player2_sheet_uri)
+            state.player2_sheet_display_url = create_display_url(
+                wf_state.player2_sheet_uri,
+            )
         yield
 
         # Run Video Steps
@@ -311,7 +324,9 @@ def on_click_regenerate_video(e: me.ClickEvent):
             user_email=app_state.user_email,
             theme=theme,
             player1_image_uri=state.player1_image_uri,
-            player2_image_uri=state.player2_image_uri if state.player2_image_uri else None,
+            player2_image_uri=state.player2_image_uri
+            if state.player2_image_uri
+            else None,
             theme_context=state.theme_context,
             include_bumper=state.include_bumper,
             model_version=state.selected_model,
@@ -322,7 +337,7 @@ def on_click_regenerate_video(e: me.ClickEvent):
         # Manually inject existing assets
         wf_state.player1_8bit_uri = state.player1_8bit_gcs_uri
         wf_state.player1_sheet_uri = state.player1_sheet_gcs_uri
-        
+
         if state.player2_8bit_gcs_uri:
             wf_state.player2_8bit_uri = state.player2_8bit_gcs_uri
         if state.player2_sheet_gcs_uri:
@@ -352,18 +367,19 @@ def on_clear_p2(e: me.ClickEvent):
     state.player2_sheet_display_url = ""
     yield
 
+
 def on_clear(e: me.ClickEvent):
     state = me.state(PageState)
     state.player1_image_uri = ""
     state.player1_image_display_url = ""
     state.player2_image_uri = ""
     state.player2_image_display_url = ""
-    
+
     state.player1_8bit_display_url = ""
     state.player1_sheet_display_url = ""
     state.player2_8bit_display_url = ""
     state.player2_sheet_display_url = ""
-    
+
     state.final_video_display_url = ""
     state.error_message = ""
     state.is_running = False
@@ -380,6 +396,7 @@ def on_open_selfie_dialog_p1(e: me.ClickEvent):
     state.active_uploader = "player1"
     state.show_selfie_dialog = True
     yield
+
 
 def on_open_selfie_dialog_p2(e: me.ClickEvent):
     state = me.state(PageState)
@@ -443,8 +460,8 @@ def retro_games_content():
         with dialog(is_open=state.show_selfie_dialog):  # pylint: disable=E1129:not-context-manager
             with me.box(
                 style=me.Style(
-                    padding=me.Padding.all(16), width="500px", height="600px"
-                )
+                    padding=me.Padding.all(16), width="500px", height="600px",
+                ),
             ):  # Added fixed size for dialog content
                 me.text("Take a Selfie", type="headline-6")
                 # Ensure selfie camera fits
@@ -455,7 +472,7 @@ def retro_games_content():
                         display="flex",
                         justify_content="flex-end",
                         margin=me.Margin(top=16),
-                    )
+                    ),
                 ):
                     me.button("Cancel", on_click=on_close_selfie_dialog, type="flat")
 
@@ -467,18 +484,18 @@ def retro_games_content():
             # Top Section: Two Columns
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="row", gap=24,
-                )
+                    display="flex",
+                    flex_direction="row",
+                    gap=24,
+                ),
             ):
                 # Left Column: Inputs
                 with me.box(
-                    style=me.Style(flex_grow=1, flex_basis="300px", min_width="200px")
+                    style=me.Style(flex_grow=1, flex_basis="300px", min_width="200px"),
                 ):
                     # Player 1 & 2
                     with me.box(
-                        style=me.Style(
-                            display="flex", flex_direction="row", gap=16
-                        ),
+                        style=me.Style(display="flex", flex_direction="row", gap=16),
                     ):
                         # Player 1 Input
                         with me.box(style=_BOX_STYLE_CENTER_DISTRIBUTED):
@@ -505,7 +522,7 @@ def retro_games_content():
                                         display="flex",
                                         justify_content="center",
                                         align_items="center",
-                                    )
+                                    ),
                                 ):
                                     me.icon(
                                         "person",
@@ -522,7 +539,7 @@ def retro_games_content():
                                     gap=8,
                                     flex_wrap="wrap",
                                     justify_content="center",
-                                )
+                                ),
                             ):
                                 me.uploader(
                                     label="Upload",
@@ -536,13 +553,13 @@ def retro_games_content():
                                     key="retro_lib_p1",
                                 )
                                 with me.content_button(
-                                    type="icon", on_click=on_open_selfie_dialog_p1
+                                    type="icon", on_click=on_open_selfie_dialog_p1,
                                 ):
                                     me.icon("camera_alt")
-                                    
+
                         # Player 2 Input (Optional)
                         with me.box(
-                            style=_BOX_STYLE_CENTER_DISTRIBUTED
+                            style=_BOX_STYLE_CENTER_DISTRIBUTED,
                             # me.Style(
                             #     flex_basis="max(480px, calc(50% - 48px))",
                             #     background=me.theme_var("background"),
@@ -580,9 +597,9 @@ def retro_games_content():
                                         display="flex",
                                         justify_content="center",
                                         align_items="center",
-                                    )
+                                    ),
                                 ):
-                                    #me.text("No P2 Selected", style=me.Style(color=me.theme_var("on-surface-variant")))
+                                    # me.text("No P2 Selected", style=me.Style(color=me.theme_var("on-surface-variant")))
                                     me.icon(
                                         "person",
                                         style=me.Style(
@@ -598,7 +615,7 @@ def retro_games_content():
                                     gap=8,
                                     flex_wrap="wrap",
                                     justify_content="center",
-                                )
+                                ),
                             ):
                                 me.uploader(
                                     label="Upload",
@@ -612,11 +629,16 @@ def retro_games_content():
                                     key="retro_lib_p2",
                                 )
                                 with me.content_button(
-                                    type="icon", on_click=on_open_selfie_dialog_p2
+                                    type="icon", on_click=on_open_selfie_dialog_p2,
                                 ):
                                     me.icon("camera_alt")
                                 if state.player2_image_uri:
-                                    me.button("Clear P2", on_click=on_clear_p2, type="flat", color="warn")
+                                    me.button(
+                                        "Clear P2",
+                                        on_click=on_clear_p2,
+                                        type="flat",
+                                        color="warn",
+                                    )
 
                     # Advanced Options
                     with me.box(
@@ -631,7 +653,7 @@ def retro_games_content():
                             flex_direction="column",
                             gap=16,
                             margin=me.Margin(top=24),
-                        )
+                        ),
                     ):
                         me.text("Configuration", type="headline-6")
                         me.input(
@@ -643,7 +665,7 @@ def retro_games_content():
                         )
 
                         with me.box(
-                            style=me.Style(display="flex", gap=16, flex_wrap="wrap")
+                            style=me.Style(display="flex", gap=16, flex_wrap="wrap"),
                         ):
                             me.select(
                                 label="Model",
@@ -651,7 +673,7 @@ def retro_games_content():
                                     me.SelectOption(
                                         label="Veo 3.1 Preview",
                                         value="3.1-preview",
-                                    )
+                                    ),
                                 ],
                                 value=state.selected_model,
                                 on_selection_change=on_model_change,
@@ -660,7 +682,7 @@ def retro_games_content():
                             me.select(
                                 label="Scene Length",
                                 options=[
-                                    #me.SelectOption(label="4s", value="4"),
+                                    # me.SelectOption(label="4s", value="4"),
                                     me.SelectOption(label="8s", value="8"),
                                 ],
                                 value=state.selected_duration,
@@ -697,7 +719,7 @@ def retro_games_content():
                             display="flex",
                             flex_direction="column",
                             margin=me.Margin(top=24),
-                        )
+                        ),
                     ):
                         me.text("Theme Selection", type="headline-6")
                         with me.box(
@@ -707,7 +729,7 @@ def retro_games_content():
                                 flex_wrap="wrap",
                                 margin=me.Margin(top=16),
                                 justify_content="center",
-                            )
+                            ),
                         ):
                             for theme_name in config.get_theme_names():
                                 is_selected = state.selected_theme_value == theme_name
@@ -732,7 +754,7 @@ def retro_games_content():
                                                 color=me.theme_var("primary")
                                                 if is_selected
                                                 else me.theme_var("outline"),
-                                            )
+                                            ),
                                         ),
                                         border_radius=12,
                                         background=me.theme_var("secondary-container")
@@ -759,7 +781,7 @@ def retro_games_content():
                                                 justify_content="center",
                                                 align_items="center",
                                                 background="#eee",
-                                            )
+                                            ),
                                         ):
                                             me.text(theme_name[0])
 
@@ -769,19 +791,20 @@ def retro_games_content():
                                         style=me.Style(
                                             font_weight="bold"
                                             if is_selected
-                                            else "normal"
+                                            else "normal",
                                         ),
                                     )
 
                         with me.box(
-                            style=me.Style(margin=me.Margin(top=24), width="100%")
+                            style=me.Style(margin=me.Margin(top=24), width="100%"),
                         ):
                             me.button(
                                 "Generate Retro Game",
                                 on_click=on_click_generate,
                                 type="raised",
                                 style=me.Style(width="100%"),
-                                disabled=state.is_running or not state.player1_image_uri,
+                                disabled=state.is_running
+                                or not state.player1_image_uri,
                             )
 
                             if state.player1_sheet_display_url:
@@ -803,7 +826,7 @@ def retro_games_content():
                         display="flex",
                         flex_direction="column",
                         gap=24,
-                    )
+                    ),
                 ):
                     if state.error_message:
                         with me.box(
@@ -812,19 +835,19 @@ def retro_games_content():
                                 color=me.theme_var("on-error-container"),
                                 padding=me.Padding.all(16),
                                 border_radius=8,
-                            )
+                            ),
                         ):
                             me.text(state.error_message)
 
                     if state.is_running:
                         with me.box(
-                            style=me.Style(display="flex", align_items="center", gap=16)
+                            style=me.Style(display="flex", align_items="center", gap=16),
                         ):
                             me.progress_spinner()
                             me.text(state.current_step, type="headline-6")
                     elif state.current_step == "Complete!":
                         with me.box(
-                            style=me.Style(display="flex", flex_direction="column")
+                            style=me.Style(display="flex", flex_direction="column"),
                         ):
                             me.text(
                                 "Generation Complete!",
@@ -835,7 +858,9 @@ def retro_games_content():
                                 me.text(state.total_duration, type="body-1")
 
                     # Intermediate Results Row
-                    with me.box(style=me.Style(display="flex", flex_direction="column", gap=16)):
+                    with me.box(
+                        style=me.Style(display="flex", flex_direction="column", gap=16),
+                    ):
                         # Player 1 Results
                         if state.player1_8bit_display_url:
                             with me.box(
@@ -847,26 +872,76 @@ def retro_games_content():
                                     flex_direction="row",
                                     align_items="center",
                                     gap=16,
-                                )
+                                ),
                             ):
-                                me.text("Player 1", type="subtitle-1", style=me.Style(font_weight="bold", width="80px"))
+                                me.text(
+                                    "Player 1",
+                                    type="subtitle-1",
+                                    style=me.Style(font_weight="bold", width="80px"),
+                                )
 
                                 # 8-bit
-                                with me.box(style=me.Style(display="flex", flex_direction="column", align_items="center")):
+                                with me.box(
+                                    style=me.Style(
+                                        display="flex",
+                                        flex_direction="column",
+                                        align_items="center",
+                                    ),
+                                ):
                                     me.image(
                                         src=state.player1_8bit_display_url,
-                                        style=me.Style(height="250px", width="250px", border_radius=8, object_fit="cover", border=me.Border.all(me.BorderSide(width=1, color=me.theme_var("outline-variant")))),
+                                        style=me.Style(
+                                            height="250px",
+                                            width="250px",
+                                            border_radius=8,
+                                            object_fit="cover",
+                                            border=me.Border.all(
+                                                me.BorderSide(
+                                                    width=1,
+                                                    color=me.theme_var(
+                                                        "outline-variant",
+                                                    ),
+                                                ),
+                                            ),
+                                        ),
                                     )
-                                    me.text("8-bit", type="caption", style=me.Style(font_size="10px"))
+                                    me.text(
+                                        "8-bit",
+                                        type="caption",
+                                        style=me.Style(font_size="10px"),
+                                    )
 
                                 # Sheet
                                 if state.player1_sheet_display_url:
-                                    with me.box(style=me.Style(display="flex", flex_direction="column", align_items="center")):
+                                    with me.box(
+                                        style=me.Style(
+                                            display="flex",
+                                            flex_direction="column",
+                                            align_items="center",
+                                        ),
+                                    ):
                                         me.image(
                                             src=state.player1_sheet_display_url,
-                                            style=me.Style(height="250px", width="250px", border_radius=8, object_fit="cover", border=me.Border.all(me.BorderSide(width=1, color=me.theme_var("outline-variant")))),
+                                            style=me.Style(
+                                                height="250px",
+                                                width="250px",
+                                                border_radius=8,
+                                                object_fit="cover",
+                                                border=me.Border.all(
+                                                    me.BorderSide(
+                                                        width=1,
+                                                        color=me.theme_var(
+                                                            "outline-variant",
+                                                        ),
+                                                    ),
+                                                ),
+                                            ),
                                         )
-                                        me.text("Sheet", type="caption", style=me.Style(font_size="10px"))
+                                        me.text(
+                                            "Sheet",
+                                            type="caption",
+                                            style=me.Style(font_size="10px"),
+                                        )
 
                         # Player 2 Results
                         if state.player2_8bit_display_url:
@@ -879,26 +954,76 @@ def retro_games_content():
                                     flex_direction="row",
                                     align_items="center",
                                     gap=16,
-                                )
+                                ),
                             ):
-                                me.text("Player 2", type="subtitle-1", style=me.Style(font_weight="bold", width="80px"))
+                                me.text(
+                                    "Player 2",
+                                    type="subtitle-1",
+                                    style=me.Style(font_weight="bold", width="80px"),
+                                )
 
                                 # 8-bit
-                                with me.box(style=me.Style(display="flex", flex_direction="column", align_items="center")):
+                                with me.box(
+                                    style=me.Style(
+                                        display="flex",
+                                        flex_direction="column",
+                                        align_items="center",
+                                    ),
+                                ):
                                     me.image(
                                         src=state.player2_8bit_display_url,
-                                        style=me.Style(height="250px", width="250px", border_radius=8, object_fit="cover", border=me.Border.all(me.BorderSide(width=1, color=me.theme_var("outline-variant")))),
+                                        style=me.Style(
+                                            height="250px",
+                                            width="250px",
+                                            border_radius=8,
+                                            object_fit="cover",
+                                            border=me.Border.all(
+                                                me.BorderSide(
+                                                    width=1,
+                                                    color=me.theme_var(
+                                                        "outline-variant",
+                                                    ),
+                                                ),
+                                            ),
+                                        ),
                                     )
-                                    me.text("8-bit", type="caption", style=me.Style(font_size="10px"))
+                                    me.text(
+                                        "8-bit",
+                                        type="caption",
+                                        style=me.Style(font_size="10px"),
+                                    )
 
                                 # Sheet
                                 if state.player2_sheet_display_url:
-                                    with me.box(style=me.Style(display="flex", flex_direction="column", align_items="center")):
+                                    with me.box(
+                                        style=me.Style(
+                                            display="flex",
+                                            flex_direction="column",
+                                            align_items="center",
+                                        ),
+                                    ):
                                         me.image(
                                             src=state.player2_sheet_display_url,
-                                            style=me.Style(height="250px", width="250px", border_radius=8, object_fit="cover", border=me.Border.all(me.BorderSide(width=1, color=me.theme_var("outline-variant")))),
+                                            style=me.Style(
+                                                height="250px",
+                                                width="250px",
+                                                border_radius=8,
+                                                object_fit="cover",
+                                                border=me.Border.all(
+                                                    me.BorderSide(
+                                                        width=1,
+                                                        color=me.theme_var(
+                                                            "outline-variant",
+                                                        ),
+                                                    ),
+                                                ),
+                                            ),
                                         )
-                                        me.text("Sheet", type="caption", style=me.Style(font_size="10px"))
+                                        me.text(
+                                            "Sheet",
+                                            type="caption",
+                                            style=me.Style(font_size="10px"),
+                                        )
 
             # Bottom Section: Final Video (Full Width)
             if state.final_video_display_url:
@@ -914,10 +1039,10 @@ def retro_games_content():
                         flex_direction="column",
                         align_items="center",
                         width="100%",  # Ensure full width
-                    )
+                    ),
                 ):
                     me.text(
-                        "Final Retro Game Video", type="headline-4"
+                        "Final Retro Game Video", type="headline-4",
                     )  # Larger headline
                     me.video(
                         src=state.final_video_display_url,

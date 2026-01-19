@@ -14,9 +14,11 @@
 """Component for displaying a video item in the library grid."""
 
 import mesop as me
+
 from common.metadata import MediaItem
 from common.utils import gcs_uri_to_https_url
 from components.pill import pill
+
 from ..video_thumbnail.video_thumbnail import video_thumbnail
 
 
@@ -24,19 +26,23 @@ from ..video_thumbnail.video_thumbnail import video_thumbnail
 def video_grid_item(item: MediaItem):
     """Renders a grid item for a video media type."""
     item_duration_str = f"{item.duration} sec" if item.duration is not None else "N/A"
-    gcs_uri = item.gcsuri if item.gcsuri else (item.gcs_uris[0] if item.gcs_uris else None)
+    gcs_uri = (
+        item.gcsuri if item.gcsuri else (item.gcs_uris[0] if item.gcs_uris else None)
+    )
     item_url = gcs_uri_to_https_url(gcs_uri)
 
     # The user reported the pill was not showing. This debug line was added to investigate.
     # It can be removed once the issue is confirmed fixed.
-    print(f"DEBUG: Grid item {item.id}, gcs_uris: {item.gcs_uris}, length: {len(item.gcs_uris) if item.gcs_uris else 0}")
+    print(
+        f"DEBUG: Grid item {item.id}, gcs_uris: {item.gcs_uris}, length: {len(item.gcs_uris) if item.gcs_uris else 0}",
+    )
     with me.box(
         style=me.Style(
             display="flex",
             flex_wrap="wrap",
             gap=5,
             margin=me.Margin(bottom=8),
-        )
+        ),
     ):
         pill("Video", "media_type_video")
         if item.gcs_uris and len(item.gcs_uris) > 1:
@@ -68,8 +74,8 @@ def video_grid_item(item: MediaItem):
             align_items="center",
             justify_content="center",
             margin=me.Margin(top=8, bottom=8),
-            min_height="100px", # Adjusted height
-        )
+            min_height="100px",  # Adjusted height
+        ),
     ):
         if item_url:
             # Use the new, robust video_thumbnail component
@@ -81,7 +87,7 @@ def video_grid_item(item: MediaItem):
             me.text(
                 "Video not available.",
                 style=me.Style(
-                    height="100px", # Adjusted height
+                    height="100px",  # Adjusted height
                     display="flex",
                     align_items="center",
                     justify_content="center",
@@ -95,7 +101,7 @@ def video_grid_item(item: MediaItem):
                 display="flex",
                 flex_direction="column",
                 gap=5,
-            )
+            ),
         ):
             if item.reference_image:
                 ref_img_url = gcs_uri_to_https_url(item.reference_image)

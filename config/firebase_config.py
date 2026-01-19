@@ -12,22 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
+
 import firebase_admin
 from firebase_admin import credentials, firestore
 
+
 class FirebaseClient:
     """Firebase client singleton class"""
+
     _instance = None
     _client = None
 
-    def __new__(cls, database_id: Optional[str] = None):
+    def __new__(cls, database_id: str | None = None):
         if cls._instance is None:
             cls._instance = super(FirebaseClient, cls).__new__(cls)
             cls._instance._initialize(database_id)
         return cls._instance
 
-    def _initialize(self, database_id: Optional[str] = None):
+    def _initialize(self, database_id: str | None = None):
         try:
             cred = credentials.ApplicationDefault()
             firebase_admin.initialize_app(cred)

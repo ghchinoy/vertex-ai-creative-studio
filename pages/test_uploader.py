@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import field
 
 import mesop as me
 
-from common.storage import store_to_gcs
 from common.utils import create_display_url
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
@@ -47,8 +45,11 @@ def test_uploader_page():
 
     with me.box(
         style=me.Style(
-            padding=me.Padding.all(24), display="flex", flex_direction="column", gap=16,
-        )
+            padding=me.Padding.all(24),
+            display="flex",
+            flex_direction="column",
+            gap=16,
+        ),
     ):
         me.text("Test Uploader Components", type="headline-5")
 
@@ -69,8 +70,8 @@ def test_uploader_page():
 
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=16, margin=me.Margin(top=24)
-            )
+                display="flex", flex_direction="row", gap=16, margin=me.Margin(top=24),
+            ),
         ):
             if state.selected_gcs_uri_A:
                 with me.box():

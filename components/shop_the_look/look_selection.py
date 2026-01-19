@@ -16,13 +16,14 @@ import uuid
 
 import mesop as me
 
-import models.shop_the_look_workflow as shop_the_look_workflow
 from common.storage import store_to_gcs
 from common.utils import create_display_url
 from config.default import Default
+from models import shop_the_look_workflow
 from state.shop_the_look_state import PageState
 
 config = Default()
+
 
 @me.component
 def look_selection():
@@ -41,339 +42,337 @@ def look_selection():
             gap=10,
             align_items="center",
             width="100%",
-        )
+        ),
     ):
         me.text(
             text="Choose a Look",
             type="headline-2",
         )
-    with me.box():
+    with me.box(), me.box(
+        style=me.Style(
+            height="100%",
+            width="100%",
+            display="flex",
+            flex_direction="row",
+            flex_wrap="wrap",
+        ),
+    ):
         with me.box(
             style=me.Style(
-                height="100%",
-                width="100%",
                 display="flex",
                 flex_direction="row",
-                flex_wrap="wrap",
-            )
+                gap=5,
+                align_items="left",
+            ),
+        ), me.box(
+            style=me.Style(
+                position="relative",
+                height="100%",
+                cursor="pointer",
+            ),
+            key="apparel",
         ):
+            me.uploader(
+                label="",
+                accepted_file_types=["image/jpeg", "image/png"],
+                on_upload=on_upload_article_image,
+                type="flat",
+                color="primary",
+                style=me.Style(
+                    position="relative",
+                    cursor="pointer",
+                    width="150px",
+                    height="150px",
+                    object_fit="cover",
+                    border_radius="5px",
+                    box_shadow="0 2px 4px rgba(0,0,0,0.1)",
+                    background="#FFFFFF",
+                    margin=me.Margin(left=10, top=10),
+                ),
+                key="top",
+                multiple=True,
+            )
+            me.icon(
+                "add",
+                style=me.Style(
+                    color="black",
+                    position="absolute",
+                    top="20px",
+                    left="30px",
+                    width="30px",
+                    height="30px",
+                    font_size="30px",
+                    pointer_events="none",
+                ),
+            )
+            me.icon(
+                "apparel",
+                style=me.Style(
+                    color="black",
+                    position="absolute",
+                    top="45px",
+                    left="55px",
+                    width="50px",
+                    height="50px",
+                    font_size="50px",
+                    pointer_events="none",
+                ),
+            )
+            me.text(
+                text="Add Top",
+                style=me.Style(
+                    position="absolute",
+                    text_align="center",
+                    bottom="35px",
+                    left="45px",
+                    font_size="20px",
+                    pointer_events="none",
+                ),
+            )
+        with me.box(
+            style=me.Style(
+                position="relative",
+                height="100%",
+                cursor="pointer",
+            ),
+            key="apparel",
+        ):
+            me.uploader(
+                label="",
+                accepted_file_types=["image/jpeg", "image/png"],
+                on_upload=on_upload_article_image,
+                type="flat",
+                color="primary",
+                style=me.Style(
+                    position="relative",
+                    cursor="pointer",
+                    width="150px",
+                    height="150px",
+                    object_fit="cover",
+                    border_radius="5px",
+                    box_shadow="0 2px 4px rgba(0,0,0,0.1)",
+                    background="#FFFFFF",
+                    margin=me.Margin(left=10, top=10),
+                ),
+                key="bottom",
+                multiple=True,
+            )
+            me.icon(
+                "add",
+                style=me.Style(
+                    color="black",
+                    position="absolute",
+                    top="20px",
+                    left="30px",
+                    width="30px",
+                    height="30px",
+                    font_size="30px",
+                    pointer_events="none",
+                ),
+            )
+            me.icon(
+                "styler",
+                style=me.Style(
+                    color="black",
+                    position="absolute",
+                    top="45px",
+                    left="55px",
+                    width="50px",
+                    height="50px",
+                    font_size="50px",
+                    pointer_events="none",
+                ),
+            )
+            me.text(
+                text="Add Bottom",
+                style=me.Style(
+                    position="absolute",
+                    text_align="center",
+                    bottom="35px",
+                    left="30px",
+                    font_size="20px",
+                    pointer_events="none",
+                ),
+            )
+
+        with me.box(
+            style=me.Style(
+                position="relative",
+                height="100%",
+                cursor="pointer",
+            ),
+            key="apparel",
+        ):
+            me.uploader(
+                label="",
+                accepted_file_types=["image/jpeg", "image/png"],
+                on_upload=on_upload_article_image,
+                type="flat",
+                color="primary",
+                style=me.Style(
+                    position="relative",
+                    cursor="pointer",
+                    width="150px",
+                    height="150px",
+                    object_fit="cover",
+                    border_radius="5px",
+                    box_shadow="0 2px 4px rgba(0,0,0,0.1)",
+                    background="#FFFFFF",
+                    margin=me.Margin(left=10, top=10),
+                ),
+                key="dress",
+                multiple=True,
+            )
+            me.icon(
+                "add",
+                style=me.Style(
+                    color="black",
+                    position="absolute",
+                    top="20px",
+                    left="30px",
+                    width="30px",
+                    height="30px",
+                    font_size="30px",
+                    pointer_events="none",
+                ),
+            )
+            me.icon(
+                "girl",
+                style=me.Style(
+                    color="black",
+                    position="absolute",
+                    top="35px",
+                    left="45px",
+                    width="70px",
+                    height="70px",
+                    font_size="70px",
+                    pointer_events="none",
+                ),
+            )
+            me.text(
+                text="Add Dress",
+                style=me.Style(
+                    position="absolute",
+                    text_align="center",
+                    bottom="35px",
+                    left="35px",
+                    font_size="20px",
+                    pointer_events="none",
+                ),
+            )
+
+        with me.box(
+            style=me.Style(
+                position="relative",
+                height="100%",
+                cursor="pointer",
+            ),
+            key="apparel",
+        ):
+            me.uploader(
+                label="",
+                accepted_file_types=["image/jpeg", "image/png"],
+                on_upload=on_upload_article_image,
+                type="flat",
+                color="primary",
+                style=me.Style(
+                    position="relative",
+                    cursor="pointer",
+                    width="150px",
+                    height="150px",
+                    object_fit="cover",
+                    border_radius="5px",
+                    box_shadow="0 2px 4px rgba(0,0,0,0.1)",
+                    background="#FFFFFF",
+                    margin=me.Margin(left=10, top=10),
+                ),
+                key="shoe",
+                multiple=True,
+            )
+            me.icon(
+                "add",
+                style=me.Style(
+                    color="black",
+                    position="absolute",
+                    top="20px",
+                    left="30px",
+                    width="30px",
+                    height="30px",
+                    font_size="30px",
+                    pointer_events="none",
+                ),
+            )
+            me.icon(
+                "steps",
+                style=me.Style(
+                    color="black",
+                    position="absolute",
+                    top="45px",
+                    left="55px",
+                    width="50px",
+                    height="50px",
+                    font_size="50px",
+                    pointer_events="none",
+                ),
+            )
+            me.text(
+                text="Add Shoe",
+                style=me.Style(
+                    position="absolute",
+                    text_align="center",
+                    bottom="35px",
+                    left="35px",
+                    font_size="20px",
+                    pointer_events="none",
+                ),
+            )
+
+        for item in state.articles:
             with me.box(
                 style=me.Style(
                     display="flex",
                     flex_direction="row",
                     gap=5,
                     align_items="left",
-                )
+                ),
             ):
+                img = create_display_url(item.clothing_image)
                 with me.box(
+                    key=f"{item.item_id}_{item.article_type}",
                     style=me.Style(
                         position="relative",
                         height="100%",
+                        margin=me.Margin(left=10, top=10),
                         cursor="pointer",
                     ),
-                    key="apparel",
+                    on_click=article_on_click,
                 ):
-                    me.uploader(
-                        label="",
-                        accepted_file_types=["image/jpeg", "image/png"],
-                        on_upload=on_upload_article_image,
-                        type="flat",
-                        color="primary",
+                    me.icon(
+                        "check_circle",
                         style=me.Style(
-                            position="relative",
-                            cursor="pointer",
+                            color=("green" if item.selected else "#666"),
+                            position="absolute",
+                            top="1px",
+                            left="5px",
+                            opacity=("1" if item.selected else ".1"),
+                        ),
+                    )
+
+                    me.image(
+                        src=img,
+                        style=me.Style(
                             width="150px",
                             height="150px",
                             object_fit="cover",
                             border_radius="5px",
                             box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                            background="#FFFFFF",
-                            margin=me.Margin(left=10, top=10),
-                        ),
-                        key="top",
-                        multiple=True,
-                    )
-                    me.icon(
-                        "add",
-                        style=me.Style(
-                            color="black",
-                            position="absolute",
-                            top="20px",
-                            left="30px",
-                            width="30px",
-                            height="30px",
-                            font_size="30px",
-                            pointer_events="none",
-                        ),
-                    )
-                    me.icon(
-                        "apparel",
-                        style=me.Style(
-                            color="black",
-                            position="absolute",
-                            top="45px",
-                            left="55px",
-                            width="50px",
-                            height="50px",
-                            font_size="50px",
-                            pointer_events="none",
-                        ),
-                    )
-                    me.text(
-                        text="Add Top",
-                        style=me.Style(
-                            position="absolute",
-                            text_align="center",
-                            bottom="35px",
-                            left="45px",
-                            font_size="20px",
-                            pointer_events="none",
-                        ),
-                    )
-            with me.box(
-                style=me.Style(
-                    position="relative",
-                    height="100%",
-                    cursor="pointer",
-                ),
-                key="apparel",
-            ):
-                me.uploader(
-                    label="",
-                    accepted_file_types=["image/jpeg", "image/png"],
-                    on_upload=on_upload_article_image,
-                    type="flat",
-                    color="primary",
-                    style=me.Style(
-                        position="relative",
-                        cursor="pointer",
-                        width="150px",
-                        height="150px",
-                        object_fit="cover",
-                        border_radius="5px",
-                        box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                        background="#FFFFFF",
-                        margin=me.Margin(left=10, top=10),
-                    ),
-                    key="bottom",
-                    multiple=True,
-                )
-                me.icon(
-                    "add",
-                    style=me.Style(
-                        color="black",
-                        position="absolute",
-                        top="20px",
-                        left="30px",
-                        width="30px",
-                        height="30px",
-                        font_size="30px",
-                        pointer_events="none",
-                    ),
-                )
-                me.icon(
-                    "styler",
-                    style=me.Style(
-                        color="black",
-                        position="absolute",
-                        top="45px",
-                        left="55px",
-                        width="50px",
-                        height="50px",
-                        font_size="50px",
-                        pointer_events="none",
-                    ),
-                )
-                me.text(
-                    text="Add Bottom",
-                    style=me.Style(
-                        position="absolute",
-                        text_align="center",
-                        bottom="35px",
-                        left="30px",
-                        font_size="20px",
-                        pointer_events="none",
-                    ),
-                )
-
-            with me.box(
-                style=me.Style(
-                    position="relative",
-                    height="100%",
-                    cursor="pointer",
-                ),
-                key="apparel",
-            ):
-                me.uploader(
-                    label="",
-                    accepted_file_types=["image/jpeg", "image/png"],
-                    on_upload=on_upload_article_image,
-                    type="flat",
-                    color="primary",
-                    style=me.Style(
-                        position="relative",
-                        cursor="pointer",
-                        width="150px",
-                        height="150px",
-                        object_fit="cover",
-                        border_radius="5px",
-                        box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                        background="#FFFFFF",
-                        margin=me.Margin(left=10, top=10),
-                    ),
-                    key="dress",
-                    multiple=True,
-                )
-                me.icon(
-                    "add",
-                    style=me.Style(
-                        color="black",
-                        position="absolute",
-                        top="20px",
-                        left="30px",
-                        width="30px",
-                        height="30px",
-                        font_size="30px",
-                        pointer_events="none",
-                    ),
-                )
-                me.icon(
-                    "girl",
-                    style=me.Style(
-                        color="black",
-                        position="absolute",
-                        top="35px",
-                        left="45px",
-                        width="70px",
-                        height="70px",
-                        font_size="70px",
-                        pointer_events="none",
-                    ),
-                )
-                me.text(
-                    text="Add Dress",
-                    style=me.Style(
-                        position="absolute",
-                        text_align="center",
-                        bottom="35px",
-                        left="35px",
-                        font_size="20px",
-                        pointer_events="none",
-                    ),
-                )
-
-            with me.box(
-                style=me.Style(
-                    position="relative",
-                    height="100%",
-                    cursor="pointer",
-                ),
-                key="apparel",
-            ):
-                me.uploader(
-                    label="",
-                    accepted_file_types=["image/jpeg", "image/png"],
-                    on_upload=on_upload_article_image,
-                    type="flat",
-                    color="primary",
-                    style=me.Style(
-                        position="relative",
-                        cursor="pointer",
-                        width="150px",
-                        height="150px",
-                        object_fit="cover",
-                        border_radius="5px",
-                        box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                        background="#FFFFFF",
-                        margin=me.Margin(left=10, top=10),
-                    ),
-                    key="shoe",
-                    multiple=True,
-                )
-                me.icon(
-                    "add",
-                    style=me.Style(
-                        color="black",
-                        position="absolute",
-                        top="20px",
-                        left="30px",
-                        width="30px",
-                        height="30px",
-                        font_size="30px",
-                        pointer_events="none",
-                    ),
-                )
-                me.icon(
-                    "steps",
-                    style=me.Style(
-                        color="black",
-                        position="absolute",
-                        top="45px",
-                        left="55px",
-                        width="50px",
-                        height="50px",
-                        font_size="50px",
-                        pointer_events="none",
-                    ),
-                )
-                me.text(
-                    text="Add Shoe",
-                    style=me.Style(
-                        position="absolute",
-                        text_align="center",
-                        bottom="35px",
-                        left="35px",
-                        font_size="20px",
-                        pointer_events="none",
-                    ),
-                )
-
-            for item in state.articles:
-                with me.box(
-                    style=me.Style(
-                        display="flex",
-                        flex_direction="row",
-                        gap=5,
-                        align_items="left",
-                    )
-                ):
-                    img = create_display_url(item.clothing_image)
-                    with me.box(
-                        key=f"{item.item_id}_{item.article_type}",
-                        style=me.Style(
-                            position="relative",
-                            height="100%",
-                            margin=me.Margin(left=10, top=10),
-                            cursor="pointer",
-                        ),
-                        on_click=article_on_click,
-                    ):
-                        me.icon(
-                            "check_circle",
-                            style=me.Style(
-                                color=("green" if item.selected else "#666"),
-                                position="absolute",
-                                top="1px",
-                                left="5px",
-                                opacity=("1" if item.selected else ".1"),
+                            opacity=(
+                                "1"
+                                if (item.available_to_select or item.selected)
+                                else ".3"
                             ),
-                        )
-
-                        me.image(
-                            src=img,
-                            style=me.Style(
-                                width="150px",
-                                height="150px",
-                                object_fit="cover",
-                                border_radius="5px",
-                                box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                                opacity=(
-                                    "1"
-                                    if (item.available_to_select or item.selected)
-                                    else ".3"
-                                ),
-                            ),
-                        )
+                        ),
+                    )
     with me.box(
         style=me.Style(
             display="flex",
@@ -410,6 +409,7 @@ def on_upload_article_image(e: me.UploadEvent):
     Args:
         e: The Mesop upload event. `e.key` contains the article type, and
            `e.files` contains the file(s).
+
     """
     state = me.state(PageState)
 
@@ -449,6 +449,7 @@ def article_on_click(e: me.ClickEvent):
     Args:
         e: The Mesop click event. `e.key` is a string combining the item_id
            and article_type, e.g., "some_uuid_top".
+
     """
     state = me.state(PageState)
     selected_type = e.key.split("_")[-1]
@@ -462,20 +463,11 @@ def article_on_click(e: me.ClickEvent):
 
     for item in state.articles:
         if item.item_id != selected_id:
-            if selected_type == "shoe" and item.article_type == "shoe":
-                item.available_to_select = not selected
-                item.selected = False
-            elif selected_type == "dress" and item.article_type in [
+            if (selected_type == "shoe" and item.article_type == "shoe") or (selected_type == "dress" and item.article_type in [
                 "dress",
                 "top",
                 "bottom",
-            ]:
-                item.available_to_select = not selected
-                item.selected = False
-            elif selected_type == "top" and item.article_type in ["dress", "top"]:
-                item.available_to_select = not selected
-                item.selected = False
-            elif selected_type == "bottom" and item.article_type in ["dress", "bottom"]:
+            ]) or (selected_type == "top" and item.article_type in ["dress", "top"]) or (selected_type == "bottom" and item.article_type in ["dress", "bottom"]):
                 item.available_to_select = not selected
                 item.selected = False
     yield
@@ -488,6 +480,7 @@ def on_continue_click(e: me.ClickEvent):
 
     Args:
         e: The Mesop click event.
+
     """
     state = me.state(PageState)
     state.look = 2

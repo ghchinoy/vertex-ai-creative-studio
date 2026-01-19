@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+
 from google import genai
 from google.genai.types import (
     Image,
@@ -20,6 +21,7 @@ from google.genai.types import (
     RecontextImageConfig,
     RecontextImageSource,
 )
+
 from config.default import Default
 
 cfg = Default()
@@ -39,8 +41,7 @@ def generate_vto_image(
     person_generation: str = "allow_all",
     safety_filter_level: str = "block_low_and_above",
 ) -> list[str]:
-    """
-    Generates Virtual Try-On images using the Google GenAI SDK.
+    """Generates Virtual Try-On images using the Google GenAI SDK.
 
     Args:
         person_gcs_uri: GCS URI of the person image.
@@ -53,6 +54,7 @@ def generate_vto_image(
 
     Returns:
         List of GCS URIs of the generated images.
+
     """
     client = init_client()
     model_id = cfg.VTO_MODEL_ID
@@ -68,7 +70,7 @@ def generate_vto_image(
             source=RecontextImageSource(
                 person_image=Image(gcs_uri=person_gcs_uri),
                 product_images=[
-                    ProductImage(product_image=Image(gcs_uri=product_gcs_uri))
+                    ProductImage(product_image=Image(gcs_uri=product_gcs_uri)),
                 ],
             ),
             config=RecontextImageConfig(
@@ -88,11 +90,11 @@ def generate_vto_image(
                     gcs_uris.append(generated_image.image.gcs_uri)
                 else:
                     logging.warning(
-                        "VTO API returned an image without a GCS URI despite output_gcs_uri being set."
+                        "VTO API returned an image without a GCS URI despite output_gcs_uri being set.",
                     )
 
         return gcs_uris
 
     except Exception as e:
-        logging.error(f"Error generating VTO image with GenAI SDK: {e}")
+        logging.exception(f"Error generating VTO image with GenAI SDK: {e}")
         raise

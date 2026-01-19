@@ -1,5 +1,7 @@
-import mesop as me
 import typing
+
+import mesop as me
+
 
 @me.web_component(path="./theme_manager.js")
 def theme_manager(

@@ -16,16 +16,18 @@
 
 import io
 import uuid
-from typing import Tuple
-from PIL import Image
+
 from google import genai
 from google.genai import types
+from PIL import Image
+
+from common.storage import download_from_gcs, store_to_gcs
 from config.default import Default
-from common.storage import store_to_gcs, download_from_gcs
 
 cfg = Default()
 
 UPSCALE_MODEL = "imagen-4.0-upscale-preview"
+
 
 def get_image_resolution(image_data: bytes | str) -> str:
     """Gets the resolution of an image from GCS URI or bytes."""
@@ -39,7 +41,7 @@ def get_image_resolution(image_data: bytes | str) -> str:
         image_bytes = image_data
     else:
         return "Unknown"
-        
+
     try:
         with Image.open(io.BytesIO(image_bytes)) as img:
             return f"{img.width}x{img.height}"
@@ -47,9 +49,9 @@ def get_image_resolution(image_data: bytes | str) -> str:
         print(f"Error getting resolution: {e}")
         return "Unknown"
 
-def upscale_image(input_gcs_uri: str, upscale_factor: str) -> Tuple[str, str, str]:
-    """
-    Upscales an image using Imagen 4.0 Upscale.
+
+def upscale_image(input_gcs_uri: str, upscale_factor: str) -> tuple[str, str, str]:
+    """Upscales an image using Imagen 4.0 Upscale.
 
     Args:
         input_gcs_uri: GCS URI of the image to upscale.
@@ -57,6 +59,7 @@ def upscale_image(input_gcs_uri: str, upscale_factor: str) -> Tuple[str, str, st
 
     Returns:
         Tuple of (output_gcs_uri, original_resolution, upscaled_resolution)
+
     """
     client = genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
 
@@ -68,7 +71,7 @@ def upscale_image(input_gcs_uri: str, upscale_factor: str) -> Tuple[str, str, st
         image=types.Image(gcs_uri=input_gcs_uri),
         upscale_factor=upscale_factor,
         config=types.UpscaleImageConfig(
-            output_mime_type='image/png',
+            output_mime_type="image/png",
         ),
     )
 
@@ -76,17 +79,19 @@ def upscale_image(input_gcs_uri: str, upscale_factor: str) -> Tuple[str, str, st
         raise RuntimeError("Upscale failed: No images generated.")
 
     generated_image = response.generated_images[0].image
-    
+
     # Try to get bytes from the generated image object
-    if hasattr(generated_image, 'image_bytes'):
+    if hasattr(generated_image, "image_bytes"):
         image_data = generated_image.image_bytes
-    elif hasattr(generated_image, '_image_bytes'):
-         image_data = generated_image._image_bytes
+    elif hasattr(generated_image, "_image_bytes"):
+        image_data = generated_image._image_bytes
     else:
         # If we can't get bytes directly, we might need to check if it's already a PIL image
         # or if there's another way to extract it.
         # For now, assume standard SDK behavior.
-        raise RuntimeError(f"Could not extract image bytes from response: {type(generated_image)}")
+        raise RuntimeError(
+            f"Could not extract image bytes from response: {type(generated_image)}",
+        )
 
     # Get upscaled resolution
     upscaled_resolution = get_image_resolution(image_data)

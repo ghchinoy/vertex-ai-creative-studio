@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-VEO evaluation prompt templates for video realization quality.
+"""VEO evaluation prompt templates for video realization quality.
 """
 
 # ==============================================================================

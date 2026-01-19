@@ -1,10 +1,10 @@
-"""
-Component for the Design Studio.
+"""Component for the Design Studio.
 """
 
-from typing import Callable
+from collections.abc import Callable
+
 import mesop as me
-from components.library.events import LibrarySelectionChangeEvent
+
 from components.library.library_chooser_button import library_chooser_button
 from components.veo_button.veo_button import veo_button
 
@@ -16,22 +16,22 @@ def design_studio(
     is_designing: bool,
     on_upload_design_image: Callable,
     on_select_design_image: Callable,
-    on_design_prompt_input: Callable, # Changed from on_blur
+    on_design_prompt_input: Callable,  # Changed from on_blur
     on_clear_design: Callable,
     on_design_click: Callable,
 ):
-    """
-    Component for the Design Studio.
+    """Component for the Design Studio.
     """
     with me.box(
-        style=me.Style(
-            display="flex", flex_direction="column", gap=16, width=300
-        )
+        style=me.Style(display="flex", flex_direction="column", gap=16, width=300),
     ):
         me.text("Design Studio", type="headline-6")
-        with me.box(style=me.Style(
-            flex_direction="column", display="flex",
-        )):
+        with me.box(
+            style=me.Style(
+                flex_direction="column",
+                display="flex",
+            ),
+        ):
             me.uploader(
                 label="Upload Design Image",
                 on_upload=on_upload_design_image,
@@ -65,4 +65,6 @@ def design_studio(
                     me.progress_spinner(diameter=18)
                 else:
                     me.text("Design")
-        veo_button(gcs_uri=storyboard_item["styled_image_uri"] if storyboard_item else "")
+        veo_button(
+            gcs_uri=storyboard_item["styled_image_uri"] if storyboard_item else "",
+        )

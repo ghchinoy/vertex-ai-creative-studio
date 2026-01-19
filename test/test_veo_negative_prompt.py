@@ -1,23 +1,24 @@
-import pytest
-from unittest.mock import patch, MagicMock
 import os
 import sys
+from unittest.mock import MagicMock, patch
 
 # Setup sys.path to allow imports from the parent directory.
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from pages.veo import on_click_veo
-from state.veo_state import PageState
-from state.state import AppState
 from common.metadata import MediaItem
 from models.requests import VideoGenerationRequest
+from pages.veo import on_click_veo
+from state.state import AppState
+from state.veo_state import PageState
 
-@patch('pages.veo.add_media_item_to_firestore')
-@patch('pages.veo.generate_video')
-@patch('mesop.state')
-def test_veo_negative_prompt_flow(mock_state, mock_generate_video, mock_add_media_item_to_firestore):
-    """
-    Tests that the negative_prompt is correctly passed from the UI state
+
+@patch("pages.veo.add_media_item_to_firestore")
+@patch("pages.veo.generate_video")
+@patch("mesop.state")
+def test_veo_negative_prompt_flow(
+    mock_state, mock_generate_video, mock_add_media_item_to_firestore,
+):
+    """Tests that the negative_prompt is correctly passed from the UI state
     through the generation request and into the final metadata logging.
     """
     # --- Arrange ---
@@ -38,12 +39,17 @@ def test_veo_negative_prompt_flow(mock_state, mock_generate_video, mock_add_medi
         resolution="1080p",
         reference_image_gcs=None,
         last_reference_image_gcs=None,
-        auto_enhance_prompt=False
+        auto_enhance_prompt=False,
     )
 
     # The on_click_veo function calls me.state() multiple times.
     # We configure the mock to return the appropriate state object each time.
-    mock_state.side_effect = [mock_app_state, mock_page_state, mock_page_state, mock_page_state]
+    mock_state.side_effect = [
+        mock_app_state,
+        mock_page_state,
+        mock_page_state,
+        mock_page_state,
+    ]
 
     # --- Act ---
     # Call the event handler, which is a generator. We need to exhaust it.

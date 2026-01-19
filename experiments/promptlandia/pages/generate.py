@@ -22,8 +22,6 @@ displaying the results.
 import mesop as me
 
 from components.header import header
-
-
 from models.gemini import gemini_generate_content
 
 
@@ -46,8 +44,8 @@ def prompt_page_content(app_state: me.state):
 
     Args:
         app_state: The global application state.
-    """
 
+    """
     state = me.state(PageState)
 
     with me.box(
@@ -56,65 +54,63 @@ def prompt_page_content(app_state: me.state):
             flex_direction="column",
             height="100%",
         ),
+    ), me.box(
+        style=me.Style(
+            background=me.theme_var("background"),
+            height="100%",
+            overflow_y="scroll",
+            margin=me.Margin(bottom=20),
+        ),
+    ), me.box(
+        style=me.Style(
+            background=me.theme_var("background"),
+            padding=me.Padding(top=24, left=24, right=24, bottom=24),
+            display="flex",
+            flex_direction="column",
+        ),
     ):
+        header("Prompt", "question_answer")
+
+        # me.text(f"Hello, {app_state.name}!")
+        me.box(style=me.Style(height=16))
         with me.box(
             style=me.Style(
-                background=me.theme_var("background"),
-                height="100%",
-                overflow_y="scroll",
-                margin=me.Margin(bottom=20),
-            )
+                display="grid",
+                flex_direction="row",
+                gap=5,
+                align_items="center",
+                width="100%",
+            ),
         ):
+            gemini_prompt_input()
+
+        me.box(style=me.Style(height=16))
+
+        if state.processing:
             with me.box(
                 style=me.Style(
-                    background=me.theme_var("background"),
-                    padding=me.Padding(top=24, left=24, right=24, bottom=24),
-                    display="flex",
-                    flex_direction="column",
-                )
+                    display="grid",
+                    justify_content="center",
+                    justify_items="center",
+                ),
             ):
-                header("Prompt", "question_answer")
-
-                # me.text(f"Hello, {app_state.name}!")
-                me.box(style=me.Style(height=16))
-                with me.box(
-                    style=me.Style(
-                        display="grid",
-                        flex_direction="row",
-                        gap=5,
-                        align_items="center",
-                        width="100%",
-                    )
-                ):
-                    gemini_prompt_input()
-
-                me.box(style=me.Style(height=16))
-
-                if state.processing:
-                    with me.box(
-                        style=me.Style(
-                            display="grid",
-                            justify_content="center",
-                            justify_items="center",
-                        )
-                    ):
-                        me.progress_spinner()
-                elif state.prompt_response:
-                    me.text("Response", style=me.Style(font_weight="bold"))
-                    me.box(style=me.Style(height=8))
-                    with me.box(
-                        style=me.Style(
-                            display="grid",
-                            flex_direction="row",
-                            gap=5,
-                            align_items="center",
-                            width="100%",
-                            background=BACKGROUND_COLOR,
-                            border_radius=16,
-                            padding=me.Padding.all(8),
-                        )
-                    ):
-                        me.markdown(text=state.prompt_response)
+                me.progress_spinner()
+        elif state.prompt_response:
+            me.text("Response", style=me.Style(font_weight="bold"))
+            me.box(style=me.Style(height=8))
+            with me.box(
+                style=me.Style(
+                    display="grid",
+                    flex_direction="row",
+                    gap=5,
+                    align_items="center",
+                    width="100%",
+                    background=BACKGROUND_COLOR,
+                    border_radius=16,
+                    padding=me.Padding.all(8),
+                ),
+            ):
+                me.markdown(text=state.prompt_response)
 
 
 @me.component
@@ -128,12 +124,12 @@ def gemini_prompt_input():
             background=BACKGROUND_COLOR,
             display="flex",
             width="100%",
-        )
+        ),
     ):
         with me.box(
             style=me.Style(
                 flex_grow=1,
-            )
+            ),
         ):
             me.native_textarea(
                 autosize=True,
@@ -162,7 +158,7 @@ def gemini_prompt_input():
             style=me.Style(
                 display="flex",
                 flex_direction="column",
-            )
+            ),
         ):
             with me.content_button(type="icon", on_click=on_click_clear_prompt):
                 me.icon("clear")
@@ -175,6 +171,7 @@ def on_blur_prompt(e: me.InputBlurEvent):
 
     Args:
         e: The Mesop InputBlurEvent.
+
     """
     me.state(PageState).prompt_input = e.value
 
@@ -191,6 +188,7 @@ def on_click_generate_content(e: me.ClickEvent):  # pylint: disable=unused-argum
 
     Args:
         e: The Mesop ClickEvent.
+
     """
     page_state = me.state(PageState)
     page_state.prompt_response = ""
@@ -210,6 +208,7 @@ def on_click_clear_prompt(e: me.ClickEvent):  # pylint: disable=unused-argument
 
     Args:
         e: The Mesop ClickEvent.
+
     """
     state = me.state(PageState)
     state.prompt_input = ""

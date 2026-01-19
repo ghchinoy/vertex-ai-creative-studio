@@ -89,14 +89,18 @@ def page():
                 flex_direction="column",
                 align_items="center",
                 gap=16,
-            )
+            ),
         ):
             me.text("Selfie Capture", type="headline-5")
 
             if state.show_camera:
                 selfie_camera(on_capture=on_capture)
             else:
-                me.button("Start Camera", on_click=lambda e: setattr(state, "show_camera", True), type="raised")
+                me.button(
+                    "Start Camera",
+                    on_click=lambda e: setattr(state, "show_camera", True),
+                    type="raised",
+                )
 
             if state.is_saving:
                 me.progress_spinner()

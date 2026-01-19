@@ -1,4 +1,5 @@
 """Test script for Chirp3 HD Text-to-Speech model."""
+
 import os
 import sys
 
@@ -6,6 +7,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models.chirp_3hd import synthesize_chirp_speech
+
 
 def main():
     """Main function to test the Chirp3 HD TTS model."""

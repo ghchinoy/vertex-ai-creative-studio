@@ -1,24 +1,22 @@
-# -*- coding: utf-8 -*-
-"""
-Main pipeline script to run the entire VEO Prompt Wizard workflow.
+"""Main pipeline script to run the entire VEO Prompt Wizard workflow.
 """
 
-import prompt_optimizer
+import evaluate_videos
 import generate_prompts
 import generate_videos
-import evaluate_videos
+import prompt_optimizer
+
 
 def main():
-    """
-    Runs the full pipeline:
+    """Runs the full pipeline:
     1. Optimizes the metaprompt.
     2. Generates augmented prompts.
     3. Generates videos from the prompts.
     4. Evaluates the generated video pairs.
     """
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("### VEO PROMPT WIZARD PIPELINE STARTING ###")
-    print("="*80)
+    print("=" * 80)
 
     try:
         # Step 1: Run the prompt optimizer
@@ -46,9 +44,10 @@ def main():
         raise e
         return
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("### VEO PROMPT WIZARD PIPELINE COMPLETED SUCCESSFULLY ###")
-    print("="*80)
+    print("=" * 80)
+
 
 if __name__ == "__main__":
     main()

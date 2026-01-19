@@ -1,13 +1,11 @@
-import cv2
 import os
-from PIL import Image
-from io import BytesIO
-import tempfile
+
+import cv2
+
 
 # --- Function to extract the last N frames from a video ---
 def extract_last_frames(video_path: str, num_frames: int = 4) -> list:
-    """
-    Extracts the last 'num_frames' from a video file using OpenCV.
+    """Extracts the last 'num_frames' from a video file using OpenCV.
 
     Args:
         video_path (str): Path to the video file.
@@ -16,6 +14,7 @@ def extract_last_frames(video_path: str, num_frames: int = 4) -> list:
     Returns:
         A list of frames, where each frame is a NumPy array.
         Returns an empty list if the video cannot be opened or has no frames.
+
     """
     if not os.path.exists(video_path):
         # Handle the case where the video file does not exist.
@@ -30,7 +29,7 @@ def extract_last_frames(video_path: str, num_frames: int = 4) -> list:
 
     # Get the total number of frames in the video.
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    
+
     # Determine the starting frame for extraction.
     if total_frames < num_frames:
         start_frame = 0
@@ -50,13 +49,15 @@ def extract_last_frames(video_path: str, num_frames: int = 4) -> list:
             break
         extracted_frames.append(frame)
         frames_read += 1
-        
+
     cap.release()
     return extracted_frames
 
-def save_frames_to_temp(frames: list, folder_name: str = "temp", prefix: str = 'frame_') -> str:
-    """
-    Saves a list of frames into a local folder in the current directory.
+
+def save_frames_to_temp(
+    frames: list, folder_name: str = "temp", prefix: str = "frame_",
+) -> str:
+    """Saves a list of frames into a local folder in the current directory.
 
     Args:
         frames (list): A list of frames (as NumPy arrays) to save.
@@ -66,6 +67,7 @@ def save_frames_to_temp(frames: list, folder_name: str = "temp", prefix: str = '
     Returns:
         The path to the folder where frames were saved.
         Returns an empty string if no frames are provided.
+
     """
     if not frames:
         print("⚠️ Warning: No frames were provided to save.")
@@ -84,6 +86,7 @@ def save_frames_to_temp(frames: list, folder_name: str = "temp", prefix: str = '
 
     return folder_name
 
+
 if __name__ == "__main__":
     # --- Configuration ---
     video_file = "../output/outpainted_image.mp4"
@@ -93,8 +96,7 @@ if __name__ == "__main__":
 
     # Step 1: Call the function to extract the last frames.
     last_frames = extract_last_frames(
-        video_path=video_file,
-        num_frames=num_frames_to_get
+        video_path=video_file, num_frames=num_frames_to_get,
     )
 
     # Step 2: Check if frames were extracted before trying to save them.

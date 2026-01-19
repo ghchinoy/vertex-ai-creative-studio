@@ -15,10 +15,10 @@
 import json
 import os
 from dataclasses import dataclass, field
-from typing import List, Optional, TypedDict
+from typing import TypedDict
 
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 load_dotenv(override=True)
 
@@ -35,28 +35,31 @@ class NavItem(BaseModel):
     id: int
     display: str
     icon: str
-    route: Optional[str] = None
-    group: Optional[str] = None
-    align: Optional[str] = None
-    feature_flag: Optional[str] = None
-    feature_flag_not: Optional[str] = None
-    description: Optional[str] = None
-    video_url: Optional[str] = None
-    video_object_position: Optional[str] = None
+    route: str | None = None
+    group: str | None = None
+    align: str | None = None
+    feature_flag: str | None = None
+    feature_flag_not: str | None = None
+    description: str | None = None
+    video_url: str | None = None
+    video_object_position: str | None = None
 
 
 class NavConfig(BaseModel):
-    pages: List[NavItem]
+    pages: list[NavItem]
 
 
 @dataclass
 class Default:
     """Defaults class"""
 
-    VERSION: str = "1.3.16" # Gemini Writers Studio config
+    VERSION: str = "2.0.0"  # Gemini Writers Studio config
+    BUILD_COMMIT: str = ""
+    BUILD_DATE: str = ""
+
     APP_ENV: str = os.environ.get("APP_ENV", "")
     API_BASE_URL: str = os.environ.get(
-        "API_BASE_URL", f"http://localhost:{os.environ.get('PORT', '8080')}"
+        "API_BASE_URL", f"http://localhost:{os.environ.get('PORT', '8080')}",
     )
 
     SERVICE_ACCOUNT_EMAIL: str = os.environ.get("SERVICE_ACCOUNT_EMAIL")
@@ -67,20 +70,23 @@ class Default:
     MODEL_ID: str = os.environ.get("MODEL_ID", "gemini-2.5-flash")
     INIT_VERTEX: bool = True
     GEMINI_IMAGE_GEN_MODEL: str = os.environ.get(
-        "GEMINI_IMAGE_GEN_MODEL", "gemini-2.5-flash-image",
+        "GEMINI_IMAGE_GEN_MODEL",
+        "gemini-2.5-flash-image",
     )
     GEMINI_IMAGE_GEN_LOCATION: str = os.environ.get(
-        "GEMINI_IMAGE_GEN_LOCATION", "global",
+        "GEMINI_IMAGE_GEN_LOCATION",
+        "global",
     )
-    GEMINI_IMAGE_GEN_API_BASE_URL: Optional[str] = os.environ.get(
-        "GEMINI_IMAGE_GEN_API_BASE_URL"
+    GEMINI_IMAGE_GEN_API_BASE_URL: str | None = os.environ.get(
+        "GEMINI_IMAGE_GEN_API_BASE_URL",
     )
 
     GEMINI_AUDIO_ANALYSIS_MODEL_ID: str = os.environ.get(
-        "GEMINI_AUDIO_ANALYSIS_MODEL_ID", "gemini-2.5-flash",
+        "GEMINI_AUDIO_ANALYSIS_MODEL_ID",
+        "gemini-2.5-flash",
     )
     GEMINI_WRITERS_WORKSHOP_MODEL_ID: str = os.environ.get(
-        "GEMINI_WRITERS_WORKSHOP_MODEL_ID", MODEL_ID
+        "GEMINI_WRITERS_WORKSHOP_MODEL_ID", MODEL_ID,
     )
 
     # Collections
@@ -107,7 +113,9 @@ class Default:
     VEO_MODEL_ID: str = os.environ.get("VEO_MODEL_ID", "veo-3.1-fast-generate-001")
     VEO_PROJECT_ID: str = os.environ.get("VEO_PROJECT_ID", PROJECT_ID)
 
-    VEO_EXP_MODEL_ID: str = os.environ.get("VEO_EXP_MODEL_ID", "veo-3.1-generate-preview")
+    VEO_EXP_MODEL_ID: str = os.environ.get(
+        "VEO_EXP_MODEL_ID", "veo-3.1-generate-preview",
+    )
     VEO_EXP_FAST_MODEL_ID: str = os.environ.get(
         "VEO_EXP_FAST_MODEL_ID",
         "veo-3.1-fast-generate-preview",
@@ -118,10 +126,12 @@ class Default:
     VTO_LOCATION: str = os.environ.get("VTO_LOCATION", "us-central1")
     VTO_MODEL_ID: str = os.environ.get("VTO_MODEL_ID", "virtual-try-on-preview-08-04")
     GENMEDIA_VTO_MODEL_COLLECTION_NAME: str = os.environ.get(
-        "GENMEDIA_VTO_MODEL_COLLECTION_NAME", "genmedia-vto-model",
+        "GENMEDIA_VTO_MODEL_COLLECTION_NAME",
+        "genmedia-vto-model",
     )
     GENMEDIA_VTO_CATALOG_COLLECTION_NAME: str = os.environ.get(
-        "GENMEDIA_VTO_CATALOG_COLLECTION_NAME", "genmedia-vto-catalog",
+        "GENMEDIA_VTO_CATALOG_COLLECTION_NAME",
+        "genmedia-vto-catalog",
     )
 
     # Temperatures for Character Consistency Workflow
@@ -137,10 +147,10 @@ class Default:
     # Character Consistency
     CHARACTER_CONSISTENCY_IMAGEN_MODEL: str = "imagen-3.0-capability-001"
     CHARACTER_CONSISTENCY_VEO_MODEL: str = os.environ.get(
-        "CHARACTER_CONSISTENCY_VEO_MODEL", "veo-3.0-fast-generate-001"
+        "CHARACTER_CONSISTENCY_VEO_MODEL", "veo-3.0-fast-generate-001",
     )
     CHARACTER_CONSISTENCY_GEMINI_MODEL: str = os.environ.get(
-        "CHARACTER_CONSISTENCY_GEMINI_MODEL", MODEL_ID
+        "CHARACTER_CONSISTENCY_GEMINI_MODEL", MODEL_ID,
     )
 
     # Lyria
@@ -164,10 +174,10 @@ class Default:
     )
 
     IMAGEN_GENERATED_SUBFOLDER: str = os.environ.get(
-        "IMAGEN_GENERATED_SUBFOLDER", "generated_images"
+        "IMAGEN_GENERATED_SUBFOLDER", "generated_images",
     )
     IMAGEN_EDITED_SUBFOLDER: str = os.environ.get(
-        "IMAGEN_EDITED_SUBFOLDER", "edited_images"
+        "IMAGEN_EDITED_SUBFOLDER", "edited_images",
     )
 
     IMAGEN_PROMPTS_JSON = "prompts/imagen_prompts.json"
@@ -179,7 +189,9 @@ class Default:
     FIREBASE_AUTH_DOMAIN: str = os.environ.get("FIREBASE_AUTH_DOMAIN", "")
     FIREBASE_PROJECT_ID: str = os.environ.get("FIREBASE_PROJECT_ID", PROJECT_ID)
     FIREBASE_STORAGE_BUCKET: str = os.environ.get("FIREBASE_STORAGE_BUCKET", "")
-    FIREBASE_MESSAGING_SENDER_ID: str = os.environ.get("FIREBASE_MESSAGING_SENDER_ID", "")
+    FIREBASE_MESSAGING_SENDER_ID: str = os.environ.get(
+        "FIREBASE_MESSAGING_SENDER_ID", "",
+    )
     FIREBASE_APP_ID: str = os.environ.get("FIREBASE_APP_ID", "")
     FIREBASE_MEASUREMENT_ID: str = os.environ.get("FIREBASE_MEASUREMENT_ID", "")
 
@@ -197,8 +209,35 @@ class Default:
     )
 
 
+def get_config_path(rel_path: str) -> str:
+    """Returns the path to a configuration file, respecting GMCS_OVERRIDE_PATH."""
+    override_base = os.environ.get("GMCS_OVERRIDE_PATH")
+    if override_base:
+        override_path = os.path.join(override_base, rel_path)
+        if os.path.exists(override_path):
+            return override_path
+    return rel_path
+
+
+def load_build_info():
+    """Loads build information from config/build.json if it exists."""
+    path = get_config_path("config/build.json")
+    if os.path.exists(path):
+        try:
+            with open(path) as f:
+                data = json.load(f)
+                Default.BUILD_COMMIT = data.get("commit", "unknown")
+                Default.BUILD_DATE = data.get("date", "unknown")
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+
+
+load_build_info()
+
+
 def get_welcome_page_config():
-    with open("config/navigation.json", "r") as f:
+    path = get_config_path("config/navigation.json")
+    with open(path) as f:
         data = json.load(f)
 
     # This will raise a validation error if the JSON is malformed
@@ -221,21 +260,12 @@ def get_welcome_page_config():
 
 
 def load_about_page_config():
-    env = os.environ.get("APP_ENV") # e.g., 'local', 'dev', 'prod'
-    env_config_path = f"config/about_content.{env}.json"
-    default_config_path = "config/about_content.json"
-
-    config_path = None
-    if env and os.path.exists(env_config_path):
-        config_path = env_config_path
-    elif os.path.exists(default_config_path):
-        config_path = default_config_path
-    else:
-        # Neither the environment-specific nor the default file was found
+    config_path = get_config_path("config/about_content.json")
+    if not os.path.exists(config_path):
         return None
 
     try:
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             content = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return None

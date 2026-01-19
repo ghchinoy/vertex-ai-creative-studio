@@ -14,7 +14,6 @@
 
 """Python wrapper for the Download Button Lit component."""
 
-import typing
 
 import mesop as me
 

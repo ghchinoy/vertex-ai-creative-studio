@@ -14,8 +14,9 @@
 
 """Python wrapper for the Media Detail Viewer Lit component."""
 
-import mesop as me
 import typing
+
+import mesop as me
 
 
 @me.web_component(path="./media_detail_viewer.js")
@@ -50,5 +51,3 @@ def media_detail_viewer(
             "extendClickEvent": on_extend_click,
         },
     )
-
-

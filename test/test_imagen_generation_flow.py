@@ -1,26 +1,30 @@
-
-
-import pytest
-from unittest.mock import patch, MagicMock
-import datetime
-
 # Setup sys.path to allow imports from the parent directory.
 import os
 import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from unittest.mock import MagicMock, patch
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from common.metadata import MediaItem
 from components.imagen.generation_controls import on_click_generate_images
 from state.imagen_state import PageState
 from state.state import AppState
-from common.metadata import MediaItem
 
-@patch('components.imagen.generation_controls.add_media_item_to_firestore')
-@patch('components.imagen.generation_controls.generate_compliment', return_value="A stunning image!")
-@patch('components.imagen.generation_controls.generate_images_from_prompt', return_value=["gs://fake-bucket/fake_image.png"])
-@patch('mesop.state')
-def test_imagen_generation_flow_and_metadata(mock_state, mock_generate_images, mock_generate_compliment, mock_add_media_item):
-    """    
-    Tests the Imagen generation flow, focusing on the data handling and metadata
+
+@patch("components.imagen.generation_controls.add_media_item_to_firestore")
+@patch(
+    "components.imagen.generation_controls.generate_compliment",
+    return_value="A stunning image!",
+)
+@patch(
+    "components.imagen.generation_controls.generate_images_from_prompt",
+    return_value=["gs://fake-bucket/fake_image.png"],
+)
+@patch("mesop.state")
+def test_imagen_generation_flow_and_metadata(
+    mock_state, mock_generate_images, mock_generate_compliment, mock_add_media_item,
+):
+    """Tests the Imagen generation flow, focusing on the data handling and metadata
     creation after a successful API call.
     """
     # --- Arrange ---
@@ -32,7 +36,7 @@ def test_imagen_generation_flow_and_metadata(mock_state, mock_generate_images, m
         imagen_image_count=1,
         image_negative_prompt_input="",
         image_aspect_ratio="1:1",
-        imagen_seed=123
+        imagen_seed=123,
     )
 
     # Configure the mesop.state mock to return the correct state object when called.
@@ -63,4 +67,3 @@ def test_imagen_generation_flow_and_metadata(mock_state, mock_generate_images, m
     assert media_item_logged.critique == "A stunning image!"
 
     print("\nComponent-level integration test for Imagen passed successfully.")
-

@@ -13,20 +13,20 @@
 # limitations under the License.
 
 import mesop as me
-
-from state.state import AppState
-from components.page_scaffold import page_scaffold
 from pages.arena import arena_page_content
-from pages.leaderboard import leaderboard_page_content
 from pages.history import history_page_content
+from pages.leaderboard import leaderboard_page_content
 from pages.settings import settings_page_content
+
+from components.page_scaffold import page_scaffold
+from state.state import AppState
 
 # from pages.gemini2 import gemini_page_content
 
 
 def on_load(e: me.LoadEvent):  # pylint: disable=unused-argument
     """On load event"""
-    #print("load event", e) # this event looks like: LoadEvent(path='/') or LoadEvent(path='/leaderboard')
+    # print("load event", e) # this event looks like: LoadEvent(path='/') or LoadEvent(path='/leaderboard')
     s = me.state(AppState)
     print("theme", s.theme_mode)
     if s.theme_mode:  # recall state theme mode
@@ -68,7 +68,7 @@ def leaderboard_page():
 def history_page():
     """History Page"""
     history_page_content(me.state(AppState))
-    
+
 
 @me.page(
     path="/settings",

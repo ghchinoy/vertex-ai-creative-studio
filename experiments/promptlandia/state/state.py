@@ -34,6 +34,7 @@ class AppState:
         name: The name of the user.
         current_page: The route of the currently active page.
         theme_mode: The current theme mode (e.g., "light" or "dark").
+
     """
 
     sidenav_open: bool = False

@@ -19,9 +19,7 @@ import uuid
 
 # from models.model_setup import ModelSetup
 from dataclasses import asdict, dataclass, field
-from typing import Dict, List, Optional
 
-import pandas as pd
 from google.cloud import firestore
 
 from common.analytics import get_logger
@@ -40,115 +38,119 @@ logger = get_logger(__name__)
 class MediaItem:
     """Represents a single media item in the library for Firestore storage and retrieval."""
 
-    id: Optional[str] = None  # Firestore document ID
-    status: str = "created"  # Options: "created", "pending", "processing", "complete", "failed"
-    related_media_item_id: Optional[str] = None  # For linking generation sequences
-    user_email: Optional[str] = None
-    timestamp: Optional[datetime.datetime] = None  # Store as datetime object
+    id: str | None = None  # Firestore document ID
+    status: str = (
+        "created"  # Options: "created", "pending", "processing", "complete", "failed"
+    )
+    related_media_item_id: str | None = None  # For linking generation sequences
+    user_email: str | None = None
+    timestamp: datetime.datetime | None = None  # Store as datetime object
 
     # Common fields across media types
-    prompt: Optional[str] = None  # The final prompt used for generation
-    original_prompt: Optional[str] = None  # User's initial prompt if rewriting occurred
-    rewritten_prompt: Optional[str] = (
+    prompt: str | None = None  # The final prompt used for generation
+    original_prompt: str | None = None  # User's initial prompt if rewriting occurred
+    rewritten_prompt: str | None = (
         None  # The prompt after any rewriter (Gemini, etc.)
     )
-    model: Optional[str] = (
+    model: str | None = (
         None  # Specific model ID used (e.g., "imagen-3.0-fast", "veo-2.0")
     )
-    mime_type: Optional[str] = None  # e.g., "video/mp4", "image/png", "audio/wav"
-    generation_time: Optional[float] = None  # Seconds for generation
-    error_message: Optional[str] = None  # If any error occurred during generation
-    mode: Optional[str] = None
+    mime_type: str | None = None  # e.g., "video/mp4", "image/png", "audio/wav"
+    generation_time: float | None = None  # Seconds for generation
+    error_message: str | None = None  # If any error occurred during generation
+    mode: str | None = None
 
     # URI fields
-    gcsuri: Optional[str] = (
+    gcsuri: str | None = (
         None  # For single file media (video, audio) -> gs://bucket/path
     )
-    gcs_uris: List[str] = field(
-        default_factory=list
+    gcs_uris: list[str] = field(
+        default_factory=list,
     )  # For multi-file media (e.g., multiple images) -> list of gs://bucket/path
-    source_images_gcs: List[str] = field(
-        default_factory=list
+    source_images_gcs: list[str] = field(
+        default_factory=list,
     )  # For multi-file input media (e.g., recontext) -> list of gs://bucket/path
-    source_uris: List[str] = field(
-        default_factory=list
+    source_uris: list[str] = field(
+        default_factory=list,
     )  # For generic source media of any type (e.g., Pixie compositor)
-    thumbnail_uri: Optional[str] = None
+    thumbnail_uri: str | None = None
 
     # Video specific (some may also apply to Image/Audio)
-    aspect: Optional[str] = None  # e.g., "16:9", "1:1" (also for Image)
-    resolution: Optional[str] = None  # e.g., "720p", "1080p"
-    duration: Optional[float] = None  # Seconds (also for Audio)
-    reference_image: Optional[str] = None
-    last_reference_image: Optional[str] = None
-    negative_prompt: Optional[str] = None
+    aspect: str | None = None  # e.g., "16:9", "1:1" (also for Image)
+    resolution: str | None = None  # e.g., "720p", "1080p"
+    duration: float | None = None  # Seconds (also for Audio)
+    reference_image: str | None = None
+    last_reference_image: str | None = None
+    negative_prompt: str | None = None
     enhanced_prompt_used: bool = False
-    comment: Optional[str] = (
+    comment: str | None = (
         None  # General comment field, e.g., for video generation type
     )
 
     # Image specific
     # aspect is shared with Video
-    modifiers: List[str] = field(
-        default_factory=list
+    modifiers: list[str] = field(
+        default_factory=list,
     )  # e.g., ["photorealistic", "wide angle"]
-    captions: List[str] = field(
-        default_factory=list
+    captions: list[str] = field(
+        default_factory=list,
     )  # Captions or narrative text associated with generated images
-    negative_prompt: Optional[str] = None
-    num_images: Optional[int] = None  # Number of images generated in a batch
-    seed: Optional[int] = (
+    negative_prompt: str | None = None
+    num_images: int | None = None  # Number of images generated in a batch
+    seed: int | None = (
         None  # Seed used for generation (also potentially for video/audio)
     )
-    critique: Optional[str] = None  # Gemini-generated critique for images
-    grounding_info: Optional[str] = None  # Grounding metadata from search, stored as JSON string
+    critique: str | None = None  # Gemini-generated critique for images
+    grounding_info: str | None = (
+        None  # Grounding metadata from search, stored as JSON string
+    )
 
     # Music specific
     # duration is shared with Video
-    audio_analysis: Optional[str] = (
+    audio_analysis: str | None = (
         None  # Structured analysis from Gemini, stored as a JSON string
     )
 
     # This field is for loading raw data from Firestore, not for writing.
     # It helps in debugging and displaying all stored fields if needed.
-    raw_data: Optional[Dict] = field(default_factory=dict, compare=False, repr=False)
+    raw_data: dict | None = field(default_factory=dict, compare=False, repr=False)
 
     # Character Consistency specific fields
-    media_type: Optional[str] = None
-    source_character_images: List[str] = field(default_factory=list)
-    character_description: Optional[str] = None
-    imagen_prompt: Optional[str] = None
-    veo_prompt: Optional[str] = None
-    candidate_images: List[str] = field(default_factory=list)
-    best_candidate_image: Optional[str] = None
-    outpainted_image: Optional[str] = None
+    media_type: str | None = None
+    source_character_images: list[str] = field(default_factory=list)
+    character_description: str | None = None
+    imagen_prompt: str | None = None
+    veo_prompt: str | None = None
+    candidate_images: list[str] = field(default_factory=list)
+    best_candidate_image: str | None = None
+    outpainted_image: str | None = None
 
     # Chirp and Gemini-TTS specific fields
-    custom_pronunciations: List[dict[str, str]] = field(default_factory=list)
-    voice: Optional[str] = None
-    pace: Optional[float] = None
-    volume_gain_db: Optional[float] = None
-    language_code: Optional[str] = None
-    style_prompt: Optional[str] = None
+    custom_pronunciations: list[dict[str, str]] = field(default_factory=list)
+    voice: str | None = None
+    pace: float | None = None
+    volume_gain_db: float | None = None
+    language_code: str | None = None
+    style_prompt: str | None = None
 
     # Interior Design Storyboard
-    storyboard_id: Optional[str] = None
+    storyboard_id: str | None = None
 
     # Object Rotation
-    object_rotation_project_id: Optional[str] = None
+    object_rotation_project_id: str | None = None
 
     # R2V specific
-    r2v_reference_images: List[str] = field(default_factory=list)
-    r2v_style_image: Optional[str] = None
+    r2v_reference_images: list[str] = field(default_factory=list)
+    r2v_style_image: str | None = None
 
     # VTO specific
-    person_image_gcs: Optional[str] = None
-    product_image_gcs: Optional[str] = None
+    person_image_gcs: str | None = None
+    product_image_gcs: str | None = None
 
     # Upscale specific
-    original_resolution: Optional[str] = None
-    upscale_factor: Optional[str] = None
-    image_size: Optional[str] = None
+    original_resolution: str | None = None
+    upscale_factor: str | None = None
+    image_size: str | None = None
 
     def __post_init__(self):
         # Ensure audio_analysis is always a JSON string for state serialization.
@@ -160,13 +162,14 @@ class MediaItem:
 
 
 def add_media_item_to_firestore(item: MediaItem):
-    """
-    Creates or updates a MediaItem in Firestore.
+    """Creates or updates a MediaItem in Firestore.
     If item.id is None, a new document is created with a Firestore-generated ID.
     If item.id is provided, the existing document with that ID is updated.
     """
     if not db:
-        logger.warning("Firestore client (db) is not initialized. Cannot add media item.")
+        logger.warning(
+            "Firestore client (db) is not initialized. Cannot add media item.",
+        )
         return
 
     # Prepare data for Firestore using asdict
@@ -174,48 +177,55 @@ def add_media_item_to_firestore(item: MediaItem):
 
     # Ensure timestamp is handled correctly
     if "timestamp" not in firestore_data or firestore_data["timestamp"] is None:
-        firestore_data["timestamp"] = datetime.datetime.now(datetime.timezone.utc)
+        firestore_data["timestamp"] = datetime.datetime.now(datetime.UTC)
     elif isinstance(firestore_data["timestamp"], str):
         try:
             firestore_data["timestamp"] = datetime.datetime.fromisoformat(
-                firestore_data["timestamp"].replace("Z", "+00:00")
+                firestore_data["timestamp"].replace("Z", "+00:00"),
             )
         except ValueError:
-            logger.warning(f"Could not parse timestamp string '{firestore_data['timestamp']}'. Setting to now().")
-            firestore_data["timestamp"] = datetime.datetime.now(datetime.timezone.utc)
+            logger.warning(
+                f"Could not parse timestamp string '{firestore_data['timestamp']}'. Setting to now().",
+            )
+            firestore_data["timestamp"] = datetime.datetime.now(datetime.UTC)
 
     try:
         if item.id:
             # If an ID is provided, update the existing document
             doc_ref = db.collection(config.GENMEDIA_COLLECTION_NAME).document(item.id)
             # We can remove the 'id' field before setting, as it's the doc's name
-            if 'id' in firestore_data:
-                del firestore_data['id']
-            doc_ref.set(firestore_data, merge=True) # Use merge=True to update fields
-            logger.info(f"Successfully updated MediaItem in Firestore with ID: {item.id}")
+            if "id" in firestore_data:
+                del firestore_data["id"]
+            doc_ref.set(firestore_data, merge=True)  # Use merge=True to update fields
+            logger.info(
+                f"Successfully updated MediaItem in Firestore with ID: {item.id}",
+            )
         else:
             # If no ID is provided, create a new document
             doc_ref = db.collection(config.GENMEDIA_COLLECTION_NAME).document()
-            if 'id' in firestore_data:
-                del firestore_data['id']
+            if "id" in firestore_data:
+                del firestore_data["id"]
             doc_ref.set(firestore_data)
             # Set the new Firestore-generated ID back on the object
             item.id = doc_ref.id
-            logger.info(f"Successfully created MediaItem in Firestore with new ID: {item.id}")
+            logger.info(
+                f"Successfully created MediaItem in Firestore with new ID: {item.id}",
+            )
 
     except Exception as e:
         logger.error(f"CRITICAL: Failed to save MediaItem to Firestore. Error: {e}")
         raise e
 
+
 def save_storyboard(storyboard: dict) -> dict:
-    """
-    Creates or updates an InteriorDesignStoryboard document in Firestore.
+    """Creates or updates an InteriorDesignStoryboard document in Firestore.
 
     Args:
         storyboard: A dictionary representing the storyboard.
 
     Returns:
         The storyboard dictionary, now with an 'id' if it was new.
+
     """
     db = FirebaseClient().get_client()
     if "id" not in storyboard or not storyboard.get("id"):
@@ -238,7 +248,7 @@ def _create_media_item_from_dict(doc_id: str, raw_item_data: dict) -> MediaItem:
         return None
 
     # Handle timestamp conversion
-    timestamp_iso_str: Optional[str] = None
+    timestamp_iso_str: str | None = None
     raw_timestamp = raw_item_data.get("timestamp")
     if isinstance(raw_timestamp, datetime.datetime):
         timestamp_iso_str = raw_timestamp.isoformat()
@@ -287,16 +297,12 @@ def _create_media_item_from_dict(doc_id: str, raw_item_data: dict) -> MediaItem:
     # Handle GCS URI (which can be a string or list)
     gcsuri: str = None
     if isinstance(raw_item_data.get("gcsuri"), list):
-        gcsuri = (
-            raw_item_data.get("gcsuri")[0] if raw_item_data.get("gcsuri") else None
-        )
+        gcsuri = raw_item_data.get("gcsuri")[0] if raw_item_data.get("gcsuri") else None
     elif raw_item_data.get("gcsuri") is not None:
         gcsuri = str(raw_item_data.get("gcsuri"))
 
     # Correctly handle thumbnail_uri vs thumbnail_url typo
-    thumbnail = raw_item_data.get("thumbnail_uri") or raw_item_data.get(
-        "thumbnail_url"
-    )
+    thumbnail = raw_item_data.get("thumbnail_uri") or raw_item_data.get("thumbnail_url")
 
     media_item = MediaItem(
         id=doc_id,
@@ -309,7 +315,9 @@ def _create_media_item_from_dict(doc_id: str, raw_item_data: dict) -> MediaItem:
         mime_type=raw_item_data.get("mime_type"),
         mode=raw_item_data.get("mode"),
         generation_time=gen_time,
-        status=raw_item_data.get("status", "complete"),  # Default to 'complete' for legacy items
+        status=raw_item_data.get(
+            "status", "complete",
+        ),  # Default to 'complete' for legacy items
         error_message=raw_item_data.get("error_message"),
         gcsuri=gcsuri,
         gcs_uris=raw_item_data.get("gcs_uris", []),
@@ -362,7 +370,7 @@ def _create_media_item_from_dict(doc_id: str, raw_item_data: dict) -> MediaItem:
 
 def get_media_item_by_id(
     item_id: str,
-) -> Optional[MediaItem]:  # Assuming MediaItem class is defined/imported
+) -> MediaItem | None:  # Assuming MediaItem class is defined/imported
     """Retrieve a specific media item by its Firestore document ID."""
     try:
         logger.info(f"Trying to retrieve {item_id}")
@@ -370,9 +378,8 @@ def get_media_item_by_id(
         doc = doc_ref.get()
         if doc.exists:
             return _create_media_item_from_dict(doc.id, doc.to_dict())
-        else:
-            logger.warning(f"No document found with ID: {item_id}")
-            return None
+        logger.warning(f"No document found with ID: {item_id}")
+        return None
     except Exception as e:
         logger.error(f"Error fetching media item by ID {item_id}: {e}")
         return None
@@ -380,8 +387,7 @@ def get_media_item_by_id(
 
 def add_media_item(user_email: str, **kwargs):
     """Add a media item to Firestore persistence"""
-
-    current_datetime = datetime.datetime.now(datetime.timezone.utc)
+    current_datetime = datetime.datetime.now(datetime.UTC)
 
     # Prepare data for Firestore
     firestore_data = {
@@ -417,9 +423,9 @@ def get_latest_videos(limit: int = 10):
 
 
 def get_total_media_count():
-    """get count of all media in firestore"""
+    """Get count of all media in firestore"""
     media_ref = db.collection(config.GENMEDIA_COLLECTION_NAME).order_by(
-        "timestamp", direction=firestore.Query.DESCENDING
+        "timestamp", direction=firestore.Query.DESCENDING,
     )
     count = len([doc.to_dict() for doc in media_ref.stream()])
     return count
@@ -432,7 +438,6 @@ def add_vto_metadata(
     user_email: str,
 ):
     """Add VTO metadata to Firestore persistence"""
-
     current_datetime = datetime.datetime.now()
 
     doc_ref = db.collection(config.GENMEDIA_COLLECTION_NAME).document()
@@ -445,7 +450,7 @@ def add_vto_metadata(
             "user_email": user_email,
             "timestamp": current_datetime,
             "model": config.VTO_MODEL_ID,
-        }
+        },
     )
 
     logger.info(f"VTO data stored in Firestore with document ID: {doc_ref.id}")
@@ -454,11 +459,11 @@ def add_vto_metadata(
 def get_media_for_page(
     page: int,
     media_per_page: int,
-    type_filters: Optional[List[str]] = None,
+    type_filters: list[str] | None = None,
     error_filter: str = "all",  # "all", "no_errors", "only_errors"
     sort_by_timestamp: bool = False,
-    filter_by_user_email: Optional[str] = None,  # New parameter
-) -> List[MediaItem]:
+    filter_by_user_email: str | None = None,  # New parameter
+) -> list[MediaItem]:
     """Fetches a paginated and filtered list of media items from Firestore.
 
     NOTE: This implementation currently fetches a larger batch of items (up to 'fetch_limit')
@@ -476,6 +481,7 @@ def get_media_for_page(
 
     Returns:
         A list of MediaItem objects.
+
     """
     fetch_limit = 1000  # Max items to fetch for client-side filtering/pagination
 
@@ -486,9 +492,11 @@ def get_media_for_page(
             query = query.order_by("timestamp", direction=firestore.Query.DESCENDING)
 
         all_docs = list(query.limit(fetch_limit).stream())
-        logger.info(f"[get_media_for_page] Fetched {len(all_docs)} total documents from Firestore before filtering.")
+        logger.info(
+            f"[get_media_for_page] Fetched {len(all_docs)} total documents from Firestore before filtering.",
+        )
 
-        all_fetched_items: List[MediaItem] = []
+        all_fetched_items: list[MediaItem] = []
         for doc in all_docs:
             raw_item_data = doc.to_dict()
 
@@ -502,26 +510,15 @@ def get_media_for_page(
 
             # Apply type filters
             passes_type_filter = False
-            if not type_filters or "all" in type_filters:
+            if not type_filters or "all" in type_filters or ("videos" in type_filters and mime_type.startswith("video/")) or ("images" in type_filters and mime_type.startswith("image/")) or ("music" in type_filters and mime_type.startswith("audio/")):
                 passes_type_filter = True
-            else:
-                if "videos" in type_filters and mime_type.startswith("video/"):
-                    passes_type_filter = True
-                elif "images" in type_filters and mime_type.startswith("image/"):
-                    passes_type_filter = True
-                elif "music" in type_filters and mime_type.startswith("audio/"):
-                    passes_type_filter = True
 
             if not passes_type_filter:
                 continue
 
             # Apply error filter
             passes_error_filter = False
-            if error_filter == "all":
-                passes_error_filter = True
-            elif error_filter == "no_errors" and not error_message_present:
-                passes_error_filter = True
-            elif error_filter == "only_errors" and error_message_present:
+            if error_filter == "all" or (error_filter == "no_errors" and not error_message_present) or (error_filter == "only_errors" and error_message_present):
                 passes_error_filter = True
 
             if not passes_error_filter:
@@ -539,7 +536,9 @@ def get_media_for_page(
             if media_item:
                 all_fetched_items.append(media_item)
 
-        logger.info(f"[get_media_for_page] {len(all_fetched_items)} items remaining after client-side filtering.")
+        logger.info(
+            f"[get_media_for_page] {len(all_fetched_items)} items remaining after client-side filtering.",
+        )
 
         # For pagination, slice the fully filtered list
         start_slice = (page - 1) * media_per_page
@@ -556,10 +555,9 @@ def get_media_for_page_optimized(
     page_size: int,
     type_filters: list[str],
     start_after=None,
-    filter_by_user_email: Optional[str] = None,
+    filter_by_user_email: str | None = None,
 ):
-    """
-    Fetches a paginated and filtered list of media items from Firestore
+    """Fetches a paginated and filtered list of media items from Firestore
     using server-side pagination and filtering.
     """
     try:
@@ -575,15 +573,15 @@ def get_media_for_page_optimized(
         # sorting, a composite index is likely needed.
         if "videos" in type_filters:
             query = query.where("mime_type", ">=", "video/").where(
-                "mime_type", "<", "video0"
+                "mime_type", "<", "video0",
             )
         elif "images" in type_filters:
             query = query.where("mime_type", ">=", "image/").where(
-                "mime_type", "<", "image0"
+                "mime_type", "<", "image0",
             )
         elif "music" in type_filters or "audio" in type_filters:
             query = query.where("mime_type", ">=", "audio/").where(
-                "mime_type", "<", "audio0"
+                "mime_type", "<", "audio0",
             )
 
         # Always sort by timestamp
@@ -615,7 +613,7 @@ def get_media_for_page_optimized(
             else:
                 gcsuri = None
 
-            timestamp_iso_str: Optional[str] = None
+            timestamp_iso_str: str | None = None
             raw_timestamp = raw_item_data.get("timestamp")
             if isinstance(raw_timestamp, datetime.datetime):
                 timestamp_iso_str = raw_timestamp.isoformat()
@@ -702,7 +700,7 @@ def get_media_for_page_optimized(
                     else None
                 ),
                 source_character_images=raw_item_data.get(
-                    "source_character_images", []
+                    "source_character_images", [],
                 ),
                 character_description=(
                     str(raw_item_data.get("character_description"))
@@ -745,8 +743,8 @@ def get_media_for_page_optimized(
 
 
 def get_media_for_chooser(
-    media_type: str, page_size: int, start_after=None
-) -> tuple[list[MediaItem], Optional[firestore.DocumentSnapshot]]:
+    media_type: str, page_size: int, start_after=None,
+) -> tuple[list[MediaItem], firestore.DocumentSnapshot | None]:
     """Fetches media items for the chooser, using a hybrid query strategy."""
     # TODO: This function uses two queries for backward compatibility (one for `media_type`
     # and one for `mime_type`). After a data migration to ensure all documents have the

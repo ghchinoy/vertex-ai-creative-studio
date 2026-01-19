@@ -1,5 +1,4 @@
-"""
-Component for displaying the room view.
+"""Component for displaying the room view.
 """
 
 import mesop as me
@@ -7,8 +6,7 @@ import mesop as me
 
 @me.component
 def room_view(storyboard: dict, is_generating_zoom: bool):
-    """
-    Component for displaying the room view.
+    """Component for displaying the room view.
     """
     with me.box(
         style=me.Style(
@@ -17,9 +15,16 @@ def room_view(storyboard: dict, is_generating_zoom: bool):
             align_items="center",
             gap=10,
             flex_grow=1,
-        )
+        ),
     ):
-        storyboard_item = next((item for item in storyboard["storyboard_items"] if item["room_name"] == storyboard["selected_room"]), None)
+        storyboard_item = next(
+            (
+                item
+                for item in storyboard["storyboard_items"]
+                if item["room_name"] == storyboard["selected_room"]
+            ),
+            None,
+        )
         if storyboard_item:
             me.text(f"Room View: {storyboard_item['room_name']}", type="headline-6")
             if is_generating_zoom:

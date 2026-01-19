@@ -13,12 +13,12 @@
 # limitations under the License.
 
 
-from dataclasses import dataclass, field
-from typing import Callable, Optional
+from collections.abc import Callable
+from dataclasses import field
 
 import mesop as me
 
-from common.metadata import MediaItem, get_media_for_page_optimized, db, config
+from common.metadata import MediaItem, get_media_for_page_optimized
 from components.dialog import dialog
 from components.library.events import LibrarySelectionChangeEvent
 
@@ -26,6 +26,7 @@ from components.library.events import LibrarySelectionChangeEvent
 @me.stateclass
 class State:
     """Local mesop state for the audio chooser button."""
+
     show_dialog: bool = False
     active_chooser_key: str = ""
     is_loading: bool = False
@@ -36,7 +37,7 @@ class State:
 @me.component
 def audio_chooser_button(
     on_library_select: Callable[[LibrarySelectionChangeEvent], None],
-    button_label: Optional[str] = None,
+    button_label: str | None = None,
     button_type: str = "stroked",
     key: str = "",
 ):
@@ -70,40 +71,56 @@ def audio_chooser_button(
         state.show_dialog = False
         yield
 
-    with me.content_button(on_click=open_dialog, type=button_type, key=key):
-        with me.box(style=me.Style(display="flex", flex_direction="row", gap=8, align_items="center")):
-            me.icon("music_note")
-            if button_label:
-                me.text(button_label)
+    with me.content_button(on_click=open_dialog, type=button_type, key=key), me.box(
+        style=me.Style(
+            display="flex", flex_direction="row", gap=8, align_items="center",
+        ),
+    ):
+        me.icon("music_note")
+        if button_label:
+            me.text(button_label)
 
-    dialog_style = me.Style(width="95vw", height="80vh", display="flex", flex_direction="column")
+    dialog_style = me.Style(
+        width="95vw", height="80vh", display="flex", flex_direction="column",
+    )
 
-    with dialog(is_open=state.show_dialog, dialog_style=dialog_style):
-        with me.box(style=me.Style(display="flex", flex_direction="column", gap=16, flex_grow=1)):
-            me.text("Select Audio from Library", type="headline-6")
-            with me.box(style=me.Style(flex_grow=1, overflow_y="auto")):
-                if state.is_loading and not state.media_items:
-                    with me.box(
-                        style=me.Style(
-                            display="flex",
-                            justify_content="center",
-                            align_items="center",
-                            height="100%",
-                        )
-                    ):
-                        me.progress_spinner()
-                else:
-                    for item in state.media_items:
-                        uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
-                        if uri:
-                            with me.box(key=uri, on_click=handle_image_selected, style=me.Style(padding=me.Padding.all(8), cursor="pointer")):
-                                me.text(uri.split("/")[-1])
+    with dialog(is_open=state.show_dialog, dialog_style=dialog_style), me.box(
+        style=me.Style(display="flex", flex_direction="column", gap=16, flex_grow=1),
+    ):
+        me.text("Select Audio from Library", type="headline-6")
+        with me.box(style=me.Style(flex_grow=1, overflow_y="auto")):
+            if state.is_loading and not state.media_items:
+                with me.box(
+                    style=me.Style(
+                        display="flex",
+                        justify_content="center",
+                        align_items="center",
+                        height="100%",
+                    ),
+                ):
+                    me.progress_spinner()
+            else:
+                for item in state.media_items:
+                    uri = item.gcsuri or (
+                        item.gcs_uris[0] if item.gcs_uris else None
+                    )
+                    if uri:
+                        with me.box(
+                            key=uri,
+                            on_click=handle_image_selected,
+                            style=me.Style(
+                                padding=me.Padding.all(8), cursor="pointer",
+                            ),
+                        ):
+                            me.text(uri.split("/")[-1])
 
-
-            with me.box(style=me.Style(display="flex", justify_content="flex-end", margin=me.Margin(top=24))):
-                me.button(
-                    "Cancel",
-                    on_click=lambda e: setattr(state, "show_dialog", False),
-                    type="stroked",
-                )
-
+        with me.box(
+            style=me.Style(
+                display="flex", justify_content="flex-end", margin=me.Margin(top=24),
+            ),
+        ):
+            me.button(
+                "Cancel",
+                on_click=lambda e: setattr(state, "show_dialog", False),
+                type="stroked",
+            )

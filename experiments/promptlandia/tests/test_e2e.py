@@ -14,6 +14,7 @@
 
 from playwright.sync_api import Page, expect
 
+
 def test_checklist_page(page: Page):
     page.goto("http://localhost:32123/checklist")
 

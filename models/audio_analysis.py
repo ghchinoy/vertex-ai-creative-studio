@@ -36,15 +36,15 @@ class AudioMetrics(BaseModel):
     estimated_tempo_bpm: float = 0.0
     duration_sec: float = 0.0
 
+
 def analyze_audio_file(gcs_uri: str) -> AudioMetrics:
-    """
-    Analyzes an audio file from GCS to extract technical metrics.
+    """Analyzes an audio file from GCS to extract technical metrics.
     """
     # Download audio bytes from GCS
     audio_bytes = download_from_gcs(gcs_uri)
-    
+
     metrics = AudioMetrics()
-    
+
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_audio:
         temp_audio.write(audio_bytes)
         temp_audio_path = temp_audio.name
@@ -53,7 +53,7 @@ def analyze_audio_file(gcs_uri: str) -> AudioMetrics:
         # --- Parselmouth Analysis (Pitch, Voice Quality) ---
         snd = parselmouth.Sound(temp_audio_path)
         pitch = snd.to_pitch()
-        pitch_values = pitch.selected_array['frequency']
+        pitch_values = pitch.selected_array["frequency"]
         voiced_pitch = pitch_values[pitch_values > 0]
 
         if len(voiced_pitch) > 0:
@@ -64,8 +64,19 @@ def analyze_audio_file(gcs_uri: str) -> AudioMetrics:
         # Voice quality metrics
         try:
             point_process = call(snd, "To PointProcess (periodic, cc)", 75, 500)
-            jitter = call(point_process, "Get jitter (local)", 0, 0, 0.0001, 0.02, 1.3) * 100
-            shimmer = call([snd, point_process], "Get shimmer (local)", 0, 0, 0.0001, 0.02, 1.3, 1.6)
+            jitter = (
+                call(point_process, "Get jitter (local)", 0, 0, 0.0001, 0.02, 1.3) * 100
+            )
+            shimmer = call(
+                [snd, point_process],
+                "Get shimmer (local)",
+                0,
+                0,
+                0.0001,
+                0.02,
+                1.3,
+                1.6,
+            )
             hnr = call(snd, "To Harmonicity (cc)", 0.01, 75, 0.1, 1.0).values.mean()
 
             metrics.jitter_percent = float(jitter) if not np.isnan(jitter) else 0.0
@@ -83,7 +94,7 @@ def analyze_audio_file(gcs_uri: str) -> AudioMetrics:
             metrics.estimated_tempo_bpm = float(tempo)
             metrics.duration_sec = float(librosa.get_duration(y=y, sr=sr))
         except Exception as e:
-             print(f"Warning: Librosa analysis failed: {e}")
+            print(f"Warning: Librosa analysis failed: {e}")
 
     finally:
         # Clean up temp file

@@ -31,7 +31,6 @@ from tenacity import (
 )
 
 from models.model_setup import ModelSetup
-
 from models.prompts import (
     PROMPT_IMPROVEMENT_INSTRUCTIONS,
     PROMPT_IMPROVEMENT_PLANNING_INSTRUCTIONS,
@@ -43,7 +42,7 @@ MODEL_ID = model_id
 
 @retry(
     wait=wait_exponential(
-        multiplier=1, min=1, max=10
+        multiplier=1, min=1, max=10,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
     retry=retry_if_exception_type(Exception),  # Retry on all exceptions
@@ -62,8 +61,8 @@ def gemini_generate_content(system_prompt: str = "", prompt: str = "") -> str:
 
     Returns:
         The generated content as a string.
-    """
 
+    """
     try:
         if system_prompt:
             response = client.models.generate_content(
@@ -92,7 +91,7 @@ def gemini_generate_content(system_prompt: str = "", prompt: str = "") -> str:
 
 @retry(
     wait=wait_exponential(
-        multiplier=1, min=1, max=10
+        multiplier=1, min=1, max=10,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
     retry=retry_if_exception_type(Exception),  # Retry on all exceptions
@@ -118,8 +117,8 @@ def gemini_improve_this_prompt(
 
     Returns:
         The improved prompt as a string.
-    """
 
+    """
     improvement_prompt = PROMPT_IMPROVEMENT_INSTRUCTIONS.format(
         plan,
         f"{system_prompt} {prompt}",
@@ -144,14 +143,14 @@ def gemini_improve_this_prompt(
 
 @retry(
     wait=wait_exponential(
-        multiplier=1, min=1, max=10
+        multiplier=1, min=1, max=10,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
     retry=retry_if_exception_type(Exception),  # Retry on all exceptions
     reraise=True,  # re-raise the last exception if all retries fail
 )
 def gemini_thinking_thoughts(
-    system_prompt: str = "", prompt: str = "", prompt_improvement_instructions: str = ""
+    system_prompt: str = "", prompt: str = "", prompt_improvement_instructions: str = "",
 ) -> str:
     """Generates a plan for improving a prompt using the Gemini model.
 
@@ -166,8 +165,8 @@ def gemini_thinking_thoughts(
 
     Returns:
         The plan for improving the prompt as a string.
-    """
 
+    """
     planning_prompt = PROMPT_IMPROVEMENT_PLANNING_INSTRUCTIONS.format(
         f"{system_prompt} {prompt}",
         prompt_improvement_instructions,

@@ -15,20 +15,19 @@
 """Main application file for the Promptlandia web application."""
 
 import mesop as me
-
-from state.state import AppState
-from components.page_scaffold import page_scaffold
-from pages.promptlandia import promptlandia_page_content
-from pages.generate import prompt_page_content
-from pages.settings import settings_page_content
-from pages.playground import playground_page_content
 from pages.checklist import checklist_page_content
+from pages.generate import prompt_page_content
+from pages.playground import playground_page_content
+from pages.promptlandia import promptlandia_page_content
+from pages.settings import settings_page_content
 from pages.video_checklist import video_page
+
+from components.page_scaffold import page_scaffold
+from state.state import AppState
 
 
 def on_load(e: me.LoadEvent):  # pylint: disable=unused-argument
-    """
-    Handles the on-load event for all pages.
+    """Handles the on-load event for all pages.
 
     This function is called when any page in the application is loaded. It sets
     the theme mode to "system", which will use the user's operating system's
@@ -36,6 +35,7 @@ def on_load(e: me.LoadEvent):  # pylint: disable=unused-argument
 
     Args:
         e: The Mesop LoadEvent.
+
     """
     me.set_theme_mode("system")
 
@@ -46,8 +46,7 @@ def on_load(e: me.LoadEvent):  # pylint: disable=unused-argument
     on_load=on_load,
 )
 def promptlandia_page():
-    """
-    Renders the main prompt improvement page.
+    """Renders the main prompt improvement page.
 
     This is the default page of the application and corresponds to the "/" route.
     It uses the `page_scaffold` component to provide a consistent layout and
@@ -64,8 +63,7 @@ def promptlandia_page():
     on_load=on_load,
 )
 def prompt_page():
-    """
-    Renders the prompt explorer page.
+    """Renders the prompt explorer page.
 
     This page corresponds to the "/prompt" route and is used for exploring
     and generating content from prompts. It uses the `page_scaffold` component
@@ -82,8 +80,7 @@ def prompt_page():
     on_load=on_load,
 )
 def settings_page():
-    """
-    Renders the settings page.
+    """Renders the settings page.
 
     This page corresponds to the "/settings" route and displays the application's
     settings. It uses the `page_scaffold` component and renders the
@@ -100,8 +97,7 @@ def settings_page():
     on_load=on_load,
 )
 def playground_page():
-    """
-    Renders the playground page.
+    """Renders the playground page.
 
     This page corresponds to the "/playground" route and provides a space for
     users to experiment with prompts and models. It uses the `page_scaffold`
@@ -118,8 +114,7 @@ def playground_page():
     on_load=on_load,
 )
 def checklist_page():
-    """
-    Renders the prompt health checklist page.
+    """Renders the prompt health checklist page.
 
     This page corresponds to the "/checklist" route and allows users to
     evaluate their prompts against a set of best practices. It uses the
@@ -136,12 +131,11 @@ def checklist_page():
     on_load=on_load,
 )
 def video_checklist_page():
-    """
-    Renders the video prompt health checklist page.
+    """Renders the video prompt health checklist page.
 
-    This page corresponds to the "/video_checklist" route and allows users to
-    evaluate their video prompts against a set of best practices. It uses the
-f    `page_scaffold` component and renders the `video_checklist_page_content`.
+        This page corresponds to the "/video_checklist" route and allows users to
+        evaluate their video prompts against a set of best practices. It uses the
+    f    `page_scaffold` component and renders the `video_checklist_page_content`.
     """
     with page_scaffold():  # pylint: disable=not-context-manager
         video_page()

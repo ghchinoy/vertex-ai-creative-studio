@@ -19,9 +19,9 @@ import urllib
 import google.auth
 import google.auth.transport.requests as googlerequests
 import google.oauth2.id_token
-from config.default import Default, Voice
 from dotenv import load_dotenv
 
+from config.default import Default, Voice
 
 load_dotenv(override=True)
 logging.basicConfig(level=logging.DEBUG)
@@ -33,13 +33,12 @@ class VoicesSetup:
 
     @staticmethod
     def init():
-        """initial population of voices"""
+        """Initial population of voices"""
         return get_voices()
 
 
 def get_voices():
-    """
-    Calls the backend endpoint for the list of available Journey Voices
+    """Calls the backend endpoint for the list of available Journey Voices
     Sets this as a state variable for downstream use (display on About page
     and on Settings page)
     """
@@ -57,7 +56,6 @@ def get_voices():
         audience = f"{urlinfo.scheme}://{urlinfo.netloc}/"
         auth_req = google.auth.transport.requests.Request()
         id_token = google.oauth2.id_token.fetch_id_token(auth_req, audience)
-
 
         req.add_header("Authorization", f"Bearer {id_token}")
     else:

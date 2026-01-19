@@ -13,7 +13,6 @@
 # limitations under the License.
 """Pill mesop component"""
 
-from typing import List, Optional
 
 import mesop as me
 
@@ -32,7 +31,11 @@ def pill(label: str, pill_type: str):
     elif pill_type == "aspect":
         background_color = me.theme_var("primary-container")
         text_color = me.theme_var("on-primarycontainer")
-    elif pill_type == "duration" or pill_type == "fps" or pill_type == "multi_image_count":
+    elif (
+        pill_type == "duration"
+        or pill_type == "fps"
+        or pill_type == "multi_image_count"
+    ):
         background_color = me.theme_var("surface-variant")
         text_color = me.theme_var("on-surface-variant")
     elif pill_type == "resolution":
@@ -47,13 +50,7 @@ def pill(label: str, pill_type: str):
         text_color = me.theme_var("on-surface-variant")
     elif pill_type == "error_present":
         background_color = me.theme_var("error-container")
-    elif pill_type == "genre":
-        background_color = me.theme_var("secondary-container")
-        text_color = me.theme_var("on-scecondary-container")
-    elif pill_type == "stage":
-        background_color = me.theme_var("secondary-container")
-        text_color = me.theme_var("on-scecondary-container")
-    elif pill_type == "multi_video":
+    elif pill_type == "genre" or pill_type == "stage" or pill_type == "multi_video":
         background_color = me.theme_var("secondary-container")
         text_color = me.theme_var("on-scecondary-container")
 

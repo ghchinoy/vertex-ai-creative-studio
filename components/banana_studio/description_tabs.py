@@ -28,7 +28,7 @@ def _description_tab_content(description: str):
         rows=4,
         autosize=True,
         style=me.Style(
-            width="100%", font_size="12pt", border=None, background="transparent"
+            width="100%", font_size="12pt", border=None, background="transparent",
         ),
     )
 
@@ -37,7 +37,7 @@ def _description_tab_content(description: str):
 def _questions_tab_content(questions: list[str]):
     with me.box(style=me.Style(display="flex", flex_direction="column", gap=8)):
         for i, question in enumerate(questions):
-            me.text(f"{i+1}. {question}")
+            me.text(f"{i + 1}. {question}")
 
 
 def on_tab_click(e: me.ClickEvent):
@@ -61,10 +61,10 @@ def _tab_header(tabs: list[Tab], on_tab_click_handler: Callable):
             width="100%",
             border=me.Border(
                 bottom=me.BorderSide(
-                    width=1, style="solid", color=me.theme_var("outline-variant")
-                )
+                    width=1, style="solid", color=me.theme_var("outline-variant"),
+                ),
             ),
-        )
+        ),
     ):
         for index, tab in enumerate(tabs):
             with me.box(
@@ -94,9 +94,7 @@ def _make_tab_style(selected: bool, disabled: bool) -> me.Style:
         style.cursor = "default"
     elif selected:
         style.border = me.Border(
-            bottom=me.BorderSide(
-                width=2, style="solid", color=me.theme_var("primary")
-            )
+            bottom=me.BorderSide(width=2, style="solid", color=me.theme_var("primary")),
         )
         style.cursor = "default"
     return style
@@ -133,10 +131,10 @@ def description_tabs(
     for i, description in enumerate(image_descriptions):
         tabs.append(
             Tab(
-                label=f"Image {i+1}",
+                label=f"Image {i + 1}",
                 icon="image",
                 content=lambda desc=description: _description_tab_content(desc),
-            )
+            ),
         )
 
     # Create tab for critique questions if they exist
@@ -146,7 +144,7 @@ def description_tabs(
                 label="Critique Questions",
                 icon="quiz",
                 content=lambda: _questions_tab_content(critique_questions),
-            )
+            ),
         )
 
     if not tabs:

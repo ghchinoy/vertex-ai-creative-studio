@@ -20,41 +20,43 @@ import uuid
 
 import google.auth
 import mesop as me
-from fastapi import APIRouter, FastAPI, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.wsgi import WSGIMiddleware
-from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse, JSONResponse
+from fastapi.responses import (
+    FileResponse,
+    JSONResponse,
+    RedirectResponse,
+    StreamingResponse,
+)
 from fastapi.staticfiles import StaticFiles
+from firebase_admin import auth
 from google.auth import impersonated_credentials
 from google.cloud import storage
 from pydantic import BaseModel
-from firebase_admin import auth
 
-import pages.shop_the_look
 from app_factory import app
-from common.prompt_template_service import PromptTemplate
 from common.utils import create_display_url, mirror_user_avatar
-from routers import veo_router
 from config import default as config
 from config.firebase_config import FirebaseClient
 from models.video_processing import convert_mp4_to_gif
+from routers import veo_router
 
-# Initialize Firebase Client
-FirebaseClient()
-from common.auth import is_user_authorized, get_user_role
+# Initialize Firebase Client with configured database
+FirebaseClient(database_id=config.Default().GENMEDIA_FIREBASE_DB)
+from common.auth import get_user_role, is_user_authorized
+import pages.shop_the_look
 from pages import about as about_page
-from pages import admin as admin_page
 from pages import banana_studio as banana_studio_page
 from pages import character_consistency as character_consistency_page
 from pages import chirp_3hd as chirp_3hd_page
 from pages import config as config_page
-from pages import forbidden as forbidden_page
 from pages import gemini_image_generation as gemini_image_generation_page
 from pages import gemini_tts as gemini_tts_page
 from pages import gemini_writers_workshop as gemini_writers_workshop_page
 from pages import guideline_analysis as guideline_analysis_page
 from pages import home as home_page
+from pages import forbidden as forbidden_page
 from pages import imagen as imagen_page
 from pages import interior_design_v2 as interior_design_page
 from pages import lyria as lyria_page
@@ -70,6 +72,13 @@ from pages import vto as vto_page
 from pages import welcome as welcome_page
 from pages.edit_images import content as edit_images_content
 from pages.library_v2 import page as library_v2_page
+from pages import admin as admin_page
+import pages.imagen_upscale
+import pages.storyboarder
+import pages.character_sheet
+import pages.brand_adherence
+import pages.styles
+from pages.test_async_veo import page as test_async_veo_page
 from pages.test_character_consistency import page as test_character_consistency_page
 from pages.test_index import page as test_index_page
 from pages.test_infinite_scroll import test_infinite_scroll_page
@@ -78,18 +87,12 @@ from pages.test_pixie_compositor import test_pixie_compositor_page
 from pages.test_svg import test_svg_page
 from pages.test_uploader import test_uploader_page
 from pages.test_vto_prompt_generator import page as test_vto_prompt_generator_page
-from pages.test_async_veo import page as test_async_veo_page
-import pages.imagen_upscale
-import pages.storyboarder
-import pages.character_sheet
-import pages.brand_adherence
-from workflows.retro_games import page as retro_games
-from state.state import AppState
 
 
 class UserInfo(BaseModel):
     email: str | None
     agent: str | None
+
 
 class LoginRequest(BaseModel):
     token: str | None
@@ -121,41 +124,47 @@ async def login(request: LoginRequest):
             try:
                 db = FirebaseClient().get_client()
                 user_ref = db.collection("users").document(email)
-                
-                update_data = {"email": email, "last_signed_in": datetime.datetime.utcnow()}
+
+                update_data = {
+                    "email": email,
+                    "last_signed_in": datetime.datetime.utcnow(),
+                }
                 if request.photo_url:
                     update_data["photo_url"] = request.photo_url
                     # Try to mirror the avatar to GCS
                     gcs_avatar_uri = mirror_user_avatar(email, request.photo_url)
                     if gcs_avatar_uri:
                         update_data["gcs_avatar_uri"] = gcs_avatar_uri
-                
+
                 # Use set with merge=True so we don't overwrite other fields like 'role'
                 user_ref.set(update_data, merge=True)
             except Exception as e:
                 print(f"Error updating user record: {e}")
         else:
             print(f"Unauthorized login attempt blocked for: {email}")
-        
+
         # Create a session cookie
         expires_in = datetime.timedelta(days=5)
-        session_cookie = auth.create_session_cookie(request.token, expires_in=expires_in)
+        session_cookie = auth.create_session_cookie(
+            request.token, expires_in=expires_in,
+        )
 
         user_role = get_user_role(email)
-        print(f"DEBUG: login endpoint returning role '{user_role}' for '{email}'", flush=True)
+        print(
+            f"DEBUG: login endpoint returning role '{user_role}' for '{email}'",
+            flush=True,
+        )
 
-        response = JSONResponse(content={
-            "status": "success", 
-            "role": user_role,
-            "email": email
-        })
+        response = JSONResponse(
+            content={"status": "success", "role": user_role, "email": email},
+        )
         response.set_cookie(
             key="session_token",
             value=session_cookie,
             expires=int(expires_in.total_seconds()),
             httponly=True,
             secure=True,  # Ensure this is True in production (HTTPS)
-            samesite="Lax"
+            samesite="Lax",
         )
         return response
     except Exception as e:
@@ -223,7 +232,7 @@ def get_signed_url(gcs_uri: str):
             print(
                 "This error often occurs in a local development environment. "
                 "Please ensure you have authenticated with service account impersonation by running: "
-                "gcloud auth application-default login --impersonate-service-account=<YOUR_SERVICE_ACCOUNT_EMAIL>"
+                "gcloud auth application-default login --impersonate-service-account=<YOUR_SERVICE_ACCOUNT_EMAIL>",
             )
         return {"error": error_message}, 500
 
@@ -253,9 +262,11 @@ async def set_request_context(request: Request, call_next):
     session_cookie = request.cookies.get("session_token")
     if session_cookie:
         try:
-            decoded_claims = auth.verify_session_cookie(session_cookie, check_revoked=True)
+            decoded_claims = auth.verify_session_cookie(
+                session_cookie, check_revoked=True,
+            )
             user_email = decoded_claims.get("email")
-        except Exception as e:
+        except Exception:
             # Invalid or expired session cookie
             pass
 
@@ -281,19 +292,19 @@ async def set_request_context(request: Request, call_next):
     # Redirect unauthenticated users to /welcome for page requests
     path = request.url.path
     accept = request.headers.get("accept", "")
-    
+
     allowed_paths = ["/welcome", "/forbidden", "/", "/favicon.ico"]
     allowed_prefixes = (
-        "/api/", 
-        "/static/", 
-        "/__web-components-module__", 
-        "/media/", 
-        "/_mesop/"
+        "/api/",
+        "/static/",
+        "/__web-components-module__",
+        "/media/",
+        "/_mesop/",
     )
 
     # 4. Check Authorization
     is_authorized = is_authenticated and is_user_authorized(user_email)
-    
+
     if "text/html" in accept:
         if not is_authenticated:
             if path not in allowed_paths and not path.startswith(allowed_prefixes):
@@ -308,7 +319,9 @@ async def set_request_context(request: Request, call_next):
 
     request.scope["MESOP_USER_EMAIL"] = user_email
     request.scope["MESOP_SESSION_ID"] = session_id
-    request.scope["MESOP_USER_ROLE"] = get_user_role(user_email) if is_authenticated else "guest"
+    request.scope["MESOP_USER_ROLE"] = (
+        get_user_role(user_email) if is_authenticated else "guest"
+    )
 
     # Pass GA ID to Mesop context if it exists
     if config.Default.GA_MEASUREMENT_ID:
@@ -316,33 +329,30 @@ async def set_request_context(request: Request, call_next):
 
     response = await call_next(request)
     response.set_cookie(
-        key="session_id", value=session_id, httponly=True, samesite="Lax"
+        key="session_id", value=session_id, httponly=True, samesite="Lax",
     )
     return response
 
 
 # Test page routes are left as is, they don't need the scaffold
 me.page(path="/test_character_consistency", title="Test Character Consistency")(
-    test_character_consistency_page
+    test_character_consistency_page,
 )
 me.page(path="/test_index", title="Test Index")(test_index_page)
 me.page(path="/test_infinite_scroll", title="Test Infinite Scroll")(
-    test_infinite_scroll_page
+    test_infinite_scroll_page,
 )
 me.page(path="/test_pixie_compositor", title="Test Pixie Compositor")(
-    test_pixie_compositor_page
+    test_pixie_compositor_page,
 )
 me.page(path="/test_uploader", title="Test Uploader")(test_uploader_page)
 me.page(path="/test_vto_prompt_generator", title="Test VTO Prompt Generator")(
-    test_vto_prompt_generator_page
+    test_vto_prompt_generator_page,
 )
 me.page(path="/test_svg", title="Test SVG")(test_svg_page)
 me.page(path="/test_media_chooser", title="Test Media Chooser")(test_media_chooser_page)
 me.page(path="/test_async_veo", title="Test Async Veo")(test_async_veo_page)
 me.page(path="/admin", title="Admin Dashboard")(admin_page.page)
-
-
-
 
 
 # Add a new endpoint to proxy GCS media for better caching.
@@ -408,7 +418,7 @@ app.mount(
             "app",
             "prod",
             "web_package",
-        )
+        ),
     ),
     name="static",
 )
@@ -419,7 +429,7 @@ app.include_router(veo_router.router)
 app.mount(
     "/",
     WSGIMiddleware(
-        me.create_wsgi_app(debug_mode=os.environ.get("DEBUG_MODE", "") == "true")
+        me.create_wsgi_app(debug_mode=os.environ.get("DEBUG_MODE", "") == "true"),
     ),
 )
 

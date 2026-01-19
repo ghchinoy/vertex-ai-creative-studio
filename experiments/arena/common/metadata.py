@@ -15,20 +15,18 @@
 import datetime
 import json
 import os
-from typing import Optional, Dict, Any, List
+from typing import Any
+
 import pandas as pd
-
-from google.cloud import firestore
-
-from config.default import Default
-from config.firebase_config import FirebaseClient
-from config.spanner_config import ArenaStudyTracker, ArenaModelEvaluation
-from models.set_up import ModelSetup
-from common.storage import check_gcs_blob_exists
 from alive_progress import alive_bar
-
+from config.spanner_config import ArenaModelEvaluation, ArenaStudyTracker
+from google.cloud import firestore
+from models.set_up import ModelSetup
 from utils.logger import LogLevel, log
 
+from common.storage import check_gcs_blob_exists
+from config.default import Default
+from config.firebase_config import FirebaseClient
 
 # Initialize configuration
 client, model_id = ModelSetup.init()
@@ -37,9 +35,14 @@ config = Default()
 db = FirebaseClient(database_id=config.IMAGE_FIREBASE_DB).get_client()
 
 
-def add_image_metadata(gcsuri: str, prompt: str, model: str, study: Optional[str] = "live", collection_name: Optional[str] = None):
+def add_image_metadata(
+    gcsuri: str,
+    prompt: str,
+    model: str,
+    study: str | None = "live",
+    collection_name: str | None = None,
+):
     """Add Image metadata to Firestore persistence"""
-    
     if collection_name is None:
         collection_name = config.IMAGE_COLLECTION_NAME
     print(f"Using Firestore collection: {collection_name}")
@@ -55,7 +58,7 @@ def add_image_metadata(gcsuri: str, prompt: str, model: str, study: Optional[str
                 "prompt": prompt,
                 "model": model,
                 "timestamp": current_datetime,  # alt: firestore.SERVER_TIMESTAMP
-            }
+            },
         )
     except Exception as e:
         print(f"Error storing image metadata: {e}")
@@ -69,10 +72,9 @@ def load_metadata_from_json(
     top_level_key: str,
     gcs_sub_folder: str,
     model_name: str,
-    key_mapping: Optional[Dict[Any, str]] = None,
+    key_mapping: dict[Any, str] | None = None,
 ) -> None:
-    """
-    Loads metadata from a JSON file and adds it to Firestore using add_image_metadata,
+    """Loads metadata from a JSON file and adds it to Firestore using add_image_metadata,
     with a progress bar.
 
     Args:
@@ -85,6 +87,7 @@ def load_metadata_from_json(
                      to the expected arguments of `add_image_metadata`.
                      For the given example, it would be `{0: 'prompt', 1: 'images'}`.
                      The value associated with 'images' is expected to be a list of image identifiers.
+
     """
     if key_mapping is None:
         key_mapping = {0: "prompt", 1: "images"}
@@ -93,18 +96,22 @@ def load_metadata_from_json(
     if not os.path.exists(json_file_path):
         raise FileNotFoundError(f"Metadata file not found: {json_file_path}")
 
-    with open(json_file_path, "r", encoding="utf-8") as f:
+    with open(json_file_path, encoding="utf-8") as f:
         metadata = json.load(f)
         data_list = metadata.get(top_level_key, [])
 
         if not data_list:
-            raise ValueError(f"No data found under the key '{top_level_key}' in the provided JSON file.")
+            raise ValueError(
+                f"No data found under the key '{top_level_key}' in the provided JSON file.",
+            )
 
         total_items = len(data_list)
         with alive_bar(total_items, title="Processing Metadata") as bar:
             for item in data_list:
                 if not isinstance(item, (list, tuple)) or len(item) < 2:
-                    print(f"Skipping invalid item format: {item}. Expected a list or tuple with at least two elements.")
+                    print(
+                        f"Skipping invalid item format: {item}. Expected a list or tuple with at least two elements.",
+                    )
                     bar()  # Increment the progress bar
                     continue
 
@@ -112,7 +119,9 @@ def load_metadata_from_json(
                 images_key = key_mapping.get(1)
 
                 if prompt_key is None or images_key is None:
-                    raise ValueError("Key mapping must include keys for both 'prompt' (typically index 0) and 'images' (typically index 1).")
+                    raise ValueError(
+                        "Key mapping must include keys for both 'prompt' (typically index 0) and 'images' (typically index 1).",
+                    )
 
                 prompt = item[0]
                 images = item[1]
@@ -127,29 +136,43 @@ def load_metadata_from_json(
                     bar()  # Increment the progress bar
                     continue
 
-                print(f"Processing prompt: 'Found {len(images)} potential {'image' if len(images) == 1 else 'images'}...")
+                print(
+                    f"Processing prompt: 'Found {len(images)} potential {'image' if len(images) == 1 else 'images'}...",
+                )
                 print(f"Images ID(s): {images}")
                 print(f"Sub-folder: {gcs_sub_folder}")
                 print(f"Model: {model_name}")
                 selected_image = None
                 for image_id in images:
-                    gcs_uri = f"gs://{Default.GENMEDIA_BUCKET}/{gcs_sub_folder}/{image_id}"
+                    gcs_uri = (
+                        f"gs://{Default.GENMEDIA_BUCKET}/{gcs_sub_folder}/{image_id}"
+                    )
                     if check_gcs_blob_exists(gcs_uri):
                         print(f"Selected image: {image_id} exists in GCS.")
                         selected_image = image_id
                         selected_image_gcsuri = gcs_uri
                         break
                 else:
-                    print(f"No valid images found in GCS for prompt: '{prompt}'. Skipping...")
+                    print(
+                        f"No valid images found in GCS for prompt: '{prompt}'. Skipping...",
+                    )
                     bar()  # Increment the progress bar
                     continue
 
-                print(f"Adding metadata for prompt: '{prompt}' with image URI: {selected_image_gcsuri}...")
-                add_image_metadata(collection_name=collection_name, gcsuri=selected_image_gcsuri, prompt=prompt, model=model_name)
+                print(
+                    f"Adding metadata for prompt: '{prompt}' with image URI: {selected_image_gcsuri}...",
+                )
+                add_image_metadata(
+                    collection_name=collection_name,
+                    gcsuri=selected_image_gcsuri,
+                    prompt=prompt,
+                    model=model_name,
+                )
                 bar()  # Increment the progress bar
 
+
 def get_elo_ratings(study: str):
-    """ Retrieve ELO ratings for models from Firestore """
+    """Retrieve ELO ratings for models from Firestore"""
     # Fetch current ELO ratings from Firestore
     doc_ref = (
         db.collection(config.IMAGE_RATINGS_COLLECTION_NAME)
@@ -163,15 +186,16 @@ def get_elo_ratings(study: str):
             ratings = doc.to_dict().get("ratings", {})
             updated_ratings.update(ratings)
     # Convert to DataFrame
-    df = pd.DataFrame(list(updated_ratings.items()), columns=['Model', 'ELO Rating'])
-    df = df.sort_values(by='ELO Rating', ascending=False)  # Sort by rating
+    df = pd.DataFrame(list(updated_ratings.items()), columns=["Model", "ELO Rating"])
+    df = df.sort_values(by="ELO Rating", ascending=False)  # Sort by rating
     df.reset_index(drop=True, inplace=True)  # Reset index
     return df
 
 
-def update_elo_ratings(model1: str, model2: str, winner: str, images: list[str], prompt: str, study: str):
+def update_elo_ratings(
+    model1: str, model2: str, winner: str, images: list[str], prompt: str, study: str,
+):
     """Update ELO ratings for models"""
-
     current_datetime = datetime.datetime.now()
 
     # Fetch current ELO ratings from Firestore
@@ -213,12 +237,14 @@ def update_elo_ratings(model1: str, model2: str, winner: str, images: list[str],
 
     # Store updated ELO ratings in Firestore
     if elo_rating_doc_id:  # Check if the document ID was found
-        doc_ref = db.collection(config.IMAGE_RATINGS_COLLECTION_NAME).document(elo_rating_doc_id)
+        doc_ref = db.collection(config.IMAGE_RATINGS_COLLECTION_NAME).document(
+            elo_rating_doc_id,
+        )
         doc_ref.update(
             {
                 "ratings": updated_ratings,
                 "timestamp": current_datetime,
-            }
+            },
         )
         print(f"ELO ratings updated in Firestore with document ID: {doc_ref.id}")
     else:
@@ -230,7 +256,7 @@ def update_elo_ratings(model1: str, model2: str, winner: str, images: list[str],
                 "type": "elo_rating",
                 "ratings": updated_ratings,
                 "timestamp": current_datetime,
-            }
+            },
         )
 
         print(f"ELO ratings created in Firestore with document ID: {doc_ref.id}")
@@ -246,8 +272,8 @@ def update_elo_ratings(model1: str, model2: str, winner: str, images: list[str],
             "image2": images[1],
             "winner": winner,
             "prompt": prompt,
-            "study": study
-        }
+            "study": study,
+        },
     )
 
     print(f"Vote updated in Firestore with document ID: {doc_ref.id}")
@@ -263,11 +289,11 @@ def update_elo_ratings(model1: str, model2: str, winner: str, images: list[str],
         raise RuntimeError("Spanner study tracker initialization failed.")
     elo_ratings_by_model = []
     for model, elo in updated_ratings.items():
-        elo_study_entry = ArenaModelEvaluation(model_name=model, 
-                             rating=elo, 
-                             study=study)
+        elo_study_entry = ArenaModelEvaluation(
+            model_name=model, rating=elo, study=study,
+        )
         elo_ratings_by_model.append(elo_study_entry)
-    
+
     try:
         study_tracker.upsert_study_runs(study_runs=elo_ratings_by_model)
         log(f"ELO ratings updated in Spanner for study '{study}'.", LogLevel.ON)
@@ -278,7 +304,6 @@ def update_elo_ratings(model1: str, model2: str, winner: str, images: list[str],
 
 def get_latest_votes(study: str, limit: int = 10):
     """Retrieve the latest votes from Firestore, ordered by timestamp in descending order."""
-
     try:
         votes_ref = (
             db.collection(config.IMAGE_RATINGS_COLLECTION_NAME)

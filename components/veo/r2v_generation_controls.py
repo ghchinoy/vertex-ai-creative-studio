@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import mesop as me
+from state.veo_and_me_state import PageState
 
 from config.veo_models import get_veo_model_config
-from state.veo_and_me_state import PageState
 
 
 @me.component
@@ -30,7 +30,8 @@ def r2v_generation_controls(on_selection_change_veo_model):
     # Define the specific models available on this page
     r2v_models = ["2.0-exp", "3.1", "3.1-fast"]
     model_options = [
-        me.SelectOption(label=get_veo_model_config(v).display_name, value=v) for v in r2v_models
+        me.SelectOption(label=get_veo_model_config(v).display_name, value=v)
+        for v in r2v_models
     ]
 
     with me.box(style=me.Style(display="flex", flex_direction="row", gap=10)):
@@ -84,7 +85,9 @@ def r2v_generation_controls(on_selection_change_veo_model):
             label="Video length",
             appearance="outline",
             options=[
-                me.SelectOption(label=f"{state.video_length}s", value=str(state.video_length))
+                me.SelectOption(
+                    label=f"{state.video_length}s", value=str(state.video_length),
+                ),
             ],
             value=str(state.video_length),
             disabled=True,
