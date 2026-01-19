@@ -22,6 +22,7 @@ from common.storage import store_to_gcs
 from common.utils import create_display_url
 from components.dialog import dialog
 from components.header import header
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from models.character_consistency import generate_character_video
 from state.state import AppState
@@ -109,16 +110,11 @@ def character_consistency_page_content():
                 ),
             ):
                 for uri in state.uploaded_image_display_urls:
-                    me.image(
-                        src=uri,
-                        style=me.Style(
-                            width=200,
-                            height=200,
-                            object_fit="contain",
-                            border_radius="12px",
-                            box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                        ),
-                    )
+                    with me.box(style=me.Style(width=200, height=200)):
+                        media_tile(
+                            media_type="image",
+                            https_url=uri,
+                        )
 
         me.textarea(
             label="Scene Prompt",
@@ -164,15 +160,11 @@ def character_consistency_page_content():
                 ),
             ):
                 for url in state.candidate_image_display_urls:
-                    me.image(
-                        src=url,
-                        style=me.Style(
-                            width=200,
-                            height=200,
-                            border_radius="12px",
-                            box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                        ),
-                    )
+                    with me.box(style=me.Style(width=200, height=200)):
+                        media_tile(
+                            media_type="image",
+                            https_url=url,
+                        )
 
         with me.box(
             style=me.Style(
@@ -186,19 +178,14 @@ def character_consistency_page_content():
                         flex_direction="column",
                         gap=4,
                         justify_content="center",
-                    ),
+                    ):
                 ):
                     me.text("Best Image", type="headline-5")
-                    me.image(
-                        src=state.best_image_display_url,
-                        style=me.Style(
-                            width=400,
-                            height=400,
-                            object_fit="contain",
-                            border_radius="12px",
-                            box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                        ),
-                    )
+                    with me.box(style=me.Style(width=400, height=400)):
+                        media_tile(
+                            media_type="image",
+                            https_url=state.best_image_display_url,
+                        )
 
             if state.outpainted_image_display_url:
                 with me.box(
@@ -210,16 +197,11 @@ def character_consistency_page_content():
                     ),
                 ):
                     me.text("Outpainted Image", type="headline-5")
-                    me.image(
-                        src=state.outpainted_image_display_url,
-                        style=me.Style(
-                            width=600,
-                            height=338,
-                            object_fit="contain",
-                            border_radius="12px",
-                            box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                        ),
-                    )
+                    with me.box(style=me.Style(width=600, height=338)):
+                        media_tile(
+                            media_type="image",
+                            https_url=state.outpainted_image_display_url,
+                        )
 
         with me.box(
             style=me.Style(
@@ -233,13 +215,15 @@ def character_consistency_page_content():
                         flex_direction="column",
                         gap=12,
                         justify_content="center",
-                    ),
+                    ):
                 ):
                     me.text("Final Video", type="headline-5")
-                    me.video(
-                        src=state.final_video_display_url,
-                        style=me.Style(width=600, height=338),
-                    )
+                    with me.box(style=me.Style(width=600, height=338)):
+                        media_tile(
+                            media_type="video",
+                            https_url=state.final_video_display_url,
+                            controls=True,
+                        )
 
 
 def on_upload(e: me.UploadEvent):
