@@ -26,6 +26,7 @@ from components.dialog import dialog
 from components.header import header
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.selfie_camera.selfie_camera import selfie_camera
 from config.default import Default
@@ -503,14 +504,12 @@ def retro_games_content():
 
                             # Image Display
                             if state.player1_image_display_url:
-                                me.image(
-                                    src=state.player1_image_display_url,
-                                    style=me.Style(
-                                        height=150,
+                                with me.box(style=me.Style(width="100%", height=150, margin=me.Margin(top=16, bottom=16))):
+                                    media_tile(
+                                        media_type="image",
+                                        https_url=state.player1_image_display_url,
                                         object_fit="contain",
-                                        margin=me.Margin(top=16, bottom=16),
-                                    ),
-                                )
+                                    )
                             else:
                                 with me.box(
                                     style=me.Style(
@@ -578,14 +577,12 @@ def retro_games_content():
 
                             # Image Display
                             if state.player2_image_display_url:
-                                me.image(
-                                    src=state.player2_image_display_url,
-                                    style=me.Style(
-                                        height=150,
+                                with me.box(style=me.Style(width="100%", height=150, margin=me.Margin(top=16, bottom=16))):
+                                    media_tile(
+                                        media_type="image",
+                                        https_url=state.player2_image_display_url,
                                         object_fit="contain",
-                                        margin=me.Margin(top=16, bottom=16),
-                                    ),
-                                )
+                                    )
                             else:
                                 with me.box(
                                     style=me.Style(
@@ -763,14 +760,12 @@ def retro_games_content():
                                     ),
                                 ):
                                     if display_url:
-                                        me.image(
-                                            src=display_url,
-                                            style=me.Style(
-                                                height=80,
-                                                width=80,
+                                        with me.box(style=me.Style(width=80, height=80)):
+                                            media_tile(
+                                                media_type="image",
+                                                https_url=display_url,
                                                 object_fit="contain",
-                                            ),
-                                        )
+                                            )
                                     else:
                                         # Fallback if no logo
                                         with me.box(
@@ -888,23 +883,11 @@ def retro_games_content():
                                         align_items="center",
                                     ),
                                 ):
-                                    me.image(
-                                        src=state.player1_8bit_display_url,
-                                        style=me.Style(
-                                            height="250px",
-                                            width="250px",
-                                            border_radius=8,
-                                            object_fit="cover",
-                                            border=me.Border.all(
-                                                me.BorderSide(
-                                                    width=1,
-                                                    color=me.theme_var(
-                                                        "outline-variant",
-                                                    ),
-                                                ),
-                                            ),
-                                        ),
-                                    )
+                                    with me.box(style=me.Style(width=250, height=250)):
+                                        media_tile(
+                                            media_type="image",
+                                            https_url=state.player1_8bit_display_url,
+                                        )
                                     me.text(
                                         "8-bit",
                                         type="caption",
@@ -920,23 +903,11 @@ def retro_games_content():
                                             align_items="center",
                                         ),
                                     ):
-                                        me.image(
-                                            src=state.player1_sheet_display_url,
-                                            style=me.Style(
-                                                height="250px",
-                                                width="250px",
-                                                border_radius=8,
-                                                object_fit="cover",
-                                                border=me.Border.all(
-                                                    me.BorderSide(
-                                                        width=1,
-                                                        color=me.theme_var(
-                                                            "outline-variant",
-                                                        ),
-                                                    ),
-                                                ),
-                                            ),
-                                        )
+                                        with me.box(style=me.Style(width=250, height=250)):
+                                            media_tile(
+                                                media_type="image",
+                                                https_url=state.player1_sheet_display_url,
+                                            )
                                         me.text(
                                             "Sheet",
                                             type="caption",
@@ -970,23 +941,11 @@ def retro_games_content():
                                         align_items="center",
                                     ),
                                 ):
-                                    me.image(
-                                        src=state.player2_8bit_display_url,
-                                        style=me.Style(
-                                            height="250px",
-                                            width="250px",
-                                            border_radius=8,
-                                            object_fit="cover",
-                                            border=me.Border.all(
-                                                me.BorderSide(
-                                                    width=1,
-                                                    color=me.theme_var(
-                                                        "outline-variant",
-                                                    ),
-                                                ),
-                                            ),
-                                        ),
-                                    )
+                                    with me.box(style=me.Style(width=250, height=250)):
+                                        media_tile(
+                                            media_type="image",
+                                            https_url=state.player2_8bit_display_url,
+                                        )
                                     me.text(
                                         "8-bit",
                                         type="caption",
@@ -1002,23 +961,11 @@ def retro_games_content():
                                             align_items="center",
                                         ),
                                     ):
-                                        me.image(
-                                            src=state.player2_sheet_display_url,
-                                            style=me.Style(
-                                                height="250px",
-                                                width="250px",
-                                                border_radius=8,
-                                                object_fit="cover",
-                                                border=me.Border.all(
-                                                    me.BorderSide(
-                                                        width=1,
-                                                        color=me.theme_var(
-                                                            "outline-variant",
-                                                        ),
-                                                    ),
-                                                ),
-                                            ),
-                                        )
+                                        with me.box(style=me.Style(width=250, height=250)):
+                                            media_tile(
+                                                media_type="image",
+                                                https_url=state.player2_sheet_display_url,
+                                            )
                                         me.text(
                                             "Sheet",
                                             type="caption",
@@ -1044,12 +991,9 @@ def retro_games_content():
                     me.text(
                         "Final Retro Game Video", type="headline-4",
                     )  # Larger headline
-                    me.video(
-                        src=state.final_video_display_url,
-                        style=me.Style(
-                            width="100%",
-                            max_width="960px",
-                            border_radius=12,
-                            margin=me.Margin(top=24),
-                        ),
-                    )  # Larger max width
+                    with me.box(style=me.Style(width="100%", max_width="960px", margin=me.Margin(top=24))):
+                        media_tile(
+                            media_type="video",
+                            https_url=state.final_video_display_url,
+                            controls=True,
+                        )
