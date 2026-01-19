@@ -24,6 +24,7 @@ from common.metadata import MediaItem, add_media_item_to_firestore  # Updated im
 from common.utils import create_display_url
 from components.dialog import dialog, dialog_actions
 from components.header import header
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import (
     page_frame,
     page_scaffold,
@@ -181,7 +182,11 @@ def lyria_content(app_state: me.state):
                     margin=me.Margin(bottom=16),
                 ),
             ):
-                me.audio(src=pagestate.music_display_url)
+                with me.box(style=me.Style(width=300, height=300)):
+                    media_tile(
+                        media_type="audio",
+                        https_url=pagestate.music_display_url,
+                    )
 
         # Gemini Analysis Loading Indicator - Show if analyzing AND primary loading is done
         if pagestate.is_analyzing and not pagestate.is_loading:
