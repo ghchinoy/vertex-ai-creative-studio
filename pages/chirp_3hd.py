@@ -27,6 +27,7 @@ from common.metadata import MediaItem, add_media_item_to_firestore
 from common.utils import create_display_url
 from components.dialog import dialog, dialog_actions
 from components.header import header
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from config.chirp_3hd import (
     CHIRP3_HD_ENCODINGS,
@@ -303,7 +304,11 @@ def page():
                         me.progress_spinner()
                         me.text("Generating audio...")
                     elif state.audio_display_url:
-                        me.audio(src=state.audio_display_url)
+                        with me.box(style=me.Style(width=300, height=300)):
+                            media_tile(
+                                media_type="audio",
+                                https_url=state.audio_display_url,
+                            )
                     else:
                         me.text("Generated audio will appear here.")
 
