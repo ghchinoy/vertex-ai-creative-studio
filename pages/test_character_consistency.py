@@ -23,6 +23,7 @@ from components.dialog import dialog
 from components.header import header
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.stepper import stepper
 from models.character_consistency import generate_character_video
@@ -135,15 +136,11 @@ This page allows you to test the character consistency workflow step-by-step.
                             ),
                         ):
                             for uri in state.uploaded_image_display_urls:
-                                me.image(
-                                    src=uri,
-                                    style=me.Style(
-                                        width=200,
-                                        height=200,
-                                        object_fit="contain",
-                                        border_radius=8,
-                                    ),
-                                )
+                                with me.box(style=me.Style(width=200, height=200)):
+                                    media_tile(
+                                        media_type="image",
+                                        https_url=uri,
+                                    )
                     me.textarea(
                         label="Scene Prompt",
                         rows=3,
@@ -207,13 +204,9 @@ This page allows you to test the character consistency workflow step-by-step.
                                             ),
                                         ),
                                     ):
-                                        me.image(
-                                            src=url,
-                                            style=me.Style(
-                                                width=200,
-                                                height=200,
-                                                border_radius=8,
-                                            ),
+                                        media_tile(
+                                            media_type="image",
+                                            https_url=url,
                                         )
                         me.button("Continue", on_click=next_step, type="raised")
 
@@ -268,16 +261,19 @@ This page allows you to test the character consistency workflow step-by-step.
                                     type="flat",
                                 )
                         if state.user_selected_image_url:
-                            me.image(
-                                src=state.user_selected_image_url,
-                                style=me.Style(width=200, height=200, border_radius=8),
-                            )
+                            with me.box(style=me.Style(width=200, height=200)):
+                                media_tile(
+                                    media_type="image",
+                                    https_url=state.user_selected_image_url,
+                                )
                     me.button("Generate Video", on_click=generate_video, type="raised")
                     if state.final_video_url:
-                        me.video(
-                            src=state.final_video_url,
-                            style=me.Style(width=600, height=338),
-                        )
+                        with me.box(style=me.Style(width=600, height=338)):
+                            media_tile(
+                                media_type="video",
+                                https_url=state.final_video_url,
+                                controls=True,
+                            )
 
             me.text(state.status_message, style=me.Style(margin=me.Margin(top=24)))
 
