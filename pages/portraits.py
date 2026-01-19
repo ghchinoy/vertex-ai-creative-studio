@@ -37,6 +37,7 @@ from components.dialog import dialog
 from components.header import header
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import (
     page_frame,
     page_scaffold,
@@ -188,13 +189,11 @@ def motion_portraits_content(app_state: me.state):
                 if state.reference_image_display_url:
                     output_url = state.reference_image_display_url
                     print(f"Displaying reference image: {output_url}")
-                    me.image(
-                        src=output_url,
-                        style=me.Style(
-                            height=200, border_radius=12, object_fit="contain",
-                        ),
-                        key=str(state.reference_image_file_key),
-                    )
+                    with me.box(style=me.Style(width=200, height=200)):
+                        media_tile(
+                            media_type="image",
+                            https_url=output_url,
+                        )
                 else:
                     me.box(
                         style=me.Style(
@@ -435,17 +434,20 @@ def motion_portraits_content(app_state: me.state):
                     )
                     video_url = state.result_video_display_url
                     print(f"Displaying result video: {video_url}")
-                    me.video(
-                        src=video_url,
+                    with me.box(
                         style=me.Style(
                             width="100%",
                             max_width="480px"
                             if state.aspect_ratio == "9:16"
                             else "720px",
-                            border_radius=12,
                             margin=me.Margin(top=8),
                         ),
-                    )
+                    ):
+                        media_tile(
+                            media_type="video",
+                            https_url=video_url,
+                            controls=True,
+                        )
                     if state.timing:
                         me.text(
                             state.timing,
@@ -475,12 +477,11 @@ def motion_portraits_content(app_state: me.state):
                         ),
                     ):
                         me.text("Video as GIF:", type="headline-5")
-                        me.image(
-                            src=state.gif_display_url,
-                            style=me.Style(
-                                width="100%", max_width="480px", border_radius=8,
-                            ),
-                        )
+                        with me.box(style=me.Style(width="100%", max_width="480px")):
+                            media_tile(
+                                media_type="image",
+                                https_url=state.gif_display_url,
+                            )
 
                 if state.generated_scene_direction and not state.is_loading:
                     with me.expansion_panel(title="Generated Scene Direction"):
