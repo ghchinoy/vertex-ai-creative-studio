@@ -175,6 +175,16 @@ def add_media_item_to_firestore(item: MediaItem):
     # Prepare data for Firestore using asdict
     firestore_data = asdict(item)
 
+    # Auto-populate media_type if missing, based on mime_type
+    if not firestore_data.get("media_type") and firestore_data.get("mime_type"):
+        mime = firestore_data["mime_type"]
+        if mime.startswith("image/"):
+            firestore_data["media_type"] = "image"
+        elif mime.startswith("video/"):
+            firestore_data["media_type"] = "video"
+        elif mime.startswith("audio/"):
+            firestore_data["media_type"] = "audio"
+
     # Ensure timestamp is handled correctly
     if "timestamp" not in firestore_data or firestore_data["timestamp"] is None:
         firestore_data["timestamp"] = datetime.datetime.now(datetime.UTC)
@@ -567,15 +577,12 @@ def get_media_for_page_optimized(
         if filter_by_user_email:
             query = query.where("user_email", "==", filter_by_user_email)
 
-        # Apply type filters using WHERE clauses
-        # Note: This requires Firestore indexes. For a single 'mime_type' startsWith,
-        # a single-field index on 'mime_type' might suffice. For combinations with
-        # sorting, a composite index is likely needed.
-        if "videos" in type_filters:
+        # Apply type filters using mime_type range filters for maximum compatibility
+        if "videos" in type_filters or "video" in type_filters:
             query = query.where("mime_type", ">=", "video/").where(
                 "mime_type", "<", "video0",
             )
-        elif "images" in type_filters:
+        elif "images" in type_filters or "image" in type_filters:
             query = query.where("mime_type", ">=", "image/").where(
                 "mime_type", "<", "image0",
             )
@@ -642,6 +649,9 @@ def get_media_for_page_optimized(
 
             media_item = MediaItem(
                 id=doc.id,
+                user_email=raw_item_data.get("user_email"),
+                timestamp=timestamp_iso_str,
+                mime_type=raw_item_data.get("mime_type"),
                 aspect=(
                     str(raw_item_data.get("aspect"))
                     if raw_item_data.get("aspect") is not None
@@ -656,7 +666,6 @@ def get_media_for_page_optimized(
                     else None
                 ),
                 generation_time=gen_time,
-                timestamp=timestamp_iso_str,
                 reference_image=(
                     str(raw_item_data.get("reference_image"))
                     if raw_item_data.get("reference_image") is not None
@@ -738,7 +747,7 @@ def get_media_for_page_optimized(
         return media_items, last_doc
 
     except Exception as e:
-        logger.error(f"Error fetching media from Firestore (optimized): {e}")
+        logger.error(f"Error fetching media from Firestore (optimized): {e}", exc_info=True)
         return [], None
 
 

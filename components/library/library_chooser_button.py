@@ -94,8 +94,39 @@ def library_chooser_button(
 
     def on_toggle_my_items(e: me.SlideToggleChangeEvent):
         """Handles the toggle for showing only user's items."""
+        # Toggle directly to avoid attribute errors with different Mesop versions
         state.show_only_my_items = not state.show_only_my_items
+        print(f"DEBUG: toggle changed, show_only_my_items={state.show_only_my_items}")
         yield from _fetch_and_update_items()
+
+    def _fetch_and_update_items():
+        """Helper to fetch items based on current state and update UI."""
+        state.is_loading = True
+        yield
+        try:
+            user_email = app_state.user_email if state.show_only_my_items else None
+            # Use the media_type stored in state, which was set when opening the dialog
+            print(f"DEBUG: fetching items with media_type={state.media_type}, filter_by_user_email='{user_email}', app_state_email='{app_state.user_email}'")
+            items, _ = get_media_for_page_optimized(
+                20, state.media_type, filter_by_user_email=user_email,
+            )
+            print(f"DEBUG: fetch returned {len(items)} items")
+
+            # Convert GCS URIs to display URLs using the centralized helper.
+            for item in items:
+                gcs_uri = (
+                    item.gcsuri
+                    if item.gcsuri
+                    else (item.gcs_uris[0] if item.gcs_uris else None)
+                )
+                item.signed_url = create_display_url(gcs_uri)
+
+            state.media_items = items
+        except Exception as ex:
+            print(f"ERROR in library fetch: {ex}")
+        finally:
+            state.is_loading = False
+            yield
 
     def on_select_from_library(e: LibrarySelectionChangeEvent):
         """Callback to handle image selection from the library dialog."""

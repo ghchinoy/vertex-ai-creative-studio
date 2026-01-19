@@ -28,6 +28,16 @@ gcloud storage buckets add-iam-policy-binding gs://your-bucket-name \
     --role="roles/storage.admin"
 ```
 
+### Firestore Indexes
+Filtering by user email and media type requires composite indexes. These are managed in `main.tf`, but can be created manually if needed:
+```bash
+gcloud firestore indexes composite create \
+  --project=your-project-id \
+  --database=create-studio-asset-metadata \
+  --collection-group=genmedia \
+  --field-config=user_email=ASCENDING,field-config=media_type=ASCENDING,field-config=timestamp=DESCENDING
+```
+
 ## 3. GCS Bucket Setup
 
 ### Import to Firebase

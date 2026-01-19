@@ -380,6 +380,27 @@ resource "google_firestore_index" "genmedia_user_email_mime_type_timestamp" {
   }
 }
 
+resource "google_firestore_index" "genmedia_user_email_media_type_timestamp" {
+  collection  = "genmedia"
+  database    = google_firestore_database.create_studio_asset_metadata.name
+  query_scope = "COLLECTION"
+
+  fields {
+    field_path = "user_email"
+    order      = "ASCENDING"
+  }
+
+  fields {
+    field_path = "media_type"
+    order      = "ASCENDING"
+  }
+
+  fields {
+    field_path = "timestamp"
+    order      = "DESCENDING"
+  }
+}
+
 resource "google_project_iam_member" "creative_studio_db_access" {
   project = var.project_id
   role    = "roles/datastore.user"

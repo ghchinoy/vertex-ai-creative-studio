@@ -237,9 +237,8 @@ def starter_pack_to_look_content():
                 key="library_starter_pack",
                 on_library_select=on_library_chooser,
                 button_type="icon",
+                media_type=["all"],
             )
-            media_type=["all"],
-        )
         if me.state(StarterPackState).starter_pack_image_display_url:
             with me.box(style=me.Style(margin=me.Margin(top=16), width="100%")):
                 media_tile(
