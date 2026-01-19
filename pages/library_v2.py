@@ -156,6 +156,9 @@ def on_error_filter_change(e: me.ButtonToggleChangeEvent):
     path="/library_v2",
     title="GenMedia Creative Studio - Library",
     on_load=on_load,
+    stylesheets=[
+        "https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@17..18,400..700;1,17..18,400..700&display=swap",
+    ],
 )
 def page():
     """Main Page."""

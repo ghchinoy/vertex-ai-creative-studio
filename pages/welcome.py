@@ -21,6 +21,9 @@ from components.welcome_hero.welcome_hero import welcome_hero
 from components.page_scaffold import on_theme_load, on_auth_state_change
 from components.theme_manager.theme_manager import theme_manager
 from components.auth_handler import auth_handler
+from components.snackbar import snackbar
+from common.auth import get_user_avatar
+from common.utils import create_display_url
 from config.default import Default as cfg
 from state.state import AppState
 
@@ -30,11 +33,18 @@ class PageState:
     show_login: bool = False
 
 
+def on_load(e: me.LoadEvent):
+    """Handles page load."""
+    yield
+
+
 def on_tile_click(e: me.WebEvent):
     app_state = me.state(AppState)
     page_state = me.state(PageState)
-    is_authenticated = app_state.user_email and app_state.user_email != "anonymous@google.com"
-    
+    is_authenticated = (
+        app_state.user_email and app_state.user_email != "anonymous@google.com"
+    )
+
     if is_authenticated:
         route = e.value["route"]
         me.navigate(route)
@@ -47,6 +57,10 @@ def on_tile_click(e: me.WebEvent):
 @me.page(
     path="/welcome",
     title="Welcome - GenMedia Creative Studio",
+    on_load=on_load,
+    stylesheets=[
+        "https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@17..18,400..700;1,17..18,400..700&display=swap",
+    ],
 )
 def page():
     """Define the Mesop page route for the welcome page."""
@@ -68,10 +82,15 @@ def page():
             "appId": cfg().FIREBASE_APP_ID,
             "measurementId": cfg().FIREBASE_MEASUREMENT_ID,
         }
+        # Fetch cached avatar if it exists
+        cached_avatar_uri = get_user_avatar(app_state.user_email)
+        cached_photo_url = create_display_url(cached_avatar_uri) if cached_avatar_uri else ""
+
         auth_handler.auth_handler(
             firebase_config=firebase_config,
             on_auth_state_change=on_auth_state_change,
             auto_login=page_state.show_login,
+            cached_photo_url=cached_photo_url,
         )
 
     tiles_data = [

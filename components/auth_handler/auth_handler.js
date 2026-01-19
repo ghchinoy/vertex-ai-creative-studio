@@ -37,6 +37,15 @@ class AuthHandler extends LitElement {
         height: 32px;
         border-radius: 50%;
     }
+    .error-msg {
+        background-color: #fce8e6;
+        color: #d93025;
+        padding: 10px 15px;
+        border-radius: 4px;
+        font-size: 13px;
+        margin-right: 10px;
+        border: 1px solid #f8d7da;
+    }
   `;
 
   static get properties() {
@@ -44,6 +53,8 @@ class AuthHandler extends LitElement {
       firebaseConfig: { type: Object },
       authStateChange: { type: String },
       autoLogin: { type: Boolean },
+      errorMessage: { type: String },
+      cachedPhotoUrl: { type: String },
       user: { state: true },
     };
   }
@@ -53,6 +64,8 @@ class AuthHandler extends LitElement {
     this.firebaseConfig = {};
     this.authStateChange = "";
     this.autoLogin = false;
+    this.errorMessage = "";
+    this.cachedPhotoUrl = "";
     this.user = null;
     this._app = null;
     this._boundHandleExternalLogin = this._handleExternalLogin.bind(this);
@@ -129,12 +142,16 @@ class AuthHandler extends LitElement {
 
   async _syncSession(token) {
       try {
+          const body = { token: token };
+          if (this.user && this.user.photoURL) {
+              body.photo_url = this.user.photoURL;
+          }
           const response = await fetch('/api/auth/login', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ token: token }),
+              body: JSON.stringify(body),
           });
           if (!response.ok) {
               console.error("Failed to sync session");
@@ -171,10 +188,18 @@ class AuthHandler extends LitElement {
       }
   }
 
+  _handleImageError(e) {
+      if (e.target.dataset.errorHandled) return;
+      // Fallback to a generic user icon if the Google avatar fails (e.g. 429)
+      e.target.dataset.errorHandled = "true";
+      e.target.src = "https://www.gstatic.com/images/branding/product/2x/avatar_anonymous_48dp.png";
+  }
+
   render() {
     if (!this.user) {
         return html`
             <div class="auth-container">
+                ${this.errorMessage ? html`<div class="error-msg">${this.errorMessage}</div>` : ""}
                 <button class="login-btn" @click="${this._handleLogin}">Sign in with Google</button>
             </div>
         `;
@@ -182,8 +207,13 @@ class AuthHandler extends LitElement {
 
     return html`
         <div class="auth-container">
+            ${this.errorMessage ? html`<div class="error-msg">${this.errorMessage}</div>` : ""}
             <div class="user-info">
-                <img class="user-avatar" src="${this.user.photoURL}" alt="${this.user.displayName}" title="${this.user.email}">
+                <img class="user-avatar" 
+                     src="${this.cachedPhotoUrl || this.user.photoURL}" 
+                     alt="${this.user.displayName}" 
+                     title="${this.user.email}"
+                     @error="${this._handleImageError}">
                 <button class="logout-btn" @click="${this._handleLogout}">Sign Out</button>
             </div>
         </div>

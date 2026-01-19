@@ -183,6 +183,9 @@ class Default:
     FIREBASE_APP_ID: str = os.environ.get("FIREBASE_APP_ID", "")
     FIREBASE_MEASUREMENT_ID: str = os.environ.get("FIREBASE_MEASUREMENT_ID", "")
 
+    # AuthZ
+    DOMAIN_ALLOWLIST: str = os.environ.get("DOMAIN_ALLOWLIST", "")
+
     image_modifiers: list[str] = field(
         default_factory=lambda: [
             "aspect_ratio",

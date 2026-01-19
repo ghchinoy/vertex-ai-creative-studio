@@ -34,7 +34,7 @@ from firebase_admin import auth
 import pages.shop_the_look
 from app_factory import app
 from common.prompt_template_service import PromptTemplate
-from common.utils import create_display_url
+from common.utils import create_display_url, mirror_user_avatar
 from routers import veo_router
 from config import default as config
 from config.firebase_config import FirebaseClient
@@ -42,11 +42,13 @@ from models.video_processing import convert_mp4_to_gif
 
 # Initialize Firebase Client
 FirebaseClient()
+from common.auth import is_user_authorized
 from pages import about as about_page
 from pages import banana_studio as banana_studio_page
 from pages import character_consistency as character_consistency_page
 from pages import chirp_3hd as chirp_3hd_page
 from pages import config as config_page
+from pages import forbidden as forbidden_page
 from pages import gemini_image_generation as gemini_image_generation_page
 from pages import gemini_tts as gemini_tts_page
 from pages import gemini_writers_workshop as gemini_writers_workshop_page
@@ -90,12 +92,17 @@ class UserInfo(BaseModel):
 
 class LoginRequest(BaseModel):
     token: str | None
+    photo_url: str | None = None
 
 
 # FastAPI server with Mesop
 router = APIRouter()
 app.include_router(router)
 
+
+from common.auth import is_user_authorized
+from pages import about as about_page
+# ... (rest of imports)
 
 @app.post("/api/auth/login")
 async def login(request: LoginRequest):
@@ -108,7 +115,31 @@ async def login(request: LoginRequest):
     try:
         # Verify the ID token
         decoded_token = auth.verify_id_token(request.token)
+        email = decoded_token.get("email")
 
+        # 1. Check if the user is authorized BEFORE creating/updating the record.
+        # This prevents "self-registration" for unauthorized users.
+        if email and is_user_authorized(email):
+            # 2. Only update user record if authorized.
+            try:
+                db = FirebaseClient().get_client()
+                user_ref = db.collection("users").document(email)
+                
+                update_data = {"email": email, "last_signed_in": datetime.datetime.utcnow()}
+                if request.photo_url:
+                    update_data["photo_url"] = request.photo_url
+                    # Try to mirror the avatar to GCS
+                    gcs_avatar_uri = mirror_user_avatar(email, request.photo_url)
+                    if gcs_avatar_uri:
+                        update_data["gcs_avatar_uri"] = gcs_avatar_uri
+                
+                # Use set with merge=True so we don't overwrite other fields like 'role'
+                user_ref.set(update_data, merge=True)
+            except Exception as e:
+                print(f"Error updating user record: {e}")
+        else:
+            print(f"Unauthorized login attempt blocked for: {email}")
+        
         # Create a session cookie
         expires_in = datetime.timedelta(days=5)
         session_cookie = auth.create_session_cookie(request.token, expires_in=expires_in)
@@ -199,12 +230,12 @@ async def add_global_csp(request: Request, call_next):
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://esm.sh https://cdn.jsdelivr.net https://www.gstatic.com https://apis.google.com; "
-        "connect-src 'self' https://esm.sh https://cdn.jsdelivr.net https://storage.cloud.google.com https://storage.googleapis.com https://*.googleusercontent.com https://*.googleapis.com https://*.firebaseio.com https://www.gstatic.com; "
+        "connect-src 'self' https://esm.sh https://cdn.jsdelivr.net https://storage.cloud.google.com https://storage.googleapis.com https://*.googleusercontent.com https://*.googleapis.com https://*.firebaseio.com https://www.gstatic.com https://firebasestorage.googleapis.com; "
         "frame-src 'self' https://*.firebaseapp.com https://*.firebaseauth.com https://accounts.google.com; "
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com http://fonts.googleapis.com/; "
-        "font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com http://fonts.googleapis.com;"
-        "img-src 'self' data: blob: https://google-ai-skin-tone-research.imgix.net https://storage.cloud.google.com https://storage.googleapis.com https://*.googleusercontent.com https://firebasestorage.googleapis.com; "
-        "media-src 'self' https://deepmind.google https://storage.cloud.google.com https://storage.googleapis.com https://*.googleusercontent.com https://firebasestorage.googleapis.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com http://fonts.googleapis.com/ https://www.gstatic.com; "
+        "font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com http://fonts.googleapis.com https://www.gstatic.com;"
+        "img-src 'self' data: blob: gs: https://google-ai-skin-tone-research.imgix.net https://storage.cloud.google.com https://storage.googleapis.com https://*.googleusercontent.com https://firebasestorage.googleapis.com https://www.gstatic.com; "
+        "media-src 'self' blob: gs: https://deepmind.google https://storage.cloud.google.com https://storage.googleapis.com https://*.googleusercontent.com https://firebasestorage.googleapis.com; "
         "worker-src 'self' blob:;"
     )
     return response
@@ -247,7 +278,7 @@ async def set_request_context(request: Request, call_next):
     path = request.url.path
     accept = request.headers.get("accept", "")
     
-    allowed_paths = ["/welcome", "/", "/favicon.ico"]
+    allowed_paths = ["/welcome", "/forbidden", "/", "/favicon.ico"]
     allowed_prefixes = (
         "/api/", 
         "/static/", 
@@ -255,10 +286,17 @@ async def set_request_context(request: Request, call_next):
         "/media/", 
         "/_mesop/"
     )
+
+    # 4. Check Authorization
+    is_authorized = is_authenticated and is_user_authorized(user_email)
     
-    if not is_authenticated and "text/html" in accept:
-        if path not in allowed_paths and not path.startswith(allowed_prefixes):
-            return RedirectResponse(url="/welcome")
+    if "text/html" in accept:
+        if not is_authenticated:
+            if path not in allowed_paths and not path.startswith(allowed_prefixes):
+                return RedirectResponse(url="/welcome")
+        elif not is_authorized:
+            if path != "/forbidden" and not path.startswith(allowed_prefixes):
+                return RedirectResponse(url="/forbidden")
 
     session_id = request.cookies.get("session_id")
     if not session_id:

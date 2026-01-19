@@ -32,6 +32,37 @@ import os
 from config.default import Default as cfg
 
 
+import requests
+
+def mirror_user_avatar(email: str, photo_url: str) -> str | None:
+    """
+    Downloads a user's avatar and stores it in GCS.
+    Returns the GCS URI if successful, None otherwise.
+    """
+    if not photo_url or not email:
+        return None
+
+    try:
+        # 1. Fetch the image bytes
+        response = requests.get(photo_url, timeout=5)
+        if response.status_code != 200:
+            print(f"Failed to fetch avatar for {email}: {response.status_code}")
+            return None
+
+        # 2. Upload to GCS
+        storage_client = storage.Client()
+        bucket_name = cfg().GENMEDIA_BUCKET
+        bucket = storage_client.bucket(bucket_name)
+        blob_path = f"avatars/{email}.png"
+        blob = bucket.blob(blob_path)
+
+        blob.upload_from_string(response.content, content_type=response.headers.get('Content-Type', 'image/png'))
+        
+        return f"gs://{bucket_name}/{blob_path}"
+    except Exception as e:
+        print(f"Error mirroring avatar for {email}: {e}")
+        return None
+
 def create_display_url(gcs_uri: str) -> str:
     """
     Creates a cacheable display URL for a GCS asset.

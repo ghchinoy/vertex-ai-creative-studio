@@ -246,11 +246,13 @@ class MediaDetailViewer extends LitElement {
   }
 
   renderPrimaryAsset() {
-    const urls = this._resolvedPrimaryUrls.length > 0 ? this._resolvedPrimaryUrls : JSON.parse(this.primaryUrlsJson);
+    const rawUrls = JSON.parse(this.primaryUrlsJson);
+    const urls = this._resolvedPrimaryUrls.length > 0 ? this._resolvedPrimaryUrls : rawUrls.map(u => u.startsWith("gs://") ? "" : u);
+    
     if (urls.length === 0) return html``;
 
     const currentUrl = urls[this._currentIndex];
-    if (!currentUrl && this.mediaType !== 'audio') {
+    if (!currentUrl && this.mediaType !== 'audio' && rawUrls[this._currentIndex]) {
         return html`<div>Loading...</div>`;
     }
 

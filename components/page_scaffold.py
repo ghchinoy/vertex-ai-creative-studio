@@ -26,6 +26,8 @@ from components.styles import (
 from components.theme_manager.theme_manager import theme_manager
 from components.auth_handler import auth_handler
 from config.default import Default as cfg
+from common.auth import get_user_avatar
+from common.utils import create_display_url
 
 def on_theme_load(e: me.WebEvent):
     s = me.state(AppState)
@@ -91,9 +93,14 @@ def page_scaffold(page_name: str):
             "appId": cfg().FIREBASE_APP_ID,
             "measurementId": cfg().FIREBASE_MEASUREMENT_ID,
         }
+        # Fetch cached avatar if it exists
+        cached_avatar_uri = get_user_avatar(app_state.user_email)
+        cached_photo_url = create_display_url(cached_avatar_uri) if cached_avatar_uri else ""
+
         auth_handler.auth_handler(
             firebase_config=firebase_config,
             on_auth_state_change=on_auth_state_change,
+            cached_photo_url=cached_photo_url,
         )
 
         with me.box(

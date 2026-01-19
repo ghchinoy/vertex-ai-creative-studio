@@ -21,6 +21,8 @@ def auth_handler(
     firebase_config: dict[str, str],
     on_auth_state_change: typing.Callable[[me.WebEvent], None],
     auto_login: bool = False,
+    error_message: str = "",
+    cached_photo_url: str = "",
     key: str | None = None,
 ):
     """
@@ -32,6 +34,8 @@ def auth_handler(
         properties={
             "firebaseConfig": firebase_config,
             "autoLogin": auto_login,
+            "errorMessage": error_message,
+            "cachedPhotoUrl": cached_photo_url,
         },
         events={
             "authStateChange": on_auth_state_change,

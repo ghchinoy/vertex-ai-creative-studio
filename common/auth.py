@@ -13,8 +13,53 @@
 # limitations under the License.
 
 import uuid
+from functools import lru_cache
 from fastapi import Request, Response
 from common.storage import get_or_create_session
+from config.default import Default as cfg
+from config.firebase_config import FirebaseClient
+
+def is_user_authorized(email: str) -> bool:
+    """
+    Checks if a user is authorized based on their domain or Firestore allowlist.
+    """
+    if not email or email == "anonymous@google.com":
+        return False
+    
+    # 1. Check Firestore "users" collection (Primary source of truth)
+    try:
+        db = FirebaseClient().get_client()
+        user_ref = db.collection("users").document(email)
+        user_doc = user_ref.get()
+        if user_doc.exists:
+            return True
+    except Exception as e:
+        print(f"AuthZ error checking Firestore for {email}: {e}")
+
+    # 2. Check Domain Allowlist Fallback
+    allowlist_str = cfg().DOMAIN_ALLOWLIST
+    if allowlist_str:
+        allowed_domains = [d.strip().lower() for d in allowlist_str.split(",")]
+        user_domain = email.split("@")[-1].lower()
+        if user_domain in allowed_domains:
+            return True
+
+    return False
+
+def get_user_avatar(email: str) -> str | None:
+    """
+    Retrieves the cached GCS avatar URI for a user from Firestore.
+    """
+    if not email or email == "anonymous@google.com":
+        return None
+    try:
+        db = FirebaseClient().get_client()
+        user_doc = db.collection("users").document(email).get()
+        if user_doc.exists:
+            return user_doc.to_dict().get("gcs_avatar_uri")
+    except Exception as e:
+        print(f"Error fetching avatar for {email}: {e}")
+    return None
 
 async def set_user_identity_and_session(request: Request, call_next):
     """

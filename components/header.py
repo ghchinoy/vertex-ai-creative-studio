@@ -57,7 +57,7 @@ def header(
             me.text(
                 title,
                 type="headline-5",
-                style=me.Style(font_family="Google Sans"),
+                style=me.Style(font_family="'Google Sans', Roboto, sans-serif"),
             )
             if current_status:
                 pill(current_status, "stage")

@@ -188,7 +188,11 @@ class MediaTile extends LitElement {
   }
 
   renderPreview() {
-    const src = this._resolvedThumbnailSrc || this.thumbnailSrc;
+    // Only use thumbnailSrc directly if it's NOT a gs:// URI.
+    // Otherwise, we must wait for _resolvedThumbnailSrc.
+    const isGsUri = this.thumbnailSrc && this.thumbnailSrc.startsWith("gs://");
+    const src = this._resolvedThumbnailSrc || (!isGsUri ? this.thumbnailSrc : "");
+
     if (!src && this.mediaType !== 'audio' && this.thumbnailSrc) {
         // Still resolving or failed
         return html`<div>Loading...</div>`;
