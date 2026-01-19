@@ -29,6 +29,7 @@ from components.edit_button.edit_button import edit_button
 from components.header import header
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.veo_button.veo_button import veo_button
 from config.default import Default
@@ -349,15 +350,10 @@ def page():
                         if state.is_generating_person_image:
                             me.progress_spinner()
                         elif state.person_image_display_url:
-                            me.image(
-                                src=state.person_image_display_url,
-                                key="person_image",
-                                style=me.Style(
-                                    width=400,
-                                    height=400,
-                                    border_radius=12,
-                                    object_fit="contain",
-                                ),
+                            media_tile(
+                                media_type="image",
+                                https_url=state.person_image_display_url,
+                                object_fit="contain",
                             )
                         else:
                             me.icon(
@@ -397,15 +393,10 @@ def page():
                         )
                     with me.box(style=IMAGE_BOX_STYLE):
                         if state.product_image_display_url:
-                            me.image(
-                                src=state.product_image_display_url,
-                                key="product_image",
-                                style=me.Style(
-                                    width=400,
-                                    height=400,
-                                    border_radius=12,
-                                    object_fit="contain",
-                                ),
+                            media_tile(
+                                media_type="image",
+                                https_url=state.product_image_display_url,
+                                object_fit="contain",
                             )
                         else:
                             me.icon(
@@ -509,10 +500,12 @@ def page():
                                 display="flex", flex_direction="column", gap=8,
                             ),
                         ):
-                            me.image(
-                                src=display_url,
-                                style=me.Style(width="400px", border_radius=12),
-                            )
+                            with me.box(style=me.Style(width=400, height=400)):
+                                media_tile(
+                                    media_type="image",
+                                    https_url=display_url,
+                                    object_fit="contain",
+                                )
                             with me.box(
                                 style=me.Style(
                                     display="flex",

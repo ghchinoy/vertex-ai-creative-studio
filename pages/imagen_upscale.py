@@ -23,6 +23,7 @@ from common.utils import create_display_url
 from components.header import header
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.pill import pill
 from components.snackbar import snackbar
@@ -195,13 +196,10 @@ def page():
 
                     with me.box(style=IMAGE_BOX_STYLE):
                         if state.input_image_url:
-                            me.image(
-                                src=state.input_image_url,
-                                style=me.Style(
-                                    max_width="100%",
-                                    max_height="100%",
-                                    object_fit="contain",
-                                ),
+                            media_tile(
+                                media_type="image",
+                                https_url=state.input_image_url,
+                                object_fit="contain",
                             )
                         else:
                             me.icon(
@@ -277,13 +275,10 @@ def page():
                     me.text("Upscaled Image", type="headline-6")
                     with me.box(style=IMAGE_BOX_STYLE):
                         if state.output_image_url:
-                            me.image(
-                                src=state.output_image_url,
-                                style=me.Style(
-                                    max_width="100%",
-                                    max_height="100%",
-                                    object_fit="contain",
-                                ),
+                            media_tile(
+                                media_type="image",
+                                https_url=state.output_image_url,
+                                object_fit="contain",
                             )
                         elif state.is_loading:
                             me.progress_spinner()

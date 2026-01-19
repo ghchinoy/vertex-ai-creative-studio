@@ -27,6 +27,7 @@ from components.header import header
 from components.image_thumbnail import image_thumbnail
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.veo_button.veo_button import veo_button
 from config.default import Default
@@ -196,10 +197,11 @@ def recontextualize():
                                     display="flex", flex_direction="column", gap=8,
                                 ),
                             ):
-                                me.image(
-                                    src=create_display_url(gcs_uri),
-                                    style=me.Style(width="400px", border_radius=12),
-                                )
+                                with me.box(style=me.Style(width=400, height=400)):
+                                    media_tile(
+                                        media_type="image",
+                                        https_url=create_display_url(gcs_uri),
+                                    )
                                 with me.box(
                                     style=me.Style(
                                         display="flex",

@@ -21,6 +21,7 @@ import mesop as me
 from common.metadata import MediaItem, add_media_item_to_firestore
 from common.utils import create_display_url
 from components.header import header
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.snackbar import snackbar
 from models.gemini import describe_image, generate_image_from_prompt_and_images
@@ -104,14 +105,11 @@ def storyboarder_content():
                 ),
             ):
                 for url in state.generated_image_urls:
-                    me.image(
-                        src=url,
-                        style=me.Style(
-                            height="200px",
-                            border_radius=8,
-                            border=me.Border.all(me.BorderSide(width=1, color="#ccc")),
-                        ),
-                    )
+                    with me.box(style=me.Style(width=200, height=200)):
+                        media_tile(
+                            media_type="image",
+                            https_url=url,
+                        )
 
             # --- Video Generation Controls ---
             with me.box(
@@ -149,10 +147,12 @@ def storyboarder_content():
                 ),
             ):
                 me.text("Final Storyboard Video", type="headline-5")
-                me.video(
-                    src=state.final_video_display_url,
-                    style=me.Style(width="100%", max_width="800px", border_radius=12),
-                )
+                with me.box(style=me.Style(width="100%", max_width="800px")):
+                    media_tile(
+                        media_type="video",
+                        https_url=state.final_video_display_url,
+                        controls=True,
+                    )
 
 
 # --- Event Handlers ---

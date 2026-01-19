@@ -28,6 +28,7 @@ from components.image_thumbnail import image_thumbnail
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
 from components.library.library_dialog import library_dialog
+from components.media_tile.media_tile import media_tile
 from components.snackbar import snackbar
 
 
@@ -597,15 +598,18 @@ def step3_content():
             me.progress_spinner()
 
         if state.rotation_project.get("final_video_uri"):
-            me.video(
-                src=create_display_url(state.rotation_project["final_video_uri"]),
+            with me.box(
                 style=me.Style(
                     width="100%",
                     max_width=720,
                     margin=me.Margin(top=16),
-                    border_radius=8,
                 ),
-            )
+            ):
+                media_tile(
+                    media_type="video",
+                    https_url=create_display_url(state.rotation_project["final_video_uri"]),
+                    controls=True,
+                )
 
 
 # Event Handlers for Step 3

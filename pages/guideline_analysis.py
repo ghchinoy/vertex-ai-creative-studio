@@ -213,10 +213,14 @@ def page_content():
                         )
                         if display_url:
                             mime_type = item.mime_type or ""
-                            if mime_type.startswith("video/"):
-                                me.video(src=display_url, style=me.Style(width="100%"))
-                            else:
-                                me.image(src=display_url, style=me.Style(width="100%"))
+                            render_type = "video" if mime_type.startswith("video/") else "image"
+                            with me.box(style=me.Style(width="100%", height=400)):
+                                media_tile(
+                                    media_type=render_type,
+                                    https_url=display_url,
+                                    controls=True if render_type == "video" else False,
+                                    object_fit="contain",
+                                )
                         else:
                             me.text("No media preview")
 

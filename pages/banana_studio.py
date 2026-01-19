@@ -33,6 +33,7 @@ from components.header import header
 from components.image_thumbnail import image_thumbnail
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.pill import pill
 from components.snackbar import snackbar
@@ -322,20 +323,17 @@ def _actions_row():
             style=me.Style(
                 display="flex",
                 flex_direction="row",
-                align_items="center",
-                gap=16,
-            ),
-        ):
-            me.image(
-                src=state.selected_image_url,
-                style=me.Style(
-                    width=100,
-                    height=100,
-                    border_radius=8,
-                    object_fit="cover",
-                ),
-            )
-            me.button(
+                                                align_items="center",
+                                                gap=16,
+                                            ),
+                                        ):
+                                            with me.box(style=me.Style(width=100, height=100)):
+                                                media_tile(
+                                                    media_type="image",
+                                                    https_url=state.selected_image_url,
+                                                )
+                                            me.button(
+                
                 "Continue",
                 on_click=on_continue_click,
                 type="stroked",
@@ -631,15 +629,14 @@ def gemini_image_gen_page_content():
 
                             image_url = state.generated_image_urls[0]
 
-                            me.image(
-                                src=image_url,
-                                style=me.Style(
-                                    width="100%",
-                                    max_height="85vh",
+                            with me.box(
+                                style=me.Style(width="100%", max_height="85vh"),
+                            ):
+                                media_tile(
+                                    media_type="image",
+                                    https_url=image_url,
                                     object_fit="contain",
-                                    border_radius=8,
-                                ),
-                            )
+                                )
 
                             if state.generated_resolution:
                                 with me.box(style=me.Style(margin=me.Margin(top=8))):
@@ -721,15 +718,14 @@ def gemini_image_gen_page_content():
                             ):
                                 # Main image
 
-                                me.image(
-                                    src=state.selected_image_url,
-                                    style=me.Style(
-                                        width="100%",
-                                        max_height="75vh",
+                                with me.box(
+                                    style=me.Style(width="100%", max_height="75vh"),
+                                ):
+                                    media_tile(
+                                        media_type="image",
+                                        https_url=state.selected_image_url,
                                         object_fit="contain",
-                                        border_radius=8,
-                                    ),
-                                )
+                                    )
 
                                 if state.generated_resolution:
                                     with me.box(
@@ -844,15 +840,14 @@ def gemini_image_gen_page_content():
                                                 cursor="pointer",
                                             ),
                                         ):
-                                            me.image(
-                                                src=url,
-                                                style=me.Style(
-                                                    width=100,
-                                                    height=100,
-                                                    object_fit="cover",
-                                                    border_radius=6,
-                                                ),
-                                            )
+                                            with me.box(
+                                                style=me.Style(width=100, height=100),
+                                            ):
+                                                media_tile(
+                                                    media_type="image",
+                                                    https_url=url,
+                                                    selected=is_selected,
+                                                )
 
                 else:
                     # Placeholder

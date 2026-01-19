@@ -29,6 +29,7 @@ from common.utils import create_display_url
 from components.header import header
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.snackbar import snackbar
 from models.video_processing import (
@@ -212,17 +213,11 @@ def render_video_video_tab():
                     )
                 with me.box(style=VIDEO_PLACEHOLDER_STYLE):
                     if "video_1" in state.selected_videos_display_urls:
-                        me.video(
-                            key=state.selected_videos[
-                                "video_1"
-                            ],  # Add key to force re-render
-                            src=state.selected_videos_display_urls["video_1"],
-                            style=me.Style(
-                                height="100%",
-                                width="100%",
-                                border_radius=8,
-                                object_fit="contain",
-                            ),
+                        media_tile(
+                            key=state.selected_videos["video_1"],
+                            media_type="video",
+                            https_url=state.selected_videos_display_urls["video_1"],
+                            object_fit="contain",
                         )
                     else:
                         me.icon("movie")
@@ -254,14 +249,11 @@ def render_video_video_tab():
                     )
                 with me.box(style=VIDEO_PLACEHOLDER_STYLE):
                     if "video_2" in state.selected_videos_display_urls:
-                        me.video(
-                            key=state.selected_videos[
-                                "video_2"
-                            ],  # Add key to force re-render
-                            src=state.selected_videos_display_urls["video_2"],
-                            style=me.Style(
-                                height="100%", width="100%", border_radius=8,
-                            ),
+                        media_tile(
+                            key=state.selected_videos["video_2"],
+                            media_type="video",
+                            https_url=state.selected_videos_display_urls["video_2"],
+                            object_fit="contain",
                         )
                     else:
                         me.icon("movie")
@@ -316,10 +308,12 @@ def render_video_video_tab():
                     gap=10,
                 ),
             ):
-                me.video(
-                    src=state.concatenated_video_display_url,
-                    style=me.Style(width="100%", max_width="720px", border_radius=8),
-                )
+                with me.box(style=me.Style(width="100%", max_width="720px")):
+                    media_tile(
+                        media_type="video",
+                        https_url=state.concatenated_video_display_url,
+                        controls=True,
+                    )
                 me.button(
                     "Convert to GIF",
                     on_click=on_convert_to_gif_click,
@@ -340,10 +334,11 @@ def render_video_video_tab():
                 ),
             ):
                 me.text("Video as GIF:", type="headline-5")
-                me.image(
-                    src=state.gif_display_url,
-                    style=me.Style(width="100%", max_width="480px", border_radius=8),
-                )
+                with me.box(style=me.Style(width="100%", max_width="480px")):
+                    media_tile(
+                        media_type="image",
+                        https_url=state.gif_display_url,
+                    )
 
 
 def render_video_audio_tab():
@@ -387,15 +382,11 @@ def render_video_audio_tab():
                     )
                 with me.box(style=VIDEO_PLACEHOLDER_STYLE):
                     if state.selected_video_for_audio_display_url:
-                        me.video(
-                            key=state.selected_video_for_audio,  # Add key to force re-render
-                            src=state.selected_video_for_audio_display_url,
-                            style=me.Style(
-                                height="100%",
-                                width="100%",
-                                border_radius=8,
-                                object_fit="contain",
-                            ),
+                        media_tile(
+                            key=state.selected_video_for_audio,
+                            media_type="video",
+                            https_url=state.selected_video_for_audio_display_url,
+                            object_fit="contain",
                         )
                     else:
                         me.icon("movie")
@@ -428,8 +419,9 @@ def render_video_audio_tab():
                     # Future: Add audio_chooser_button if created
                 with me.box(style=VIDEO_PLACEHOLDER_STYLE):
                     if state.selected_audio_display_url:
-                        me.audio(
-                            src=state.selected_audio_display_url,
+                        media_tile(
+                            media_type="audio",
+                            https_url=state.selected_audio_display_url,
                         )
                     else:
                         me.icon("music_note")
@@ -471,10 +463,12 @@ def render_video_audio_tab():
                     gap=10,
                 ),
             ):
-                me.video(
-                    src=state.concatenated_video_display_url,
-                    style=me.Style(width="100%", max_width="720px", border_radius=8),
-                )
+                with me.box(style=me.Style(width="100%", max_width="720px")):
+                    media_tile(
+                        media_type="video",
+                        https_url=state.concatenated_video_display_url,
+                        controls=True,
+                    )
 
 
 def on_upload_video_for_audio(e: me.UploadEvent):

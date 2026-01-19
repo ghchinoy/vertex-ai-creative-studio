@@ -19,12 +19,12 @@ from typing import TYPE_CHECKING, Any
 
 import mesop as me
 from absl import logging
-from google.cloud import storage
-
+from common import storage
 from common import utils as helpers
 from common.storage import store_to_gcs
 from components import constants
 from components.header import header
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from config.default import Default
 from models import image_models
@@ -162,16 +162,12 @@ def content(app_state: me.state):  # pylint: disable=unused-argument
                             for idx, uri in enumerate(
                                 [page_state.edit_uri],
                             ):
-                                me.image(
-                                    src=helpers.gcs_uri_to_https_url(uri),
-                                    style=me.Style(
-                                        align_self="end",
-                                        justify_content="center",
-                                        width="460px",
-                                        border_radius=12,
-                                    ),
-                                    key=f"edit_{idx}",
-                                )
+                                with me.box(style=me.Style(width="460px", height=460)):
+                                    media_tile(
+                                        media_type="image",
+                                        https_url=helpers.create_display_url(uri),
+                                        key=f"edit_{idx}",
+                                    )
                         else:
                             me.box(
                                 style=me.Style(

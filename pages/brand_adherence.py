@@ -23,6 +23,7 @@ from common.metadata import MediaItem, add_media_item_to_firestore
 from common.storage import store_to_gcs
 from common.utils import create_display_url
 from components.header import header
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.snackbar import snackbar
 from models.gemini import (
@@ -91,10 +92,11 @@ def brand_adherence_content():
                         with me.box(
                             style=me.Style(display="flex", align_items="center", gap=16),
                         ):
-                            me.image(
-                                src=state.reference_image_display_url,
-                                style=me.Style(height=50, border_radius=4),
-                            )
+                            with me.box(style=me.Style(width=100, height=50)):
+                                media_tile(
+                                    media_type="image",
+                                    https_url=state.reference_image_display_url,
+                                )
                             me.button(
                                 "Clear Image",
                                 on_click=on_clear_reference_image,
@@ -200,16 +202,12 @@ def brand_adherence_content():
                 ):
                     # Image
                     with me.box(style=me.Style(flex_basis="500px", flex_grow=1)):
-                        me.image(
-                            src=state.generated_image_display_url,
-                            style=me.Style(
-                                width="100%",
-                                border_radius=8,
-                                border=me.Border.all(
-                                    me.BorderSide(width=1, color="#ccc"),
-                                ),
-                            ),
-                        )
+                        with me.box(style=me.Style(width="100%", height=500)):
+                            media_tile(
+                                media_type="image",
+                                https_url=state.generated_image_display_url,
+                                object_fit="contain",
+                            )
 
                     # Analysis
                     with me.box(style=me.Style(flex_basis="400px", flex_grow=1)):
