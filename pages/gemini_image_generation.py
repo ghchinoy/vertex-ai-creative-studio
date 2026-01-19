@@ -32,6 +32,7 @@ from components.header import header
 from components.image_thumbnail import image_thumbnail
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.pill import pill
 from components.search_entry_point.search_entry_point import search_entry_point
@@ -406,15 +407,11 @@ def gemini_image_gen_page_content():
                                 gap=16,
                             ),
                         ):
-                            me.image(
-                                src=state.selected_image_url,
-                                style=me.Style(
-                                    width=100,
-                                    height=100,
-                                    border_radius=8,
-                                    object_fit="cover",
-                                ),
-                            )
+                            with me.box(style=me.Style(width=100, height=100)):
+                                media_tile(
+                                    media_type="image",
+                                    https_url=state.selected_image_url,
+                                )
                             me.button(
                                 "Continue",
                                 on_click=on_continue_click,
@@ -569,18 +566,14 @@ def gemini_image_gen_page_content():
                                     justify_content="center",
                                 ),
                             ):
-                                me.image(
-                                    src=state.generated_image_urls[0],
-                                    alt=state.generated_image_captions[0]
-                                    if state.generated_image_captions
-                                    else "",
-                                    style=me.Style(
-                                        width="100%",
-                                        max_height="85vh",
+                                with me.box(
+                                    style=me.Style(width="100%", max_height="85vh"),
+                                ):
+                                    media_tile(
+                                        media_type="image",
+                                        https_url=state.generated_image_urls[0],
                                         object_fit="contain",
-                                        border_radius=8,
-                                    ),
-                                )
+                                    )
                                 # Content Credentials (C2PA) Viewer
                                 with me.box(
                                     style=me.Style(
@@ -643,16 +636,14 @@ def gemini_image_gen_page_content():
                                         justify_content="center",
                                     ),
                                 ):
-                                    me.image(
-                                        src=state.selected_image_url,
-                                        alt=caption,
-                                        style=me.Style(
-                                            width="100%",
-                                            max_height="75vh",
+                                    with me.box(
+                                        style=me.Style(width="100%", max_height="75vh"),
+                                    ):
+                                        media_tile(
+                                            media_type="image",
+                                            https_url=state.selected_image_url,
                                             object_fit="contain",
-                                            border_radius=8,
-                                        ),
-                                    )
+                                        )
                                     # Content Credentials (C2PA) Viewer
                                     with me.box(
                                         style=me.Style(
@@ -710,16 +701,14 @@ def gemini_image_gen_page_content():
                                                 cursor="pointer",
                                             ),
                                         ):
-                                            me.image(
-                                                src=url,
-                                                alt=caption,
-                                                style=me.Style(
-                                                    width=100,
-                                                    height=100,
-                                                    object_fit="cover",
-                                                    border_radius=6,
-                                                ),
-                                            )
+                                            with me.box(
+                                                style=me.Style(width=100, height=100),
+                                            ):
+                                                media_tile(
+                                                    media_type="image",
+                                                    https_url=url,
+                                                    selected=is_selected,
+                                                )
 
                                 if state.grounding_info:
                                     with me.box(
