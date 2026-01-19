@@ -28,12 +28,12 @@ from components.dialog import dialog
 from components.header import header
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.prompt_template_form_dialog.prompt_template_form_dialog import (
     prompt_template_form_dialog,
 )
 from components.svg_icon.svg_icon import svg_icon
-from components.video_thumbnail.video_thumbnail import video_thumbnail
 from config.default import Default as cfg
 from models.gemini import generate_text
 from state.state import AppState
@@ -460,20 +460,18 @@ def _media_upload_slots():
                         gcs_uri.lower().endswith(ext)
                         for ext in [".png", ".jpg", ".jpeg", ".webp", ".gif"]
                     ):
-                        me.image(
-                            src=display_url,
-                            style=me.Style(
-                                width="100%",
-                                height="100%",
-                                border_radius=8,
-                                object_fit="cover",
-                            ),
+                        media_tile(
+                            media_type="image",
+                            https_url=display_url,
                         )
                     elif any(
                         gcs_uri.lower().endswith(ext)
                         for ext in [".mp4", ".mov", ".avi", ".webm"]
                     ):
-                        video_thumbnail(video_src=display_url)
+                        media_tile(
+                            media_type="video",
+                            https_url=display_url,
+                        )
                     elif gcs_uri.lower().endswith(".pdf"):
                         with me.box(
                             style=me.Style(
