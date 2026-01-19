@@ -323,17 +323,16 @@ def _actions_row():
             style=me.Style(
                 display="flex",
                 flex_direction="row",
-                                                align_items="center",
-                                                gap=16,
-                                            ),
-                                        ):
-                                            with me.box(style=me.Style(width=100, height=100)):
-                                                media_tile(
-                                                    media_type="image",
-                                                    https_url=state.selected_image_url,
-                                                )
-                                            me.button(
-                
+                align_items="center",
+                gap=16,
+            ),
+        ):
+            with me.box(style=me.Style(width=100, height=100)):
+                media_tile(
+                    media_type="image",
+                    https_url=state.selected_image_url,
+                )
+            me.button(
                 "Continue",
                 on_click=on_continue_click,
                 type="stroked",
