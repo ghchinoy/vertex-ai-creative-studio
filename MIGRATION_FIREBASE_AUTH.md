@@ -113,3 +113,4 @@ The application handles CSP automatically in `main.py`, but ensure these are all
 1.  **Identity:** Sign in on the `/welcome` page and verify your email appears in the app header and config page.
 2.  **Direct Access:** Open browser DevTools > Network. Verify images are being resolved via `firebasestorage.googleapis.com`.
 3.  **Metadata:** Ensure new generations in Firestore correctly attribute `user_email` to your authenticated address.
+4.  **User Tracking:** The system now automatically captures `first_signed_in` and `last_signed_in` timestamps for all users, visible in the Admin Dashboard.

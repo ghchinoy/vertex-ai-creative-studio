@@ -124,11 +124,18 @@ async def login(request: LoginRequest):
             try:
                 db = FirebaseClient().get_client()
                 user_ref = db.collection("users").document(email)
+                user_doc = user_ref.get()
 
+                now = datetime.datetime.utcnow()
                 update_data = {
                     "email": email,
-                    "last_signed_in": datetime.datetime.utcnow(),
+                    "last_signed_in": now,
                 }
+
+                # Set first_signed_in if it doesn't exist (new or legacy user)
+                if not user_doc.exists or "first_signed_in" not in (user_doc.to_dict() or {}):
+                    update_data["first_signed_in"] = now
+
                 if request.photo_url:
                     update_data["photo_url"] = request.photo_url
                     # Try to mirror the avatar to GCS

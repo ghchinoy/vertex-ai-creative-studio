@@ -159,7 +159,7 @@ def users_tab():
             with me.box(
                 style=me.Style(
                     display="grid",
-                    grid_template_columns="50px 2fr 1fr 1.5fr 80px",
+                    grid_template_columns="50px 2fr 1fr 1.5fr 1.5fr 80px",
                     gap=16,
                     padding=me.Padding.all(12),
                     border=me.Border(
@@ -171,12 +171,14 @@ def users_tab():
                 me.text("")
                 me.text("Email")
                 me.text("Role")
+                me.text("First Joined")
                 me.text("Last Signed In")
                 me.text("Actions")
 
             for user in users:
                 email = user.get("email", "N/A")
                 role = user.get("role", "creator")
+                first_signed_in = user.get("first_signed_in")
                 last_signed_in = user.get("last_signed_in")
                 photo_url = user.get("photo_url")
                 gcs_avatar_uri = user.get("gcs_avatar_uri")
@@ -197,7 +199,7 @@ def users_tab():
                     on_click=on_user_row_click,
                     style=me.Style(
                         display="grid",
-                        grid_template_columns="50px 2fr 1fr 1.5fr 80px",
+                        grid_template_columns="50px 2fr 1fr 1.5fr 1.5fr 80px",
                         gap=16,
                         padding=me.Padding.all(12),
                         align_items="center",
@@ -215,6 +217,11 @@ def users_tab():
                     )
                     me.text(email)
                     me.text(role, style=me.Style(font_style="italic"))
+                    me.text(
+                        first_signed_in.strftime("%Y-%m-%d %H:%M")
+                        if isinstance(first_signed_in, datetime.datetime)
+                        else "N/A",
+                    )
                     me.text(
                         last_signed_in.strftime("%Y-%m-%d %H:%M")
                         if isinstance(last_signed_in, datetime.datetime)
