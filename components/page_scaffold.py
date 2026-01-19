@@ -40,6 +40,18 @@ def on_auth_state_change(e: me.WebEvent):
     # When auth state changes, we need to refresh or navigate to ensure
     # the server-side session is recognized by the middleware.
     token = e.value.get("token")
+    role = e.value.get("role")
+    email = e.value.get("email")
+    
+    s = me.state(AppState)
+    if role:
+        s.role = role
+    if email:
+        s.user_email = email
+    elif not token:
+        # Reset to anonymous on logout
+        s.user_email = "anonymous@google.com"
+        s.role = "guest"
     
     # Check if we are on the welcome page and if login was explicitly requested
     from pages.welcome import PageState as WelcomePageState

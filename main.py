@@ -42,8 +42,9 @@ from models.video_processing import convert_mp4_to_gif
 
 # Initialize Firebase Client
 FirebaseClient()
-from common.auth import is_user_authorized
+from common.auth import is_user_authorized, get_user_role
 from pages import about as about_page
+from pages import admin as admin_page
 from pages import banana_studio as banana_studio_page
 from pages import character_consistency as character_consistency_page
 from pages import chirp_3hd as chirp_3hd_page
@@ -100,10 +101,6 @@ router = APIRouter()
 app.include_router(router)
 
 
-from common.auth import is_user_authorized
-from pages import about as about_page
-# ... (rest of imports)
-
 @app.post("/api/auth/login")
 async def login(request: LoginRequest):
     """Verifies Firebase ID token and sets a session cookie."""
@@ -144,7 +141,14 @@ async def login(request: LoginRequest):
         expires_in = datetime.timedelta(days=5)
         session_cookie = auth.create_session_cookie(request.token, expires_in=expires_in)
 
-        response = JSONResponse(content={"status": "success"})
+        user_role = get_user_role(email)
+        print(f"DEBUG: login endpoint returning role '{user_role}' for '{email}'", flush=True)
+
+        response = JSONResponse(content={
+            "status": "success", 
+            "role": user_role,
+            "email": email
+        })
         response.set_cookie(
             key="session_token",
             value=session_cookie,
@@ -304,6 +308,7 @@ async def set_request_context(request: Request, call_next):
 
     request.scope["MESOP_USER_EMAIL"] = user_email
     request.scope["MESOP_SESSION_ID"] = session_id
+    request.scope["MESOP_USER_ROLE"] = get_user_role(user_email) if is_authenticated else "guest"
 
     # Pass GA ID to Mesop context if it exists
     if config.Default.GA_MEASUREMENT_ID:
@@ -334,6 +339,7 @@ me.page(path="/test_vto_prompt_generator", title="Test VTO Prompt Generator")(
 me.page(path="/test_svg", title="Test SVG")(test_svg_page)
 me.page(path="/test_media_chooser", title="Test Media Chooser")(test_media_chooser_page)
 me.page(path="/test_async_veo", title="Test Async Veo")(test_async_veo_page)
+me.page(path="/admin", title="Admin Dashboard")(admin_page.page)
 
 
 

@@ -41,17 +41,12 @@ def on_load(e: me.LoadEvent):
 def on_tile_click(e: me.WebEvent):
     app_state = me.state(AppState)
     page_state = me.state(PageState)
-    is_authenticated = (
-        app_state.user_email and app_state.user_email != "anonymous@google.com"
-    )
-
-    if is_authenticated:
-        route = e.value["route"]
-        me.navigate(route)
-    else:
-        # Toggle state to trigger autoLogin in auth-handler
+    
+    if e.value["route"] == "login":
         page_state.show_login = True
-    yield
+        yield
+    else:
+        yield me.navigate(e.value["route"])
 
 
 @me.page(
@@ -67,6 +62,8 @@ def page():
     app_state = me.state(AppState)
     page_state = me.state(PageState)
     log_page_view(page_name="welcome", session_id=app_state.session_id)
+
+    is_logged_in = app_state.user_email and app_state.user_email != "anonymous@google.com"
 
     theme_manager(theme=app_state.theme_mode, on_theme_load=on_theme_load)
 
@@ -93,14 +90,23 @@ def page():
             cached_photo_url=cached_photo_url,
         )
 
-    tiles_data = [
-        {"icon": "home", "route": "/home"},
-        {"label": "Veo", "route": "/veo"},
-        {"label": "Gemini Image Generation", "icon": "banana", "route": "/nano-banana"},
-        {"label": "Lyria", "route": "/lyria"},
-        {"label": "Speech", "route": "/home"},
-        {"label": "Workflows", "route": "/home"},
-    ]
+    # Define tiles based on auth state
+    if not is_logged_in:
+        tiles_data = [
+            {"label": "Sign in to Get Started", "icon": "login", "route": "login", "border": True},
+            {"label": "Veo", "route": "/veo", "disabled": True},
+            {"label": "Gemini Image Generation", "icon": "banana", "route": "/nano-banana", "disabled": True},
+            {"label": "Lyria", "route": "/lyria", "disabled": True},
+        ]
+    else:
+        tiles_data = [
+            {"icon": "home", "route": "/home"},
+            {"label": "Veo", "route": "/veo"},
+            {"label": "Gemini Image Generation", "icon": "banana", "route": "/nano-banana"},
+            {"label": "Lyria", "route": "/lyria"},
+            {"label": "Speech", "route": "/home"},
+            {"label": "Workflows", "route": "/home"},
+        ]
 
     welcome_hero(
         title="GenMedia Creative Studio",

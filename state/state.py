@@ -23,6 +23,7 @@ class AppState:
     sidenav_open: bool = False
     theme_mode: str = "dark"
     user_email: str = "anonymous@google.com"
+    role: str = "creator"
     session_id: str = ""
     current_page: str = ""
 
@@ -33,12 +34,16 @@ class AppState:
             if "MESOP_USER_EMAIL" in request.environ:
                 self.user_email = request.environ["MESOP_USER_EMAIL"]
                 self.session_id = request.environ.get("MESOP_SESSION_ID", "")
+                self.role = request.environ.get("MESOP_USER_ROLE", "creator")
             elif "HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL" in request.environ:
                 user_email = request.environ["HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL"]
                 if user_email.startswith("accounts.google.com:"):
                     user_email = user_email.split(":")[-1]
                 self.user_email = user_email
                 self.session_id = request.environ.get("MESOP_SESSION_ID", "")
+                # Fallback role lookup if needed, but middleware should handle it
+                from common.auth import get_user_role
+                self.role = get_user_role(user_email)
         except:
             # Fallback for when not in a request context (e.g. initial load)
             pass

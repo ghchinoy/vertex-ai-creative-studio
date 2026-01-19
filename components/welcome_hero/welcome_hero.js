@@ -19,12 +19,13 @@ class WelcomeHero extends LitElement {
     this.tileClickEvent = '';
   }
 
-  handleClick(route) {
+  handleClick(tile) {
+    if (tile.disabled) return;
     if (!this.tileClickEvent) {
       console.error('Mesop event handler ID for tileClickEvent is not set.');
       return;
     }
-    this.dispatchEvent(new MesopEvent(this.tileClickEvent, { route }));
+    this.dispatchEvent(new MesopEvent(this.tileClickEvent, { route: tile.route }));
   }
 
   static styles = css`
@@ -116,6 +117,11 @@ class WelcomeHero extends LitElement {
     .tile.no-border:hover {
       background-color: rgba(255, 255, 255, 0.15);
     }
+    .tile.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
     .icon-wrapper {
       width: 24px;
       height: 24px;
@@ -145,8 +151,8 @@ class WelcomeHero extends LitElement {
             ${parsedTiles.map(
               (tile) => html`
                 <div 
-                  class="tile ${tile.border === false ? 'no-border' : ''}" 
-                  @click=${() => this.handleClick(tile.route)}
+                  class="tile ${tile.border === false ? 'no-border' : ''} ${tile.disabled ? 'disabled' : ''}" 
+                  @click=${() => this.handleClick(tile)}
                 >
                   ${tile.icon
                     ? html`<div class="icon-wrapper"><svg-icon .iconName=${tile.icon}></svg-icon></div>`

@@ -115,6 +115,16 @@ def sidenav(current_page: Optional[str]):
 
             # Bottom section
             with me.box(style=MENU_BOTTOM):
+                # Render Admin Dashboard for admins only
+                if app_state.role == "admin":
+                    menu_item(
+                        item_id="admin_dashboard",
+                        icon="admin_panel_settings",
+                        text="Admin Dashboard",
+                        route="/admin",
+                        minimized=not app_state.sidenav_open,
+                    )
+
                 theme_toggle_icon(
                     9,
                     "light_mode",

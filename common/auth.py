@@ -19,6 +19,7 @@ from common.storage import get_or_create_session
 from config.default import Default as cfg
 from config.firebase_config import FirebaseClient
 
+@lru_cache(maxsize=1024)
 def is_user_authorized(email: str) -> bool:
     """
     Checks if a user is authorized based on their domain or Firestore allowlist.
@@ -78,6 +79,26 @@ def get_user_avatar(email: str) -> str | None:
     except Exception as e:
         print(f"Error fetching avatar for {email}: {e}")
     return None
+
+@lru_cache(maxsize=1024)
+def get_user_role(email: str) -> str:
+    """
+    Retrieves the user's role from Firestore, defaulting to 'creator'.
+    """
+    if not email or email == "anonymous@google.com":
+        return "guest"
+    try:
+        db = FirebaseClient().get_client()
+        user_doc = db.collection("users").document(email).get()
+        if user_doc.exists:
+            role = user_doc.to_dict().get("role", "creator")
+            print(f"DEBUG: Found role '{role}' for user '{email}'", flush=True)
+            return role
+        else:
+            print(f"DEBUG: No user document found for '{email}', defaulting to 'creator'", flush=True)
+    except Exception as e:
+        print(f"Error fetching role for {email}: {e}")
+    return "creator"
 
 async def set_user_identity_and_session(request: Request, call_next):
     """

@@ -153,7 +153,10 @@ class AuthHandler extends LitElement {
               },
               body: JSON.stringify(body),
           });
-          if (!response.ok) {
+          if (response.ok) {
+              const data = await response.json();
+              this._dispatchAuthEvent(token, data.role, data.email);
+          } else {
               console.error("Failed to sync session");
           }
       } catch (e) {
@@ -161,9 +164,16 @@ class AuthHandler extends LitElement {
       }
   }
 
-  _dispatchAuthEvent(token) {
+  _dispatchAuthEvent(token, role, email) {
       if (this.authStateChange) {
-          this.dispatchEvent(new MesopEvent(this.authStateChange, { token: token }));
+          const eventData = { token: token };
+          if (role) {
+              eventData.role = role;
+          }
+          if (email) {
+              eventData.email = email;
+          }
+          this.dispatchEvent(new MesopEvent(this.authStateChange, eventData));
       }
       // Reset autoLogin to prevent loops
       this.autoLogin = false;

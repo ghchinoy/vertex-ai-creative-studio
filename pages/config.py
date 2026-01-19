@@ -214,7 +214,7 @@ def get_config_table(app_state: AppState):
             "Use Media Proxy",
         ],
         "Value": [
-            app_state.user_email if app_state.user_email else "Anonymous",
+            f"{app_state.user_email} ({app_state.role})" if app_state.user_email else f"Anonymous ({app_state.role})",
             str(Default.INIT_VERTEX),
             Default.PROJECT_ID,
             Default.LOCATION,
