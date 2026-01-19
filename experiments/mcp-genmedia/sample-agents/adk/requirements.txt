@@ -9,7 +9,7 @@ anyio==4.11.0
     #   mcp
     #   sse-starlette
     #   starlette
-authlib==1.6.5
+authlib==1.6.6
     # via google-adk
 cachetools==6.1.0
     # via google-auth
