@@ -82,6 +82,7 @@ class PageState:
     aspect_ratio: str = "16:9"
     video_length: int = 8
     auto_enhance_prompt: bool = False
+    generate_audio: bool = False
 
     generated_scene_direction: str = ""
 
@@ -291,6 +292,12 @@ def motion_portraits_content(app_state: me.state):
                         checked=state.auto_enhance_prompt,
                         on_change=on_change_auto_enhance_prompt,
                         disabled=auto_enhance_disabled,
+                    )
+                    me.checkbox(
+                        label="generate audio",
+                        checked=state.generate_audio,
+                        on_change=on_change_generate_audio,
+                        disabled=not state.veo_model.startswith("3."),
                     )
 
                 me.text(
@@ -644,6 +651,19 @@ def on_change_auto_enhance_prompt(e: me.CheckboxChangeEvent):
     state.auto_enhance_prompt = e.checked
 
 
+def on_change_generate_audio(e: me.CheckboxChangeEvent):
+    """Toggle audio generation."""
+    app_state = me.state(AppState)
+    log_ui_click(
+        element_id="portraits_generate_audio",
+        page_name=app_state.current_page,
+        session_id=app_state.session_id,
+        extras={"checked": e.checked},
+    )
+    state = me.state(PageState)
+    state.generate_audio = e.checked
+
+
 def on_selection_change_length(e: me.SelectSelectionChangeEvent):
     """Adjust the video duration length in seconds based on user event"""
     app_state = me.state(AppState)
@@ -827,7 +847,7 @@ Do not describe the frame. There should be no lip movement like speaking, but th
             reference_image_mime_type=state.reference_image_mime_type,
             person_generation="allow_adult",
             video_count=1,
-            generate_audio=True,
+            generate_audio=state.generate_audio,
         )
 
         gcs_uri, _ = generate_video(request)
