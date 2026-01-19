@@ -35,6 +35,7 @@ from components.interior_design.room_view import room_view
 from components.interior_design.storyboard_item_tile import storyboard_item_tile
 from components.interior_design.storyboard_video_tile import storyboard_video_tile
 from components.library.events import LibrarySelectionChangeEvent
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.snackbar import snackbar
 from models.gemini import (
@@ -291,21 +292,21 @@ def page_content():
                     else:
                         me.text("Generate Video")
 
-                final_video_uri = state.storyboard.get("final_video_uri")
                 if final_video_uri:
                     with me.box(
                         style=me.Style(
                             margin=me.Margin(top=24),
                             display="flex",
                             justify_content="center",
+                            width="100%",
                         ),
                     ):
-                        me.video(
-                            src=state.storyboard.get("final_video_display_url", ""),
-                            style=me.Style(
-                                width="100%", max_width="720px", border_radius=8,
-                            ),
-                        )
+                        with me.box(style=me.Style(width="100%", max_width="720px")):
+                            media_tile(
+                                media_type="video",
+                                https_url=state.storyboard.get("final_video_display_url", ""),
+                                controls=True,
+                            )
 
 
 def show_snackbar(state: PageState, message: str):
@@ -715,18 +716,22 @@ def item_detail_dialog(on_close: Callable):
         ):
             with me.box(style=me.Style(flex_grow=1)):
                 me.text("Source Image", type="headline-5")
-                me.image(
-                    src=item.get("styled_image_display_url", ""),
-                    style=me.Style(width="100%", border_radius=8),
-                )
+                with me.box(style=me.Style(width="100%", height=300)):
+                    media_tile(
+                        media_type="image",
+                        https_url=item.get("styled_image_display_url", ""),
+                        object_fit="contain",
+                    )
 
             with me.box(style=me.Style(flex_grow=1)):
                 me.text("Generated Video", type="headline-5")
                 if item.get("generated_video_uri"):
-                    me.video(
-                        src=item.get("generated_video_display_url", ""),
-                        style=me.Style(width="100%", border_radius=8),
-                    )
+                    with me.box(style=me.Style(width="100%", height=300)):
+                        media_tile(
+                            media_type="video",
+                            https_url=item.get("generated_video_display_url", ""),
+                            controls=True,
+                        )
                 else:
                     me.text("Video not generated yet.")
 

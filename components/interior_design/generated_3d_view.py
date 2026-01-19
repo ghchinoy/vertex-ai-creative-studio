@@ -6,6 +6,7 @@ from collections.abc import Callable
 import mesop as me
 
 from common.utils import create_display_url
+from components.media_tile.media_tile import media_tile
 
 IMAGE_PLACEHOLDER_STYLE = me.Style(
     width=400,
@@ -59,14 +60,10 @@ def generated_3d_view(
             if is_generating:
                 me.progress_spinner()
             elif storyboard and storyboard.get("generated_3d_view_uri"):
-                me.image(
-                    src=create_display_url(storyboard["generated_3d_view_uri"]),
-                    style=me.Style(
-                        height="100%",
-                        width="100%",
-                        border_radius=8,
-                        object_fit="contain",
-                    ),
+                media_tile(
+                    media_type="image",
+                    https_url=create_display_url(storyboard["generated_3d_view_uri"]),
+                    object_fit="contain",
                 )
             else:
                 me.icon("view_in_ar")

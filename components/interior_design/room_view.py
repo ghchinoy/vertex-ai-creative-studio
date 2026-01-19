@@ -3,6 +3,8 @@
 
 import mesop as me
 
+from components.media_tile.media_tile import media_tile
+
 
 @me.component
 def room_view(storyboard: dict, is_generating_zoom: bool):
@@ -31,13 +33,9 @@ def room_view(storyboard: dict, is_generating_zoom: bool):
                 me.progress_spinner()
             # Use the pre-signed display URL. Use .get() for safety with old data.
             elif storyboard_item.get("styled_image_display_url"):
-                me.image(
-                    src=storyboard_item.get("styled_image_display_url"),
-                    style=me.Style(
-                        height="100%",
-                        width="100%",
-                        max_width="600px",
-                        border_radius=8,
+                with me.box(style=me.Style(width="100%", max_width="600px", height=400)):
+                    media_tile(
+                        media_type="image",
+                        https_url=storyboard_item.get("styled_image_display_url"),
                         object_fit="contain",
-                    ),
-                )
+                    )

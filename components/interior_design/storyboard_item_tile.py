@@ -6,6 +6,7 @@ from collections.abc import Callable
 import mesop as me
 
 from common.utils import create_display_url
+from components.media_tile.media_tile import media_tile
 
 
 @me.component
@@ -27,31 +28,36 @@ def storyboard_item_tile(
             width=200,
             height=150,
             border_radius=8,
-            background=f"url({display_url}) center / cover",
             position="relative",
             cursor="pointer",
             border=me.Border.all(me.BorderSide(color=me.theme_var("outline-variant"))),
             flex_shrink=0,
-        ),
-    ), me.box(
-        style=me.Style(
-            position="absolute",
-            bottom=0,
-            left=0,
-            right=0,
-            background="rgba(0, 0, 0, 0.6)",
-            padding=me.Padding(top=4, bottom=4, left=8, right=8),
-            border_radius="0 0 8px 8px",
+            overflow="hidden",
         ),
     ):
-        me.text(
-            room_name,
-            style=me.Style(
-                color="white",
-                font_size=14,
-                font_weight=500,
-                overflow="hidden",
-                text_overflow="ellipsis",
-                white_space="nowrap",
-            ),
+        media_tile(
+            media_type="image",
+            https_url=display_url,
         )
+        with me.box(
+            style=me.Style(
+                position="absolute",
+                bottom=0,
+                left=0,
+                right=0,
+                background="rgba(0, 0, 0, 0.6)",
+                padding=me.Padding(top=4, bottom=4, left=8, right=8),
+                border_radius="0 0 8px 8px",
+            ),
+        ):
+            me.text(
+                room_name,
+                style=me.Style(
+                    color="white",
+                    font_size=14,
+                    font_weight=500,
+                    overflow="hidden",
+                    text_overflow="ellipsis",
+                    white_space="nowrap",
+                ),
+            )

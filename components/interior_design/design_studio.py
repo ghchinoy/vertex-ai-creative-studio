@@ -6,6 +6,7 @@ from collections.abc import Callable
 import mesop as me
 
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.veo_button.veo_button import veo_button
 
 
@@ -44,10 +45,11 @@ def design_studio(
                 button_label="Add from Library",
             )
         if design_image_display_url:
-            me.image(
-                src=design_image_display_url,
-                style=me.Style(width="100%", border_radius=8, margin=me.Margin(top=8)),
-            )
+            with me.box(style=me.Style(width="100%", height=200, margin=me.Margin(top=8))):
+                media_tile(
+                    media_type="image",
+                    https_url=design_image_display_url,
+                )
         me.textarea(
             label="Design Modifications",
             on_input=on_design_prompt_input,

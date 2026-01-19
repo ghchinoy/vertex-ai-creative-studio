@@ -5,7 +5,7 @@ from collections.abc import Callable
 
 import mesop as me
 
-from components.video_thumbnail.video_thumbnail import video_thumbnail
+from components.media_tile.media_tile import media_tile
 
 
 @me.component
@@ -26,11 +26,13 @@ def storyboard_video_tile(
             position="relative",
             cursor="pointer",
             flex_shrink=0,
+            overflow="hidden",
+            border_radius=8,
         ),
     ):
-        video_thumbnail(
-            video_src=video_url,
-            selected=False,  # Not used in this context, but required
+        media_tile(
+            media_type="video",
+            https_url=video_url,
         )
         # Overlay for the room name
         with me.box(
