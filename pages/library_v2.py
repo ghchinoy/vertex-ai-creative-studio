@@ -244,13 +244,14 @@ def library_content():
                         elif ".wav" in https_url or ".mp3" in https_url:
                             render_type = "audio"
 
-                    media_tile(
-                        key=item.id,
-                        on_click=on_media_item_click,
-                        media_type=render_type,
-                        https_url=https_url,
-                        pills_json=get_pills_for_item(item, https_url),
-                    )
+                    with me.box(style=me.Style(height=300)):
+                        media_tile(
+                            key=item.id,
+                            on_click=on_media_item_click,
+                            media_type=render_type,
+                            https_url=https_url,
+                            pills_json=get_pills_for_item(item, https_url),
+                        )
 
         scroll_sentinel(
             on_visible=on_load_more,

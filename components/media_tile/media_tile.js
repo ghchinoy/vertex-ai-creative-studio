@@ -8,12 +8,17 @@ class MediaTile extends LitElement {
     :host {
       display: block;
       position: relative;
-      border-radius: 12px;
+      border-radius: 8px;
       overflow: hidden;
       cursor: pointer;
-      border: 1px solid var(--mesop-outline-variant-color);
-      height: 250px;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
       background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    :host([has-pills]) {
+      border: 1px solid var(--mesop-outline-variant-color);
     }
 
     .preview {
@@ -113,6 +118,14 @@ class MediaTile extends LitElement {
   }
 
   updated(changedProperties) {
+    if (changedProperties.has('pillsJson')) {
+        const hasPills = this.pillsJson && this.pillsJson !== "[]";
+        if (hasPills) {
+            this.setAttribute('has-pills', '');
+        } else {
+            this.removeAttribute('has-pills');
+        }
+    }
     if (changedProperties.has('thumbnailSrc')) {
         this._resolveUrl(this.thumbnailSrc).then(url => {
             this._resolvedThumbnailSrc = url;
@@ -210,14 +223,16 @@ class MediaTile extends LitElement {
   }
 
   render() {
+    const hasPills = this.pillsJson && this.pillsJson !== "[]";
     return html`
       <div class="preview">${this.renderPreview()}</div>
+      ${hasPills || this.mediaType === "audio" ? html`
       <div class="overlay">
         ${this.mediaType === "audio"
           ? html`<audio controls .src=${this._resolvedAudioSrc || this.audioSrc}></audio>`
           : ""}
         <div class="pills-container">${this.renderPills()}</div>
-      </div>
+      </div>` : ""}
     `;
   }
 }

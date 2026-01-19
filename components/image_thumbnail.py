@@ -14,6 +14,7 @@
 
 import mesop as me
 from typing import Callable
+from components.media_tile.media_tile import media_tile
 
 @me.component
 def image_thumbnail(image_uri: str, index: int, on_remove: Callable, icon_size: int = 18):
@@ -21,8 +22,27 @@ def image_thumbnail(image_uri: str, index: int, on_remove: Callable, icon_size: 
     # This creates a consistent 4px "padding" on all sides.
     box_dimension = icon_size + 8
     
-    with me.box(style=me.Style(position="relative", width=100, height=100)):
-        me.image(src=image_uri, style=me.Style(width="100%", height="100%", border_radius=8, object_fit="cover"))
+    with me.box(style=me.Style(position="relative", width=100, height=100, display="flex", overflow="hidden", border_radius=8)):
+        if image_uri and image_uri.startswith("gs://"):
+            media_tile(
+                media_type="image",
+                https_url=image_uri,
+                pills_json="[]",
+            )
+        else:
+            me.image(
+                src=image_uri,
+                style=me.Style(
+                    width="100%",
+                    height="100%",
+                    border_radius=8,
+                    object_fit="cover",
+                    border=me.Border.all(
+                        me.BorderSide(width=1, style="solid", color=me.theme_var("outline-variant"))
+                    ),
+                ),
+            )
+        
         with me.box(
             on_click=on_remove,
             key=str(index),

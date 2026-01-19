@@ -285,6 +285,18 @@ resource "google_project_iam_member" "creative_studio_sa_token_creator" {
   member  = google_service_account.creative_studio.member
 }
 
+resource "google_project_iam_member" "creative_studio_firebase_auth" {
+  project = var.project_id
+  role    = "roles/firebaseauth.admin"
+  member  = google_service_account.creative_studio.member
+}
+
+resource "google_project_iam_member" "creative_studio_firebase_admin" {
+  project = var.project_id
+  role    = "roles/firebase.admin"
+  member  = google_service_account.creative_studio.member
+}
+
 resource "google_firestore_database" "create_studio_asset_metadata" {
   name                              = "create-studio-asset-metadata"
   location_id                       = var.region

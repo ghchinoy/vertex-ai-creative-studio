@@ -55,7 +55,7 @@ def media_tile(
     *,
     media_type: str | None,
     https_url: str,
-    pills_json: str,
+    pills_json: str = "[]",
     on_click: typing.Callable[[me.WebEvent], None] | None = None,
     key: str | None = None,
 ):

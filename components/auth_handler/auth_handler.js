@@ -43,6 +43,7 @@ class AuthHandler extends LitElement {
     return {
       firebaseConfig: { type: Object },
       authStateChange: { type: String },
+      autoLogin: { type: Boolean },
       user: { state: true },
     };
   }
@@ -51,14 +52,43 @@ class AuthHandler extends LitElement {
     super();
     this.firebaseConfig = {};
     this.authStateChange = "";
+    this.autoLogin = false;
     this.user = null;
     this._app = null;
+    this._boundHandleExternalLogin = this._handleExternalLogin.bind(this);
+    this._boundHandleExternalLogout = this._handleExternalLogout.bind(this);
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener('genmedia-login', this._boundHandleExternalLogin);
+    window.addEventListener('genmedia-logout', this._boundHandleExternalLogout);
+    if (this.firebaseConfig && Object.keys(this.firebaseConfig).length > 0) {
+      this._initFirebase();
+    }
   }
 
   updated(changedProperties) {
     if (changedProperties.has('firebaseConfig') && this.firebaseConfig && Object.keys(this.firebaseConfig).length > 0) {
       this._initFirebase();
     }
+    if (changedProperties.has('autoLogin') && this.autoLogin && !this.user) {
+        this._handleLogin();
+    }
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('genmedia-login', this._boundHandleExternalLogin);
+    window.removeEventListener('genmedia-logout', this._boundHandleExternalLogout);
+  }
+
+  _handleExternalLogin() {
+    this._handleLogin();
+  }
+
+  _handleExternalLogout() {
+    this._handleLogout();
   }
 
   _initFirebase() {
@@ -86,6 +116,9 @@ class AuthHandler extends LitElement {
             } else {
                 await this._syncSession(null);
                 this._dispatchAuthEvent(null);
+                if (this.autoLogin) {
+                    this._handleLogin();
+                }
             }
         });
 
@@ -115,6 +148,8 @@ class AuthHandler extends LitElement {
       if (this.authStateChange) {
           this.dispatchEvent(new MesopEvent(this.authStateChange, { token: token }));
       }
+      // Reset autoLogin to prevent loops
+      this.autoLogin = false;
   }
 
   async _handleLogin() {

@@ -20,6 +20,7 @@ def auth_handler(
     *,
     firebase_config: dict[str, str],
     on_auth_state_change: typing.Callable[[me.WebEvent], None],
+    auto_login: bool = False,
     key: str | None = None,
 ):
     """
@@ -30,6 +31,7 @@ def auth_handler(
         name="auth-handler",
         properties={
             "firebaseConfig": firebase_config,
+            "autoLogin": auto_login,
         },
         events={
             "authStateChange": on_auth_state_change,

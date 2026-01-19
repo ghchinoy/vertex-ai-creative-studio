@@ -35,7 +35,29 @@ def on_theme_load(e: me.WebEvent):
 
 
 def on_auth_state_change(e: me.WebEvent):
-    pass
+    # When auth state changes, we need to refresh or navigate to ensure
+    # the server-side session is recognized by the middleware.
+    token = e.value.get("token")
+    
+    # Check if we are on the welcome page and if login was explicitly requested
+    from pages.welcome import PageState as WelcomePageState
+    login_was_requested = False
+    try:
+        ws = me.state(WelcomePageState)
+        login_was_requested = ws.show_login
+        ws.show_login = False # Always reset
+    except:
+        pass
+
+    if token:
+        # Successful login - only redirect to home if login was explicitly requested 
+        # from the welcome page tiles.
+        if login_was_requested:
+            me.navigate("/home")
+    else:
+        # Logout - always go to welcome
+        me.navigate("/welcome")
+    yield
 
 
 @me.content_component

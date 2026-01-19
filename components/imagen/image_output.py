@@ -20,6 +20,9 @@ from components.svg_icon.svg_icon import svg_icon
 
 from components.edit_button.edit_button import edit_button
 from components.veo_button.veo_button import veo_button
+from components.media_tile.media_tile import media_tile, get_pills_for_item
+from common.metadata import MediaItem
+from common.utils import create_display_url
 
 
 @me.component
@@ -66,16 +69,13 @@ def image_output():
                     for img_uri in state.image_output:
                         if img_uri:
                             with me.box(style=me.Style(display="flex", flex_direction="column", gap=8)):
-                                me.image(
-                                    src=img_uri,
-                                    style=me.Style(
-                                        width="300px",
-                                        height="300px",
-                                        object_fit="contain",
-                                        border_radius="12px",
-                                        box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                                    ),
-                                )
+                                # Use media_tile to handle gs:// URIs natively via Firebase SDK
+                                with me.box(style=me.Style(height=300, width=300)):
+                                    media_tile(
+                                        media_type="image",
+                                        https_url=create_display_url(img_uri),
+                                        pills_json=get_pills_for_item(MediaItem(gcsuri=img_uri, media_type="image"), img_uri),
+                                    )
                                 with me.box(style=me.Style(display="flex", flex_direction="row", gap=8, justify_content="center")):
                                     edit_button(gcs_uri=img_uri)
                                     veo_button(gcs_uri=img_uri)

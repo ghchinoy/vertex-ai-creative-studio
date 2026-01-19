@@ -198,12 +198,13 @@ async def add_global_csp(request: Request, call_next):
     response = await call_next(request)
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://esm.sh https://cdn.jsdelivr.net; "
-        "connect-src 'self' https://esm.sh https://cdn.jsdelivr.net https://storage.cloud.google.com https://storage.googleapis.com https://*.googleusercontent.com; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://esm.sh https://cdn.jsdelivr.net https://www.gstatic.com https://apis.google.com; "
+        "connect-src 'self' https://esm.sh https://cdn.jsdelivr.net https://storage.cloud.google.com https://storage.googleapis.com https://*.googleusercontent.com https://*.googleapis.com https://*.firebaseio.com https://www.gstatic.com; "
+        "frame-src 'self' https://*.firebaseapp.com https://*.firebaseauth.com https://accounts.google.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com http://fonts.googleapis.com/; "
         "font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com http://fonts.googleapis.com;"
-        "img-src 'self' data: blob: https://google-ai-skin-tone-research.imgix.net https://storage.cloud.google.com https://storage.googleapis.com https://*.googleusercontent.com; "
-        "media-src 'self' https://deepmind.google https://storage.cloud.google.com https://storage.googleapis.com https://*.googleusercontent.com; "
+        "img-src 'self' data: blob: https://google-ai-skin-tone-research.imgix.net https://storage.cloud.google.com https://storage.googleapis.com https://*.googleusercontent.com https://firebasestorage.googleapis.com; "
+        "media-src 'self' https://deepmind.google https://storage.cloud.google.com https://storage.googleapis.com https://*.googleusercontent.com https://firebasestorage.googleapis.com; "
         "worker-src 'self' blob:;"
     )
     return response
@@ -228,11 +229,36 @@ async def set_request_context(request: Request, call_next):
         user_email = request.headers.get("X-Goog-Authenticated-User-Email")
 
     # 3. Default to anonymous
+    is_authenticated = user_email is not None and user_email != "anonymous@google.com"
+
     if not user_email:
         user_email = "anonymous@google.com"
 
     if user_email.startswith("accounts.google.com:"):
         user_email = user_email.split(":")[-1]
+
+    # Inject identity into headers for downstream WSGI (Mesop)
+    headers = dict(request.scope["headers"])
+    # ASGI headers are lowercase bytes
+    headers[b"x-goog-authenticated-user-email"] = user_email.encode("utf-8")
+    request.scope["headers"] = [(k, v) for k, v in headers.items()]
+
+    # Redirect unauthenticated users to /welcome for page requests
+    path = request.url.path
+    accept = request.headers.get("accept", "")
+    
+    allowed_paths = ["/welcome", "/", "/favicon.ico"]
+    allowed_prefixes = (
+        "/api/", 
+        "/static/", 
+        "/__web-components-module__", 
+        "/media/", 
+        "/_mesop/"
+    )
+    
+    if not is_authenticated and "text/html" in accept:
+        if path not in allowed_paths and not path.startswith(allowed_prefixes):
+            return RedirectResponse(url="/welcome")
 
     session_id = request.cookies.get("session_id")
     if not session_id:
@@ -314,7 +340,7 @@ async def get_media_proxy(request: Request, bucket_name: str, object_path: str):
 
 @app.get("/")
 def home() -> RedirectResponse:
-    return RedirectResponse(url="/home")
+    return RedirectResponse(url="/welcome")
 
 
 # Use this to mount the static files for the Mesop app

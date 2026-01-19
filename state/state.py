@@ -28,15 +28,20 @@ class AppState:
 
     def __init__(self):
         """Initializes the AppState, reading user info from the request context."""
-        if "HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL" in request.environ:
-            user_email = request.environ["HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL"]
-            if user_email.startswith("accounts.google.com:"):
-                user_email = user_email.split(":")[-1]
-            self.user_email = user_email
-            self.session_id = request.environ.get("MESOP_SESSION_ID", "")
-        elif "MESOP_USER_EMAIL" in request.environ:
-            self.user_email = request.environ["MESOP_USER_EMAIL"]
-            self.session_id = request.environ["MESOP_SESSION_ID"]
+        try:
+            # Try to read from Mesop's internal scope which is populated by middleware
+            if "MESOP_USER_EMAIL" in request.environ:
+                self.user_email = request.environ["MESOP_USER_EMAIL"]
+                self.session_id = request.environ.get("MESOP_SESSION_ID", "")
+            elif "HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL" in request.environ:
+                user_email = request.environ["HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL"]
+                if user_email.startswith("accounts.google.com:"):
+                    user_email = user_email.split(":")[-1]
+                self.user_email = user_email
+                self.session_id = request.environ.get("MESOP_SESSION_ID", "")
+        except:
+            # Fallback for when not in a request context (e.g. initial load)
+            pass
 
 
 def theme_toggle_button():
