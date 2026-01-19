@@ -827,6 +827,7 @@ Do not describe the frame. There should be no lip movement like speaking, but th
             reference_image_mime_type=state.reference_image_mime_type,
             person_generation="allow_adult",
             video_count=1,
+            generate_audio=True,
         )
 
         gcs_uri, _ = generate_video(request)

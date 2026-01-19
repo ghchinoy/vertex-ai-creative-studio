@@ -37,7 +37,7 @@ class VideoGenerationRequest(BaseModel):
     aspect_ratio: str
     resolution: str
     enhance_prompt: bool
-    generate_audio: bool
+    generate_audio: bool = True
     model_version_id: str
     person_generation: str
     negative_prompt: Optional[str] = None
