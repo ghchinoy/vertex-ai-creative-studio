@@ -22,6 +22,7 @@ from config.firebase_config import FirebaseClient
 def is_user_authorized(email: str) -> bool:
     """
     Checks if a user is authorized based on their domain or Firestore allowlist.
+    Logs unauthorized attempts for audit purposes.
     """
     if not email or email == "anonymous@google.com":
         return False
@@ -38,11 +39,28 @@ def is_user_authorized(email: str) -> bool:
 
     # 2. Check Domain Allowlist Fallback
     allowlist_str = cfg().DOMAIN_ALLOWLIST
+    is_domain_authorized = False
     if allowlist_str:
         allowed_domains = [d.strip().lower() for d in allowlist_str.split(",")]
         user_domain = email.split("@")[-1].lower()
         if user_domain in allowed_domains:
-            return True
+            is_domain_authorized = True
+
+    if is_domain_authorized:
+        return True
+
+    # 3. Log Unauthorized Attempt
+    try:
+        from datetime import datetime
+        db = FirebaseClient().get_client()
+        db.collection("unauthorized_access_logs").add({
+            "email": email,
+            "timestamp": datetime.utcnow(),
+            "reason": "Domain and Firestore check failed",
+            "domain_allowlist_configured": bool(allowlist_str)
+        })
+    except Exception as e:
+        print(f"Error logging unauthorized attempt for {email}: {e}")
 
     return False
 

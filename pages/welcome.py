@@ -59,7 +59,7 @@ def on_tile_click(e: me.WebEvent):
     title="Welcome - GenMedia Creative Studio",
     on_load=on_load,
     stylesheets=[
-        "https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@17..18,400..700;1,17..18,400..700&display=swap",
+        "/assets/style.css",
     ],
 )
 def page():

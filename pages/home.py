@@ -32,7 +32,7 @@ from state.state import AppState
         dangerously_disable_trusted_types=True,
     ),
     stylesheets=[
-        "https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@17..18,400..700;1,17..18,400..700&display=swap",
+        "/assets/style.css",
         "https://fonts.googleapis.com/css2?family=Google+Symbols:opsz,wght,FILL,GRAD,ROND@20..48,100..700,0..1,-50..200,0..100&icon_names=spark",
     ],
 )
