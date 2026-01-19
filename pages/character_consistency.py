@@ -178,7 +178,7 @@ def character_consistency_page_content():
                         flex_direction="column",
                         gap=4,
                         justify_content="center",
-                    ):
+                    ),
                 ):
                     me.text("Best Image", type="headline-5")
                     with me.box(style=me.Style(width=400, height=400)):
@@ -215,7 +215,7 @@ def character_consistency_page_content():
                         flex_direction="column",
                         gap=12,
                         justify_content="center",
-                    ):
+                    ),
                 ):
                     me.text("Final Video", type="headline-5")
                     with me.box(style=me.Style(width=600, height=338)):

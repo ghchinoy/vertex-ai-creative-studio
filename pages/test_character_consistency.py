@@ -174,20 +174,10 @@ This page allows you to test the character consistency workflow step-by-step.
                                 is_system_selected = url == state.best_image_url
                                 is_user_selected = url == state.user_selected_image_url
                                 with me.box(
-                                    key=url,  # Use the URL as a key for the event
+                                    key=url,
                                     on_click=on_select_image_click,
                                     style=me.Style(
                                         padding=me.Padding.all(4),
-                                        border=me.Border.all(
-                                            me.BorderSide(
-                                                width=4,
-                                                style="solid",
-                                                color=me.theme_var("primary")
-                                                if is_user_selected
-                                                else "transparent",
-                                            ),
-                                        ),
-                                        border_radius=12,
                                         cursor="pointer",
                                     ),
                                 ):
@@ -195,7 +185,7 @@ This page allows you to test the character consistency workflow step-by-step.
                                         style=me.Style(
                                             border=me.Border(
                                                 bottom=me.BorderSide(
-                                                    width=4,
+                                                    width=6,
                                                     style="solid",
                                                     color=me.theme_var("secondary")
                                                     if is_system_selected
@@ -204,10 +194,12 @@ This page allows you to test the character consistency workflow step-by-step.
                                             ),
                                         ),
                                     ):
-                                        media_tile(
-                                            media_type="image",
-                                            https_url=url,
-                                        )
+                                        with me.box(style=me.Style(width=200, height=200)):
+                                            media_tile(
+                                                media_type="image",
+                                                https_url=url,
+                                                selected=is_user_selected,
+                                            )
                         me.button("Continue", on_click=next_step, type="raised")
 
                 if state.current_step == 3:
