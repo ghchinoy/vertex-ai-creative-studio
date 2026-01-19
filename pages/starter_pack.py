@@ -21,6 +21,7 @@ from common.metadata import add_media_item
 from components.header import header
 from components.library.events import LibrarySelectionChangeEvent
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.tab_nav import Tab, tab_group
 from config.default import Default
@@ -93,16 +94,11 @@ def page():
                                 elif me.state(
                                     StarterPackState,
                                 ).generated_starter_pack_display_url:
-                                    me.image(
-                                        src=me.state(
+                                    media_tile(
+                                        media_type="image",
+                                        https_url=me.state(
                                             StarterPackState,
                                         ).generated_starter_pack_display_url,
-                                        style=me.Style(
-                                            width="100%",
-                                            max_height=400,
-                                            object_fit="contain",
-                                            border_radius=8,
-                                        ),
                                     )
                                 else:
                                     me.text("Output will appear here")
@@ -147,16 +143,11 @@ def page():
                                 elif me.state(
                                     StarterPackState,
                                 ).generated_look_display_url:
-                                    me.image(
-                                        src=me.state(
+                                    media_tile(
+                                        media_type="image",
+                                        https_url=me.state(
                                             StarterPackState,
                                         ).generated_look_display_url,
-                                        style=me.Style(
-                                            width="100%",
-                                            max_height=400,
-                                            object_fit="contain",
-                                            border_radius=8,
-                                        ),
                                     )
                                 else:
                                     me.text("Output will appear here")
@@ -207,14 +198,11 @@ def look_to_starter_pack_content():
                 button_type="icon",
             )
         if me.state(StarterPackState).look_image_display_url:
-            me.image(
-                src=me.state(StarterPackState).look_image_display_url,
-                style=me.Style(
-                    width="100%",
-                    margin=me.Margin(top=16),
-                    border_radius=8,
-                ),
-            )
+            with me.box(style=me.Style(margin=me.Margin(top=16), width="100%")):
+                media_tile(
+                    media_type="image",
+                    https_url=me.state(StarterPackState).look_image_display_url,
+                )
         me.button(
             "Generate Starter Pack",
             on_click=on_click_generate_starter_pack,
@@ -250,15 +238,14 @@ def starter_pack_to_look_content():
                 on_library_select=on_library_chooser,
                 button_type="icon",
             )
+            media_type=["all"],
+        )
         if me.state(StarterPackState).starter_pack_image_display_url:
-            me.image(
-                src=me.state(StarterPackState).starter_pack_image_display_url,
-                style=me.Style(
-                    width="100%",
-                    margin=me.Margin(top=16),
-                    border_radius=8,
-                ),
-            )
+            with me.box(style=me.Style(margin=me.Margin(top=16), width="100%")):
+                media_tile(
+                    media_type="image",
+                    https_url=me.state(StarterPackState).starter_pack_image_display_url,
+                )
         with me.box(
             style=me.Style(
                 display="flex",
@@ -289,14 +276,11 @@ def starter_pack_to_look_content():
             ):
                 me.progress_spinner()
         elif me.state(StarterPackState).model_image_display_url:
-            me.image(
-                src=me.state(StarterPackState).model_image_display_url,
-                style=me.Style(
-                    width="100%",
-                    margin=me.Margin(top=16),
-                    border_radius=8,
-                ),
-            )
+            with me.box(style=me.Style(margin=me.Margin(top=16), width="100%")):
+                media_tile(
+                    media_type="image",
+                    https_url=me.state(StarterPackState).model_image_display_url,
+                )
 
         me.button(
             "Generate Look",
