@@ -16,6 +16,8 @@
 
 import { LitElement, html, css } from 'https://cdn.jsdelivr.net/npm/lit/+esm';
 import 'https://cdn.jsdelivr.net/npm/@material/mwc-button/+esm';
+import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 class DownloadButton extends LitElement {
   static get properties() {
@@ -43,6 +45,37 @@ class DownloadButton extends LitElement {
     }
   `;
 
+  async _resolveUrl(url) {
+    if (!url) return "";
+    if (url.startsWith("gs://")) {
+      try {
+        let app;
+        try {
+          app = getApp();
+        } catch (e) {
+          app = window.genMediaFirebaseApp;
+        }
+
+        if (!app) {
+          await new Promise(r => setTimeout(r, 500));
+          try { app = getApp(); } catch (e) { app = window.genMediaFirebaseApp; }
+        }
+
+        if (!app) {
+          throw new Error("Firebase app not found");
+        }
+
+        const storage = getStorage(app);
+        const storageRef = ref(storage, url);
+        return await getDownloadURL(storageRef);
+      } catch (e) {
+        console.error("Error resolving GCS URL:", url, e);
+        throw e;
+      }
+    }
+    return url;
+  }
+
   async _handleDownload() {
     if (!this.url || !this.url.startsWith('gs://')) {
       this.error = 'Error: Invalid GCS URI provided.';
@@ -52,21 +85,11 @@ class DownloadButton extends LitElement {
     this.error = '';
 
     try {
-      // 1. Get the signed URL from our backend API.
-      const signedUrlResponse = await fetch(`/api/get_signed_url?gcs_uri=${this.url}`);
-      const signedUrlData = await signedUrlResponse.json();
+      // 1. Resolve the URL using the Firebase SDK directly.
+      const downloadUrl = await this._resolveUrl(this.url);
 
-      if (!signedUrlResponse.ok || signedUrlData.error) {
-        throw new Error(signedUrlData.error || `API error! status: ${signedUrlResponse.status}`);
-      }
-      
-      const signedUrl = signedUrlData.signed_url;
-      if (!signedUrl) {
-        throw new Error('Failed to retrieve signed URL from API.');
-      }
-
-      // 2. Fetch the resource using the signed URL.
-      const response = await fetch(signedUrl);
+      // 2. Fetch the resource using the resolved URL.
+      const response = await fetch(downloadUrl);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -75,15 +98,14 @@ class DownloadButton extends LitElement {
       const blob = await response.blob();
 
       // 4. Create a temporary link and trigger the download.
-      const link = document.createElement('a');
+      const link = document.body.appendChild(document.createElement('a'));
       link.href = URL.createObjectURL(blob);
       link.download = this.filename || 'download';
-      document.body.appendChild(link);
       link.click();
 
       // 5. Clean up.
-      document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
+      document.body.removeChild(link);
 
     } catch (e) {
       console.error('Download failed:', e);
