@@ -410,10 +410,12 @@ def render_tour_detail_dialog(storyboard: dict):
             ):
                 final_video_uri = storyboard.get("final_video_uri")
                 if final_video_uri:
-                    me.video(
-                        src=create_display_url(final_video_uri),
-                        style=me.Style(width="100%", border_radius=8),
-                    )
+                    with me.box(style=me.Style(width="100%", height=400)):
+                        media_tile(
+                            media_type="video",
+                            https_url=create_display_url(final_video_uri),
+                            controls=True,
+                        )
 
                 with me.box():
                     me.text("Storyboard Clips", type="headline-6")

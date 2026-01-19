@@ -20,6 +20,7 @@ import mesop as me
 
 from components.dialog import dialog
 from components.header import header
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from config.firebase_config import FirebaseClient
 from state.admin_state import AdminState
@@ -188,8 +189,7 @@ def users_tab():
                 # to avoid 403 Forbidden errors on private buckets.
                 avatar_url = photo_url  # Fallback to the Google URL
                 if gcs_avatar_uri:
-                    proxy_path = gcs_avatar_uri.replace("gs://", "")
-                    avatar_url = f"/media/{proxy_path}"
+                    avatar_url = gcs_avatar_uri
 
                 if not avatar_url:
                     avatar_url = "https://www.gstatic.com/images/branding/product/2x/avatar_anonymous_48dp.png"
@@ -211,10 +211,11 @@ def users_tab():
                         cursor="pointer",
                     ),
                 ):
-                    me.image(
-                        src=avatar_url,
-                        style=me.Style(width=32, height=32, border_radius="50%"),
-                    )
+                    with me.box(style=me.Style(width=32, height=32)):
+                        media_tile(
+                            media_type="image",
+                            https_url=avatar_url,
+                        )
                     me.text(email)
                     me.text(role, style=me.Style(font_style="italic"))
                     me.text(

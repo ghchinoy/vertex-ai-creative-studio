@@ -15,6 +15,7 @@
 import mesop as me
 
 from components.header import header
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.pill import pill
 from config.default import ABOUT_PAGE_CONTENT
@@ -51,16 +52,18 @@ def render_section(section_data: dict):
             me.markdown(section_data["description"])
 
         # Media content on the right
-        with me.box(style=me.Style(width="300px")):
+        with me.box(style=me.Style(width="300px", height=200)):
             if section_data.get("image"):
-                me.image(
-                    src=section_data["image"],
-                    style=me.Style(width="100%", border_radius=8),
+                media_tile(
+                    media_type="image",
+                    https_url=section_data["image"],
+                    object_fit="contain",
                 )
             elif section_data.get("video"):
-                me.video(
-                    src=section_data["video"],
-                    style=me.Style(width="100%", border_radius=8),
+                media_tile(
+                    media_type="video",
+                    https_url=section_data["video"],
+                    object_fit="contain",
                 )
 
 
