@@ -287,18 +287,26 @@ def motion_portraits_content(app_state: me.state):
                         value=f"{state.video_length}",
                         on_selection_change=on_selection_change_length,
                     )
-                    me.checkbox(
-                        label="auto-enhance prompt",
-                        checked=state.auto_enhance_prompt,
-                        on_change=on_change_auto_enhance_prompt,
-                        disabled=auto_enhance_disabled,
-                    )
-                    me.checkbox(
-                        label="generate audio",
-                        checked=state.generate_audio,
-                        on_change=on_change_generate_audio,
-                        disabled=not state.veo_model.startswith("3."),
-                    )
+                    with me.box(
+                        style=me.Style(
+                            display="flex",
+                            flex_direction="column",
+                            gap=0,
+                            margin=me.Margin(left=10),
+                        ),
+                    ):
+                        me.checkbox(
+                            label="auto-enhance prompt",
+                            checked=state.auto_enhance_prompt,
+                            on_change=on_change_auto_enhance_prompt,
+                            disabled=auto_enhance_disabled,
+                        )
+                        me.checkbox(
+                            label="generate audio",
+                            checked=state.generate_audio,
+                            on_change=on_change_generate_audio,
+                            disabled=not state.veo_model.startswith("3."),
+                        )
 
                 me.text(
                     "Style options",
