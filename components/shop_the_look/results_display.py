@@ -17,6 +17,7 @@
 import mesop as me
 
 from common.utils import create_display_url
+from components.media_tile.media_tile import media_tile
 from models.shop_the_look_handlers import on_click_veo, on_click_vto_look
 from pages.styles import _BOX_STYLE_CENTER_DISTRIBUTED
 from state.shop_the_look_state import PageState
@@ -85,15 +86,11 @@ def results_display():
                         margin=me.Margin(bottom=20),
                     ),
                 )
-                me.image(
-                    src=state.before_image_display_url,
-                    style=me.Style(
-                        width="200px",
-                        height="200px",
-                        object_fit="contain",
-                        border_radius="115px",
-                    ),
-                )
+                with me.box(style=me.Style(width=200, height=200)):
+                    media_tile(
+                        media_type="image",
+                        https_url=state.before_image_display_url,
+                    )
 
                 if state.is_loading:
                     with me.box(
@@ -217,15 +214,11 @@ def results_display():
                         ),
                     ):
                         img = create_display_url(item.clothing_image)
-                        me.image(
-                            src=img,
-                            style=me.Style(
-                                width="100px",
-                                height="100px",
-                                object_fit="cover",
-                                border_radius="15px",
-                            ),
-                        )
+                        with me.box(style=me.Style(width=100, height=100)):
+                            media_tile(
+                                media_type="image",
+                                https_url=img,
+                            )
                         me.text(
                             item.ai_description,
                             style=me.Style(
@@ -328,8 +321,7 @@ def results_display():
                                                 ),
                                             ),
                                         )
-                    me.image(
-                        src=state.result_image_display_url,
+                    with me.box(
                         style=me.Style(
                             margin=me.Margin(left=10),
                             width=(
@@ -338,26 +330,26 @@ def results_display():
                             height=(
                                 "250px" if state.result_video_display_url else "500px"
                             ),
-                            object_fit="contain",
-                            border_radius="5px",
-                            box_shadow="0 2px 4px rgba(0,0,0,0.1)",
                         ),
-                    )
+                    ):
+                        media_tile(
+                            media_type="image",
+                            https_url=state.result_image_display_url,
+                            object_fit="contain",
+                        )
                     if state.result_video_display_url:
                         video_url = state.result_video_display_url
                         print(f"video_url: {video_url}")
 
                         with me.tooltip(message=state.veo_prompt_input):
                             me.icon("information")
-                        me.video(
-                            src=video_url,
-                            style=me.Style(
-                                border_radius=6,
-                                width="250px",
-                                height="250px",
+                        with me.box(style=me.Style(width="250px", height="250px")):
+                            media_tile(
+                                media_type="video",
+                                https_url=video_url,
+                                controls=True,
                                 object_fit="contain",
-                            ),
-                        )
+                            )
                 with me.box(
                     style=me.Style(
                         display="flex",
@@ -375,30 +367,26 @@ def results_display():
                                 ),
                             ):
                                 for img_url in state.alternate_display_urls:
-                                    me.image(
-                                        src=img_url,
-                                        style=me.Style(
-                                            margin=me.Margin(left=10),
-                                            width="200px",
-                                            height="200px",
+                                    with me.box(style=me.Style(width=200, height=200, margin=me.Margin(left=10))):
+                                        media_tile(
+                                            media_type="image",
+                                            https_url=img_url,
                                             object_fit="contain",
-                                            border_radius="5px",
-                                            box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                                        ),
-                                    )
+                                        )
             else:
-                me.image(
-                    src=state.before_image_display_url,
+                with me.box(
                     style=me.Style(
                         margin=me.Margin(left=10),
                         width="500px",
                         height="500px",
-                        object_fit="contain",
-                        border_radius="5px",
-                        box_shadow="0 2px 4px rgba(0,0,0,0.1)",
                         opacity=".1",
                     ),
-                )
+                ):
+                    media_tile(
+                        media_type="image",
+                        https_url=state.before_image_display_url,
+                        object_fit="contain",
+                    )
 
     # Progression Images
     if state.progression_images:
@@ -472,36 +460,24 @@ def results_display():
                                             position="absolute",
                                             top="1px",
                                             left="15px",
-                                        ),
-                                    )
-                            me.image(
-                                src=image_url,
-                                style=me.Style(
-                                    margin=me.Margin(left=10),
-                                    width="200px",
-                                    height="200px",
-                                    object_fit="cover",
-                                    border_radius="5px",
-                                    box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                                ),
-                            )
-            if state.alternate_progression_display_urls:
-                with me.box(style=_BOX_STYLE_CENTER_DISTRIBUTED):
-                    with me.box(style=me.Style(height="100%")):
-                        for img_url in state.alternate_progression_display_urls:
-                            me.image(
-                                src=img_url,
-                                style=me.Style(
-                                    margin=me.Margin(left=10),
-                                    width="200px",
-                                    height="200px",
-                                    object_fit="contain",
-                                    border_radius="5px",
-                                    box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                                ),
-                            )
-
-    if state.retry_progression_images:
+                                                                                    ),
+                                                                                )
+                                                                    with me.box(style=me.Style(width=200, height=200, margin=me.Margin(left=10))):
+                                                                        media_tile(
+                                                                            media_type="image",
+                                                                            https_url=image_url,
+                                                                        )
+                                                    if state.alternate_progression_display_urls:
+                                                        with me.box(style=_BOX_STYLE_CENTER_DISTRIBUTED):
+                                                            with me.box(style=me.Style(height="100%")):
+                                                                for img_url in state.alternate_progression_display_urls:
+                                                                    with me.box(style=me.Style(width=200, height=200, margin=me.Margin(left=10))):
+                                                                        media_tile(
+                                                                            media_type="image",
+                                                                            https_url=img_url,
+                                                                            object_fit="contain",
+                                                                        )
+                                            if state.retry_progression_images:
         with me.expansion_panel(
             key="retry_progression",
             title="Retry",
@@ -572,23 +548,16 @@ def results_display():
                                             position="absolute",
                                             top="1px",
                                             left="15px",
-                                        ),
-                                    )
-                            me.image(
-                                src=image_url,
-                                style=me.Style(
-                                    margin=me.Margin(left=10),
-                                    width="200px",
-                                    height="200px",
-                                    object_fit="cover",
-                                    border_radius="5px",
-                                    box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                                ),
-                            )
-
-    return me
-
-
+                                                                                    ),
+                                                                                )
+                                                                    with me.box(style=me.Style(width=200, height=200, margin=me.Margin(left=10))):
+                                                                        media_tile(
+                                                                            media_type="image",
+                                                                            https_url=image_url,
+                                                                        )
+                                        
+                                            return me
+                                        
 def on_click_manual_retry(e: me.ClickEvent):
     state = me.state(PageState)
     state.retry_counter -= 1

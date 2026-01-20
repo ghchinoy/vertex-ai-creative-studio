@@ -15,6 +15,7 @@
 import mesop as me
 
 from common.utils import create_display_url
+from components.media_tile.media_tile import media_tile
 from models import shop_the_look_workflow
 from state.shop_the_look_state import PageState
 from state.state import AppState
@@ -231,16 +232,11 @@ def config_panel():
                                 ),
                             )
 
-                        me.image(
-                            src=img,
-                            style=me.Style(
-                                width="150px",
-                                height="150px",
-                                object_fit="cover",
-                                border_radius="5px",
-                                box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                            ),
-                        )
+                        with me.box(style=me.Style(width=150, height=150)):
+                            media_tile(
+                                media_type="image",
+                                https_url=img,
+                            )
         with me.box(
             style=me.Style(
                 display="flex",
@@ -293,16 +289,11 @@ def config_panel():
                                 ),
                             )
 
-                        me.image(
-                            src=img,
-                            style=me.Style(
-                                width="150px",
-                                height="150px",
-                                object_fit="cover",
-                                border_radius="5px",
-                                box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                            ),
-                        )
+                        with me.box(style=me.Style(width=150, height=150)):
+                            media_tile(
+                                media_type="image",
+                                https_url=img,
+                            )
 
 
 # Config Events

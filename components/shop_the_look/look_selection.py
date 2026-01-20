@@ -18,6 +18,7 @@ import mesop as me
 
 from common.storage import store_to_gcs
 from common.utils import create_display_url
+from components.media_tile.media_tile import media_tile
 from config.default import Default
 from models import shop_the_look_workflow
 from state.shop_the_look_state import PageState
@@ -358,21 +359,22 @@ def look_selection():
                         ),
                     )
 
-                    me.image(
-                        src=img,
+                    with me.box(
                         style=me.Style(
                             width="150px",
                             height="150px",
-                            object_fit="cover",
-                            border_radius="5px",
-                            box_shadow="0 2px 4px rgba(0,0,0,0.1)",
                             opacity=(
                                 "1"
                                 if (item.available_to_select or item.selected)
                                 else ".3"
                             ),
-                        ),
-                    )
+                        )
+                    ):
+                        media_tile(
+                            media_type="image",
+                            https_url=img,
+                            selected=item.selected,
+                        )
     with me.box(
         style=me.Style(
             display="flex",

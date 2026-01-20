@@ -18,6 +18,7 @@ import mesop as me
 
 from common.storage import store_to_gcs
 from common.utils import create_display_url
+from components.media_tile.media_tile import media_tile
 from config.default import Default
 from models import shop_the_look_workflow
 from state.shop_the_look_state import PageState
@@ -147,16 +148,11 @@ def model_selection():
                 ),
                 on_click=on_model_click,
             ):
-                me.image(
-                    src=create_display_url(model.model_image),
-                    style=me.Style(
-                        object_fit="cover",
-                        border_radius="5px",
-                        box_shadow="0 2px 4px rgba(0,0,0,0.1)",
-                        max_height="200px",
-                        height="auto",
-                    ),
-                )
+                with me.box(style=me.Style(width=200, height=200)):
+                    media_tile(
+                        media_type="image",
+                        https_url=create_display_url(model.model_image),
+                    )
 
 
 def on_model_click(e: me.ClickEvent):
