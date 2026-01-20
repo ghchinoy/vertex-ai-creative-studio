@@ -7,6 +7,7 @@ import mesop as me
 
 from common.utils import create_display_url
 from components.library.library_chooser_button import library_chooser_button
+from components.media_tile.media_tile import media_tile
 
 IMAGE_PLACEHOLDER_STYLE = me.Style(
     width=400,
@@ -60,14 +61,10 @@ def floor_plan_uploader(
             )
         with me.box(style=IMAGE_PLACEHOLDER_STYLE):
             if storyboard and storyboard.get("original_floor_plan_uri"):
-                me.image(
-                    src=create_display_url(storyboard["original_floor_plan_uri"]),
-                    style=me.Style(
-                        height="100%",
-                        width="100%",
-                        border_radius=8,
-                        object_fit="contain",
-                    ),
+                media_tile(
+                    media_type="image",
+                    https_url=create_display_url(storyboard["original_floor_plan_uri"]),
+                    object_fit="contain",
                 )
             else:
                 me.icon("floorplan")

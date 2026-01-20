@@ -19,12 +19,9 @@ import uuid
 
 import mesop as me
 
-from common.metadata import MediaItem, add_media_item_to_firestore
-from common.storage import store_to_gcs
 from common.utils import create_display_url
 from components.header import header
-from components.library.events import LibrarySelectionChangeEvent
-from components.library.video_chooser_button import video_chooser_button
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.pixie_compositor.pixie_compositor import pixie_compositor
 from state.state import AppState
@@ -61,10 +58,12 @@ def test_pixie_compositor_page():
                     video_chooser_button(on_library_select=on_video_select)
 
                     if state.selected_video_display_url:
-                        me.video(
-                            src=state.selected_video_display_url,
-                            style=me.Style(height="200px"),
-                        )
+                        with me.box(style=me.Style(width=200, height=200)):
+                            media_tile(
+                                media_type="video",
+                                https_url=state.selected_video_display_url,
+                                controls=True,
+                            )
 
                 with me.box(
                     style=me.Style(
@@ -104,7 +103,11 @@ def test_pixie_compositor_page():
 
             me.text("Result:")
             if state.result_gif:
-                me.image(src=state.result_gif)
+                with me.box(style=me.Style(width=400, height=400)):
+                    media_tile(
+                        media_type="image",
+                        https_url=state.result_gif,
+                    )
                 me.button("Save to Library", on_click=on_save_to_library_click)
             else:
                 me.text("GIF will appear here")

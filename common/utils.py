@@ -36,6 +36,8 @@ def mirror_user_avatar(email: str, photo_url: str) -> str | None:
         return None
 
     try:
+        # Ensure email is clean
+        email = email.strip()
         # 1. Fetch the image bytes
         response = requests.get(photo_url, timeout=5)
         if response.status_code != 200:

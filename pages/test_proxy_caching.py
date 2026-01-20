@@ -21,6 +21,7 @@ import mesop as me
 from common.metadata import MediaItem, get_media_for_page
 from common.utils import create_display_url
 from components.header import header
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 
 
@@ -91,12 +92,11 @@ def page_content():
             for item in state.media_items:
                 gcs_uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
                 if gcs_uri:
-                    me.image(
-                        src=create_display_url(gcs_uri),
-                        style=me.Style(
-                            height=150, width=150, object_fit="cover", border_radius=8,
-                        ),
-                    )
+                    with me.box(style=me.Style(width=150, height=150)):
+                        media_tile(
+                            media_type="image",
+                            https_url=create_display_url(gcs_uri),
+                        )
 
     with me.box(style=me.Style(margin=me.Margin(top=32))):
         # Method 2: Proxy Endpoint
@@ -112,9 +112,8 @@ def page_content():
             for item in state.media_items:
                 gcs_uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
                 if gcs_uri:
-                    me.image(
-                        src=create_display_url(gcs_uri),
-                        style=me.Style(
-                            height=150, width=150, object_fit="cover", border_radius=8,
-                        ),
-                    )
+                    with me.box(style=me.Style(width=150, height=150)):
+                        media_tile(
+                            media_type="image",
+                            https_url=create_display_url(gcs_uri),
+                        )

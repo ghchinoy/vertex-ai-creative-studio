@@ -23,6 +23,7 @@ from common.metadata import add_media_item
 from common.utils import create_display_url
 from components.dialog import dialog
 from components.header import header
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import on_theme_load
 from components.theme_manager.theme_manager import theme_manager
 from models.image_models import generate_virtual_models
@@ -249,10 +250,11 @@ It is crucial to describe gender based on presentation rather than identity beca
             ):
                 for image_row in state.generated_images:
                     for image_url in image_row:
-                        me.image(
-                            src=create_display_url(image_url),
-                            style=me.Style(width="100%"),
-                        )
+                        with me.box(style=me.Style(width="100%", height=300)):
+                            media_tile(
+                                media_type="image",
+                                https_url=create_display_url(image_url),
+                            )
 
 
 def on_show_info_dialog(e: me.ClickEvent):

@@ -19,6 +19,7 @@ import mesop as me
 import requests
 
 from common.utils import create_display_url
+from components.media_tile.media_tile import media_tile
 from models.requests import VideoGenerationRequest
 
 
@@ -66,10 +67,13 @@ def page():
             me.progress_spinner()
 
         if state.video_uri:
-            me.video(
-                src=create_display_url(state.video_uri),
-                style=me.Style(width="100%", max_width=640),
-            )
+            with me.box(style=me.Style(width="100%", max_width="640px")):
+                media_tile(
+                    media_type="video",
+                    https_url=create_display_url(state.video_uri),
+                    controls=True,
+                )
+
 
         if state.error_message:
             me.text(f"Error: {state.error_message}", style=me.Style(color="red"))
