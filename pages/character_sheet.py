@@ -22,6 +22,7 @@ from common.metadata import MediaItem, add_media_item_to_firestore
 from common.storage import store_to_gcs
 from common.utils import create_display_url
 from components.header import header
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.snackbar import snackbar
 from models.gemini import generate_image_from_prompt_and_images
@@ -60,12 +61,12 @@ def character_sheet_content():
             with me.box(style=me.Style(flex_basis="300px", flex_grow=1)):
                 me.text("1. Upload Original Character", type="headline-6")
                 if state.original_image_display_url:
-                    me.image(
-                        src=state.original_image_display_url,
-                        style=me.Style(
-                            width="100%", border_radius=8, margin=me.Margin(bottom=16),
-                        ),
-                    )
+                    with me.box(style=me.Style(width="100%", height=300, margin=me.Margin(bottom=16))):
+                        media_tile(
+                            media_type="image",
+                            https_url=state.original_image_display_url,
+                            object_fit="contain",
+                        )
                     me.button("Clear", on_click=on_clear_original, type="stroked")
                 else:
                     me.uploader(
@@ -104,14 +105,12 @@ def character_sheet_content():
                         "Asset Sheet Result:",
                         style=me.Style(font_weight="bold", margin=me.Margin(top=8)),
                     )
-                    me.image(
-                        src=state.asset_sheet_display_url,
-                        style=me.Style(
-                            width="100%",
-                            border_radius=8,
-                            border=me.Border.all(me.BorderSide(width=1, color="#ccc")),
-                        ),
-                    )
+                    with me.box(style=me.Style(width="100%", height=300)):
+                        media_tile(
+                            media_type="image",
+                            https_url=state.asset_sheet_display_url,
+                            object_fit="contain",
+                        )
 
                 me.divider()
 
@@ -143,10 +142,12 @@ def character_sheet_content():
                         "Scenario Result:",
                         style=me.Style(font_weight="bold", margin=me.Margin(top=8)),
                     )
-                    me.image(
-                        src=state.scenario_image_display_url,
-                        style=me.Style(width="100%", border_radius=8),
-                    )
+                    with me.box(style=me.Style(width="100%", height=400)):
+                        media_tile(
+                            media_type="image",
+                            https_url=state.scenario_image_display_url,
+                            object_fit="contain",
+                        )
 
 
 # --- Event Handlers ---
