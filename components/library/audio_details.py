@@ -20,8 +20,9 @@ from datetime import datetime
 import mesop as me
 
 from common.metadata import MediaItem
-from common.utils import gcs_uri_to_https_url
+from common.utils import create_display_url
 from components.download_button.download_button import download_button
+from components.media_tile.media_tile import media_tile
 
 
 @me.component
@@ -30,7 +31,7 @@ def audio_details(item: MediaItem, on_click_permalink: Callable):
     gcs_uri = (
         item.gcsuri if item.gcsuri else (item.gcs_uris[0] if item.gcs_uris else None)
     )
-    item_display_url = gcs_uri_to_https_url(gcs_uri)
+    item_display_url = create_display_url(gcs_uri)
 
     with me.box(
         style=me.Style(
@@ -43,9 +44,11 @@ def audio_details(item: MediaItem, on_click_permalink: Callable):
         ),
     ):
         if item_display_url and not item.error_message:
-            me.audio(
-                src=item_display_url,
-            )
+            with me.box(style=me.Style(width="100%", height=200)):
+                media_tile(
+                    media_type="audio",
+                    https_url=item_display_url,
+                )
 
         if item.error_message:
             me.text(

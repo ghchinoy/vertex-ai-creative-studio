@@ -25,6 +25,7 @@ from common.metadata import MediaItem
 from common.utils import create_display_url
 from components.download_button.download_button import download_button
 from components.edit_button.edit_button import edit_button
+from components.media_tile.media_tile import media_tile
 
 
 @me.stateclass
@@ -89,14 +90,12 @@ def image_details(item: MediaItem, on_click_permalink: Callable) -> None:
     ):
         # Image display
         image_url = create_display_url(item.gcs_uris[state.current_index])
-        me.image(
-            src=image_url,
-            style=me.Style(
-                width="100%",
-                height="auto",
-                border_radius="8px",
-            ),
-        )
+        with me.box(style=me.Style(width="100%", height=400)):
+            media_tile(
+                media_type="image",
+                https_url=image_url,
+                object_fit="contain",
+            )
 
         # Carousel controls - only show if there is more than one image.
         if num_images > 1:
@@ -155,34 +154,35 @@ def image_details(item: MediaItem, on_click_permalink: Callable) -> None:
                             gap=4,
                         ),
                     ):
-                        me.text("Person Image")
-                        person_url = create_display_url(person_gcs_uri)
-                        me.image(
-                            src=person_url,
-                            style=me.Style(
-                                width="200px", height="auto", border_radius="8px",
-                            ),
-                        )
-
-                # Product Image
-                product_gcs_uri = item.raw_data.get("product_image_gcs")
-                if product_gcs_uri:
-                    with me.box(
-                        style=me.Style(
-                            display="flex",
-                            flex_direction="column",
-                            align_items="center",
-                            gap=4,
-                        ),
-                    ):
-                        me.text("Product Image")
-                        product_url = create_display_url(product_gcs_uri)
-                        me.image(
-                            src=product_url,
-                            style=me.Style(
-                                width="200px", height="auto", border_radius="8px",
-                            ),
-                        )
+                                            me.text("Person Image")
+                                            person_url = create_display_url(person_gcs_uri)
+                                            with me.box(style=me.Style(width=200, height=200)):
+                                                media_tile(
+                                                    media_type="image",
+                                                    https_url=person_url,
+                                                    object_fit="contain",
+                                                )
+                        
+                                        # Product Image
+                                        product_gcs_uri = item.raw_data.get("product_image_gcs")
+                                        if product_gcs_uri:
+                                            with me.box(
+                                                style=me.Style(
+                                                    display="flex",
+                                                    flex_direction="column",
+                                                    align_items="center",
+                                                    gap=4,
+                                                ),
+                                            ):
+                                                me.text("Product Image")
+                                                product_url = create_display_url(product_gcs_uri)
+                                                with me.box(style=me.Style(width=200, height=200)):
+                                                    media_tile(
+                                                        media_type="image",
+                                                        https_url=product_url,
+                                                        object_fit="contain",
+                                                    )
+                        
     if item.comment == "product recontext":
         with me.box(style=me.Style(margin=me.Margin(top=16))):
             me.text(
@@ -198,12 +198,12 @@ def image_details(item: MediaItem, on_click_permalink: Callable) -> None:
                 ),
             ):
                 for uri in item.source_images_gcs:
-                    me.image(
-                        src=create_display_url(uri),
-                        style=me.Style(
-                            width="100px", height="auto", border_radius="8px",
-                        ),
-                    )
+                    with me.box(style=me.Style(width=100, height=100)):
+                        media_tile(
+                            media_type="image",
+                            https_url=create_display_url(uri),
+                            object_fit="contain",
+                        )
     with me.box(
         style=me.Style(
             display="flex", flex_direction="row", gap=10, margin=me.Margin(top=16),

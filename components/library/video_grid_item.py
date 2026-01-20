@@ -16,10 +16,9 @@
 import mesop as me
 
 from common.metadata import MediaItem
-from common.utils import gcs_uri_to_https_url
+from common.utils import create_display_url
+from components.media_tile.media_tile import media_tile
 from components.pill import pill
-
-from ..video_thumbnail.video_thumbnail import video_thumbnail
 
 
 @me.component
@@ -29,7 +28,7 @@ def video_grid_item(item: MediaItem):
     gcs_uri = (
         item.gcsuri if item.gcsuri else (item.gcs_uris[0] if item.gcs_uris else None)
     )
-    item_url = gcs_uri_to_https_url(gcs_uri)
+    item_url = create_display_url(gcs_uri)
 
     # The user reported the pill was not showing. This debug line was added to investigate.
     # It can be removed once the issue is confirmed fixed.
@@ -78,11 +77,12 @@ def video_grid_item(item: MediaItem):
         ),
     ):
         if item_url:
-            # Use the new, robust video_thumbnail component
-            video_thumbnail(
-                video_src=item_url,
-                # This component is not selectable in the grid, so on_click is not set
-            )
+            # Use the new, robust media_tile component
+            with me.box(style=me.Style(width=160, height=90)):
+                media_tile(
+                    media_type="video",
+                    https_url=item_url,
+                )
         else:
             me.text(
                 "Video not available.",
@@ -104,24 +104,18 @@ def video_grid_item(item: MediaItem):
             ),
         ):
             if item.reference_image:
-                ref_img_url = gcs_uri_to_https_url(item.reference_image)
-                me.image(
-                    src=ref_img_url,
-                    style=me.Style(
-                        height="70px",
-                        width="auto",
-                        border_radius=4,
+                ref_img_url = create_display_url(item.reference_image)
+                with me.box(style=me.Style(width=70, height=70)):
+                    media_tile(
+                        media_type="image",
+                        https_url=ref_img_url,
                         object_fit="contain",
-                    ),
-                )
+                    )
             if item.last_reference_image:
-                last_ref_img_url = gcs_uri_to_https_url(item.last_reference_image)
-                me.image(
-                    src=last_ref_img_url,
-                    style=me.Style(
-                        height="70px",
-                        width="auto",
-                        border_radius=4,
+                last_ref_img_url = create_display_url(item.last_reference_image)
+                with me.box(style=me.Style(width=70, height=70)):
+                    media_tile(
+                        media_type="image",
+                        https_url=last_ref_img_url,
                         object_fit="contain",
-                    ),
-                )
+                    )

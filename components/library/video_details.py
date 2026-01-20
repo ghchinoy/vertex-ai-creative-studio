@@ -20,10 +20,9 @@ from datetime import datetime
 import mesop as me
 
 from common.metadata import MediaItem
-from common.utils import gcs_uri_to_https_url
+from common.utils import create_display_url
 from components.download_button.download_button import download_button
-
-from ..video_thumbnail.video_thumbnail import video_thumbnail
+from components.media_tile.media_tile import media_tile
 
 
 @me.component
@@ -43,18 +42,14 @@ def video_details(
     ):
         # Main video player
         if selected_url and not item.error_message:
-            me.video(
-                key=selected_url,  # Add key to force re-render
-                src=gcs_uri_to_https_url(selected_url),
-                style=me.Style(
-                    width="100%",
-                    max_height="40vh",
-                    border_radius=8,
-                    background="#000",
-                    display="block",
-                    margin=me.Margin(bottom=16),
-                ),
-            )
+            with me.box(style=me.Style(width="100%", height=400, margin=me.Margin(bottom=16))):
+                media_tile(
+                    key=selected_url,
+                    media_type="video",
+                    https_url=create_display_url(selected_url),
+                    controls=True,
+                    object_fit="contain",
+                )
 
         # Thumbnail strip for multiple videos
         if item.gcs_uris and len(item.gcs_uris) > 1:
@@ -71,9 +66,10 @@ def video_details(
                 for url in item.gcs_uris:
                     is_selected = url == selected_url
                     with me.box(style=me.Style(height="90px", width="160px")):
-                        video_thumbnail(
+                        media_tile(
                             key=url,
-                            video_src=gcs_uri_to_https_url(url),
+                            media_type="video",
+                            https_url=create_display_url(url),
                             selected=is_selected,
                             on_click=on_thumbnail_click,
                         )
@@ -124,7 +120,7 @@ def video_details(
         me.text(f"Resolution: {item.resolution or '720p'}")
 
         if item.reference_image:
-            ref_url = gcs_uri_to_https_url(item.reference_image)
+            ref_url = create_display_url(item.reference_image)
             me.text(
                 "Reference Image:",
                 style=me.Style(
@@ -132,30 +128,24 @@ def video_details(
                     margin=me.Margin(top=8),
                 ),
             )
-            me.image(
-                src=ref_url,
-                style=me.Style(
-                    max_width="250px",
-                    height="auto",
-                    border_radius=6,
-                    margin=me.Margin(top=4),
-                ),
-            )
+            with me.box(style=me.Style(width=250, height=250, margin=me.Margin(top=4))):
+                media_tile(
+                    media_type="image",
+                    https_url=ref_url,
+                    object_fit="contain",
+                )
         if item.last_reference_image:
-            last_ref_url = gcs_uri_to_https_url(item.last_reference_image)
+            last_ref_url = create_display_url(item.last_reference_image)
             me.text(
                 "Last Reference Image:",
                 style=me.Style(font_weight="500", margin=me.Margin(top=8)),
             )
-            me.image(
-                src=last_ref_url,
-                style=me.Style(
-                    max_width="250px",
-                    height="auto",
-                    border_radius=6,
-                    margin=me.Margin(top=4),
-                ),
-            )
+            with me.box(style=me.Style(width=250, height=250, margin=me.Margin(top=4))):
+                media_tile(
+                    media_type="image",
+                    https_url=last_ref_url,
+                    object_fit="contain",
+                )
 
         with me.box(
             style=me.Style(
