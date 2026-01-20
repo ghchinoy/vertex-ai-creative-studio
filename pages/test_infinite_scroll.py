@@ -16,6 +16,7 @@ import mesop as me
 
 from common.utils import create_display_url
 from components.library.events import LibrarySelectionChangeEvent
+from components.media_tile.media_tile import media_tile
 from components.library.infinite_scroll_chooser_button import (
     infinite_scroll_chooser_button,
 )
@@ -72,7 +73,8 @@ def test_infinite_scroll_page():
                 if state.selected_gcs_uri:
                     with me.box(style=me.Style(margin=me.Margin(top=24))):
                         me.text("Selected Image:")
-                        me.image(
-                            src=state.selected_gcs_uri,
-                            style=me.Style(width="300px", border_radius=8),
-                        )
+                        with me.box(style=me.Style(width="300px", height=300)):
+                            media_tile(
+                                media_type="image",
+                                https_url=state.selected_gcs_uri,
+                            )
