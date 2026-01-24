@@ -460,24 +460,24 @@ def results_display():
                                             position="absolute",
                                             top="1px",
                                             left="15px",
-                                                                                    ),
-                                                                                )
-                                                                    with me.box(style=me.Style(width=200, height=200, margin=me.Margin(left=10))):
-                                                                        media_tile(
-                                                                            media_type="image",
-                                                                            https_url=image_url,
-                                                                        )
-                                                    if state.alternate_progression_display_urls:
-                                                        with me.box(style=_BOX_STYLE_CENTER_DISTRIBUTED):
-                                                            with me.box(style=me.Style(height="100%")):
-                                                                for img_url in state.alternate_progression_display_urls:
-                                                                    with me.box(style=me.Style(width=200, height=200, margin=me.Margin(left=10))):
-                                                                        media_tile(
-                                                                            media_type="image",
-                                                                            https_url=img_url,
-                                                                            object_fit="contain",
-                                                                        )
-                                            if state.retry_progression_images:
+                                        ),
+                                    )
+                            with me.box(style=me.Style(width=200, height=200, margin=me.Margin(left=10))):
+                                media_tile(
+                                    media_type="image",
+                                    https_url=image_url,
+                                )
+            if state.alternate_progression_display_urls:
+                with me.box(style=_BOX_STYLE_CENTER_DISTRIBUTED):
+                    with me.box(style=me.Style(height="100%")):
+                        for img_url in state.alternate_progression_display_urls:
+                            with me.box(style=me.Style(width=200, height=200, margin=me.Margin(left=10))):
+                                media_tile(
+                                    media_type="image",
+                                    https_url=img_url,
+                                    object_fit="contain",
+                                )
+    if state.retry_progression_images:
         with me.expansion_panel(
             key="retry_progression",
             title="Retry",
@@ -548,16 +548,17 @@ def results_display():
                                             position="absolute",
                                             top="1px",
                                             left="15px",
-                                                                                    ),
-                                                                                )
-                                                                    with me.box(style=me.Style(width=200, height=200, margin=me.Margin(left=10))):
-                                                                        media_tile(
-                                                                            media_type="image",
-                                                                            https_url=image_url,
-                                                                        )
-                                        
-                                            return me
-                                        
+                                        ),
+                                    )
+                            with me.box(style=me.Style(width=200, height=200, margin=me.Margin(left=10))):
+                                media_tile(
+                                    media_type="image",
+                                    https_url=image_url,
+                                )
+
+    return me
+
+
 def on_click_manual_retry(e: me.ClickEvent):
     state = me.state(PageState)
     state.retry_counter -= 1
