@@ -16,6 +16,7 @@ import json
 import os
 import re
 
+
 # --- Test Logic (without Pydantic) ---
 
 
@@ -39,7 +40,9 @@ def parse_evaluation_markdown(markdown_text: str) -> dict:
         if "Issue not present in the prompt" in content or not json_matches:
             category_data = {
                 "items": {"Issue Found": False},
-                "details": {"Issue Found": "No issue was found for this category."},
+                "details": {
+                    "Issue Found": "No issue was found for this category.",
+                },
                 "explanation": "The model did not find any issues for this category.",
             }
         else:
@@ -97,13 +100,24 @@ def test_parser_logic():
         parsed_dict = parse_evaluation_markdown(response)
 
         print(f"--- Parsed Dictionary for {sample_file} (first 2 items) ---")
-        print(json.dumps({k: parsed_dict[k] for k in list(parsed_dict)[:2]}, indent=2))
+        print(
+            json.dumps(
+                {k: parsed_dict[k] for k in list(parsed_dict)[:2]},
+                indent=2,
+            ),
+        )
 
         assert isinstance(parsed_dict, dict)
         if "Typos" in parsed_dict:
-            assert isinstance(parsed_dict["Typos"]["items"]["Issue Found"], bool)
+            assert isinstance(
+                parsed_dict["Typos"]["items"]["Issue Found"],
+                bool,
+            )
         if "Punctuation" in parsed_dict:
-            assert isinstance(parsed_dict["Punctuation"]["items"]["Issue Found"], bool)
+            assert isinstance(
+                parsed_dict["Punctuation"]["items"]["Issue Found"],
+                bool,
+            )
         if "Typos" in parsed_dict:
             assert "details" in parsed_dict["Typos"]
             assert "explanation" in parsed_dict["Typos"]

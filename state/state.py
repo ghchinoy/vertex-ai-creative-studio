@@ -36,7 +36,9 @@ class AppState:
                 self.session_id = request.environ.get("MESOP_SESSION_ID", "")
                 self.role = request.environ.get("MESOP_USER_ROLE", "creator")
             elif "HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL" in request.environ:
-                user_email = request.environ["HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL"]
+                user_email = request.environ[
+                    "HTTP_X_GOOG_AUTHENTICATED_USER_EMAIL"
+                ]
                 if user_email.startswith("accounts.google.com:"):
                     user_email = user_email.split(":")[-1]
                 self.user_email = user_email
@@ -74,7 +76,9 @@ def theme_toggle_button():
     ):
         me.text(me.state(AppState).theme_mode)
         me.icon(
-            "dark_mode" if me.state(AppState).theme_mode == "light" else "light_mode",
+            "dark_mode"
+            if me.state(AppState).theme_mode == "light"
+            else "light_mode",
         )
 
 

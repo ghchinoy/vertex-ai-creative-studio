@@ -26,16 +26,21 @@ def room_view(storyboard: dict, is_generating_zoom: bool):
             None,
         )
         if storyboard_item:
-            me.text(f"Room View: {storyboard_item['room_name']}", type="headline-6")
+            me.text(
+                f"Room View: {storyboard_item['room_name']}",
+                type="headline-6",
+            )
             if is_generating_zoom:
                 me.progress_spinner()
             # Use the pre-signed display URL. Use .get() for safety with old data.
             elif storyboard_item.get("styled_image_display_url"):
                 with me.box(
-                    style=me.Style(width="100%", max_width="600px", height=400)
+                    style=me.Style(width="100%", max_width="600px", height=400),
                 ):
                     media_tile(
                         media_type="image",
-                        https_url=storyboard_item.get("styled_image_display_url"),
+                        https_url=storyboard_item.get(
+                            "styled_image_display_url",
+                        ),
                         object_fit="contain",
                     )

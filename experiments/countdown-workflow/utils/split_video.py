@@ -18,6 +18,7 @@ import os
 
 from moviepy import VideoFileClip
 
+
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 

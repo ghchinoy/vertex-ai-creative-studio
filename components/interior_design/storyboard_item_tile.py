@@ -17,7 +17,9 @@ def storyboard_item_tile(
 ):
     """A simple tile for displaying a storyboard item."""
     display_url = (
-        create_display_url(image_url) if image_url.startswith("gs://") else image_url
+        create_display_url(image_url)
+        if image_url.startswith("gs://")
+        else image_url
     )
     with me.box(
         key=key,
@@ -28,7 +30,9 @@ def storyboard_item_tile(
             border_radius=8,
             position="relative",
             cursor="pointer",
-            border=me.Border.all(me.BorderSide(color=me.theme_var("outline-variant"))),
+            border=me.Border.all(
+                me.BorderSide(color=me.theme_var("outline-variant")),
+            ),
             flex_shrink=0,
             overflow="hidden",
         ),

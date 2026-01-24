@@ -69,20 +69,30 @@ def character_sheet_content():
                 if state.original_image_display_url:
                     with me.box(
                         style=me.Style(
-                            width="100%", height=300, margin=me.Margin(bottom=16)
-                        )
+                            width="100%",
+                            height=300,
+                            margin=me.Margin(bottom=16),
+                        ),
                     ):
                         media_tile(
                             media_type="image",
                             https_url=state.original_image_display_url,
                             object_fit="contain",
                         )
-                    me.button("Clear", on_click=on_clear_original, type="stroked")
+                    me.button(
+                        "Clear",
+                        on_click=on_clear_original,
+                        type="stroked",
+                    )
                 else:
                     me.uploader(
                         label="Upload Image",
                         on_upload=on_upload_original,
-                        accepted_file_types=["image/jpeg", "image/png", "image/webp"],
+                        accepted_file_types=[
+                            "image/jpeg",
+                            "image/png",
+                            "image/webp",
+                        ],
                     )
 
             # Right: Controls
@@ -97,7 +107,9 @@ def character_sheet_content():
             ):
                 # Step 2: Generate Asset Sheet
                 me.text("2. Generate Asset Sheet", type="headline-6")
-                me.text("Create a multi-view character sheet to establish consistency.")
+                me.text(
+                    "Create a multi-view character sheet to establish consistency.",
+                )
 
                 me.button(
                     "Generate Asset Sheet",
@@ -113,7 +125,10 @@ def character_sheet_content():
                 if state.asset_sheet_display_url:
                     me.text(
                         "Asset Sheet Result:",
-                        style=me.Style(font_weight="bold", margin=me.Margin(top=8)),
+                        style=me.Style(
+                            font_weight="bold",
+                            margin=me.Margin(top=8),
+                        ),
                     )
                     with me.box(style=me.Style(width="100%", height=300)):
                         media_tile(
@@ -150,7 +165,10 @@ def character_sheet_content():
                 if state.scenario_image_display_url:
                     me.text(
                         "Scenario Result:",
-                        style=me.Style(font_weight="bold", margin=me.Margin(top=8)),
+                        style=me.Style(
+                            font_weight="bold",
+                            margin=me.Margin(top=8),
+                        ),
                     )
                     with me.box(style=me.Style(width="100%", height=400)):
                         media_tile(

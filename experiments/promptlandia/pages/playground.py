@@ -25,6 +25,7 @@ from collections.abc import Callable
 
 import mesop as me
 
+
 _TEMPERATURE_MIN = 0.0
 _TEMPERATURE_MAX = 2.0
 _TOKEN_LIMIT_MIN = 1
@@ -80,7 +81,9 @@ def playground_page_content(app_state: me.state):
                         content=state.input.replace('"', '"'),
                         model=state.selected_model,
                         region=state.selected_region,
-                        stop_sequences=make_stop_sequence_str(state.stop_sequences),
+                        stop_sequences=make_stop_sequence_str(
+                            state.stop_sequences,
+                        ),
                         token_limit=state.token_limit,
                         temperature=state.temperature,
                     ),
@@ -92,9 +95,14 @@ def playground_page_content(app_state: me.state):
             with me.box(style=_STYLE_CODE_BOX):
                 me.markdown(
                     _GPT_CODE_TEXT.format(
-                        content=state.input.replace('"', '"').replace("\n", "\\n"),
+                        content=state.input.replace('"', '"').replace(
+                            "\n",
+                            "\\n",
+                        ),
                         model=state.selected_model,
-                        stop_sequences=make_stop_sequence_str(state.stop_sequences),
+                        stop_sequences=make_stop_sequence_str(
+                            state.stop_sequences,
+                        ),
                         token_limit=state.token_limit,
                         temperature=state.temperature,
                     ),
@@ -151,7 +159,10 @@ def playground_page_content(app_state: me.state):
             me.select(
                 options=[
                     me.SelectOption(label="Gemini 1.5", value="gemini-1.5"),
-                    me.SelectOption(label="Chat-GPT Turbo", value="gpt-3.5-turbo"),
+                    me.SelectOption(
+                        label="Chat-GPT Turbo",
+                        value="gpt-3.5-turbo",
+                    ),
                 ],
                 label="Model",
                 style=_STYLE_INPUT_WIDTH,
@@ -265,12 +276,17 @@ def tab_box(*, header: str, key: str):
             me.box(
                 key=key,
                 on_click=on_click_tab_header,
-                style=me.Style(padding=_DEFAULT_PADDING, border=_DEFAULT_BORDER),
+                style=me.Style(
+                    padding=_DEFAULT_PADDING,
+                    border=_DEFAULT_BORDER,
+                ),
             ),
             me.box(style=me.Style(display="flex")),
         ):
             me.icon(
-                icon="keyboard_arrow_down" if tab_open else "keyboard_arrow_right",
+                icon="keyboard_arrow_down"
+                if tab_open
+                else "keyboard_arrow_right",
             )
             me.text(
                 header,
@@ -529,7 +545,11 @@ def _make_modal_background_style(modal_open: bool) -> me.Style:
 
 _DEFAULT_PADDING = me.Padding.all(15)
 _DEFAULT_BORDER = me.Border.all(
-    me.BorderSide(color=me.theme_var("outline-variant"), width=1, style="solid"),
+    me.BorderSide(
+        color=me.theme_var("outline-variant"),
+        width=1,
+        style="solid",
+    ),
 )
 
 _STYLE_INPUT_WIDTH = me.Style(width="100%")
@@ -549,7 +569,10 @@ _STYLE_CONTAINER = me.Style(
     height="100vh",
 )
 
-_STYLE_MAIN_HEADER = me.Style(border=_DEFAULT_BORDER, padding=me.Padding.all(15))
+_STYLE_MAIN_HEADER = me.Style(
+    border=_DEFAULT_BORDER,
+    padding=me.Padding.all(15),
+)
 
 _STYLE_MAIN_COLUMN = me.Style(
     border=_DEFAULT_BORDER,
@@ -565,7 +588,10 @@ _STYLE_CONFIG_COLUMN = me.Style(
 
 _STYLE_TITLE_BOX = me.Style(display="inline-block")
 
-_STYLE_CONFIG_HEADER = me.Style(border=_DEFAULT_BORDER, padding=me.Padding.all(10))
+_STYLE_CONFIG_HEADER = me.Style(
+    border=_DEFAULT_BORDER,
+    padding=me.Padding.all(10),
+)
 
 _STYLE_STOP_SEQUENCE_CHIP = me.Style(margin=me.Margin.all(3))
 
@@ -576,7 +602,9 @@ _STYLE_MODAL_CONTAINER = me.Style(
     box_sizing="content-box",
     height="100vh",
     overflow_y="scroll",
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
 )
 
 _STYLE_MODAL_CONTENT = me.Style(margin=me.Margin.all(30))

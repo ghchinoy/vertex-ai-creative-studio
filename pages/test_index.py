@@ -162,7 +162,9 @@ def page():
                                             color=me.theme_var("outline"),
                                         ),
                                     ),
-                                    background=me.theme_var("surface-container-lowest"),
+                                    background=me.theme_var(
+                                        "surface-container-lowest",
+                                    ),
                                     padding=me.Padding.all(15),
                                     border_radius=12,
                                     cursor="pointer",

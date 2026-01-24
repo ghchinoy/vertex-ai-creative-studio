@@ -26,6 +26,7 @@ from common.analytics import get_logger
 from config.default import Default
 from config.firebase_config import FirebaseClient
 
+
 # Initialize configuration
 # client, model_id = ModelSetup.init()
 # MODEL_ID = model_id
@@ -39,17 +40,19 @@ class MediaItem:
     """Represents a single media item in the library for Firestore storage and retrieval."""
 
     id: str | None = None  # Firestore document ID
-    status: str = (
-        "created"  # Options: "created", "pending", "processing", "complete", "failed"
-    )
+    status: str = "created"  # Options: "created", "pending", "processing", "complete", "failed"
     related_media_item_id: str | None = None  # For linking generation sequences
     user_email: str | None = None
     timestamp: datetime.datetime | None = None  # Store as datetime object
 
     # Common fields across media types
     prompt: str | None = None  # The final prompt used for generation
-    original_prompt: str | None = None  # User's initial prompt if rewriting occurred
-    rewritten_prompt: str | None = None  # The prompt after any rewriter (Gemini, etc.)
+    original_prompt: str | None = (
+        None  # User's initial prompt if rewriting occurred
+    )
+    rewritten_prompt: str | None = (
+        None  # The prompt after any rewriter (Gemini, etc.)
+    )
     model: str | None = (
         None  # Specific model ID used (e.g., "imagen-3.0-fast", "veo-2.0")
     )
@@ -81,7 +84,9 @@ class MediaItem:
     last_reference_image: str | None = None
     negative_prompt: str | None = None
     enhanced_prompt_used: bool = False
-    comment: str | None = None  # General comment field, e.g., for video generation type
+    comment: str | None = (
+        None  # General comment field, e.g., for video generation type
+    )
 
     # Image specific
     # aspect is shared with Video
@@ -109,7 +114,11 @@ class MediaItem:
 
     # This field is for loading raw data from Firestore, not for writing.
     # It helps in debugging and displaying all stored fields if needed.
-    raw_data: dict | None = field(default_factory=dict, compare=False, repr=False)
+    raw_data: dict | None = field(
+        default_factory=dict,
+        compare=False,
+        repr=False,
+    )
 
     # Character Consistency specific fields
     media_type: str | None = None
@@ -198,11 +207,16 @@ def add_media_item_to_firestore(item: MediaItem):
     try:
         if item.id:
             # If an ID is provided, update the existing document
-            doc_ref = db.collection(config.GENMEDIA_COLLECTION_NAME).document(item.id)
+            doc_ref = db.collection(config.GENMEDIA_COLLECTION_NAME).document(
+                item.id,
+            )
             # We can remove the 'id' field before setting, as it's the doc's name
             if "id" in firestore_data:
                 del firestore_data["id"]
-            doc_ref.set(firestore_data, merge=True)  # Use merge=True to update fields
+            doc_ref.set(
+                firestore_data,
+                merge=True,
+            )  # Use merge=True to update fields
             logger.info(
                 f"Successfully updated MediaItem in Firestore with ID: {item.id}",
             )
@@ -219,7 +233,9 @@ def add_media_item_to_firestore(item: MediaItem):
             )
 
     except Exception as e:
-        logger.error(f"CRITICAL: Failed to save MediaItem to Firestore. Error: {e}")
+        logger.error(
+            f"CRITICAL: Failed to save MediaItem to Firestore. Error: {e}",
+        )
         raise e
 
 
@@ -237,7 +253,9 @@ def save_storyboard(storyboard: dict) -> dict:
     if "id" not in storyboard or not storyboard.get("id"):
         storyboard["id"] = str(uuid.uuid4())
 
-    doc_ref = db.collection("interior_design_storyboards").document(storyboard["id"])
+    doc_ref = db.collection("interior_design_storyboards").document(
+        storyboard["id"],
+    )
     doc_ref.set(storyboard)
     logger.info(f"Storyboard saved to Firestore with ID: {storyboard['id']}")
     return storyboard
@@ -303,12 +321,18 @@ def _create_media_item_from_dict(doc_id: str, raw_item_data: dict) -> MediaItem:
     # Handle GCS URI (which can be a string or list)
     gcsuri: str = None
     if isinstance(raw_item_data.get("gcsuri"), list):
-        gcsuri = raw_item_data.get("gcsuri")[0] if raw_item_data.get("gcsuri") else None
+        gcsuri = (
+            raw_item_data.get("gcsuri")[0]
+            if raw_item_data.get("gcsuri")
+            else None
+        )
     elif raw_item_data.get("gcsuri") is not None:
         gcsuri = str(raw_item_data.get("gcsuri"))
 
     # Correctly handle thumbnail_uri vs thumbnail_url typo
-    thumbnail = raw_item_data.get("thumbnail_uri") or raw_item_data.get("thumbnail_url")
+    thumbnail = raw_item_data.get("thumbnail_uri") or raw_item_data.get(
+        "thumbnail_url",
+    )
 
     media_item = MediaItem(
         id=doc_id,
@@ -347,7 +371,10 @@ def _create_media_item_from_dict(doc_id: str, raw_item_data: dict) -> MediaItem:
         grounding_info=raw_item_data.get("grounding_info"),
         audio_analysis=raw_item_data.get("audio_analysis"),
         media_type=raw_item_data.get("media_type"),
-        source_character_images=raw_item_data.get("source_character_images", []),
+        source_character_images=raw_item_data.get(
+            "source_character_images",
+            [],
+        ),
         character_description=raw_item_data.get("character_description"),
         imagen_prompt=raw_item_data.get("imagen_prompt"),
         veo_prompt=raw_item_data.get("veo_prompt"),
@@ -361,7 +388,9 @@ def _create_media_item_from_dict(doc_id: str, raw_item_data: dict) -> MediaItem:
         language_code=raw_item_data.get("language_code"),
         style_prompt=raw_item_data.get("style_prompt"),
         storyboard_id=raw_item_data.get("storyboard_id"),
-        object_rotation_project_id=raw_item_data.get("object_rotation_project_id"),
+        object_rotation_project_id=raw_item_data.get(
+            "object_rotation_project_id",
+        ),
         related_media_item_id=raw_item_data.get("related_media_item_id"),
         r2v_reference_images=raw_item_data.get("r2v_reference_images", []),
         r2v_style_image=raw_item_data.get("r2v_style_image"),
@@ -381,7 +410,9 @@ def get_media_item_by_id(
     """Retrieve a specific media item by its Firestore document ID."""
     try:
         logger.info(f"Trying to retrieve {item_id}")
-        doc_ref = db.collection(config.GENMEDIA_COLLECTION_NAME).document(item_id)
+        doc_ref = db.collection(config.GENMEDIA_COLLECTION_NAME).document(
+            item_id,
+        )
         doc = doc_ref.get()
         if doc.exists:
             return _create_media_item_from_dict(doc.id, doc.to_dict())
@@ -408,7 +439,9 @@ def add_media_item(user_email: str, **kwargs):
     doc_ref = db.collection(config.GENMEDIA_COLLECTION_NAME).document()
     doc_ref.set(firestore_data)
 
-    logger.info(f"Media data stored in Firestore with document ID: {doc_ref.id}")
+    logger.info(
+        f"Media data stored in Firestore with document ID: {doc_ref.id}",
+    )
 
 
 def get_latest_videos(limit: int = 10):
@@ -491,13 +524,18 @@ def get_media_for_page(
         A list of MediaItem objects.
 
     """
-    fetch_limit = 1000  # Max items to fetch for client-side filtering/pagination
+    fetch_limit = (
+        1000  # Max items to fetch for client-side filtering/pagination
+    )
 
     try:
         query = db.collection(config.GENMEDIA_COLLECTION_NAME)
 
         if sort_by_timestamp:
-            query = query.order_by("timestamp", direction=firestore.Query.DESCENDING)
+            query = query.order_by(
+                "timestamp",
+                direction=firestore.Query.DESCENDING,
+            )
 
         all_docs = list(query.limit(fetch_limit).stream())
         logger.info(
@@ -509,7 +547,9 @@ def get_media_for_page(
             raw_item_data = doc.to_dict()
 
             if raw_item_data is None:
-                logger.warning(f"doc.to_dict() returned None for doc ID: {doc.id}")
+                logger.warning(
+                    f"doc.to_dict() returned None for doc ID: {doc.id}",
+                )
                 continue
 
             # Ensure mime_type is a string, even if it's null in Firestore
@@ -606,7 +646,10 @@ def get_media_for_page_optimized(
             )
 
         # Always sort by timestamp
-        query = query.order_by("timestamp", direction=firestore.Query.DESCENDING)
+        query = query.order_by(
+            "timestamp",
+            direction=firestore.Query.DESCENDING,
+        )
 
         # Server-side pagination
         if start_after:
@@ -639,8 +682,13 @@ def get_media_for_page_optimized(
             if isinstance(raw_timestamp, datetime.datetime):
                 timestamp_iso_str = raw_timestamp.isoformat()
             elif isinstance(raw_timestamp, str):
-                timestamp_iso_str = raw_timestamp  # Assuming it's already ISO format
-            elif hasattr(raw_timestamp, "isoformat"):  # For Firestore Timestamp objects
+                timestamp_iso_str = (
+                    raw_timestamp  # Assuming it's already ISO format
+                )
+            elif hasattr(
+                raw_timestamp,
+                "isoformat",
+            ):  # For Firestore Timestamp objects
                 timestamp_iso_str = raw_timestamp.isoformat()
 
             try:
@@ -763,7 +811,8 @@ def get_media_for_page_optimized(
 
     except Exception as e:
         logger.error(
-            f"Error fetching media from Firestore (optimized): {e}", exc_info=True
+            f"Error fetching media from Firestore (optimized): {e}",
+            exc_info=True,
         )
         return [], None
 

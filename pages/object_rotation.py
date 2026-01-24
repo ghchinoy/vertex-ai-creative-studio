@@ -39,7 +39,11 @@ def _uploader_placeholder(on_upload: Callable, on_library_select: Callable):
             height=100,
             width=100,
             border=me.Border.all(
-                me.BorderSide(width=1, style="dashed", color=me.theme_var("outline")),
+                me.BorderSide(
+                    width=1,
+                    style="dashed",
+                    color=me.theme_var("outline"),
+                ),
             ),
             border_radius=8,
             display="flex",
@@ -49,7 +53,11 @@ def _uploader_placeholder(on_upload: Callable, on_library_select: Callable):
             gap=8,
         ),
     ):
-        me.uploader(label="Upload", on_upload=on_upload, style=me.Style(flex_grow=1))
+        me.uploader(
+            label="Upload",
+            on_upload=on_upload,
+            style=me.Style(flex_grow=1),
+        )
         library_chooser_button(
             on_library_select=on_library_select,
             button_type="icon",
@@ -59,7 +67,10 @@ def _uploader_placeholder(on_upload: Callable, on_library_select: Callable):
 
 from components.page_scaffold import page_frame, page_scaffold
 from components.stepper import stepper
-from models.object_rotation import generate_product_views, save_object_rotation_project
+from models.object_rotation import (
+    generate_product_views,
+    save_object_rotation_project,
+)
 from state.state import AppState
 
 
@@ -106,8 +117,10 @@ def on_load(e: me.LoadEvent):
                 project = doc.to_dict()
                 # Hydrate display URLs
                 if project.get("main_product_image_uri"):
-                    project["main_product_image_display_url"] = create_display_url(
-                        project["main_product_image_uri"],
+                    project["main_product_image_display_url"] = (
+                        create_display_url(
+                            project["main_product_image_uri"],
+                        )
                     )
                 if project.get("final_video_uri"):
                     project["final_video_display_url"] = create_display_url(
@@ -122,7 +135,9 @@ def on_load(e: me.LoadEvent):
                 state.rotation_project = project
                 state.current_step = 3
                 state.max_completed_step = 3
-                print(f"Loaded rotation project {object_rotation_id} from Firestore.")
+                print(
+                    f"Loaded rotation project {object_rotation_id} from Firestore.",
+                )
         state.initial_load_complete = True
     yield
 
@@ -254,7 +269,9 @@ def on_main_image_upload(e: me.UploadEvent):
     state.rotation_project["main_product_image_uri"] = gcs_uri
     yield
 
-    state.rotation_project = save_object_rotation_project(state.rotation_project)
+    state.rotation_project = save_object_rotation_project(
+        state.rotation_project,
+    )
     yield
 
 
@@ -325,7 +342,9 @@ def on_step1_next(e: me.ClickEvent):
     state = me.state(PageState)
 
     # Save the project to Firestore before proceeding
-    state.rotation_project = save_object_rotation_project(state.rotation_project)
+    state.rotation_project = save_object_rotation_project(
+        state.rotation_project,
+    )
 
     state.current_step = 2
     state.max_completed_step = 2
@@ -375,7 +394,7 @@ def step2_content():
                     image_thumbnail(
                         image_uri=create_display_url(
                             state.rotation_project.get("product_views", {}).get(
-                                "front"
+                                "front",
                             ),
                         ),
                         on_remove=on_front_view_remove,
@@ -401,7 +420,9 @@ def step2_content():
                 if state.rotation_project.get("product_views", {}).get("back"):
                     image_thumbnail(
                         image_uri=create_display_url(
-                            state.rotation_project.get("product_views", {}).get("back"),
+                            state.rotation_project.get("product_views", {}).get(
+                                "back",
+                            ),
                         ),
                         on_remove=on_back_view_remove,
                         index=1,
@@ -426,7 +447,9 @@ def step2_content():
                 if state.rotation_project.get("product_views", {}).get("left"):
                     image_thumbnail(
                         image_uri=create_display_url(
-                            state.rotation_project.get("product_views", {}).get("left"),
+                            state.rotation_project.get("product_views", {}).get(
+                                "left",
+                            ),
                         ),
                         on_remove=on_left_view_remove,
                         index=2,
@@ -452,7 +475,7 @@ def step2_content():
                     image_thumbnail(
                         image_uri=create_display_url(
                             state.rotation_project.get("product_views", {}).get(
-                                "right"
+                                "right",
                             ),
                         ),
                         on_remove=on_right_view_remove,
@@ -539,7 +562,10 @@ async def on_generate_views(e: me.ClickEvent):
 
     try:
         views = await generate_product_views(
-            product_description=state.rotation_project.get("product_description", ""),
+            product_description=state.rotation_project.get(
+                "product_description",
+                "",
+            ),
             image_uri=state.rotation_project["main_product_image_uri"],
         )
         if not views:
@@ -547,7 +573,9 @@ async def on_generate_views(e: me.ClickEvent):
         if "product_views" not in state.rotation_project:
             state.rotation_project["product_views"] = {}
         state.rotation_project["product_views"].update(views)
-        state.rotation_project = save_object_rotation_project(state.rotation_project)
+        state.rotation_project = save_object_rotation_project(
+            state.rotation_project,
+        )
     except Exception as ex:
         # Handle and display error
         print(f"Error generating views: {ex}")
@@ -570,7 +598,9 @@ def on_view_upload(e: me.UploadEvent, view_name: str):
     if "product_views" not in state.rotation_project:
         state.rotation_project["product_views"] = {}
     state.rotation_project["product_views"][view_name] = gcs_uri
-    state.rotation_project = save_object_rotation_project(state.rotation_project)
+    state.rotation_project = save_object_rotation_project(
+        state.rotation_project,
+    )
     yield
 
 
@@ -634,7 +664,7 @@ def step3_content():
                 media_tile(
                     media_type="video",
                     https_url=create_display_url(
-                        state.rotation_project["final_video_uri"]
+                        state.rotation_project["final_video_uri"],
                     ),
                     controls=True,
                 )
@@ -652,11 +682,15 @@ def on_generate_video(e: me.ClickEvent):
     yield
 
     try:
-        video_uri = generate_rotation_video(state.rotation_project["product_views"])
+        video_uri = generate_rotation_video(
+            state.rotation_project["product_views"],
+        )
         state.rotation_project["final_video_uri"] = video_uri
 
         # Create and save the final MediaItem
-        source_images = [state.rotation_project["main_product_image_uri"]] + list(
+        source_images = [
+            state.rotation_project["main_product_image_uri"],
+        ] + list(
             state.rotation_project["product_views"].values(),
         )
 
@@ -668,13 +702,18 @@ def on_generate_video(e: me.ClickEvent):
             source_images_gcs=source_images,
             object_rotation_project_id=state.rotation_project["id"],
             model="object-rotation-v1",
-            prompt=state.rotation_project.get("product_description", "Object Rotation"),
+            prompt=state.rotation_project.get(
+                "product_description",
+                "Object Rotation",
+            ),
         )
         add_media_item_to_firestore(media_item)
 
         # Save the MediaItem ID back to the project for two-way linking
         state.rotation_project["library_media_item_id"] = media_item.id
-        state.rotation_project = save_object_rotation_project(state.rotation_project)
+        state.rotation_project = save_object_rotation_project(
+            state.rotation_project,
+        )
 
     except Exception as ex:
         # Handle and display error

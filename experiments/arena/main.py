@@ -21,6 +21,7 @@ from pages.settings import settings_page_content
 from components.page_scaffold import page_scaffold
 from state.state import AppState
 
+
 # from pages.gemini2 import gemini_page_content
 
 

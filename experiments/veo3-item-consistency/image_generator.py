@@ -24,6 +24,7 @@ from utils.select_best import select_best_image
 
 import config
 
+
 # Initialize clients
 client = genai.Client(
     vertexai=True,
@@ -132,7 +133,9 @@ def generate_images_and_select_best(
     # Generate a detailed, unified description for each reference image in parallel
     # This now correctly handles images with both humans and machines.
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        all_descriptions = list(executor.map(_get_description_for_image, image_paths))
+        all_descriptions = list(
+            executor.map(_get_description_for_image, image_paths),
+        )
 
     # Create the reference images for Imagen
     reference_images_for_generation = []
@@ -153,7 +156,10 @@ def generate_images_and_select_best(
 
     # Generate the final, scene-focused prompt
     # The first description now contains details of both the character and machine.
-    generated_prompts = _generate_final_scene_prompt(all_descriptions[0], prompt)
+    generated_prompts = _generate_final_scene_prompt(
+        all_descriptions[0],
+        prompt,
+    )
     final_prompt = generated_prompts.prompt
     negative_prompt = generated_prompts.negative_prompt
 

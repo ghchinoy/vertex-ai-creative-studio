@@ -15,11 +15,16 @@
 import datetime
 import logging
 
-from common.metadata import MediaItem, add_media_item_to_firestore, get_media_item_by_id
+from common.metadata import (
+    MediaItem,
+    add_media_item_to_firestore,
+    get_media_item_by_id,
+)
 from config.veo_models import get_veo_model_config
 from models.requests import VideoGenerationRequest
 from models.veo import generate_video
 from models.video_processing import get_video_duration
+
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +58,9 @@ def process_veo_generation_task(
                     f"Corrected duration for extended video: {actual_duration}s",
                 )
             except Exception as e:
-                logger.warning(f"Could not verify duration of extended video: {e}")
+                logger.warning(
+                    f"Could not verify duration of extended video: {e}",
+                )
 
         _complete_job(job_id, video_uris, resolution, duration=actual_duration)
         logger.info(f"Background task for job {job_id} completed successfully.")
@@ -120,7 +127,9 @@ def _fail_job(job_id: str, error_message: str):
 def create_initial_job(request: VideoGenerationRequest, user_email: str) -> str:
     """Creates the initial 'pending' MediaItem in Firestore and returns its ID."""
     model_config = get_veo_model_config(request.model_version_id)
-    model_name = model_config.model_name if model_config else request.model_version_id
+    model_name = (
+        model_config.model_name if model_config else request.model_version_id
+    )
 
     # Infer mode
     mode = "t2v"

@@ -3,7 +3,11 @@ import os
 import sys
 from unittest.mock import MagicMock, patch
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+sys.path.insert(
+    0,
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+)
 
 from common.metadata import MediaItem
 from components.imagen.generation_controls import on_click_generate_images

@@ -44,8 +44,10 @@ def synthesize_chirp_speech(
             )
             custom_pronunciation_entries.append(entry)
         if custom_pronunciation_entries:
-            input_dict["custom_pronunciations"] = texttospeech.CustomPronunciations(
-                pronunciations=custom_pronunciation_entries,
+            input_dict["custom_pronunciations"] = (
+                texttospeech.CustomPronunciations(
+                    pronunciations=custom_pronunciation_entries,
+                )
             )
 
     synthesis_input = texttospeech.SynthesisInput(input_dict)

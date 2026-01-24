@@ -18,6 +18,7 @@ from common.metadata import get_media_item_by_id
 from models.requests import VideoGenerationRequest
 from services.veo_service import create_initial_job, process_veo_generation_task
 
+
 router = APIRouter(prefix="/api/veo", tags=["veo"])
 
 

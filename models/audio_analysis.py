@@ -58,13 +58,24 @@ def analyze_audio_file(gcs_uri: str) -> AudioMetrics:
         if len(voiced_pitch) > 0:
             metrics.mean_pitch_hz = float(np.mean(voiced_pitch))
             metrics.pitch_std_hz = float(np.std(voiced_pitch))
-            metrics.pitch_range_hz = float(np.max(voiced_pitch) - np.min(voiced_pitch))
+            metrics.pitch_range_hz = float(
+                np.max(voiced_pitch) - np.min(voiced_pitch),
+            )
 
         # Voice quality metrics
         try:
             point_process = call(snd, "To PointProcess (periodic, cc)", 75, 500)
             jitter = (
-                call(point_process, "Get jitter (local)", 0, 0, 0.0001, 0.02, 1.3) * 100
+                call(
+                    point_process,
+                    "Get jitter (local)",
+                    0,
+                    0,
+                    0.0001,
+                    0.02,
+                    1.3,
+                )
+                * 100
             )
             shimmer = call(
                 [snd, point_process],
@@ -76,10 +87,21 @@ def analyze_audio_file(gcs_uri: str) -> AudioMetrics:
                 1.3,
                 1.6,
             )
-            hnr = call(snd, "To Harmonicity (cc)", 0.01, 75, 0.1, 1.0).values.mean()
+            hnr = call(
+                snd,
+                "To Harmonicity (cc)",
+                0.01,
+                75,
+                0.1,
+                1.0,
+            ).values.mean()
 
-            metrics.jitter_percent = float(jitter) if not np.isnan(jitter) else 0.0
-            metrics.shimmer_db = float(shimmer) if not np.isnan(shimmer) else 0.0
+            metrics.jitter_percent = (
+                float(jitter) if not np.isnan(jitter) else 0.0
+            )
+            metrics.shimmer_db = (
+                float(shimmer) if not np.isnan(shimmer) else 0.0
+            )
             metrics.hnr_db = float(hnr) if not np.isnan(hnr) else 0.0
         except Exception as e:
             print(f"Warning: Voice quality analysis failed: {e}")

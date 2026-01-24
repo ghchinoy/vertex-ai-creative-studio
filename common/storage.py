@@ -21,6 +21,7 @@ from google.cloud import storage
 from config.default import Default
 from config.firebase_config import FirebaseClient
 
+
 cfg = Default()
 
 db = FirebaseClient(cfg.GENMEDIA_FIREBASE_DB).get_client()
@@ -38,7 +39,9 @@ class Session:
 
 def get_or_create_session(session_id: str, user_email: str) -> Session:
     """Retrieves a session from Firestore or creates a new one if it doesn't exist."""
-    session_ref = db.collection(cfg.SESSIONS_COLLECTION_NAME).document(session_id)
+    session_ref = db.collection(cfg.SESSIONS_COLLECTION_NAME).document(
+        session_id,
+    )
     session_doc = session_ref.get()
 
     if session_doc.exists:
@@ -81,9 +84,7 @@ def store_to_gcs(
         blob.upload_from_string(contents, content_type=mime_type)
     else:
         blob.upload_from_string(contents, content_type=mime_type)
-    return (
-        f"gs://{actual_bucket_name}/{destination_blob_name}"  # Return full gsutil URI
-    )
+    return f"gs://{actual_bucket_name}/{destination_blob_name}"  # Return full gsutil URI
 
 
 def download_from_gcs(gcs_uri: str) -> bytes:

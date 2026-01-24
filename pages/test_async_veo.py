@@ -78,7 +78,10 @@ def page():
                 )
 
         if state.error_message:
-            me.text(f"Error: {state.error_message}", style=me.Style(color="red"))
+            me.text(
+                f"Error: {state.error_message}",
+                style=me.Style(color="red"),
+            )
 
 
 def on_prompt_blur(e: me.InputBlurEvent):
@@ -150,7 +153,10 @@ def on_click_generate(e: me.ClickEvent):
                 state.video_uri = status_data["video_uri"]
                 state.is_loading = False
             elif state.job_status == "failed":
-                state.error_message = status_data.get("error_message", "Unknown error")
+                state.error_message = status_data.get(
+                    "error_message",
+                    "Unknown error",
+                )
                 state.is_loading = False
 
             yield

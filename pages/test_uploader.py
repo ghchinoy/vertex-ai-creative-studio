@@ -56,7 +56,9 @@ def test_uploader_page():
         me.divider()
 
         me.text("Example 5: Test Independent State with Keys")
-        with me.box(style=me.Style(display="flex", flex_direction="row", gap=16)):
+        with me.box(
+            style=me.Style(display="flex", flex_direction="row", gap=16),
+        ):
             library_chooser_button(
                 key="chooser_A",
                 on_library_select=on_test_library_select,

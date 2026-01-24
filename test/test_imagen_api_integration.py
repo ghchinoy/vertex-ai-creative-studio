@@ -40,11 +40,15 @@ def test_imagen_api_call(gcs_bucket_for_tests, model_config):
     )
 
     generated_images = response.generated_images
-    assert len(generated_images) > 0, "The 'generated_images' list should not be empty."
+    assert len(generated_images) > 0, (
+        "The 'generated_images' list should not be empty."
+    )
 
     image = generated_images[0].image
     assert image is not None, "The generated image should not be None."
-    assert hasattr(image, "gcs_uri"), "The image should have a 'gcs_uri' attribute."
+    assert hasattr(image, "gcs_uri"), (
+        "The image should have a 'gcs_uri' attribute."
+    )
     assert image.gcs_uri.startswith("gs://"), (
         f"The returned URI should be a GCS URI. Got {image.gcs_uri}"
     )

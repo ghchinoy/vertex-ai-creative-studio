@@ -8,6 +8,7 @@ import mesop as me
 
 from state.state import AppState
 
+
 ## Example usage
 # snackbar(
 #     label="Cannonball!!!",

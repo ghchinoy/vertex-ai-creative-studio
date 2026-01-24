@@ -49,7 +49,11 @@ def description_accordion(
                     on_toggle=on_toggle,
                 ),
                 me.box(
-                    style=me.Style(display="flex", flex_direction="column", gap=8),
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="column",
+                        gap=8,
+                    ),
                 ),
             ):
                 for i, question in enumerate(critique_questions):

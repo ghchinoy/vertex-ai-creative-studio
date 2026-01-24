@@ -22,6 +22,7 @@ from components.styles import CONTENT_STYLE
 from config.default import Default, reference_voices
 from state.state import AppState
 
+
 logging.basicConfig(level=logging.DEBUG)
 config = Default()
 
@@ -56,12 +57,18 @@ def about_page(app_state: me.state):
             ),
         ):
             with me.box():
-                me.text(f"Journey Voices ({len(state.voices)})", type="headline-6")
+                me.text(
+                    f"Journey Voices ({len(state.voices)})",
+                    type="headline-6",
+                )
 
                 me.html(
                     "<a href='https://cloud.google.com/text-to-speech/docs/voice-types' target='_blank'>Journey voices</a> and <a href='https://cloud.google.com/text-to-speech/docs/voices' target='_blank'>all Cloud TTS voices</a>",
                 )
-                sorted_voices = sorted(state.voices, key=lambda voice: voice["name"])
+                sorted_voices = sorted(
+                    state.voices,
+                    key=lambda voice: voice["name"],
+                )
                 for voice in sorted_voices:
                     me.text(
                         f"{voice.get('name')} / {voice['gender']} / {voice['language_codes'][0]}",

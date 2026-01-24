@@ -23,6 +23,7 @@ from common.storage import store_to_gcs  # Import the common function
 # from google.cloud import storage # No longer needed here
 from config.default import Default
 
+
 # Initialize Configuration
 cfg = Default()
 vertexai.init(project=cfg.PROJECT_ID, location=cfg.LOCATION)
@@ -47,7 +48,9 @@ def generate_music_with_lyria(prompt: str):
     client_options = {"api_endpoint": api_regional_endpoint}
     # It's good practice to handle client creation within a try/except if it can fail
     try:
-        client = aiplatform.gapic.PredictionServiceClient(client_options=client_options)
+        client = aiplatform.gapic.PredictionServiceClient(
+            client_options=client_options,
+        )
     except Exception as client_err:
         print(f"Failed to create PredictionServiceClient: {client_err}")
         raise ValueError(
@@ -75,9 +78,7 @@ def generate_music_with_lyria(prompt: str):
             "bytesBase64Encoded",
         ):
             # Handle cases where the API might return a 200 OK but no valid prediction
-            error_message = (
-                "Lyria API returned an unexpected response (no valid prediction data)."
-            )
+            error_message = "Lyria API returned an unexpected response (no valid prediction data)."
             if response.predictions and response.predictions[0].get(
                 "error",
             ):  # Check for explicit error in payload
@@ -116,7 +117,9 @@ def generate_music_with_lyria(prompt: str):
         raise ValueError(error_message) from e
     except Exception as e:
         # Catch any other unexpected errors during the process (e.g., issues in store_to_gcs not caught there)
-        error_message = f"An unexpected error occurred during music generation: {e!s}"
+        error_message = (
+            f"An unexpected error occurred during music generation: {e!s}"
+        )
         print(error_message)
         raise Exception(
             error_message,

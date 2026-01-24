@@ -23,6 +23,7 @@ from google.api_core import exceptions as gapic_exceptions
 from common.storage import download_gcs_blob
 from config.default import Default
 
+
 config = Default()
 
 
@@ -52,7 +53,9 @@ class PromptManager:
 
     def _load_prompts(self):
         """Loads prompts from the GCS blob into memory. Falls back to default prompt list."""
-        self.prompts = {"prompts": []}  # initialize to empty list to avoid errors.
+        self.prompts = {
+            "prompts": [],
+        }  # initialize to empty list to avoid errors.
         try:
             if self.prompts_location.startswith("gs://"):
                 prompt_file = download_gcs_blob(gs_uri=self.prompts_location)
@@ -63,7 +66,9 @@ class PromptManager:
                     self.prompts = json.load(f)
 
         except gapic_exceptions.NotFound:
-            print("Error: Requested blob not found, loading the default prompt list.")
+            print(
+                "Error: Requested blob not found, loading the default prompt list.",
+            )
             self.prompts_location = config.DEFAULT_PROMPTS
 
         except gapic_exceptions.Unauthorized:
@@ -82,7 +87,9 @@ class PromptManager:
         """Returns a random image generation prompt."""
         if self.prompts and self.prompts["prompts"]:
             return random.choice(self.prompts["prompts"])
-        return "Default prompt: No prompts available."  # Handle empty prompt list
+        return (
+            "Default prompt: No prompts available."  # Handle empty prompt list
+        )
 
 
 if __name__ == "__main__":

@@ -20,7 +20,10 @@ import time
 import mesop as me
 
 from common.analytics import track_click
-from common.metadata import MediaItem, add_media_item_to_firestore  # Updated import
+from common.metadata import (
+    MediaItem,
+    add_media_item_to_firestore,
+)  # Updated import
 from common.utils import create_display_url
 from components.styles import _BOX_STYLE  # Import the style
 from config.default import Default
@@ -29,6 +32,7 @@ from models.gemini import generate_compliment, rewrite_prompt_with_gemini
 from models.image_models import generate_images_from_prompt
 from state.imagen_state import PageState
 from state.state import AppState
+
 
 app_config_instance = Default()
 
@@ -48,7 +52,10 @@ def generation_controls():
             me.select(
                 label="Imagen version",
                 options=[
-                    me.SelectOption(label=model.display_name, value=model.model_name)
+                    me.SelectOption(
+                        label=model.display_name,
+                        value=model.model_name,
+                    )
                     for model in IMAGEN_MODELS
                 ],
                 on_selection_change=on_selection_change_image_model,
@@ -71,7 +78,9 @@ def generation_controls():
             or state.image_prompt_input,  # Show input if placeholder is also input
         )
         me.box(style=me.Style(height=8))
-        with me.box(style=me.Style(display="flex", justify_content="space-between")):
+        with me.box(
+            style=me.Style(display="flex", justify_content="space-between"),
+        ):
             me.button(
                 "Clear",
                 color="primary",
@@ -147,9 +156,7 @@ def on_click_generate_images(e: me.ClickEvent):
         )
 
     if not current_prompt:
-        state.error_message = (
-            "Image prompt cannot be empty. Please enter a prompt or use 'Random'."
-        )
+        state.error_message = "Image prompt cannot be empty. Please enter a prompt or use 'Random'."
         state.is_loading = False  # Ensure loading is false if we exit early
         yield
         return
@@ -180,7 +187,10 @@ def on_click_generate_images(e: me.ClickEvent):
 
         if state.image_output:
             # Generate commentary in the background using the permanent GCS URIs
-            state.image_commentary = generate_compliment(current_prompt, new_image_uris)
+            state.image_commentary = generate_compliment(
+                current_prompt,
+                new_image_uris,
+            )
 
         end_time = time.time()
         execution_time = end_time - start_time
@@ -318,7 +328,9 @@ def on_click_rewrite_prompt(e: me.ClickEvent):
             state.image_prompt_input,
         )  # Changed function name for clarity
         state.image_prompt_input = rewritten_prompt
-        state.image_prompt_placeholder = rewritten_prompt  # Update placeholder as well
+        state.image_prompt_placeholder = (
+            rewritten_prompt  # Update placeholder as well
+        )
         state.image_textarea_key += 1  # Force re-render
         print(f"Rewritten prompt: '{rewritten_prompt}'")
     except Exception as ex:

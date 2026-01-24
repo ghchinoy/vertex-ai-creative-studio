@@ -27,6 +27,7 @@ from config.default import Default
 from config.veo_models import get_veo_model_config
 from models.requests import APIReferenceImage, VideoGenerationRequest
 
+
 config = Default()
 
 logger = get_logger(__name__)
@@ -138,7 +139,10 @@ def generate_video(request: VideoGenerationRequest) -> tuple[str, str]:
         for ref in request.r2v_references:
             reference_images_list.append(
                 types.VideoGenerationReferenceImage(
-                    image=types.Image(gcs_uri=ref.gcs_uri, mime_type=ref.mime_type),
+                    image=types.Image(
+                        gcs_uri=ref.gcs_uri,
+                        mime_type=ref.mime_type,
+                    ),
                     reference_type="asset",
                 ),
             )
@@ -172,7 +176,9 @@ def generate_video(request: VideoGenerationRequest) -> tuple[str, str]:
     gen_config = types.GenerateVideosConfig(**gen_config_args)
 
     # Log the full request payload for debugging
-    logger.info(f"Calling generate_videos with model: {model_config.model_name}")
+    logger.info(
+        f"Calling generate_videos with model: {model_config.model_name}",
+    )
     logger.info(f"Config: {gen_config_args}")
     if image_input:
         logger.info(
@@ -215,7 +221,9 @@ def generate_video(request: VideoGenerationRequest) -> tuple[str, str]:
                 hasattr(operation.result, "generated_videos")
                 and operation.result.generated_videos
             ):
-                video_uris = [v.video.uri for v in operation.result.generated_videos]
+                video_uris = [
+                    v.video.uri for v in operation.result.generated_videos
+                ]
                 logger.info(f"Successfully generated {len(video_uris)} videos.")
                 return video_uris, request.resolution
             raise GenerationError(

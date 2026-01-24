@@ -39,6 +39,7 @@ from models.veo import APIReferenceImage, VideoGenerationRequest
 from state.state import AppState
 from state.veo_state import PageState
 
+
 config = Default()
 
 veo_model = VeoModelSetup.init()
@@ -237,7 +238,9 @@ def veo_content(app_state: me.state):
                     me.text(f"Last Frame: {state.last_reference_image_gcs}")
             elif state.veo_mode == "r2v":
                 if state.r2v_reference_images:
-                    me.text(f"Asset Images: {len(state.r2v_reference_images)} selected")
+                    me.text(
+                        f"Asset Images: {len(state.r2v_reference_images)} selected",
+                    )
                 if state.r2v_style_image:
                     me.text(f"Style Image: {state.r2v_style_image}")
 
@@ -245,13 +248,22 @@ def veo_content(app_state: me.state):
                 me.button("Close", on_click=close_info_dialog, type="flat")
 
     with page_frame():  # pylint: disable=E1129:not-context-manager
-        header("Veo", "movie", show_info_button=True, on_info_click=open_info_dialog)
+        header(
+            "Veo",
+            "movie",
+            show_info_button=True,
+            on_info_click=open_info_dialog,
+        )
 
         # Main container with a column direction
-        with me.box(style=me.Style(display="flex", flex_direction="column", gap=20)):
+        with me.box(
+            style=me.Style(display="flex", flex_direction="column", gap=20),
+        ):
             # --- TOP ROW ---
             # A nested container with a row direction
-            with me.box(style=me.Style(display="flex", flex_direction="row", gap=10)):
+            with me.box(
+                style=me.Style(display="flex", flex_direction="row", gap=10),
+            ):
                 # Left column of the top row
                 with me.box(
                     style=me.Style(
@@ -329,7 +341,9 @@ def on_click_extend_video(e: me.ClickEvent):
     # --- Model Validation ---
     model_config = get_veo_model_config(state.veo_model)
     if not model_config or not model_config.supports_video_extension:
-        state.error_message = "Video extension is not supported by the current model."
+        state.error_message = (
+            "Video extension is not supported by the current model."
+        )
         state.show_error_dialog = True
         yield
         return
@@ -413,7 +427,9 @@ def on_click_extend_video(e: me.ClickEvent):
     while state.job_status in ["pending", "processing", "created"]:
         time.sleep(2)
         try:
-            status_url = f"{config.API_BASE_URL}/api/veo/job/{state.current_job_id}"
+            status_url = (
+                f"{config.API_BASE_URL}/api/veo/job/{state.current_job_id}"
+            )
             resp = requests.get(status_url)
             resp.raise_for_status()
             status_data = resp.json()
@@ -433,7 +449,9 @@ def on_click_extend_video(e: me.ClickEvent):
 
                 end_time = time.time()
                 execution_time = end_time - start_time
-                state.timing = f"Extension time: {round(execution_time)} seconds"
+                state.timing = (
+                    f"Extension time: {round(execution_time)} seconds"
+                )
                 state.is_loading = False
                 yield
                 break
@@ -635,7 +653,9 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
     while state.job_status in ["pending", "processing", "created"]:
         time.sleep(2)
         try:
-            status_url = f"{config.API_BASE_URL}/api/veo/job/{state.current_job_id}"
+            status_url = (
+                f"{config.API_BASE_URL}/api/veo/job/{state.current_job_id}"
+            )
             resp = requests.get(status_url)
             resp.raise_for_status()
             status_data = resp.json()
@@ -656,7 +676,9 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
 
                 end_time = time.time()
                 execution_time = end_time - start_time
-                state.timing = f"Generation time: {round(execution_time)} seconds"
+                state.timing = (
+                    f"Generation time: {round(execution_time)} seconds"
+                )
                 state.is_loading = False
                 yield
                 break

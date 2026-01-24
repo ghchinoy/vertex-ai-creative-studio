@@ -343,10 +343,14 @@ def results_display():
                         style=me.Style(
                             margin=me.Margin(left=10),
                             width=(
-                                "250px" if state.result_video_display_url else "500px"
+                                "250px"
+                                if state.result_video_display_url
+                                else "500px"
                             ),
                             height=(
-                                "250px" if state.result_video_display_url else "500px"
+                                "250px"
+                                if state.result_video_display_url
+                                else "500px"
                             ),
                         ),
                     ):
@@ -361,7 +365,9 @@ def results_display():
 
                         with me.tooltip(message=state.veo_prompt_input):
                             me.icon("information")
-                        with me.box(style=me.Style(width="250px", height="250px")):
+                        with me.box(
+                            style=me.Style(width="250px", height="250px"),
+                        ):
                             media_tile(
                                 media_type="video",
                                 https_url=video_url,
@@ -390,7 +396,7 @@ def results_display():
                                             width=200,
                                             height=200,
                                             margin=me.Margin(left=10),
-                                        )
+                                        ),
                                     ):
                                         media_tile(
                                             media_type="image",
@@ -491,8 +497,10 @@ def results_display():
                                     )
                             with me.box(
                                 style=me.Style(
-                                    width=200, height=200, margin=me.Margin(left=10)
-                                )
+                                    width=200,
+                                    height=200,
+                                    margin=me.Margin(left=10),
+                                ),
                             ):
                                 media_tile(
                                     media_type="image",
@@ -504,8 +512,10 @@ def results_display():
                         for img_url in state.alternate_progression_display_urls:
                             with me.box(
                                 style=me.Style(
-                                    width=200, height=200, margin=me.Margin(left=10)
-                                )
+                                    width=200,
+                                    height=200,
+                                    margin=me.Margin(left=10),
+                                ),
                             ):
                                 media_tile(
                                     media_type="image",
@@ -537,7 +547,9 @@ def results_display():
                     ),
                 ):
                     for img in p.progression_images:
-                        image_url = f"/media/{img.image_path.replace('gs://', '')}"
+                        image_url = (
+                            f"/media/{img.image_path.replace('gs://', '')}"
+                        )
 
                         with me.box(
                             style=me.Style(
@@ -590,8 +602,10 @@ def results_display():
                                     )
                             with me.box(
                                 style=me.Style(
-                                    width=200, height=200, margin=me.Margin(left=10)
-                                )
+                                    width=200,
+                                    height=200,
+                                    margin=me.Margin(left=10),
+                                ),
                             ):
                                 media_tile(
                                     media_type="image",

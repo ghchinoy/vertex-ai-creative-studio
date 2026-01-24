@@ -23,6 +23,7 @@ from video_generator import generate_video_from_best_image
 
 import config
 
+
 # --- CONFIGURATION ---
 # Set the path to the directory containing your input images.
 IMAGE_LOCATION = config.INPUT_DIR
@@ -60,7 +61,9 @@ def run_full_workflow(image_location: str, scenario: str):
         ]
 
         if not image_files:
-            logger.error(f"No image files found in the directory: {image_location}")
+            logger.error(
+                f"No image files found in the directory: {image_location}",
+            )
             return
 
         if not scenario.strip():
@@ -68,7 +71,9 @@ def run_full_workflow(image_location: str, scenario: str):
             return
 
         # 1. Generate images and select the best one
-        logger.info("Step 1: Generating images and selecting the best candidate...")
+        logger.info(
+            "Step 1: Generating images and selecting the best candidate...",
+        )
         output_path, best_image_path, _ = generate_images_and_select_best(
             image_files,
             scenario,
@@ -78,7 +83,10 @@ def run_full_workflow(image_location: str, scenario: str):
 
         # 2. Generate video from the best image
         logger.info("Step 2: Generating video from the best image...")
-        video_path = generate_video_from_best_image(output_path, best_image_path)
+        video_path = generate_video_from_best_image(
+            output_path,
+            best_image_path,
+        )
 
         if video_path:
             logger.info(f"Successfully generated video: {video_path}")
@@ -88,7 +96,10 @@ def run_full_workflow(image_location: str, scenario: str):
             print("\nWorkflow failed during video generation.")
 
     except Exception as e:
-        logger.error(f"An error occurred during the workflow: {e}", exc_info=True)
+        logger.error(
+            f"An error occurred during the workflow: {e}",
+            exc_info=True,
+        )
         print(f"\nAn error occurred: {e}")
 
 
@@ -102,13 +113,17 @@ def run_extend_video_workflow(
     context image for character consistency.
     """
     try:
-        logger.info(f"Starting video extension workflow for scenario: '{scenario}'")
+        logger.info(
+            f"Starting video extension workflow for scenario: '{scenario}'",
+        )
         logger.info(f"Using video: {video_path}")
         logger.info(f"Using context image: {context_image_path}")
 
         # --- Input Validation ---
         if not os.path.isfile(video_path):
-            logger.error(f"The provided video path is not a valid file: {video_path}")
+            logger.error(
+                f"The provided video path is not a valid file: {video_path}",
+            )
             print(f"Error: Video not found at {video_path}")
             return
 
@@ -125,7 +140,9 @@ def run_extend_video_workflow(
             return
 
         # 1. Generate a new scene image based on video context and a character image
-        logger.info("Step 1: Generating a new scene image from video context...")
+        logger.info(
+            "Step 1: Generating a new scene image from video context...",
+        )
         (
             output_path,
             outpainted_image_path,
@@ -146,7 +163,9 @@ def run_extend_video_workflow(
         )
 
         # 2. Generate a final video from the newly created scene image
-        logger.info("Step 2: Generating final video from the new scene image...")
+        logger.info(
+            "Step 2: Generating final video from the new scene image...",
+        )
         final_video_path = generate_video_from_last_frame(
             output_path=output_video_path,
             last_frame_path=outpainted_image_path,
@@ -157,14 +176,19 @@ def run_extend_video_workflow(
         )
 
         if final_video_path:
-            logger.info(f"Successfully generated final video: {final_video_path}")
+            logger.info(
+                f"Successfully generated final video: {final_video_path}",
+            )
             print(f"\nWorkflow complete. 🎬 Video saved at: {final_video_path}")
         else:
             logger.error("Final video generation failed.")
             print("\nWorkflow failed during final video generation.")
 
     except Exception as e:
-        logger.error(f"An error occurred during the workflow: {e}", exc_info=True)
+        logger.error(
+            f"An error occurred during the workflow: {e}",
+            exc_info=True,
+        )
         print(f"\nAn unexpected error occurred: {e}")
 
 

@@ -19,6 +19,7 @@ import time
 from google import genai
 from google.genai import types
 
+
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = "us-central1"
 OUTPUT_GCS = os.getenv("OUTPUT_GCS", f"{PROJECT_ID}-assets")

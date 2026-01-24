@@ -16,10 +16,10 @@ import mesop as me
 
 from common.utils import create_display_url
 from components.library.events import LibrarySelectionChangeEvent
-from components.media_tile.media_tile import media_tile
 from components.library.infinite_scroll_chooser_button import (
     infinite_scroll_chooser_button,
 )
+from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 
 
@@ -60,7 +60,10 @@ def test_infinite_scroll_page():
                     gap=16,
                 ),
             ):
-                me.text("Test Infinite Scroll Library Chooser", type="headline-5")
+                me.text(
+                    "Test Infinite Scroll Library Chooser",
+                    type="headline-5",
+                )
 
                 me.divider()
 

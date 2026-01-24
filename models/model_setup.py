@@ -20,6 +20,7 @@ from google.cloud import aiplatform
 
 from config.default import Default
 
+
 load_dotenv(override=True)
 
 
@@ -59,10 +60,14 @@ class VtoModelSetup:
         else:
             api_regional_endpoint = f"{location}-aiplatform.googleapis.com"
         client_options = {"api_endpoint": api_regional_endpoint}
-        client = aiplatform.gapic.PredictionServiceClient(client_options=client_options)
+        client = aiplatform.gapic.PredictionServiceClient(
+            client_options=client_options,
+        )
         # model_endpoint = f"projects/{project_id}/locations/{location}/publishers/google/models/virtual-try-on-exp-05-31"
         model_endpoint = f"projects/{project_id}/locations/{location}/publishers/google/models/{model_id}"
-        print(f"Prediction client initiated on project {project_id} in {location}.")
+        print(
+            f"Prediction client initiated on project {project_id} in {location}.",
+        )
 
         return client, model_endpoint
 
@@ -118,7 +123,9 @@ class GeminiModelSetup:
         effective_location = location if location else config.LOCATION
 
         if not effective_project_id or not effective_location:
-            raise ValueError("Project ID and Location must be set for Gemini client.")
+            raise ValueError(
+                "Project ID and Location must be set for Gemini client.",
+            )
 
         print(
             f"Initiating Gemini client for project {effective_project_id} in {effective_location}",

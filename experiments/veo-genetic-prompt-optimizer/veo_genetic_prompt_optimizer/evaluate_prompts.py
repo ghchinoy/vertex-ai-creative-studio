@@ -21,6 +21,7 @@ from vertexai.preview.evaluation import (
     PointwiseMetric,
 )
 
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -123,7 +124,10 @@ def _get_autorater_response(
         if "score" in response_schema["properties"]:
             return {"score": 0.0, "explanation": f"API call failed: {e}"}
         if "pairwise_choice" in response_schema["properties"]:
-            return {"pairwise_choice": "ERROR", "explanation": f"API call failed: {e}"}
+            return {
+                "pairwise_choice": "ERROR",
+                "explanation": f"API call failed: {e}",
+            }
         return {}
 
 
@@ -147,7 +151,8 @@ def custom_metric_fn(
                 image_data = f.read()
                 prompt_parts.append(
                     genai.types.Part.from_bytes(
-                        data=image_data, mime_type="image/jpeg"
+                        data=image_data,
+                        mime_type="image/jpeg",
                     ),
                 )
         except (FileNotFoundError, Exception) as e:
@@ -155,7 +160,12 @@ def custom_metric_fn(
                 f"  - Warning: Could not read image at {image_path}: {e}. Evaluating without image.",
             )
 
-    result = _get_autorater_response(client, prompt_parts, metric_name, response_schema)
+    result = _get_autorater_response(
+        client,
+        prompt_parts,
+        metric_name,
+        response_schema,
+    )
 
     if "score" in result:
         return {
@@ -217,7 +227,9 @@ def evaluate_pointwise_single(
         )
         metric = CustomMetric(name=metric_name, metric_function=metric_function)
     else:
-        print("--- Text-only data detected. Using standard PointwiseMetric. ---")
+        print(
+            "--- Text-only data detected. Using standard PointwiseMetric. ---",
+        )
         metric = PointwiseMetric(
             metric=metric_name,
             metric_prompt_template=metric_template,
@@ -233,7 +245,10 @@ def evaluate_pointwise_single(
 
     metrics_df = result.metrics_table
     if not metrics_df.empty:
-        explanation = metrics_df.iloc[0].get(f"{metric_name}/explanation", "N/A")
+        explanation = metrics_df.iloc[0].get(
+            f"{metric_name}/explanation",
+            "N/A",
+        )
         score = metrics_df.iloc[0].get(f"{metric_name}/score")
         return score, explanation
     return None, "Evaluation failed to produce a result."
@@ -283,7 +298,9 @@ def evaluate_pointwise_batch(
         )
         metric = CustomMetric(name=metric_name, metric_function=metric_function)
     else:
-        print("--- Text-only data detected. Using standard PointwiseMetric. ---")
+        print(
+            "--- Text-only data detected. Using standard PointwiseMetric. ---",
+        )
         metric = PointwiseMetric(
             metric=metric_name,
             metric_prompt_template=metric_template,
@@ -329,7 +346,10 @@ def evaluate_pairwise_single(
         response_schema = {
             "type": "OBJECT",
             "properties": {
-                "pairwise_choice": {"type": "STRING", "enum": ["A", "B", "SAME"]},
+                "pairwise_choice": {
+                    "type": "STRING",
+                    "enum": ["A", "B", "SAME"],
+                },
                 "explanation": {"type": "STRING"},
             },
             "required": ["pairwise_choice", "explanation"],
@@ -363,7 +383,10 @@ def evaluate_pairwise_single(
 
     metrics_df = result.metrics_table
     if not metrics_df.empty:
-        explanation = metrics_df.iloc[0].get(f"{metric_name}/explanation", "N/A")
+        explanation = metrics_df.iloc[0].get(
+            f"{metric_name}/explanation",
+            "N/A",
+        )
         winner = metrics_df.iloc[0].get(f"{metric_name}/pairwise_choice")
         return winner, explanation
     return None, "Evaluation failed to produce a result."
@@ -395,7 +418,10 @@ def evaluate_pairwise_batch(
         response_schema = {
             "type": "OBJECT",
             "properties": {
-                "pairwise_choice": {"type": "STRING", "enum": ["A", "B", "SAME"]},
+                "pairwise_choice": {
+                    "type": "STRING",
+                    "enum": ["A", "B", "SAME"],
+                },
                 "explanation": {"type": "STRING"},
             },
             "required": ["pairwise_choice", "explanation"],
@@ -437,7 +463,9 @@ def main():
     """Runs a full test of all evaluation configurations."""
     try:
         vertexai.init(project=PROJECT_ID, location=AUTORATER_LOCATION)
-        print(f"Vertex AI initialized for project {PROJECT_ID} in {AUTORATER_LOCATION}")
+        print(
+            f"Vertex AI initialized for project {PROJECT_ID} in {AUTORATER_LOCATION}",
+        )
     except Exception as e:
         print(f"Error initializing Vertex AI: {e}")
         exit()
@@ -467,7 +495,10 @@ def main():
         veo_prompt_eval_templates.VEO_PROMPT_EFFECTIVENESS_TEMPLATE.replace(
             "{original_prompt}",
             "{prompt}",
-        ).replace("{augmented_prompt}", "This is the same as the original: {prompt}")
+        ).replace(
+            "{augmented_prompt}",
+            "This is the same as the original: {prompt}",
+        )
     )
     score, explanation = evaluate_pointwise_single(
         prompt_data={"prompt": "A bird flying."},

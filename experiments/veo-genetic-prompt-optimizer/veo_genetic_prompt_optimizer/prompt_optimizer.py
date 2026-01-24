@@ -17,6 +17,7 @@ import veo_prompt_eval_templates
 from dotenv import load_dotenv
 from google import genai
 
+
 load_dotenv()
 
 # --- Configuration ---
@@ -36,7 +37,11 @@ ENABLE_VIDEO_FEEDBACK = False
 def get_genai_client() -> genai.Client:
     """Initializes and returns a GenAI client."""
     try:
-        return genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
+        return genai.Client(
+            vertexai=True,
+            project=PROJECT_ID,
+            location=LOCATION,
+        )
     except Exception as e:
         print(f"Error initializing GenAI client: {e}")
         raise
@@ -86,10 +91,13 @@ def generate_with_gemini(
         try:
             with open(image_path, "rb") as image_file:
                 image_data = image_file.read()
-                parts.append(genai.types.Part.from_text(text="Image to animate:"))
+                parts.append(
+                    genai.types.Part.from_text(text="Image to animate:"),
+                )
                 parts.append(
                     genai.types.Part.from_bytes(
-                        data=image_data, mime_type="image/jpeg"
+                        data=image_data,
+                        mime_type="image/jpeg",
                     ),
                 )
         except FileNotFoundError:
@@ -202,7 +210,9 @@ def _get_video_paths(prompt_data: dict[str, Any]) -> tuple[str, str, str]:
     """Generates standardized video paths for original and augmented prompts."""
     video_pairs_dir = "video_pairs"
     if prompt_data.get("image_path"):
-        base_name = os.path.splitext(os.path.basename(prompt_data["image_path"]))[0]
+        base_name = os.path.splitext(
+            os.path.basename(prompt_data["image_path"]),
+        )[0]
     else:
         sanitized_name = "".join(
             c for c in prompt_data["prompt"] if c.isalnum() or c in " _-"
@@ -269,7 +279,9 @@ def get_metaprompt_fitness(
                 },
             )
         else:
-            print(f"  - Failed to generate augmented prompt for '{original_prompt}'")
+            print(
+                f"  - Failed to generate augmented prompt for '{original_prompt}'",
+            )
 
     # --- Step 3: Evaluate Augmented Prompts for Effectiveness and Intent Preservation ---
     avg_effectiveness_score = 0.0
@@ -307,12 +319,14 @@ def get_metaprompt_fitness(
         print(f"  - Avg Effectiveness Score: {avg_effectiveness_score:.3f}")
 
         print("  - Evaluating augmented prompts for intent preservation...")
-        intent_summary, intent_matrix = evaluate_prompts.evaluate_pointwise_batch(
-            prompts_data=augmented_prompts_data,
-            metric_name="intent_preservation",
-            metric_template=intent_template,
-            experiment="optimizer-intent-check",
-            sampling_count=1,
+        intent_summary, intent_matrix = (
+            evaluate_prompts.evaluate_pointwise_batch(
+                prompts_data=augmented_prompts_data,
+                metric_name="intent_preservation",
+                metric_template=intent_template,
+                experiment="optimizer-intent-check",
+                sampling_count=1,
+            )
         )
         avg_intent_score = intent_summary.get("intent_preservation/mean", 0.0)
         aggregated_intent_explanation = " | ".join(
@@ -337,7 +351,9 @@ def _get_selection_from_gemini(
     top_k: int,
 ) -> dict[str, Any]:
     """Uses Gemini to rank and select top metaprompts from a list of candidates with tied scores."""
-    print(f"  - Scores are tied. Using Gemini as a judge to select top {top_k}...")
+    print(
+        f"  - Scores are tied. Using Gemini as a judge to select top {top_k}...",
+    )
 
     selection_schema = {
         "type": "OBJECT",
@@ -460,7 +476,10 @@ def select_parents(
         )
 
     # Primary sort key is the new combined score
-    fitness_results.sort(key=lambda x: x.get("combined_score", 0.0), reverse=True)
+    fitness_results.sort(
+        key=lambda x: x.get("combined_score", 0.0),
+        reverse=True,
+    )
     print("\n--- Candidate Ranking (Combined Score) ---")
     for i, r in enumerate(fitness_results):
         print(
@@ -502,7 +521,11 @@ def select_parents(
             or r.get("combined_score", 0.0) > cutoff_score
         ]
 
-        selection = _get_selection_from_gemini(client, candidates_to_judge, top_k)
+        selection = _get_selection_from_gemini(
+            client,
+            candidates_to_judge,
+            top_k,
+        )
 
         metaprompt_map = {r["metaprompt"]: r for r in fitness_results}
 
@@ -510,14 +533,20 @@ def select_parents(
             p["metaprompt"] for p in selection.get("ranked_parents", [])
         ]
         parents = [
-            metaprompt_map[mp] for mp in ranked_metaprompts if mp in metaprompt_map
+            metaprompt_map[mp]
+            for mp in ranked_metaprompts
+            if mp in metaprompt_map
         ]
 
-        best_parent_metaprompt = selection.get("best_parent", {}).get("metaprompt")
+        best_parent_metaprompt = selection.get("best_parent", {}).get(
+            "metaprompt",
+        )
         best_parent = metaprompt_map.get(best_parent_metaprompt)
 
         if best_parent:
-            best_parent["judgement"] = selection.get("best_parent", {}).get("reasoning")
+            best_parent["judgement"] = selection.get("best_parent", {}).get(
+                "reasoning",
+            )
         else:
             best_parent = parents[0] if parents else {}
     else:
@@ -536,7 +565,9 @@ def main():
         with open("original_prompts.json") as f:
             original_prompts_data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"Error loading or parsing 'original_prompts.json': {e}. Exiting.")
+        print(
+            f"Error loading or parsing 'original_prompts.json': {e}. Exiting.",
+        )
         return
 
     base_prompts = [
@@ -600,7 +631,9 @@ def main():
             break
 
         print(f"\n--- Top Metaprompt of Generation {gen + 1} ---")
-        print(f"  Combined Score: {best_parent.get('combined_score', 'N/A'):.3f}")
+        print(
+            f"  Combined Score: {best_parent.get('combined_score', 'N/A'):.3f}",
+        )
         print(
             f"  (Breakdown: Aug: {best_parent.get('augmented_prompt_score', 'N/A'):.2f}, "
             f"Meta: {best_parent.get('metaprompt_score', 'N/A'):.2f}, "
@@ -628,7 +661,8 @@ def main():
                         (
                             item
                             for item in best_parent_augmented_prompts
-                            if item["original_prompt"] == original_prompt_data["prompt"]
+                            if item["original_prompt"]
+                            == original_prompt_data["prompt"]
                         ),
                         None,
                     )
@@ -655,9 +689,13 @@ def main():
                         video_generation_tasks.append(
                             {
                                 "type": "augmented",
-                                "prompt": augmented_prompt_item["augmented_prompt"],
+                                "prompt": augmented_prompt_item[
+                                    "augmented_prompt"
+                                ],
                                 "output_path": augmented_video_path,
-                                "image_path": original_prompt_data.get("image_path"),
+                                "image_path": original_prompt_data.get(
+                                    "image_path",
+                                ),
                             },
                         )
                         video_pairs_for_evaluation.append(
@@ -665,7 +703,9 @@ def main():
                                 "prompt": original_prompt_data["prompt"],
                                 "video_a": original_video_path,
                                 "video_b": augmented_video_path,
-                                "image_path": original_prompt_data.get("image_path"),
+                                "image_path": original_prompt_data.get(
+                                    "image_path",
+                                ),
                             },
                         )
                     else:
@@ -693,7 +733,9 @@ def main():
                             try:
                                 success = future.result()
                                 if not success:
-                                    print("    - A video generation task failed.")
+                                    print(
+                                        "    - A video generation task failed.",
+                                    )
                             except Exception as exc:
                                 print(
                                     f"    - Video generation task generated an exception: {exc}",
@@ -745,7 +787,9 @@ def main():
                                 )
 
                     if all_video_explanations:
-                        video_evaluation_feedback = "\n".join(all_video_explanations)
+                        video_evaluation_feedback = "\n".join(
+                            all_video_explanations,
+                        )
                     else:
                         video_evaluation_feedback = (
                             "No successful video evaluations for best parent."
@@ -812,11 +856,14 @@ def main():
                     {
                         "metaprompt": mutated
                         if mutated
-                        else parent_to_mutate["metaprompt"] + " (mutation failed)",
+                        else parent_to_mutate["metaprompt"]
+                        + " (mutation failed)",
                         "provenance": {
                             "type": "mutation",
                             "parent_metaprompt": parent_to_mutate["metaprompt"],
-                            "parent_score": parent_to_mutate.get("combined_score"),
+                            "parent_score": parent_to_mutate.get(
+                                "combined_score",
+                            ),
                         },
                     },
                 )
@@ -866,11 +913,14 @@ def main():
                     {
                         "metaprompt": mutated
                         if mutated
-                        else parent_to_mutate["metaprompt"] + " (mutation failed)",
+                        else parent_to_mutate["metaprompt"]
+                        + " (mutation failed)",
                         "provenance": {
                             "type": "mutation",
                             "parent_metaprompt": parent_to_mutate["metaprompt"],
-                            "parent_score": parent_to_mutate.get("combined_score"),
+                            "parent_score": parent_to_mutate.get(
+                                "combined_score",
+                            ),
                         },
                     },
                 )

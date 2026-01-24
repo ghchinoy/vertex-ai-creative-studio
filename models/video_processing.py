@@ -28,10 +28,14 @@ from common.metadata import MediaItem, add_media_item_to_firestore
 from common.storage import download_from_gcs, store_to_gcs
 from config.default import Default
 
+
 config = Default()
 
 
-def _download_videos_to_temp(video_gcs_uris: list[str], tmpdir: str) -> list[str]:
+def _download_videos_to_temp(
+    video_gcs_uris: list[str],
+    tmpdir: str,
+) -> list[str]:
     """Downloads videos from GCS to a temporary directory."""
     local_video_paths = []
     for i, gcs_uri in enumerate(video_gcs_uris):
@@ -46,7 +50,11 @@ def _download_videos_to_temp(video_gcs_uris: list[str], tmpdir: str) -> list[str
     return local_video_paths
 
 
-def _upload_to_gcs(local_path: str, destination_folder: str, mime_type: str) -> str:
+def _upload_to_gcs(
+    local_path: str,
+    destination_folder: str,
+    mime_type: str,
+) -> str:
     """Uploads a local file to GCS."""
     with open(local_path, "rb") as f:
         file_bytes = f.read()
@@ -72,6 +80,7 @@ def _upload_to_gcs(local_path: str, destination_folder: str, mime_type: str) -> 
 import datetime
 
 import moviepy
+
 
 print(
     f"DEBUG: Loading video_processing.py at {datetime.datetime.now()}. Moviepy version: {moviepy.__version__}",
@@ -124,7 +133,9 @@ def crossfade(clip1, clip2, transition_duration, speed_curve="sigmoid"):
 
     if clip1.audio and clip2.audio:
         print("DEBUG: Applying audio crossfade")
-        audio1 = clip1.audio.with_effects([afx.AudioFadeOut(transition_duration)])
+        audio1 = clip1.audio.with_effects(
+            [afx.AudioFadeOut(transition_duration)],
+        )
         audio2 = clip2.audio.with_effects(
             [afx.AudioFadeIn(transition_duration)],
         ).with_start(clip1.duration - transition_duration)
@@ -167,7 +178,11 @@ def wipe(clip1, clip2, transition_duration, direction="left-to-right"):
             return mask
         return np.zeros((height, width), dtype=np.float32)
 
-    mask_clip = VideoClip(make_mask_frame, duration=total_duration, is_mask=True)
+    mask_clip = VideoClip(
+        make_mask_frame,
+        duration=total_duration,
+        is_mask=True,
+    )
     clip1_masked = clip1.with_mask(mask_clip)
 
     final_clip = CompositeVideoClip([clip2, clip1_masked], size=(width, height))
@@ -175,7 +190,9 @@ def wipe(clip1, clip2, transition_duration, direction="left-to-right"):
     final_clip.fps = clip1.fps
 
     if clip1.audio and clip2.audio:
-        audio1 = clip1.audio.with_effects([afx.AudioFadeOut(transition_duration)])
+        audio1 = clip1.audio.with_effects(
+            [afx.AudioFadeOut(transition_duration)],
+        )
         audio2 = clip2.audio.with_effects(
             [afx.AudioFadeIn(transition_duration)],
         ).with_start(clip1.duration - transition_duration)
@@ -203,7 +220,9 @@ def dipToBlack(clip1, clip2, transition_duration, **kwargs):
 
     if clip1.audio and clip2.audio:
         audio1 = clip1.audio.with_effects([afx.AudioFadeOut(fade_duration)])
-        audio2 = clip2.audio.with_effects([afx.AudioFadeIn(fade_duration)]).with_start(
+        audio2 = clip2.audio.with_effects(
+            [afx.AudioFadeIn(fade_duration)],
+        ).with_start(
             clip1.duration - fade_duration,
         )
         final_audio = CompositeAudioClip([audio1, audio2])
@@ -352,7 +371,11 @@ def process_videos(
         final_clip_path = os.path.join(tmpdir, output_filename)
         final_clip.write_videofile(final_clip_path, codec="libx264")
 
-        final_gcs_uri = _upload_to_gcs(final_clip_path, "processed_videos", "video/mp4")
+        final_gcs_uri = _upload_to_gcs(
+            final_clip_path,
+            "processed_videos",
+            "video/mp4",
+        )
 
         for clip in clips:
             clip.close()
@@ -383,10 +406,18 @@ def layer_audio_on_video(video_gcs_uri: str, audio_gcs_uri: str) -> str:
         # Write the output file
         output_filename = f"audio_layered_{uuid.uuid4()}.mp4"
         final_clip_path = os.path.join(tmpdir, output_filename)
-        video_clip.write_videofile(final_clip_path, codec="libx264", audio_codec="aac")
+        video_clip.write_videofile(
+            final_clip_path,
+            codec="libx264",
+            audio_codec="aac",
+        )
 
         # Upload to GCS
-        final_gcs_uri = _upload_to_gcs(final_clip_path, "processed_videos", "video/mp4")
+        final_gcs_uri = _upload_to_gcs(
+            final_clip_path,
+            "processed_videos",
+            "video/mp4",
+        )
 
         # Clean up
         video_clip.close()
@@ -428,7 +459,9 @@ def get_video_duration(gcs_uri: str) -> float:
                 duration = clip.duration
             return duration
         except Exception as e:
-            logging.exception(f"Failed to get video duration for {gcs_uri}: {e}")
+            logging.exception(
+                f"Failed to get video duration for {gcs_uri}: {e}",
+            )
             return 0.0
 
 
@@ -443,9 +476,7 @@ def convert_mp4_to_gif(
     with tempfile.TemporaryDirectory() as tmpdir:
         local_path = _download_videos_to_temp([source_video_gcs_uri], tmpdir)[0]
 
-        output_filename = (
-            f"{os.path.splitext(os.path.basename(local_path))[0]}{uuid.uuid4()}.gif"
-        )
+        output_filename = f"{os.path.splitext(os.path.basename(local_path))[0]}{uuid.uuid4()}.gif"
         output_path = os.path.join(tmpdir, output_filename)
 
         clip = VideoFileClip(local_path)
@@ -467,7 +498,10 @@ def convert_mp4_to_gif(
         # bytes_per_pixel_heuristic = base_heuristic + motion_factor * 0.2 # Motion adjusts heuristic by up to 0.2
 
         # Let's map the motion score (e.g., 0-50) to a more aggressive heuristic range (e.g., 0.6 - 1.4)
-        normalized_motion = min(motion_score / 50.0, 1.0)  # Normalize score, cap at 1.0
+        normalized_motion = min(
+            motion_score / 50.0,
+            1.0,
+        )  # Normalize score, cap at 1.0
         bytes_per_pixel_heuristic = 0.6 + (
             normalized_motion * 0.8
         )  # Map to 0.6-1.4 range
@@ -488,7 +522,9 @@ def convert_mp4_to_gif(
         )
 
         # Iteratively reduce quality if estimate is too high
-        while estimated_size > TARGET_SIZE_BYTES and (resize_factor > 0.2 or fps > 8):
+        while estimated_size > TARGET_SIZE_BYTES and (
+            resize_factor > 0.2 or fps > 8
+        ):
             if resize_factor > 0.3:
                 resize_factor -= 0.1
             elif fps > 8:
@@ -509,9 +545,7 @@ def convert_mp4_to_gif(
                 f"Adjusting parameters. New resize_factor: {resize_factor:.2f}, New fps: {fps}, Estimated Size: {estimated_size / 1024 / 1024:.2f} MB",
             )
 
-        final_params_comment = (
-            f"GIF generation params: resize_factor={resize_factor:.2f}, fps={fps}"
-        )
+        final_params_comment = f"GIF generation params: resize_factor={resize_factor:.2f}, fps={fps}"
         logging.info(f"FINAL PARAMS: {final_params_comment}")
 
         final_clip = clip.resized(resize_factor)

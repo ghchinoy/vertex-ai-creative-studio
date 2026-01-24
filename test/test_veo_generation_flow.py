@@ -3,7 +3,11 @@ import os
 import sys
 from unittest.mock import MagicMock, patch
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+sys.path.insert(
+    0,
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+)
 
 from common.metadata import MediaItem
 from pages.veo import on_click_veo
@@ -12,7 +16,10 @@ from state.veo_state import PageState
 
 
 @patch("pages.veo.add_media_item_to_firestore")
-@patch("pages.veo.generate_video", return_value="gs://fake-bucket/fake_video.mp4")
+@patch(
+    "pages.veo.generate_video",
+    return_value="gs://fake-bucket/fake_video.mp4",
+)
 @patch("mesop.state")
 def test_veo_generation_flow_and_metadata(
     mock_state,
@@ -59,6 +66,8 @@ def test_veo_generation_flow_and_metadata(
     assert media_item_logged.user_email == "test_user@example.com"
     assert media_item_logged.prompt == "a test prompt for veo"
     assert media_item_logged.gcsuri == "gs://fake-bucket/fake_video.mp4"
-    assert media_item_logged.model == "veo-2.0-generate-001"  # This comes from config
+    assert (
+        media_item_logged.model == "veo-2.0-generate-001"
+    )  # This comes from config
 
     print("\nComponent-level integration test for VEO passed successfully.")

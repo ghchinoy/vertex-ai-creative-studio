@@ -30,11 +30,16 @@ from components.snackbar import snackbar
 from models.upscale import UPSCALE_MODEL, get_image_resolution, upscale_image
 from state.state import AppState
 
+
 IMAGE_BOX_STYLE = me.Style(
     width=512,
     height=512,
     border=me.Border.all(
-        me.BorderSide(width=2, style="dashed", color=me.theme_var("outline-variant")),
+        me.BorderSide(
+            width=2,
+            style="dashed",
+            color=me.theme_var("outline-variant"),
+        ),
     ),
     border_radius=12,
     display="flex",
@@ -254,13 +259,18 @@ def page():
                         )
 
                     with me.box(
-                        style=me.Style(flex_direction="row", display="flex", gap=8),
+                        style=me.Style(
+                            flex_direction="row",
+                            display="flex",
+                            gap=8,
+                        ),
                     ):
                         me.button(
                             "Upscale",
                             on_click=on_upscale,
                             type="raised",
-                            disabled=state.is_loading or not state.input_image_gcs,
+                            disabled=state.is_loading
+                            or not state.input_image_gcs,
                             style=me.Style(width="100%"),
                         )
 
@@ -309,4 +319,7 @@ def page():
                             pill_type="resolution",
                         )
 
-            snackbar(is_visible=state.show_snackbar, label=state.snackbar_message)
+            snackbar(
+                is_visible=state.show_snackbar,
+                label=state.snackbar_message,
+            )

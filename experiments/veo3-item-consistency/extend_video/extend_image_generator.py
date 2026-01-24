@@ -25,6 +25,7 @@ import config
 
 from .extract_frame import extract_last_frames, save_frames_to_temp
 
+
 # Initialize clients
 client = genai.Client(
     vertexai=True,
@@ -83,7 +84,10 @@ def _get_description_for_image(image_path: str) -> str:
     return description_response.text.strip()
 
 
-def _select_best_scene_frame(scene_descriptions: list[str], user_prompt: str) -> int:
+def _select_best_scene_frame(
+    scene_descriptions: list[str],
+    user_prompt: str,
+) -> int:
     """Uses Gemini to analyze a list of frame descriptions and select the best one
     to serve as a starting point for the user's desired next scene.
     """

@@ -35,7 +35,11 @@ from components.header import header
 from components.media_tile.media_tile import media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.scroll_sentinel.scroll_sentinel import scroll_sentinel
-from models.gemini import describe_image, describe_video, evaluate_media_with_questions
+from models.gemini import (
+    describe_image,
+    describe_video,
+    evaluate_media_with_questions,
+)
 from models.guideline_analysis import generate_guideline_criteria
 from state.state import AppState
 
@@ -163,7 +167,9 @@ def on_evaluate_criteria_click(e: me.ClickEvent):
             score_str = f"{yes_answers}/{len(questions)}"
             evaluation_dict = {
                 "score": score_str,
-                "details": [ans.model_dump() for ans in evaluation_result.answers],
+                "details": [
+                    ans.model_dump() for ans in evaluation_result.answers
+                ],
             }
             new_evaluations[category] = json.dumps(evaluation_dict)
         state.evaluations = new_evaluations
@@ -210,7 +216,11 @@ def page_content():
         with me.box(style=me.Style(flex_grow=1)):
             if item:
                 with me.box(
-                    style=me.Style(display="flex", flex_direction="row", gap=16),
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        gap=16,
+                    ),
                 ):
                     with me.box(style=me.Style(width="50%")):
                         display_url = create_display_url(
@@ -220,13 +230,19 @@ def page_content():
                         if display_url:
                             mime_type = item.mime_type or ""
                             render_type = (
-                                "video" if mime_type.startswith("video/") else "image"
+                                "video"
+                                if mime_type.startswith("video/")
+                                else "image"
                             )
-                            with me.box(style=me.Style(width="100%", height=400)):
+                            with me.box(
+                                style=me.Style(width="100%", height=400),
+                            ):
                                 media_tile(
                                     media_type=render_type,
                                     https_url=display_url,
-                                    controls=True if render_type == "video" else False,
+                                    controls=True
+                                    if render_type == "video"
+                                    else False,
                                     object_fit="contain",
                                 )
                         else:
@@ -237,7 +253,9 @@ def page_content():
                         if item.prompt:
                             me.text(item.prompt)
                         else:
-                            me.text("No prompt available. You can generate one below.")
+                            me.text(
+                                "No prompt available. You can generate one below.",
+                            )
                         me.button(
                             "Describe this item",
                             on_click=on_describe_item_click,
@@ -248,7 +266,10 @@ def page_content():
                             label="Additional Brand Guidelines",
                             on_blur=on_additional_guidance_blur,
                             value=state.additional_guidance,
-                            style=me.Style(width="100%", margin=me.Margin(top=16)),
+                            style=me.Style(
+                                width="100%",
+                                margin=me.Margin(top=16),
+                            ),
                         )
 
                 with me.box(style=me.Style(margin=me.Margin(top=16))):
@@ -298,9 +319,14 @@ def page_content():
                         )
 
                     if state.evaluations:
-                        for category, evaluation_json in state.evaluations.items():
+                        for (
+                            category,
+                            evaluation_json,
+                        ) in state.evaluations.items():
                             evaluation = json.loads(evaluation_json)
-                            with me.box(style=me.Style(margin=me.Margin(top=16))):
+                            with me.box(
+                                style=me.Style(margin=me.Margin(top=16)),
+                            ):
                                 with me.expansion_panel(
                                     title=f"{category} Score: {evaluation['score']}",
                                     icon="rule",
@@ -319,14 +345,18 @@ def page_content():
                                                 me.icon(
                                                     "check_circle",
                                                     style=me.Style(
-                                                        color=me.theme_var("success"),
+                                                        color=me.theme_var(
+                                                            "success",
+                                                        ),
                                                     ),
                                                 )
                                             else:
                                                 me.icon(
                                                     "cancel",
                                                     style=me.Style(
-                                                        color=me.theme_var("error"),
+                                                        color=me.theme_var(
+                                                            "error",
+                                                        ),
                                                     ),
                                                 )
                                             me.text(detail["question"])
@@ -365,7 +395,11 @@ def _uploader_placeholder(on_library_select: Callable):
             height=100,
             width=100,
             border=me.Border.all(
-                me.BorderSide(width=1, style="dashed", color=me.theme_var("outline")),
+                me.BorderSide(
+                    width=1,
+                    style="dashed",
+                    color=me.theme_var("outline"),
+                ),
             ),
             border_radius=8,
             display="flex",
@@ -452,7 +486,9 @@ def render_chooser_dialog():
         )
 
         for item in new_items:
-            gcs_uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
+            gcs_uri = item.gcsuri or (
+                item.gcs_uris[0] if item.gcs_uris else None
+            )
             item.signed_url = create_display_url(gcs_uri) if gcs_uri else ""
 
         state.chooser_media_items.extend(new_items)
@@ -486,10 +522,17 @@ def render_chooser_dialog():
                         width="100%",
                     ),
                 ):
-                    me.text("Select a Media Asset from Library", type="headline-6")
+                    me.text(
+                        "Select a Media Asset from Library",
+                        type="headline-6",
+                    )
                     with me.content_button(
                         type="icon",
-                        on_click=lambda e: setattr(state, "show_chooser_dialog", False),
+                        on_click=lambda e: setattr(
+                            state,
+                            "show_chooser_dialog",
+                            False,
+                        ),
                     ):
                         me.icon("close")
 
@@ -500,7 +543,10 @@ def render_chooser_dialog():
                         padding=me.Padding.all(10),
                     ),
                 ):
-                    if state.chooser_is_loading and not state.chooser_media_items:
+                    if (
+                        state.chooser_is_loading
+                        and not state.chooser_media_items
+                    ):
                         me.progress_spinner()
                     else:
                         with me.box(
@@ -524,9 +570,15 @@ def render_chooser_dialog():
                                     elif item.mime_type.startswith("audio/"):
                                         render_type = "audio"
                                 elif https_url:
-                                    if ".mp4" in https_url or ".webm" in https_url:
+                                    if (
+                                        ".mp4" in https_url
+                                        or ".webm" in https_url
+                                    ):
                                         render_type = "video"
-                                    elif ".wav" in https_url or ".mp3" in https_url:
+                                    elif (
+                                        ".wav" in https_url
+                                        or ".mp3" in https_url
+                                    ):
                                         render_type = "audio"
 
                                 media_tile(

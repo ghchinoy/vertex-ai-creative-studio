@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types as genai_types
 
+
 load_dotenv()
 
 PROJECT_ID = os.getenv("PROJECT_ID")
@@ -32,7 +33,11 @@ FLIP_ENABLED = True
 def get_genai_client() -> genai.Client:
     """Initializes and returns a GenAI client."""
     try:
-        return genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
+        return genai.Client(
+            vertexai=True,
+            project=PROJECT_ID,
+            location=LOCATION,
+        )
     except Exception as e:
         print(f"Error initializing GenAI client: {e}")
         raise
@@ -131,7 +136,11 @@ def evaluate_single_video(
         return json.loads(response.text)
     except Exception as e:
         print(f"API call error for eval_id {eval_id}: {e}")
-        return {"error": str(e), "score": 0, "reasoning": f"API call failed: {e}"}
+        return {
+            "error": str(e),
+            "score": 0,
+            "reasoning": f"API call failed: {e}",
+        }
 
 
 # --- Pairwise Functions ---
@@ -159,7 +168,11 @@ def compare_two_videos(
                 mime_type="video/mp4",
             )
     except FileNotFoundError as e:
-        return {"error": str(e), "better_video": "ERROR", "reasoning": "File not found"}
+        return {
+            "error": str(e),
+            "better_video": "ERROR",
+            "reasoning": "File not found",
+        }
 
     image_part = None
     if image_path:
@@ -247,7 +260,10 @@ def process_video_pair(
 ) -> dict[str, Any]:
     """Manages multiple evaluation runs for a single pair of videos."""
     if not os.path.exists(video_a_path) or not os.path.exists(video_b_path):
-        return {"status": "skipped", "reason": "One or both video files not found."}
+        return {
+            "status": "skipped",
+            "reason": "One or both video files not found.",
+        }
 
     all_votes = []
     all_comparison_results = []
@@ -315,7 +331,9 @@ def print_summary(results: list[dict[str, Any]], processing_time: float):
         if result["eval_results"]["status"] == "success":
             print("  Status: Success")
             print(f"  Vote Counts: {result['eval_results']['vote_counts']}")
-            print(f"  Total Valid Evals: {result['eval_results']['total_evals']}")
+            print(
+                f"  Total Valid Evals: {result['eval_results']['total_evals']}",
+            )
         else:
             print(f"  Status: {result['eval_results']['status']}")
             print(f"  Reason: {result['eval_results']['reason']}")
@@ -347,14 +365,18 @@ def main():
                 sanitized_name = "".join(
                     c for c in original_prompt if c.isalnum() or c in " _-"
                 ).rstrip()
-                base_name = f"text_{sanitized_name.replace(' ', '_').lower()[:30]}"
+                base_name = (
+                    f"text_{sanitized_name.replace(' ', '_').lower()[:30]}"
+                )
 
             pair_dir = os.path.join(video_pairs_dir, base_name)
 
             original_video = os.path.join(pair_dir, "original.mp4")
             augmented_video = os.path.join(pair_dir, "augmented.mp4")
 
-            if os.path.exists(original_video) and os.path.exists(augmented_video):
+            if os.path.exists(original_video) and os.path.exists(
+                augmented_video,
+            ):
                 video_pairs_to_compare.append(
                     {
                         "prompt": original_prompt,
@@ -365,7 +387,9 @@ def main():
                 )
 
     if not video_pairs_to_compare:
-        print("No valid video pairs found in the 'video_pairs' directory. Exiting.")
+        print(
+            "No valid video pairs found in the 'video_pairs' directory. Exiting.",
+        )
         return
 
     # --- Run Pairwise Evaluations ---
@@ -400,7 +424,10 @@ def main():
                     f"Pair for prompt '{pair['prompt']}' generated an exception: {exc}",
                 )
                 pairwise_results.append(
-                    {**pair, "eval_results": {"status": "error", "reason": str(exc)}},
+                    {
+                        **pair,
+                        "eval_results": {"status": "error", "reason": str(exc)},
+                    },
                 )
 
     print_summary(

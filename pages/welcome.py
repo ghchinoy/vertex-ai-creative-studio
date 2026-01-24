@@ -70,7 +70,13 @@ def page():
 
     # Wrap auth_handler in a high z-index box so it stays on top of the fixed hero
     with me.box(
-        style=me.Style(position="fixed", top=0, right=0, z_index=1000, width="100%"),
+        style=me.Style(
+            position="fixed",
+            top=0,
+            right=0,
+            z_index=1000,
+            width="100%",
+        ),
     ):
         # Need auth_handler to handle the login event
         firebase_config = {

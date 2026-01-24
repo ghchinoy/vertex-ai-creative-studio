@@ -33,6 +33,7 @@ from models.shop_the_look_models import (
 from state.shop_the_look_state import PageState
 from state.state import AppState
 
+
 config = Default()
 db = FirebaseClient(database_id=config.GENMEDIA_FIREBASE_DB).get_client()
 
@@ -43,7 +44,9 @@ def model_on_delete(e: me.ClickEvent):
     print(f"deleting {file_to_delete}")
     state.current_status = f"Deleting model {file_to_delete}"
     try:
-        doc_ref = db.collection(config.GENMEDIA_VTO_MODEL_COLLECTION_NAME).document(
+        doc_ref = db.collection(
+            config.GENMEDIA_VTO_MODEL_COLLECTION_NAME,
+        ).document(
             file_to_delete,
         )
 
@@ -61,7 +64,9 @@ def article_on_delete(e: me.ClickEvent):
     print(f"deleting {file_to_delete}")
     state.current_status = f"Deleting article {file_to_delete}"
     try:
-        doc_ref = db.collection(config.GENMEDIA_VTO_CATALOG_COLLECTION_NAME).document(
+        doc_ref = db.collection(
+            config.GENMEDIA_VTO_CATALOG_COLLECTION_NAME,
+        ).document(
             file_to_delete,
         )
         doc_ref.delete()
@@ -137,7 +142,9 @@ def on_click_upload_models(e: me.UploadEvent):
     for row in cf:
         try:
             # TODO mapping object instead of row[]
-            doc_ref = db.collection(config.GENMEDIA_VTO_MODEL_COLLECTION_NAME).document(
+            doc_ref = db.collection(
+                config.GENMEDIA_VTO_MODEL_COLLECTION_NAME,
+            ).document(
                 f"{row[1]}_{row[4]}",
             )
             doc_ref.set(
@@ -228,7 +235,11 @@ def load_model_data(limit: int = 50):
         app_state = me.state(AppState)
         media_ref = db.collection(config.GENMEDIA_VTO_MODEL_COLLECTION_NAME)
 
-        query = media_ref.where("upload_user", "in", ["everyone", app_state.user_email])
+        query = media_ref.where(
+            "upload_user",
+            "in",
+            ["everyone", app_state.user_email],
+        )
 
         models = []
         for doc in query.stream():
@@ -244,7 +255,11 @@ def load_article_data(limit: int = 50):
     state = me.state(PageState)
     app_state = me.state(AppState)
     media_ref = db.collection(config.GENMEDIA_VTO_CATALOG_COLLECTION_NAME)
-    query = media_ref.where("upload_user", "in", ["everyone", app_state.user_email])
+    query = media_ref.where(
+        "upload_user",
+        "in",
+        ["everyone", app_state.user_email],
+    )
 
     articles = []
     for doc in query.stream():
@@ -258,7 +273,9 @@ def load_article_data(limit: int = 50):
 
 def load_look_data(limit: int = 50):
     state = me.state(PageState)
-    media_ref = db.collection(config.GENMEDIA_VTO_CATALOG_COLLECTION_NAME).order_by(
+    media_ref = db.collection(
+        config.GENMEDIA_VTO_CATALOG_COLLECTION_NAME,
+    ).order_by(
         "look_id",
         direction=firestore.Query.ASCENDING,
     )
@@ -266,13 +283,16 @@ def load_look_data(limit: int = 50):
     for doc in media_ref.stream():
         catalog_data = doc.to_dict()
         record = CatalogRecord(**catalog_data)
-        record.clothing_image = (f"gs://{config.GENMEDIA_BUCKET}/{record.item_id}",)
+        record.clothing_image = (
+            f"gs://{config.GENMEDIA_BUCKET}/{record.item_id}",
+        )
         looks.append(record)
 
     looks.sort(key=lambda item: (item.look_id, item.try_on_order))
     looks = list(
         filter(
-            lambda look: look.article_type not in ("sunglasses", "watch", "hat"),
+            lambda look: look.article_type
+            not in ("sunglasses", "watch", "hat"),
             looks,
         ),
     )

@@ -25,6 +25,7 @@ from utils.logger import LogLevel, log
 
 from config.default import Default
 
+
 config = Default()
 
 
@@ -35,8 +36,12 @@ class ArenaModelEvaluation:
     model_name: str = field(default=None)  # Default model name if not provided
     study: str = field(default=None)  # Default study name if not provided
     time_of_rating: datetime | None = field(default=None)  # Time of rating
-    rating: float = field(default=1000.0)  # Default rating is 1000.0 if not provided
-    id: str = field(default_factory=lambda: "")  # Unique identifier for the study run
+    rating: float = field(
+        default=1000.0,
+    )  # Default rating is 1000.0 if not provided
+    id: str = field(
+        default_factory=lambda: "",
+    )  # Unique identifier for the study run
 
     def __post_init__(self):
         if not isinstance(self.model_name, str) or not self.model_name:
@@ -74,7 +79,9 @@ class ArenaStudyTracker:
             cls._instance.spanner_instance_id = spanner_instance_id
             cls._instance.spanner_database_id = spanner_database_id
             cls._instance.client = spanner.Client(project=project_id)
-            cls._instance.instance = cls._instance.client.instance(spanner_instance_id)
+            cls._instance.instance = cls._instance.client.instance(
+                spanner_instance_id,
+            )
             cls._instance.database = cls._instance.instance.database(
                 spanner_database_id,
             )
@@ -83,7 +90,9 @@ class ArenaStudyTracker:
 
     def _generate_unique_id(self, number_characters: int = 8) -> str:
         """Generate a unique ID of a specified length."""
-        characters = string.ascii_uppercase + string.ascii_lowercase + string.digits
+        characters = (
+            string.ascii_uppercase + string.ascii_lowercase + string.digits
+        )
         unique_id = "".join(
             secrets.choice(characters) for _ in range(number_characters)
         )
@@ -130,10 +139,14 @@ class ArenaStudyTracker:
         try:
             with self.database.batch() as batch:
                 if inserts:
-                    log(f"Inserting {len(inserts)} new study runs into the database.")
+                    log(
+                        f"Inserting {len(inserts)} new study runs into the database.",
+                    )
                     batch.insert(table_name, columns=columns, values=inserts)
                 if updates:
-                    log(f"Updating {len(updates)} existing study runs in the database.")
+                    log(
+                        f"Updating {len(updates)} existing study runs in the database.",
+                    )
                     batch.update(table_name, columns=columns, values=updates)
             log(
                 f"{len(study_runs)} study runs added/updated successfully in the database.",
@@ -154,12 +167,17 @@ class ArenaStudyTracker:
             self._instance.client = None
             log("Database connection closed.")
         else:
-            log("Client was already closed or not initialized.", LogLevel.WARNING)
+            log(
+                "Client was already closed or not initialized.",
+                LogLevel.WARNING,
+            )
 
     def __del__(self):
         """Destructor to ensure the Spanner client is closed when the object is deleted."""
         self.close()
-        log("ArenaStudyTracker instance deleted and database connection closed.")
+        log(
+            "ArenaStudyTracker instance deleted and database connection closed.",
+        )
 
     def __enter__(self):
         """Enter the runtime context for the ArenaStudyTracker."""

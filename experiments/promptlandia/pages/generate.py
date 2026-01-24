@@ -166,7 +166,10 @@ def gemini_prompt_input():
         ):
             with me.content_button(type="icon", on_click=on_click_clear_prompt):
                 me.icon("clear")
-            with me.content_button(type="icon", on_click=on_click_generate_content):
+            with me.content_button(
+                type="icon",
+                on_click=on_click_generate_content,
+            ):
                 me.icon("send")
 
 
@@ -199,7 +202,10 @@ def on_click_generate_content(e: me.ClickEvent):  # pylint: disable=unused-argum
     page_state.processing = True
     yield
     print(f"using prompt: {page_state.prompt_input}")
-    page_state.prompt_response = gemini_generate_content("", page_state.prompt_input)
+    page_state.prompt_response = gemini_generate_content(
+        "",
+        page_state.prompt_input,
+    )
     page_state.processing = False
     yield
 

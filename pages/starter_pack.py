@@ -28,6 +28,7 @@ from config.default import Default
 from state.starter_pack_state import StarterPackState
 from state.state import AppState
 
+
 cfg = Default()
 
 from common.utils import create_display_url
@@ -56,17 +57,25 @@ def page():
                         Tab(
                             label="Look to Starter Pack",
                             content=look_to_starter_pack_content,
-                            selected=me.state(StarterPackState).selected_tab_index == 0,
+                            selected=me.state(
+                                StarterPackState,
+                            ).selected_tab_index
+                            == 0,
                         ),
                         Tab(
                             label="Starter Pack to Look",
                             content=starter_pack_to_look_content,
-                            selected=me.state(StarterPackState).selected_tab_index == 1,
+                            selected=me.state(
+                                StarterPackState,
+                            ).selected_tab_index
+                            == 1,
                         ),
                     ]
                     tab_group(tabs, on_tab_click=on_tab_click)
 
-                with me.box(style=me.Style(display="flex", flex_direction="column")):
+                with me.box(
+                    style=me.Style(display="flex", flex_direction="column"),
+                ):
                     # me.text("Outputs", type="headline-5")
                     if me.state(StarterPackState).selected_tab_index == 0:
                         with me.box(style=me.Style(margin=me.Margin(top=16))):
@@ -106,7 +115,9 @@ def page():
                                     me.text("Output will appear here")
                             if (
                                 me.state(StarterPackState).look_image_uri
-                                or me.state(StarterPackState).generated_starter_pack_uri
+                                or me.state(
+                                    StarterPackState,
+                                ).generated_starter_pack_uri
                             ):
                                 with me.box(
                                     style=me.Style(
@@ -142,7 +153,9 @@ def page():
                                     justify_content="center",
                                 ),
                             ):
-                                if me.state(StarterPackState).is_generating_look:
+                                if me.state(
+                                    StarterPackState,
+                                ).is_generating_look:
                                     me.progress_spinner()
                                 elif me.state(
                                     StarterPackState,
@@ -156,7 +169,9 @@ def page():
                                 else:
                                     me.text("Output will appear here")
                             if (
-                                me.state(StarterPackState).starter_pack_image_uri
+                                me.state(
+                                    StarterPackState,
+                                ).starter_pack_image_uri
                                 or me.state(StarterPackState).model_image_uri
                                 or me.state(StarterPackState).generated_look_uri
                             ):
@@ -247,7 +262,9 @@ def starter_pack_to_look_content():
             with me.box(style=me.Style(margin=me.Margin(top=16), width="100%")):
                 media_tile(
                     media_type="image",
-                    https_url=me.state(StarterPackState).starter_pack_image_display_url,
+                    https_url=me.state(
+                        StarterPackState,
+                    ).starter_pack_image_display_url,
                 )
         with me.box(
             style=me.Style(
@@ -269,7 +286,10 @@ def starter_pack_to_look_content():
                 on_library_select=on_library_chooser,
                 button_type="icon",
             )
-            me.button("Create Virtual Model", on_click=on_click_generate_virtual_model)
+            me.button(
+                "Create Virtual Model",
+                on_click=on_click_generate_virtual_model,
+            )
 
         if me.state(StarterPackState).is_generating_virtual_model:
             with me.box(
@@ -284,7 +304,9 @@ def starter_pack_to_look_content():
             with me.box(style=me.Style(margin=me.Margin(top=16), width="100%")):
                 media_tile(
                     media_type="image",
-                    https_url=me.state(StarterPackState).model_image_display_url,
+                    https_url=me.state(
+                        StarterPackState,
+                    ).model_image_display_url,
                 )
 
         me.button(
@@ -399,7 +421,9 @@ def on_click_generate_starter_pack(e: me.ClickEvent):
     state.is_generating_starter_pack = True
     yield
 
-    gcs_uri = model.generate_starter_pack_from_look(look_image_uri=state.look_image_uri)
+    gcs_uri = model.generate_starter_pack_from_look(
+        look_image_uri=state.look_image_uri,
+    )
 
     state.generated_starter_pack_uri = gcs_uri
     state.generated_starter_pack_display_url = create_display_url(gcs_uri)

@@ -66,7 +66,9 @@ def home_page_content(app_state: me.state):  # pylint: disable=unused-argument
         # Group pages by the "group" key
         grouped_pages: dict[str, list[dict]] = defaultdict(list)
         pages_to_display = [
-            page for page in get_welcome_page_config() if page.get("display") != "Home"
+            page
+            for page in get_welcome_page_config()
+            if page.get("display") != "Home"
         ]
 
         for page_data in pages_to_display:
@@ -80,7 +82,9 @@ def home_page_content(app_state: me.state):  # pylint: disable=unused-argument
                 group_name,
             )  # Get items for the current group
 
-            if not items_in_group:  # Skip if group is not in data or has no items
+            if (
+                not items_in_group
+            ):  # Skip if group is not in data or has no items
                 continue
 
             # Group Title
@@ -128,7 +132,9 @@ def home_page_content(app_state: me.state):  # pylint: disable=unused-argument
                         video_object_position=video_object_position,
                         on_tile_click=handle_tile_click,
                         default_bg_color=me.theme_var("secondary-container"),
-                        default_text_color=me.theme_var("on-secondary-container"),
+                        default_text_color=me.theme_var(
+                            "on-secondary-container",
+                        ),
                         hover_bg_color=me.theme_var("surface-container-high"),
                         hover_text_color=me.theme_var("on-tertiary-container"),
                     )

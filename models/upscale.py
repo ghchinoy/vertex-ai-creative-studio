@@ -24,6 +24,7 @@ from PIL import Image
 from common.storage import download_from_gcs, store_to_gcs
 from config.default import Default
 
+
 cfg = Default()
 
 UPSCALE_MODEL = "imagen-4.0-upscale-preview"
@@ -50,7 +51,10 @@ def get_image_resolution(image_data: bytes | str) -> str:
         return "Unknown"
 
 
-def upscale_image(input_gcs_uri: str, upscale_factor: str) -> tuple[str, str, str]:
+def upscale_image(
+    input_gcs_uri: str,
+    upscale_factor: str,
+) -> tuple[str, str, str]:
     """Upscales an image using Imagen 4.0 Upscale.
 
     Args:
@@ -61,7 +65,11 @@ def upscale_image(input_gcs_uri: str, upscale_factor: str) -> tuple[str, str, st
         Tuple of (output_gcs_uri, original_resolution, upscaled_resolution)
 
     """
-    client = genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
+    client = genai.Client(
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
+    )
 
     # Get original resolution
     original_resolution = get_image_resolution(input_gcs_uri)

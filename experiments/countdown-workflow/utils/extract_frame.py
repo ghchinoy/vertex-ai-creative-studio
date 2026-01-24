@@ -17,6 +17,7 @@ import os
 
 from moviepy import VideoFileClip
 
+
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,10 @@ def extract_first_frame(video_path: str, output_image_path: str) -> bool:
     try:
         logger.info(f"Extracting first frame from '{video_path}'...")
         with VideoFileClip(video_path) as clip:
-            clip.save_frame(output_image_path, t=0)  # t=0 saves the very first frame
+            clip.save_frame(
+                output_image_path,
+                t=0,
+            )  # t=0 saves the very first frame
         logger.info(f"First frame saved successfully to '{output_image_path}'")
         return True
     except Exception as e:

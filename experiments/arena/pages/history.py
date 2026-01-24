@@ -110,7 +110,10 @@ def history_page_content(app_state: me.state):
                                     )
                                     me.text(
                                         model1,
-                                        style=me.Style(font_size="10pt", color="black"),
+                                        style=me.Style(
+                                            font_size="10pt",
+                                            color="black",
+                                        ),
                                     )
 
                                 with me.content_button(
@@ -132,7 +135,10 @@ def history_page_content(app_state: me.state):
                                     )
                                     me.text(
                                         model2,
-                                        style=me.Style(font_size="10pt", color="black"),
+                                        style=me.Style(
+                                            font_size="10pt",
+                                            color="black",
+                                        ),
                                     )
                             me.html(
                                 html=f"{timestamp}: {model1} vs. {model2}:  <strong>{winner}</strong> won.",
@@ -166,7 +172,9 @@ WINNER_THUMBNAIL_STYLE = me.Style(
     height="100px",
     margin=me.Margin(top=10),
     border_radius="18px",
-    border=me.Border().all(me.BorderSide(color="green", style="inset", width="5px")),
+    border=me.Border().all(
+        me.BorderSide(color="green", style="inset", width="5px"),
+    ),
 )
 
 THUMBNAIL_STYLE = me.Style(

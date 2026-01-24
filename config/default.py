@@ -20,6 +20,7 @@ from typing import TypedDict
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
+
 load_dotenv(override=True)
 
 
@@ -92,7 +93,10 @@ class Default:
     )
 
     # Collections
-    GENMEDIA_FIREBASE_DB: str = os.environ.get("GENMEDIA_FIREBASE_DB", "(default)")
+    GENMEDIA_FIREBASE_DB: str = os.environ.get(
+        "GENMEDIA_FIREBASE_DB",
+        "(default)",
+    )
     GENMEDIA_COLLECTION_NAME: str = os.environ.get(
         "GENMEDIA_COLLECTION_NAME",
         "genmedia",
@@ -103,16 +107,30 @@ class Default:
     )
 
     # storage
-    GENMEDIA_BUCKET: str = os.environ.get("GENMEDIA_BUCKET", f"{PROJECT_ID}-assets")
-    VIDEO_BUCKET: str = os.environ.get("VIDEO_BUCKET", f"{PROJECT_ID}-assets/videos")
-    IMAGE_BUCKET: str = os.environ.get("IMAGE_BUCKET", f"{PROJECT_ID}-assets/images")
+    GENMEDIA_BUCKET: str = os.environ.get(
+        "GENMEDIA_BUCKET",
+        f"{PROJECT_ID}-assets",
+    )
+    VIDEO_BUCKET: str = os.environ.get(
+        "VIDEO_BUCKET",
+        f"{PROJECT_ID}-assets/videos",
+    )
+    IMAGE_BUCKET: str = os.environ.get(
+        "IMAGE_BUCKET",
+        f"{PROJECT_ID}-assets/images",
+    )
     GCS_ASSETS_BUCKET: str = os.environ.get("GCS_ASSETS_BUCKET")
 
     # Library
-    LIBRARY_MEDIA_PER_PAGE: int = int(os.environ.get("LIBRARY_MEDIA_PER_PAGE", 15))
+    LIBRARY_MEDIA_PER_PAGE: int = int(
+        os.environ.get("LIBRARY_MEDIA_PER_PAGE", 15),
+    )
 
     # Veo
-    VEO_MODEL_ID: str = os.environ.get("VEO_MODEL_ID", "veo-3.1-fast-generate-001")
+    VEO_MODEL_ID: str = os.environ.get(
+        "VEO_MODEL_ID",
+        "veo-3.1-fast-generate-001",
+    )
     VEO_PROJECT_ID: str = os.environ.get("VEO_PROJECT_ID", PROJECT_ID)
 
     VEO_EXP_MODEL_ID: str = os.environ.get(
@@ -127,7 +145,10 @@ class Default:
 
     # VTO
     VTO_LOCATION: str = os.environ.get("VTO_LOCATION", "us-central1")
-    VTO_MODEL_ID: str = os.environ.get("VTO_MODEL_ID", "virtual-try-on-preview-08-04")
+    VTO_MODEL_ID: str = os.environ.get(
+        "VTO_MODEL_ID",
+        "virtual-try-on-preview-08-04",
+    )
     GENMEDIA_VTO_MODEL_COLLECTION_NAME: str = os.environ.get(
         "GENMEDIA_VTO_MODEL_COLLECTION_NAME",
         "genmedia-vto-model",
@@ -160,7 +181,10 @@ class Default:
 
     # Lyria
     LYRIA_LOCATION: str = os.environ.get("LYRIA_LOCATION", "us-central1")
-    LYRIA_MODEL_VERSION: str = os.environ.get("LYRIA_MODEL_VERSION", "lyria-002")
+    LYRIA_MODEL_VERSION: str = os.environ.get(
+        "LYRIA_MODEL_VERSION",
+        "lyria-002",
+    )
     LYRIA_PROJECT_ID: str = os.environ.get("LYRIA_PROJECT_ID", PROJECT_ID)
     MEDIA_BUCKET: str = os.environ.get("MEDIA_BUCKET", f"{PROJECT_ID}-assets")
 
@@ -189,7 +213,9 @@ class Default:
 
     IMAGEN_PROMPTS_JSON = "prompts/imagen_prompts.json"
 
-    USE_MEDIA_PROXY: bool = os.environ.get("USE_MEDIA_PROXY", "false").lower() == "true"
+    USE_MEDIA_PROXY: bool = (
+        os.environ.get("USE_MEDIA_PROXY", "false").lower() == "true"
+    )
 
     # Firebase Web Config
     FIREBASE_API_KEY: str = os.environ.get("FIREBASE_API_KEY", "")

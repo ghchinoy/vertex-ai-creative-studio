@@ -27,6 +27,7 @@ from yt_dlp import YoutubeDL
 
 import config
 
+
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,10 @@ def main():
             "format": "bestvideo+bestaudio/best",
             "download_ranges": download_ranges_callback,
             "force_keyframes_at_cuts": True,
-            "outtmpl": os.path.join(config.VIDEO_OUTPUT_DIR, "%(title)s.%(ext)s"),
+            "outtmpl": os.path.join(
+                config.VIDEO_OUTPUT_DIR,
+                "%(title)s.%(ext)s",
+            ),
             "merge_output_format": "mp4",
             "progress_hooks": [my_progress_hook],
             "overwrites": True,

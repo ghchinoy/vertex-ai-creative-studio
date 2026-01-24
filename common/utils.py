@@ -125,9 +125,7 @@ def get_image_dimensions_from_base64(base64_string: str) -> tuple[int, int]:
 
 
 def make_local_request(endpoint: str) -> dict[str, Any]:
-    filepath = (
-        f"mocks/{endpoint}.json"  # Assuming mock files are in a 'mocks' directory
-    )
+    filepath = f"mocks/{endpoint}.json"  # Assuming mock files are in a 'mocks' directory
     try:
         with open(filepath) as f:
             return json.load(f)
@@ -143,7 +141,10 @@ def print_keys(obj, prefix=""):
     if isinstance(obj, dict):
         for key in obj:
             print(prefix + key)
-            print_keys(obj[key], prefix + "  ")  # Recurse with increased indentation
+            print_keys(
+                obj[key],
+                prefix + "  ",
+            )  # Recurse with increased indentation
     elif isinstance(obj, list):
         for i, item in enumerate(obj):
             # For lists, we might want to indicate the index and then recurse on the item
@@ -151,7 +152,10 @@ def print_keys(obj, prefix=""):
             # If you only want to print keys of dicts within a list,
             # you might adjust the print statement here or what you pass to print_keys.
             # Current behavior: treats list items as potentially new objects to explore.
-            print_keys(item, prefix + f"  [{i}] ")  # indicate list index in prefix
+            print_keys(
+                item,
+                prefix + f"  [{i}] ",
+            )  # indicate list index in prefix
 
 
 GCS_PUBLIC_URL_PREFIX = "https://storage.cloud.google.com/"
@@ -186,7 +190,10 @@ def https_url_to_gcs_uri(url: str | None) -> str:
     url_to_convert = url.split("?")[0]
 
     if url_to_convert.startswith("https://storage.googleapis.com/"):
-        return url_to_convert.replace("https://storage.googleapis.com/", "gs://")
+        return url_to_convert.replace(
+            "https://storage.googleapis.com/",
+            "gs://",
+        )
     if url_to_convert.startswith(GCS_PUBLIC_URL_PREFIX):
         return url_to_convert.replace(GCS_PUBLIC_URL_PREFIX, "gs://")
 

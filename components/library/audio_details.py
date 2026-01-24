@@ -29,7 +29,9 @@ from components.media_tile.media_tile import media_tile
 def audio_details(item: MediaItem, on_click_permalink: Callable):
     """Renders the details for an audio item."""
     gcs_uri = (
-        item.gcsuri if item.gcsuri else (item.gcs_uris[0] if item.gcs_uris else None)
+        item.gcsuri
+        if item.gcsuri
+        else (item.gcs_uris[0] if item.gcs_uris else None)
     )
     item_display_url = create_display_url(gcs_uri)
 
@@ -84,7 +86,9 @@ def audio_details(item: MediaItem, on_click_permalink: Callable):
         me.text(f"Generated: {dialog_timestamp_str_detail}")
 
         if item.generation_time is not None:
-            me.text(f"Generation Time: {round(item.generation_time, 2)} seconds")
+            me.text(
+                f"Generation Time: {round(item.generation_time, 2)} seconds",
+            )
 
         if item.model is not None:
             me.text(f"Model: {item.model}")

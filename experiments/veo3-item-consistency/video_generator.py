@@ -108,6 +108,11 @@ def generate_video_from_best_image(
     gemini_client, veo_client = initialize_clients()
     os.makedirs(output_path, exist_ok=True)
 
-    video_path = generate_video(gemini_client, veo_client, best_image_path, output_path)
+    video_path = generate_video(
+        gemini_client,
+        veo_client,
+        best_image_path,
+        output_path,
+    )
 
     return video_path

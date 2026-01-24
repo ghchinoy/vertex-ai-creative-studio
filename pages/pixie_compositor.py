@@ -69,7 +69,11 @@ VIDEO_PLACEHOLDER_STYLE = me.Style(
     width=360,
     height=200,
     border=me.Border.all(
-        me.BorderSide(width=2, style="dashed", color=me.theme_var("outline-variant")),
+        me.BorderSide(
+            width=2,
+            style="dashed",
+            color=me.theme_var("outline-variant"),
+        ),
     ),
     border_radius=8,
     display="flex",
@@ -149,7 +153,11 @@ def _make_tab_style(selected: bool) -> me.Style:
     if selected:
         style.background = me.theme_var("surface-container")
         style.border = me.Border(
-            bottom=me.BorderSide(width=2, style="solid", color=me.theme_var("primary")),
+            bottom=me.BorderSide(
+                width=2,
+                style="solid",
+                color=me.theme_var("primary"),
+            ),
         )
         style.cursor = "default"
     return style
@@ -163,7 +171,11 @@ def page_content():
         Tab(key="video_audio", label="Video + Audio", icon="music_video"),
     ]
 
-    _tab_group(tabs=tabs, on_tab_click=on_tab_change, selected_tab_key=state.active_tab)
+    _tab_group(
+        tabs=tabs,
+        on_tab_click=on_tab_change,
+        selected_tab_key=state.active_tab,
+    )
 
     # Conditionally render tab content
     if state.active_tab == "video_video":
@@ -224,7 +236,9 @@ def render_video_video_tab():
                         media_tile(
                             key=state.selected_videos["video_1"],
                             media_type="video",
-                            https_url=state.selected_videos_display_urls["video_1"],
+                            https_url=state.selected_videos_display_urls[
+                                "video_1"
+                            ],
                             object_fit="contain",
                         )
                     else:
@@ -260,7 +274,9 @@ def render_video_video_tab():
                         media_tile(
                             key=state.selected_videos["video_2"],
                             media_type="video",
-                            https_url=state.selected_videos_display_urls["video_2"],
+                            https_url=state.selected_videos_display_urls[
+                                "video_2"
+                            ],
                             object_fit="contain",
                         )
                     else:
@@ -300,7 +316,9 @@ def render_video_video_tab():
 
         # Result Area
         if state.is_loading:
-            with me.box(style=me.Style(display="flex", justify_content="center")):
+            with me.box(
+                style=me.Style(display="flex", justify_content="center"),
+            ):
                 me.progress_spinner()
 
         if state.error_message:
@@ -329,7 +347,9 @@ def render_video_video_tab():
                 )
 
         if state.is_converting_gif:
-            with me.box(style=me.Style(display="flex", justify_content="center")):
+            with me.box(
+                style=me.Style(display="flex", justify_content="center"),
+            ):
                 me.progress_spinner()
 
         if state.gif_display_url:
@@ -462,27 +482,31 @@ def render_video_audio_tab():
 
         # Result Area (reusing components from the other tab)
         if state.is_loading:
-            with me.box(style=me.Style(display="flex", justify_content="center")):
+            with me.box(
+                style=me.Style(display="flex", justify_content="center"),
+            ):
                 me.progress_spinner()
 
         if state.error_message:
             me.text(state.error_message, style=me.Style(color="red"))
 
         if state.concatenated_video_display_url:
-            with me.box(
-                style=me.Style(
-                    display="flex",
-                    flex_direction="column",
-                    align_items="center",
-                    gap=10,
+            with (
+                me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="column",
+                        align_items="center",
+                        gap=10,
+                    ),
                 ),
+                me.box(style=me.Style(width="100%", max_width="720px")),
             ):
-                with me.box(style=me.Style(width="100%", max_width="720px")):
-                    media_tile(
-                        media_type="video",
-                        https_url=state.concatenated_video_display_url,
-                        controls=True,
-                    )
+                media_tile(
+                    media_type="video",
+                    https_url=state.concatenated_video_display_url,
+                    controls=True,
+                )
 
 
 def on_upload_video_for_audio(e: me.UploadEvent):
@@ -551,7 +575,10 @@ def on_layer_audio_click(e: me.ClickEvent):
                 user_email=app_state.user_email,
                 timestamp=datetime.datetime.now(datetime.UTC),
                 mime_type="video/mp4",
-                source_uris=[state.selected_video_for_audio, state.selected_audio],
+                source_uris=[
+                    state.selected_video_for_audio,
+                    state.selected_audio,
+                ],
                 comment="Produced by Pixie Compositor: Video + Audio",
                 model="pixie-compositor-v1-audio-layer",
             ),
@@ -609,7 +636,9 @@ def on_video_select(e: LibrarySelectionChangeEvent):
     state = me.state(PageState)
     # The key of the chooser button tells us which video slot to fill.
     state.selected_videos[e.chooser_id] = e.gcs_uri
-    state.selected_videos_display_urls[e.chooser_id] = create_display_url(e.gcs_uri)
+    state.selected_videos_display_urls[e.chooser_id] = create_display_url(
+        e.gcs_uri,
+    )
     yield
 
 
@@ -634,7 +663,10 @@ def on_process_click(e: me.ClickEvent):
             state.selected_videos["video_1"],
             state.selected_videos["video_2"],
         ]
-        processed_uri = process_videos(video_uris_to_process, state.selected_transition)
+        processed_uri = process_videos(
+            video_uris_to_process,
+            state.selected_transition,
+        )
         state.concatenated_video_url = processed_uri
         state.concatenated_video_display_url = create_display_url(processed_uri)
 

@@ -30,6 +30,7 @@ import mesop as me
 from components.styles import BACKGROUND_COLOR, CONTENT_STYLE
 from config.default import BabelMetadata, Default
 
+
 logging.basicConfig(level=logging.DEBUG)
 config = Default()
 BUCKET_PATH = "https://storage.mtls.cloud.google.com/" + config.GENMEDIA_BUCKET
@@ -86,7 +87,12 @@ def chirphd_voices_page(app_state: me.state):
                             display="flex",
                             flex_direction="column",
                             gap=5,
-                            padding=me.Padding(top=10, left=10, right=10, bottom=12),
+                            padding=me.Padding(
+                                top=10,
+                                left=10,
+                                right=10,
+                                bottom=12,
+                            ),
                         ),
                     ):
                         me.text(
@@ -135,7 +141,9 @@ def subtle_chat_input_journey():
         #  me.icon("upload")
         # with me.content_button(type="icon"):
         #  me.icon("photo")
-        with me.box(style=me.Style(display="flex", gap=5, flex_direction="column")):
+        with me.box(
+            style=me.Style(display="flex", gap=5, flex_direction="column"),
+        ):
             with me.content_button(type="icon", on_click=on_click_babel):
                 me.icon("send")
             with me.content_button(type="icon", on_click=on_click_clear_babel):

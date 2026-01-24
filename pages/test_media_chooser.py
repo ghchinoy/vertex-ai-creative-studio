@@ -77,7 +77,10 @@ def page_content():
         yield
 
         # Fetch real data
-        items, last_doc = get_media_for_chooser(media_type=media_type, page_size=20)
+        items, last_doc = get_media_for_chooser(
+            media_type=media_type,
+            page_size=20,
+        )
         state.media_items = items
         state.last_doc_id = last_doc.id if last_doc else ""
         if not last_doc:
@@ -86,7 +89,9 @@ def page_content():
         print(f"<-- LOGGER: {len(items)} items loaded for dialog. -->")
         yield
 
-    with me.box(style=me.Style(display="flex", flex_direction="column", gap=20)):
+    with me.box(
+        style=me.Style(display="flex", flex_direction="column", gap=20),
+    ):
         me.text(
             "This page is for testing the new media_chooser_button component in isolation.",
         )
@@ -168,7 +173,9 @@ def render_chooser_dialog():
         if state.is_loading or state.all_items_loaded:
             return
 
-        print(f"<-- LOGGER: Loading more items for {state.dialog_media_type} -->")
+        print(
+            f"<-- LOGGER: Loading more items for {state.dialog_media_type} -->",
+        )
         state.is_loading = True
         yield
 
@@ -265,16 +272,27 @@ def render_chooser_dialog():
                                 for item in items_to_render:
                                     https_url = create_display_url(
                                         item.gcsuri
-                                        or (item.gcs_uris[0] if item.gcs_uris else ""),
+                                        or (
+                                            item.gcs_uris[0]
+                                            if item.gcs_uris
+                                            else ""
+                                        ),
                                     )
                                     media_tile(
                                         key=item.gcsuri
-                                        or (item.gcs_uris[0] if item.gcs_uris else ""),
+                                        or (
+                                            item.gcs_uris[0]
+                                            if item.gcs_uris
+                                            else ""
+                                        ),
                                         on_click=handle_item_selected,
                                         media_type=item.media_type
                                         or state.dialog_media_type,
                                         https_url=https_url,
-                                        pills_json=get_pills_for_item(item, https_url),
+                                        pills_json=get_pills_for_item(
+                                            item,
+                                            https_url,
+                                        ),
                                     )
                         scroll_sentinel(
                             on_visible=handle_load_more,

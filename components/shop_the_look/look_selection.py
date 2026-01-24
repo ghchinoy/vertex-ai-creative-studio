@@ -23,6 +23,7 @@ from config.default import Default
 from models import shop_the_look_workflow
 from state.shop_the_look_state import PageState
 
+
 config = Default()
 
 
@@ -374,7 +375,7 @@ def look_selection():
                                 if (item.available_to_select or item.selected)
                                 else ".3"
                             ),
-                        )
+                        ),
                     ):
                         media_tile(
                             media_type="image",
@@ -428,7 +429,9 @@ def on_upload_article_image(e: me.UploadEvent):
         file_ext = file.name.split(".")[-1]
         filename = f"{filename_uuid}.{file_ext}"
 
-        file_path = f"gs://{config.GENMEDIA_BUCKET}/uploads/apparel/{e.key}/{filename}"
+        file_path = (
+            f"gs://{config.GENMEDIA_BUCKET}/uploads/apparel/{e.key}/{filename}"
+        )
         gcs_url = store_to_gcs(
             f"uploads/apparel/{e.key}",
             filename.lower(),
@@ -436,7 +439,9 @@ def on_upload_article_image(e: me.UploadEvent):
             file.getvalue(),
         )
         state.reference_image_gcs_clothing.append(f"{gcs_url}")
-        state.reference_image_display_urls_clothing.append(create_display_url(gcs_url))
+        state.reference_image_display_urls_clothing.append(
+            create_display_url(gcs_url),
+        )
         article_type = gcs_url.split("/")[-2]
         shop_the_look_workflow.store_article_data(file_path, article_type)
 
@@ -482,7 +487,10 @@ def article_on_click(e: me.ClickEvent):
                         "bottom",
                     ]
                 )
-                or (selected_type == "top" and item.article_type in ["dress", "top"])
+                or (
+                    selected_type == "top"
+                    and item.article_type in ["dress", "top"]
+                )
                 or (
                     selected_type == "bottom"
                     and item.article_type in ["dress", "bottom"]

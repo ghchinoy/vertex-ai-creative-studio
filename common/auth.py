@@ -12,12 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import uuid
 from functools import lru_cache
 
-from fastapi import Request
-
-from common.storage import get_or_create_session
 from config.default import Default as cfg
 from config.firebase_config import FirebaseClient
 

@@ -128,7 +128,11 @@ def make_tab_style(selected: bool, disabled: bool, tab_width: str) -> me.Style:
     elif selected:
         style.background = me.theme_var("surface-container")
         style.border = me.Border(
-            bottom=me.BorderSide(width=2, style="solid", color=me.theme_var("primary")),
+            bottom=me.BorderSide(
+                width=2,
+                style="solid",
+                color=me.theme_var("primary"),
+            ),
         )
         style.cursor = "default"
     style.width = tab_width

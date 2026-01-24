@@ -43,6 +43,7 @@ from models.gemini import evaluate_tts_audio
 from models.gemini_tts import synthesize_speech
 from state.state import AppState
 
+
 # Load about content from JSON
 with open("config/about_content.json") as f:
     about_content = json.load(f)
@@ -92,7 +93,9 @@ class GeminiTtsState:
     show_snackbar: bool = False
     snackbar_message: str = ""
     is_evaluating: bool = False
-    evaluation_result: TTSEvaluationState = field(default_factory=TTSEvaluationState)  # pylint: disable=invalid-field-call
+    evaluation_result: TTSEvaluationState = field(
+        default_factory=TTSEvaluationState,
+    )  # pylint: disable=invalid-field-call
 
 
 @me.page(
@@ -162,7 +165,11 @@ def gemini_tts_page_content():
                     autosize=True,
                 )
                 with me.box(
-                    style=me.Style(display="flex", flex_direction="row", gap=16),
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        gap=16,
+                    ),
                 ):
                     me.select(
                         label="Model",
@@ -178,14 +185,21 @@ def gemini_tts_page_content():
                         style=me.Style(flex_grow=1, width=250),
                         appearance="outline",
                     )
-                    me.text(GEMINI_TTS_MODELS[state.selected_model]["description"])
+                    me.text(
+                        GEMINI_TTS_MODELS[state.selected_model]["description"],
+                    )
                 with me.box(
-                    style=me.Style(display="flex", flex_direction="row", gap=16),
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        gap=16,
+                    ),
                 ):
                     me.select(
                         label="Voice",
                         options=[
-                            me.SelectOption(label=v, value=v) for v in GEMINI_TTS_VOICES
+                            me.SelectOption(label=v, value=v)
+                            for v in GEMINI_TTS_VOICES
                         ],
                         on_selection_change=on_select_voice,
                         value=state.selected_voice,
@@ -204,7 +218,11 @@ def gemini_tts_page_content():
                         appearance="outline",
                     )
                 with me.box(
-                    style=me.Style(display="flex", flex_direction="row", gap=16),
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        gap=16,
+                    ),
                 ):
                     me.button(
                         "Generate",
@@ -285,7 +303,9 @@ def gemini_tts_page_content():
                             style=me.Style(
                                 margin=me.Margin(top=24),
                                 padding=me.Padding.all(16),
-                                background=me.theme_var("surface-container-low"),
+                                background=me.theme_var(
+                                    "surface-container-low",
+                                ),
                                 border_radius=8,
                                 width="100%",
                             ),
@@ -568,7 +588,9 @@ def on_click_generate(e: me.ClickEvent):
             state.evaluation_result.audio_metrics.jitter_percent = (
                 audio_metrics.jitter_percent
             )
-            state.evaluation_result.audio_metrics.shimmer_db = audio_metrics.shimmer_db
+            state.evaluation_result.audio_metrics.shimmer_db = (
+                audio_metrics.shimmer_db
+            )
             state.evaluation_result.audio_metrics.hnr_db = audio_metrics.hnr_db
             state.evaluation_result.audio_metrics.estimated_tempo_bpm = (
                 audio_metrics.estimated_tempo_bpm

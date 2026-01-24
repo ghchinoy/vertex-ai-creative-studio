@@ -28,7 +28,9 @@ def get_pills_for_item(item: MediaItem, https_url: str) -> str:
         elif item.mode:
             pills.append({"label": item.mode})
         else:
-            pills.append({"label": "t2v" if not item.reference_image else "i2v"})
+            pills.append(
+                {"label": "t2v" if not item.reference_image else "i2v"},
+            )
         if item.aspect:
             pills.append({"label": item.aspect})
         if item.duration is not None:
@@ -36,7 +38,8 @@ def get_pills_for_item(item: MediaItem, https_url: str) -> str:
     elif effective_media_type == "image":
         pills.append({"label": "Image"})
         if item.model and (
-            "vto" in item.model.lower() or "virtual-try-on" in item.model.lower()
+            "vto" in item.model.lower()
+            or "virtual-try-on" in item.model.lower()
         ):
             pills.append({"label": "vto"})
         if item.aspect:
@@ -80,7 +83,9 @@ def media_tile(
         name="media-tile",
         properties={
             "mediaType": effective_media_type or "",
-            "thumbnailSrc": https_url if effective_media_type != "audio" else "",
+            "thumbnailSrc": https_url
+            if effective_media_type != "audio"
+            else "",
             "audioSrc": https_url if effective_media_type == "audio" else "",
             "pillsJson": pills_json,
             "controls": controls,

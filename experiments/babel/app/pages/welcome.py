@@ -33,9 +33,12 @@ from components.styles import BACKGROUND_COLOR, CONTENT_STYLE
 from config.default import BabelMetadata, Default
 from state.state import AppState
 
+
 logging.basicConfig(level=logging.DEBUG)
 config = Default()
-BUCKET_PATH = "https://storage.mtls.cloud.google.com/" + config.STATIC_PUBLIC_BUCKET
+BUCKET_PATH = (
+    "https://storage.mtls.cloud.google.com/" + config.STATIC_PUBLIC_BUCKET
+)
 
 
 @me.stateclass
@@ -71,7 +74,9 @@ def get_chosen_voices():
     voices = app_state.voices
 
     filtered_voices = [
-        voice for voice in voices if "Puck" in voice["name"] or "Leda" in voice["name"]
+        voice
+        for voice in voices
+        if "Puck" in voice["name"] or "Leda" in voice["name"]
     ]
     return filtered_voices
 
@@ -97,8 +102,13 @@ def filter_babel_metadata(filepath: str) -> list[BabelMetadata]:
         print(f"Error: Invalid JSON format in '{filepath}'.")
         return []
 
-    if "audio_metadata" not in data or not isinstance(data["audio_metadata"], list):
-        print(f"Warning: 'audio_metadata' key not found or not a list in '{filepath}'.")
+    if "audio_metadata" not in data or not isinstance(
+        data["audio_metadata"],
+        list,
+    ):
+        print(
+            f"Warning: 'audio_metadata' key not found or not a list in '{filepath}'.",
+        )
         return []
 
     filtered_metadata: list[BabelMetadata] = [
@@ -140,7 +150,9 @@ def welcome_page(app_state: me.state):
     state.voices = get_chosen_voices()
     if not state.loaded:
         print("There're no voices to display")
-        state.audio_output_metadata = filter_babel_metadata("pages/welcome_event.json")
+        state.audio_output_metadata = filter_babel_metadata(
+            "pages/welcome_event.json",
+        )
         state.loaded = True
         print(f"loaded {len(state.audio_output_metadata)} voices")
 
@@ -187,7 +199,12 @@ def welcome_page(app_state: me.state):
                             display="flex",
                             flex_direction="column",
                             gap=5,
-                            padding=me.Padding(top=10, left=10, right=10, bottom=12),
+                            padding=me.Padding(
+                                top=10,
+                                left=10,
+                                right=10,
+                                bottom=12,
+                            ),
                         ),
                     ):
                         me.text(
@@ -236,7 +253,9 @@ def subtle_chat_input_journey():
         #  me.icon("upload")
         # with me.content_button(type="icon"):
         #  me.icon("photo")
-        with me.box(style=me.Style(display="flex", gap=5, flex_direction="column")):
+        with me.box(
+            style=me.Style(display="flex", gap=5, flex_direction="column"),
+        ):
             with me.content_button(type="icon", on_click=on_click_babel):
                 me.icon("send")
             with me.content_button(type="icon", on_click=on_click_clear_babel):

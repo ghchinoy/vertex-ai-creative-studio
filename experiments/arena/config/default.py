@@ -19,6 +19,7 @@ from dataclasses import asdict, dataclass
 
 from dotenv import load_dotenv
 
+
 load_dotenv(override=True)
 
 
@@ -35,17 +36,25 @@ class Default:
     PROJECT_ID: str = os.environ.get("PROJECT_ID")
     LOCATION: str = os.environ.get("LOCATION", "us-central1")
     MODEL_ID: str = os.environ.get("MODEL_ID", "gemini-2.0-flash")
-    INIT_VERTEX: bool = os.environ.get("INIT_VERTEX", "True").lower() in ("true", "1")
+    INIT_VERTEX: bool = os.environ.get("INIT_VERTEX", "True").lower() in (
+        "true",
+        "1",
+    )
 
     GENMEDIA_BUCKET: str = os.environ.get("GENMEDIA_BUCKET")
     PUBLIC_BUCKET: bool = os.environ.get("PUBLIC_BUCKET", "False").lower() in (
         "true",
         "1",
     )
-    SHOW_RESULTS_PAUSE_TIME: int = int(os.environ.get("SHOW_RESULTS_PAUSE_TIME", "1"))
+    SHOW_RESULTS_PAUSE_TIME: int = int(
+        os.environ.get("SHOW_RESULTS_PAUSE_TIME", "1"),
+    )
     IMAGE_FIREBASE_DB: str = os.environ.get("IMAGE_FIREBASE_DB")
     IMAGE_COLLECTION_NAME = os.environ.get("IMAGE_COLLECTION_NAME")
-    STUDY_COLLECTION_NAME: str = os.environ.get("STUDY_COLLECTION_NAME", "arena_study")
+    STUDY_COLLECTION_NAME: str = os.environ.get(
+        "STUDY_COLLECTION_NAME",
+        "arena_study",
+    )
     IMAGE_RATINGS_COLLECTION_NAME: str = os.environ.get(
         "IMAGE_RATINGS_COLLECTION_NAME",
         "arena_elo",
@@ -80,7 +89,9 @@ class Default:
     # Spanner related variables
     SPANNER_INSTANCE_ID: str = os.environ.get("SPANNER_INSTANCE_ID", "arena")
     SPANNER_DATABASE_ID: str = os.environ.get("SPANNER_DATABASE_ID", "study")
-    SPANNER_TIMEOUT: int = int(os.environ.get("SPANNER_TIMEOUT", 300))  # seconds
+    SPANNER_TIMEOUT: int = int(
+        os.environ.get("SPANNER_TIMEOUT", 300),
+    )  # seconds
 
     def __post_init__(self):
         """Validates the configuration variables after initialization."""
@@ -109,7 +120,9 @@ class Default:
             )
 
         if not self.IMAGE_COLLECTION_NAME:
-            raise ValueError("IMAGE_COLLECTION_NAME environment variable is not set.")
+            raise ValueError(
+                "IMAGE_COLLECTION_NAME environment variable is not set.",
+            )
 
         valid_locations = [
             "us-central1",

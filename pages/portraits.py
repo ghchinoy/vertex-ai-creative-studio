@@ -53,6 +53,7 @@ from pages.styles import (
 )
 from state.state import AppState
 
+
 client = GeminiModelSetup.init()
 
 
@@ -63,7 +64,11 @@ veo_model_name = VeoModelSetup.init()
 with open("config/about_content.json") as f:
     about_content = json.load(f)
     MOTION_PORTRAITS_INFO = next(
-        (s for s in about_content["sections"] if s.get("id") == "motion_portraits"),
+        (
+            s
+            for s in about_content["sections"]
+            if s.get("id") == "motion_portraits"
+        ),
         None,
     )
 
@@ -112,7 +117,10 @@ from config.portrait_styles import PORTRAIT_STYLES
 from config.veo_models import VEO_MODELS, get_veo_model_config
 
 
-@me.page(path="/motion_portraits", title="Motion Portraits - GenMedia Creative Studio")
+@me.page(
+    path="/motion_portraits",
+    title="Motion Portraits - GenMedia Creative Studio",
+)
 def motion_portraits_page():
     """Implement the Motion Portraits page."""
     state = me.state(AppState)
@@ -155,11 +163,16 @@ def motion_portraits_content(app_state: me.state):
             )
         )
     ]
-    auto_enhance_disabled = not selected_model_config.supports_prompt_enhancement
+    auto_enhance_disabled = (
+        not selected_model_config.supports_prompt_enhancement
+    )
 
     if state.info_dialog_open:
         with dialog(is_open=state.info_dialog_open):  # pylint: disable=not-context-manager
-            me.text(f"About {MOTION_PORTRAITS_INFO['title']}", type="headline-6")
+            me.text(
+                f"About {MOTION_PORTRAITS_INFO['title']}",
+                type="headline-6",
+            )
             me.markdown(MOTION_PORTRAITS_INFO["description"])
             me.divider()
             me.text("Current Settings", type="headline-6")
@@ -237,7 +250,10 @@ def motion_portraits_content(app_state: me.state):
                         button_type="icon",
                         key="portrait_library_chooser",
                     )
-                    with me.content_button(type="icon", on_click=on_open_selfie_dialog):
+                    with me.content_button(
+                        type="icon",
+                        on_click=on_open_selfie_dialog,
+                    ):
                         me.icon("camera_alt")
                     me.button(
                         label="Clear",
@@ -329,19 +345,31 @@ def motion_portraits_content(app_state: me.state):
                         # Define styles based on state
                         if is_disabled:
                             button_style = me.Style(
-                                padding=me.Padding.symmetric(vertical=8, horizontal=16),
+                                padding=me.Padding.symmetric(
+                                    vertical=8,
+                                    horizontal=16,
+                                ),
                                 border_radius=20,
                                 border=me.Border.all(
                                     me.BorderSide(
-                                        color=me.theme_var("sys-color-outline-variant"),
+                                        color=me.theme_var(
+                                            "sys-color-outline-variant",
+                                        ),
                                     ),
                                 ),
-                                background=me.theme_var("sys-color-surface-container"),
+                                background=me.theme_var(
+                                    "sys-color-surface-container",
+                                ),
                             )
-                            text_color = me.theme_var("sys-color-on-surface-variant")
+                            text_color = me.theme_var(
+                                "sys-color-on-surface-variant",
+                            )
                         elif is_selected:
                             button_style = me.Style(
-                                padding=me.Padding.symmetric(vertical=8, horizontal=16),
+                                padding=me.Padding.symmetric(
+                                    vertical=8,
+                                    horizontal=16,
+                                ),
                                 border_radius=20,
                                 border=me.Border.all(
                                     me.BorderSide(
@@ -349,12 +377,19 @@ def motion_portraits_content(app_state: me.state):
                                         color=me.theme_var("sys-color-primary"),
                                     ),
                                 ),
-                                background=me.theme_var("sys-color-primary-container"),
+                                background=me.theme_var(
+                                    "sys-color-primary-container",
+                                ),
                             )
-                            text_color = me.theme_var("sys-color-on-primary-container")
+                            text_color = me.theme_var(
+                                "sys-color-on-primary-container",
+                            )
                         else:  # Default
                             button_style = me.Style(
-                                padding=me.Padding.symmetric(vertical=8, horizontal=16),
+                                padding=me.Padding.symmetric(
+                                    vertical=8,
+                                    horizontal=16,
+                                ),
                                 border_radius=20,
                                 border=me.Border.all(
                                     me.BorderSide(
@@ -383,8 +418,14 @@ def motion_portraits_content(app_state: me.state):
                             ),
                         ):
                             if is_selected:
-                                me.icon("check", style=me.Style(color=text_color))
-                            me.text(style.label, style=me.Style(color=text_color))
+                                me.icon(
+                                    "check",
+                                    style=me.Style(color=text_color),
+                                )
+                            me.text(
+                                style.label,
+                                style=me.Style(color=text_color),
+                            )
 
         with me.box(
             style=me.Style(
@@ -398,7 +439,8 @@ def motion_portraits_content(app_state: me.state):
                     on_click=on_click_motion_portraits,
                     type="flat",
                     key="generate_motion_portrait_button",
-                    disabled=state.is_loading or not state.reference_image_display_url,
+                    disabled=state.is_loading
+                    or not state.reference_image_display_url,
                 ),
                 me.box(
                     style=me.Style(
@@ -473,7 +515,10 @@ def motion_portraits_content(app_state: me.state):
                     if state.timing:
                         me.text(
                             state.timing,
-                            style=me.Style(margin=me.Margin(top=10), font_size="0.9em"),
+                            style=me.Style(
+                                margin=me.Margin(top=10),
+                                font_size="0.9em",
+                            ),
                         )
 
                     me.button(
@@ -485,7 +530,10 @@ def motion_portraits_content(app_state: me.state):
 
                     if state.is_converting_gif:
                         with me.box(
-                            style=me.Style(display="flex", justify_content="center"),
+                            style=me.Style(
+                                display="flex",
+                                justify_content="center",
+                            ),
                         ):
                             me.progress_spinner()
 
@@ -499,7 +547,9 @@ def motion_portraits_content(app_state: me.state):
                         ),
                     ):
                         me.text("Video as GIF:", type="headline-5")
-                        with me.box(style=me.Style(width="100%", max_width="480px")):
+                        with me.box(
+                            style=me.Style(width="100%", max_width="480px"),
+                        ):
                             media_tile(
                                 media_type="image",
                                 https_url=state.gif_display_url,
@@ -521,7 +571,9 @@ def motion_portraits_content(app_state: me.state):
                             style=me.Style(
                                 white_space="pre-wrap",
                                 font_family="monospace",
-                                background=me.theme_var("sys-color-surface-container"),
+                                background=me.theme_var(
+                                    "sys-color-surface-container",
+                                ),
                                 padding=me.Padding.all(10),
                                 border_radius=8,
                             ),
@@ -636,7 +688,9 @@ def on_modifier_click(e: me.ClickEvent):
     modifier_key = e.key.split("mod_btn_")[-1]
 
     if not modifier_key:
-        print("Error: ClickEvent has no key associated with the content_button.")
+        print(
+            "Error: ClickEvent has no key associated with the content_button.",
+        )
         return
 
     # If the key is already selected, deselect it.
@@ -765,7 +819,9 @@ def on_click_upload(e: me.UploadEvent):
     )
     state.reference_image_gcs = destination_blob_name
     # url
-    state.reference_image_display_url = create_display_url(destination_blob_name)
+    state.reference_image_display_url = create_display_url(
+        destination_blob_name,
+    )
     # log
     print(
         f"{destination_blob_name} with contents len {len(contents)} of type {e.file.mime_type} uploaded to {config.GENMEDIA_BUCKET}.",
@@ -818,10 +874,14 @@ Examine the picture provided to improve the scene direction.
     final_prompt_for_llm = base_prompt
     if state.modifier_array:
         # Get the full style objects for the selected IDs
-        selected_styles = [s for s in PORTRAIT_STYLES if s.id in state.modifier_array]
+        selected_styles = [
+            s for s in PORTRAIT_STYLES if s.id in state.modifier_array
+        ]
 
         # Append each style's full description
-        final_prompt_for_llm += "\n\nIncorporate the following stylistic directions:\n"
+        final_prompt_for_llm += (
+            "\n\nIncorporate the following stylistic directions:\n"
+        )
         for style in selected_styles:
             final_prompt_for_llm += f"- {style.description}\n"
 
@@ -848,7 +908,9 @@ Do not describe the frame. There should be no lip movement like speaking, but th
         )
         state.generated_scene_direction = scene_direction_for_video
         state.veo_prompt_input = scene_direction_for_video
-        print(f"Generated Scene Direction (for video):\n{scene_direction_for_video}")
+        print(
+            f"Generated Scene Direction (for video):\n{scene_direction_for_video}",
+        )
         yield
 
         print("Lights, camera, action!")
@@ -880,7 +942,9 @@ Do not describe the frame. There should be no lip movement like speaking, but th
             state.result_video_display_url = create_display_url(gcs_uri)
             print(f"Video generated: {gcs_uri}.")
         else:
-            current_error_message = "Video generation failed to return a GCS URI."
+            current_error_message = (
+                "Video generation failed to return a GCS URI."
+            )
 
     except Exception as err:
         print(
@@ -1039,6 +1103,10 @@ def selfie_dialog():
                 ):
                     me.button(
                         "Cancel",
-                        on_click=lambda e: setattr(state, "show_selfie_dialog", False),
+                        on_click=lambda e: setattr(
+                            state,
+                            "show_selfie_dialog",
+                            False,
+                        ),
                         type="flat",
                     )

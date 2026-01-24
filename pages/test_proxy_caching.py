@@ -96,7 +96,9 @@ def page_content():
             ),
         ):
             for item in state.media_items:
-                gcs_uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
+                gcs_uri = item.gcsuri or (
+                    item.gcs_uris[0] if item.gcs_uris else None
+                )
                 if gcs_uri:
                     with me.box(style=me.Style(width=150, height=150)):
                         media_tile(
@@ -119,7 +121,9 @@ def page_content():
             ),
         ):
             for item in state.media_items:
-                gcs_uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
+                gcs_uri = item.gcsuri or (
+                    item.gcs_uris[0] if item.gcs_uris else None
+                )
                 if gcs_uri:
                     with me.box(style=me.Style(width=150, height=150)):
                         media_tile(

@@ -39,7 +39,9 @@ class PageState:
 
     # Input Images
     reference_image_gcs_clothing: list[str] = field(default_factory=list)
-    reference_image_display_urls_clothing: list[str] = field(default_factory=list)
+    reference_image_display_urls_clothing: list[str] = field(
+        default_factory=list,
+    )
 
     reference_image_gcs_model: str = ""
     reference_image_display_url_model: str = ""
@@ -58,7 +60,9 @@ class PageState:
 
     # Progression and alternate images
     progression_images: list[ProgressionImages] = field(default_factory=list)
-    retry_progression_images: list[ProgressionImages] = field(default_factory=list)
+    retry_progression_images: list[ProgressionImages] = field(
+        default_factory=list,
+    )
     alternate_progression_gcs_uris: list[str] = field(default_factory=list)
     alternate_progression_display_urls: list[str] = field(default_factory=list)
     alternate_gcs_uris: list[str] = field(default_factory=list)

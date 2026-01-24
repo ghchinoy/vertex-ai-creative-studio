@@ -63,7 +63,10 @@ def generation_controls(
             label="Model",
             appearance="outline",
             options=[
-                me.SelectOption(label=model.display_name, value=model.version_id)
+                me.SelectOption(
+                    label=model.display_name,
+                    value=model.version_id,
+                )
                 for model in VEO_MODELS
             ],
             value=state.veo_model,
@@ -150,7 +153,10 @@ def generation_controls(
             label="Person Generation",
             appearance="outline",
             options=[
-                me.SelectOption(label="Allow (All ages)", value="Allow (All ages)"),
+                me.SelectOption(
+                    label="Allow (All ages)",
+                    value="Allow (All ages)",
+                ),
                 me.SelectOption(
                     label="Allow (Adults only)",
                     value="Allow (Adults only)",

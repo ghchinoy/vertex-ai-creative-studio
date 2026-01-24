@@ -9,6 +9,7 @@ import time
 from dotenv import load_dotenv
 from google import genai
 
+
 load_dotenv()
 
 # --- Configuration ---
@@ -66,7 +67,11 @@ Now, analyze and sanitize the following query:
 def get_genai_client() -> genai.Client:
     """Initializes and returns a GenAI client."""
     try:
-        return genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
+        return genai.Client(
+            vertexai=True,
+            project=PROJECT_ID,
+            location=LOCATION,
+        )
     except Exception as e:
         print(f"Error initializing GenAI client: {e}")
         raise
@@ -149,7 +154,9 @@ def sanitize_prompt(client: genai.Client, prompt_to_sanitize: str) -> str:
 
 def main():
     """Main function to sanitize a prompt."""
-    parser = argparse.ArgumentParser(description="Sanitize a prompt for safety.")
+    parser = argparse.ArgumentParser(
+        description="Sanitize a prompt for safety.",
+    )
     parser.add_argument("prompt", type=str, help="The prompt to sanitize.")
     args = parser.parse_args()
 

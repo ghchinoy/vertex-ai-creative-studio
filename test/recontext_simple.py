@@ -25,13 +25,12 @@ from typing import Any
 from google.cloud import aiplatform
 from google.cloud.aiplatform.gapic import PredictResponse
 
+
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = "us-central1"
 RECONTEXT = "imagen-product-recontext-preview-06-30"
 api_regional_endpoint = f"{LOCATION}-aiplatform.googleapis.com"
-model_endpoint = (
-    f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{RECONTEXT}"
-)
+model_endpoint = f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{RECONTEXT}"
 OUTPUT_GCS = os.getenv(
     "OUTPUT_GCS",
     f"gs://{PROJECT_ID}-assets",
@@ -59,7 +58,9 @@ def call_product_recontext(
 
     if image_bytes_list:
         for product_image_bytes in image_bytes_list:
-            product_image = {"image": {"bytesBase64Encoded": product_image_bytes}}
+            product_image = {
+                "image": {"bytesBase64Encoded": product_image_bytes},
+            }
             instance["productImages"].append(product_image)
 
     if image_uris_list:
@@ -125,9 +126,7 @@ person_generation = "allow_adult"  # ["dont_allow", "allow_adult", "allow_all"]
 
 product_1 = "gs://genai-blackbelt-fishfooding-assets/vto_product_images/product_hawaiian_shirt.png"
 product_2 = "gs://genai-blackbelt-fishfooding-assets/images/generated_images/1752171998606/sample_0.png"
-product_3 = (
-    "gs://genai-blackbelt-fishfooding-assets/uploads/girlwithapearlearing_vermeer.jpg"
-)
+product_3 = "gs://genai-blackbelt-fishfooding-assets/uploads/girlwithapearlearing_vermeer.jpg"
 
 r = call_product_recontext(
     prompt=prompt,

@@ -51,7 +51,9 @@ This document provides guidelines for AI agents working on the GenMedia Creative
 
 ## Code Quality
 
-- Use `ruff` for code formatting and linting. Ensure code is formatted (`ruff format .`) and linted (`ruff check --fix .`) before submitting changes.
+- Use `ruff` for code formatting and linting.
+- **Mandatory verification:** After any tool call that modifies Python code (`replace`, `write_file`), you MUST run `uv run ruff format <file_path>` and `uv run ruff check --fix <file_path>` immediately on the affected file. This prevents syntax and indentation errors from persisting or cascading.
+- Ensure the project-wide lint pass (`ruff check .`) passes without new regressions before finalizing a task.
 
 
 ## 🤖 GitHub Automation Agents

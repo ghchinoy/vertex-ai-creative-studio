@@ -37,6 +37,7 @@ from config.chirp_3hd import (
 from models.chirp_3hd import synthesize_chirp_speech
 from state.state import AppState
 
+
 # Load about content from JSON
 with open("config/about_content.json") as f:
     about_content = json.load(f)
@@ -48,9 +49,7 @@ with open("config/about_content.json") as f:
 
 @me.stateclass
 class Chirp3hdState:
-    text: str = (
-        "Hello, Chirp is the latest generation of Google's Text-to-Speech technology."
-    )
+    text: str = "Hello, Chirp is the latest generation of Google's Text-to-Speech technology."
     selected_voice: str = "Orus"
     selected_language: str = "en-US"
     speaking_rate: float = 1.0
@@ -93,7 +92,11 @@ def page():
                     me.text(CHIRP3_HD_INFO["title"], type="headline-6")
                     me.markdown(CHIRP3_HD_INFO["description"])
                     with dialog_actions():  # pylint: disable=E1129
-                        me.button("Close", on_click=close_info_dialog, type="flat")
+                        me.button(
+                            "Close",
+                            on_click=close_info_dialog,
+                            type="flat",
+                        )
 
             # Error Dialog
             if state.show_error_dialog:
@@ -108,7 +111,11 @@ def page():
                         style=me.Style(margin=me.Margin(top=16)),
                     )
                     with dialog_actions():  # pylint: disable=E1129
-                        me.button("Close", on_click=close_error_dialog, type="flat")
+                        me.button(
+                            "Close",
+                            on_click=close_error_dialog,
+                            type="flat",
+                        )
 
             with me.box(
                 style=me.Style(
@@ -192,7 +199,9 @@ def page():
                                     step=0.05,
                                 )
                             with me.box():
-                                me.text(f"Volume Gain: {state.volume_gain_db:.1f} dB")
+                                me.text(
+                                    f"Volume Gain: {state.volume_gain_db:.1f} dB",
+                                )
                                 me.slider(
                                     on_value_change=on_change_volume,
                                     min=-96.0,
@@ -204,7 +213,10 @@ def page():
                         # Custom Pronunciations Section
                         me.text(
                             "Custom Pronunciations",
-                            style=me.Style(font_weight=500, margin=me.Margin(top=8)),
+                            style=me.Style(
+                                font_weight=500,
+                                margin=me.Margin(top=8),
+                            ),
                         )
                         with me.box(
                             style=me.Style(
@@ -217,14 +229,20 @@ def page():
                             me.input(
                                 label="Phrase",
                                 on_blur=on_blur_phrase,
-                                style=me.Style(flex_grow=1, font_size="smaller"),
+                                style=me.Style(
+                                    flex_grow=1,
+                                    font_size="smaller",
+                                ),
                                 value=state.current_phrase_input,
                                 appearance="outline",
                             )
                             me.input(
                                 label="Pronunciation",
                                 on_blur=on_blur_pronunciation,
-                                style=me.Style(flex_grow=1, font_size="smaller"),
+                                style=me.Style(
+                                    flex_grow=1,
+                                    font_size="smaller",
+                                ),
                                 value=state.current_pronunciation_input,
                                 appearance="outline",
                             )
@@ -236,7 +254,10 @@ def page():
                                 ],
                                 on_selection_change=on_select_encoding,
                                 value=state.selected_encoding,
-                                style=me.Style(flex_grow=1, font_size="smaller"),
+                                style=me.Style(
+                                    flex_grow=1,
+                                    font_size="smaller",
+                                ),
                                 appearance="outline",
                             )
                             with me.content_button(
@@ -247,8 +268,12 @@ def page():
                             # me.button("Add", on_click=on_add_pronunciation, type="stroked")
 
                         if state.custom_pronunciations:
-                            with me.box(style=me.Style(margin=me.Margin(top=16))):
-                                for i, p in enumerate(state.custom_pronunciations):
+                            with me.box(
+                                style=me.Style(margin=me.Margin(top=16)),
+                            ):
+                                for i, p in enumerate(
+                                    state.custom_pronunciations,
+                                ):
                                     with me.box(
                                         style=me.Style(
                                             display="flex",
@@ -297,7 +322,9 @@ def page():
                         flex_direction="column",
                         align_items="center",
                         justify_content="center",
-                        border=me.Border.all(me.BorderSide(width=1, style="solid")),
+                        border=me.Border.all(
+                            me.BorderSide(width=1, style="solid"),
+                        ),
                         border_radius=12,
                         padding=me.Padding.all(16),
                     ),
@@ -524,16 +551,16 @@ def on_click_generate(e: me.ClickEvent):
             me.state(AppState).snackbar_message = "Audio saved to library"
         except Exception as ex:
             print(f"CRITICAL: Failed to store metadata: {ex}")
-            me.state(AppState).snackbar_message = "Error saving audio to library"
+            me.state(
+                AppState,
+            ).snackbar_message = "Error saving audio to library"
 
 
 @track_click(element_id="chirp_clear_button")
 def on_click_clear(e: me.ClickEvent):
     """Resets the page state to its default values."""
     state = me.state(Chirp3hdState)
-    state.text = (
-        "Hello, Chirp is the latest generation of Google's Text-to-Speech technology."
-    )
+    state.text = "Hello, Chirp is the latest generation of Google's Text-to-Speech technology."
     state.selected_voice = "Orus"
     state.selected_language = "en-US"
     state.speaking_rate = 1.0

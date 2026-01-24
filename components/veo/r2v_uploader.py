@@ -37,9 +37,13 @@ def r2v_uploader(
 
     with me.box(style=me.Style(display="flex", flex_direction="row", gap=15)):
         # --- Assets Section ---
-        with me.box(style=me.Style(display="flex", flex_direction="column", gap=2)):
+        with me.box(
+            style=me.Style(display="flex", flex_direction="column", gap=2),
+        ):
             me.text("Asset references", style=me.Style(font_size="10pt"))
-            with me.box(style=me.Style(display="flex", flex_direction="row", gap=5)):
+            with me.box(
+                style=me.Style(display="flex", flex_direction="row", gap=5),
+            ):
                 for i in range(MAX_ASSET_IMAGES):
                     if i < len(state.r2v_reference_images):
                         image_uri = state.r2v_reference_images[i]
@@ -61,9 +65,13 @@ def r2v_uploader(
                     else:
                         _empty_placeholder()
         # --- Style Section ---
-        with me.box(style=me.Style(display="flex", flex_direction="column", gap=2)):
+        with me.box(
+            style=me.Style(display="flex", flex_direction="column", gap=2),
+        ):
             me.text("Style reference", style=me.Style(font_size="10pt"))
-            with me.box(style=me.Style(display="flex", flex_direction="row", gap=5)):
+            with me.box(
+                style=me.Style(display="flex", flex_direction="row", gap=5),
+            ):
                 if state.r2v_style_image:
                     image_thumbnail(
                         image_uri=state.r2v_style_image,
@@ -115,7 +123,9 @@ def _uploader_placeholder(
             key=f"{key_prefix}_uploader",
             disabled=disabled,
         )
-        with me.box(style=me.Style(pointer_events="none" if disabled else "auto")):
+        with me.box(
+            style=me.Style(pointer_events="none" if disabled else "auto"),
+        ):
             library_chooser_button(
                 key=f"{key_prefix}_library_chooser",
                 on_library_select=on_library_select,
@@ -131,7 +141,11 @@ def _empty_placeholder():
             height=100,
             width=100,
             border=me.Border.all(
-                me.BorderSide(width=1, style="dashed", color=me.theme_var("outline")),
+                me.BorderSide(
+                    width=1,
+                    style="dashed",
+                    color=me.theme_var("outline"),
+                ),
             ),
             border_radius=8,
             opacity=0.5,

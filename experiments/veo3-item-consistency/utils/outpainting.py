@@ -27,6 +27,7 @@ from PIL import Image as PIL_Image
 
 import config
 
+
 # Initialize the Gemini client to use Vertex AI
 client = genai.Client(
     vertexai=True,
@@ -141,7 +142,10 @@ def outpaint_image(image_path: str, prompt: str) -> str:
     mask_for_api = Image(image_bytes=get_bytes_from_pil(mask_pil_outpaint))
 
     # Create reference images for the API call
-    raw_ref_image = RawReferenceImage(reference_image=image_for_api, reference_id=0)
+    raw_ref_image = RawReferenceImage(
+        reference_image=image_for_api,
+        reference_id=0,
+    )
     mask_ref_image = MaskReferenceImage(
         reference_id=1,
         reference_image=mask_for_api,

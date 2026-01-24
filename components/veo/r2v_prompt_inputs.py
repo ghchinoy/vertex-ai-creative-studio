@@ -57,7 +57,9 @@ def r2v_prompt_inputs(
                 key=str(state.veo_prompt_textarea_key),
                 value=state.veo_prompt_input,
             )
-        with me.box(style=me.Style(display="flex", flex_direction="column", gap=15)):
+        with me.box(
+            style=me.Style(display="flex", flex_direction="column", gap=15),
+        ):
             icon_style = me.Style(
                 display="flex",
                 flex_direction="column",

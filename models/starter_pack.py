@@ -39,7 +39,10 @@ def generate_starter_pack_from_look(look_image_uri: str) -> str:
     return ""
 
 
-def generate_look_from_starter_pack(starter_pack_uri: str, model_image_uri: str) -> str:
+def generate_look_from_starter_pack(
+    starter_pack_uri: str,
+    model_image_uri: str,
+) -> str:
     """Generates a look from a starter pack and model image."""
     prompt = "Try this ensemble on the given model."
     generated_images, _, _, _ = gemini.generate_image_from_prompt_and_images(
@@ -56,18 +59,25 @@ def generate_look_from_starter_pack(starter_pack_uri: str, model_image_uri: str)
 
 def generate_virtual_model() -> str:
     """Generates a virtual model image."""
-    config_path = Path(__file__).parent.parent / "config/virtual_model_options.json"
+    config_path = (
+        Path(__file__).parent.parent / "config/virtual_model_options.json"
+    )
     with open(config_path) as f:
         options = json.load(f)
 
     selected_gender_obj = random.choice(options.get("genders", []))
-    selected_silhouette_obj = random.choice(options.get("silhouette_presets", []))
+    selected_silhouette_obj = random.choice(
+        options.get("silhouette_presets", []),
+    )
     selected_mst_obj = random.choice(options.get("MST", []))
     selected_variant_obj = random.choice(options.get("variants", []))
 
     generator = VirtualModelGenerator(DEFAULT_PROMPT)
     generator.set_value("gender", selected_gender_obj["prompt_fragment"])
-    generator.set_value("silhouette", selected_silhouette_obj["prompt_fragment"])
+    generator.set_value(
+        "silhouette",
+        selected_silhouette_obj["prompt_fragment"],
+    )
     generator.set_value("MST", selected_mst_obj["prompt_fragment"])
     generator.set_value("variant", selected_variant_obj["prompt_fragment"])
     prompt = generator.build_prompt()

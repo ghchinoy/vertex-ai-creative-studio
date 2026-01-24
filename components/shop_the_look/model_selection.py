@@ -23,6 +23,7 @@ from config.default import Default
 from models import shop_the_look_workflow
 from state.shop_the_look_state import PageState
 
+
 config = Default()
 
 
@@ -156,12 +157,12 @@ def model_selection():
                     ),
                     on_click=on_model_click,
                 ),
+                me.box(style=me.Style(width=200, height=200)),
             ):
-                with me.box(style=me.Style(width=200, height=200)):
-                    media_tile(
-                        media_type="image",
-                        https_url=create_display_url(model.model_image),
-                    )
+                media_tile(
+                    media_type="image",
+                    https_url=create_display_url(model.model_image),
+                )
 
 
 def on_model_click(e: me.ClickEvent):

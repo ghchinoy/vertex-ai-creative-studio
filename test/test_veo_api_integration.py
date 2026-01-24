@@ -43,14 +43,18 @@ def test_veo_t2v_api_call(gcs_bucket_for_tests, model_config):
     print("----------------------------------------------------")
 
     # Verify that the operation completed successfully and returned a valid response.
-    assert operation_result is not None, "The API operation result should not be None."
+    assert operation_result is not None, (
+        "The API operation result should not be None."
+    )
     assert operation_result.get("done"), (
         f"The 'done' flag in the operation should be True. Full response: {operation_result}"
     )
 
     # Explicitly check for a top-level error in the operation result.
     if "error" in operation_result:
-        pytest.fail(f"API returned a top-level error: {operation_result['error']}")
+        pytest.fail(
+            f"API returned a top-level error: {operation_result['error']}",
+        )
 
     response_data = operation_result.get("response", {})
     assert "videos" in response_data, (

@@ -33,6 +33,7 @@ from google.genai.types import (
     Tool,
 )
 
+
 # ======== Environment Set up ========
 
 BUCKET = os.environ.get("BUCKET")
@@ -138,11 +139,15 @@ def gemini_grounding_call():
 
     for support in grounding_metadata.grounding_supports:
         markdown_parts.append(
-            text_bytes[last_byte_index : support.segment.end_index].decode(ENCODING),
+            text_bytes[last_byte_index : support.segment.end_index].decode(
+                ENCODING,
+            ),
         )
 
         # Generate and append citation footnotes (e.g., "[1][2]")
-        footnotes = "".join([f"[{i + 1}]" for i in support.grounding_chunk_indices])
+        footnotes = "".join(
+            [f"[{i + 1}]" for i in support.grounding_chunk_indices],
+        )
         markdown_parts.append(f" {footnotes}")
 
         # Update index for the next segment
@@ -165,7 +170,11 @@ def gemini_grounding_call():
 
         # Convert GCS URIs to public HTTPS URLs
         if uri and uri.startswith("gs://"):
-            uri = uri.replace("gs://", "https://storage.googleapis.com/", 1).replace(
+            uri = uri.replace(
+                "gs://",
+                "https://storage.googleapis.com/",
+                1,
+            ).replace(
                 " ",
                 "%20",
             )
@@ -496,7 +505,11 @@ def page_header(page_title="In progress"):
 
 
 def make_clickable_text_box(text, page):
-    with me.box(key=page, on_click=handle_click_text_box, style=TEXT_HOLDING_USER):
+    with me.box(
+        key=page,
+        on_click=handle_click_text_box,
+        style=TEXT_HOLDING_USER,
+    ):
         me.text(text, type="body-2")
 
 
@@ -506,7 +519,9 @@ def make_clickable_text_box(text, page):
 @me.stateclass
 class State:
     # Loaded from files
-    showcase_df: pd.DataFrame | None = None  # showcase video locations and details
+    showcase_df: pd.DataFrame | None = (
+        None  # showcase video locations and details
+    )
     # Inspiration related
     inspo_prompt: str = "How might I tailor a marketing campaign for homewares in a department store to young professionals for this summer? Suggest and outline 3 campaign ideas."
     inspo_output_refs: str
@@ -552,7 +567,10 @@ def page_index():
                 text="I want to create media from existing content",
                 page="create",
             )
-            make_clickable_text_box(text="Show me some outputs", page="showcase")
+            make_clickable_text_box(
+                text="Show me some outputs",
+                page="showcase",
+            )
     with me.box(
         style=me.Style(
             display="flex",
@@ -602,7 +620,9 @@ def page_create():
             ):
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="column", flex_grow=1
+                        display="flex",
+                        flex_direction="column",
+                        flex_grow=1,
                     ),
                 ):
                     me.input(
@@ -656,7 +676,10 @@ def page_create():
                         style=me.Style(font_size=14),
                     )
                     me.divider()
-                me.markdown("**Base prompt used:**", style=me.Style(font_size=14))
+                me.markdown(
+                    "**Base prompt used:**",
+                    style=me.Style(font_size=14),
+                )
                 me.markdown(PROMPT_CREATIVE_BASE, style=me.Style(font_size=11))
             with me.box(
                 style=me.Style(
@@ -711,11 +734,16 @@ def page_create():
             if len(s.creative_output) > 0:
                 # me.markdown(s.creative_output) # for debug
                 markdown_output = []
-                for key, value in json.loads(s.creative_output)["response"].items():
+                for key, value in json.loads(s.creative_output)[
+                    "response"
+                ].items():
                     heading = key.replace("_", " ").title()
                     markdown_output.append(f"## {heading}\n")
                     markdown_output.append(f"{value}\n\n")
-                me.markdown("".join(markdown_output), style=me.Style(line_height=1.5))
+                me.markdown(
+                    "".join(markdown_output),
+                    style=me.Style(line_height=1.5),
+                )
             me.box(style=me.Style(margin=me.Margin(top=10, bottom=10)))
             me.button(
                 "Let's see some generated videos",
@@ -773,7 +801,9 @@ WELCOME_HOLDING = me.Style(
     width="min(800px, 100%)",
     background="white",
     border_radius=15,
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
     padding=me.Padding.all(30),
     margin=me.Margin.all("auto"),  # pushes this box into the middle
     # align_items="center", # pushes items inside into middle and squeezes size down of all items...
@@ -783,7 +813,9 @@ TEXT_STYLE_AGENT = me.Style(
     background=AGENT_TEXT_BACKGROUND,
     width="75%",
     border_radius=15,
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
     padding=me.Padding.all(20),
 )
 
@@ -793,7 +825,9 @@ TEXT_HOLDING_USER = me.Style(
     flex_direction="row",
     background=BACKGROUND_COLOUR_CONTENT,
     border_radius=15,
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
     # width="75%",
     padding=me.Padding.all(15),
     margin=me.Margin.all(5),
@@ -837,7 +871,9 @@ STYLE_BOX_WHITE = me.Style(
     flex_basis="max(480px, calc(50% - 48px))",
     background="#fff",
     border_radius=12,
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",

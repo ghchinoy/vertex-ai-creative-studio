@@ -75,7 +75,9 @@ def image_output():
                                 ),
                             ):
                                 # Use media_tile to handle gs:// URIs natively via Firebase SDK
-                                with me.box(style=me.Style(height=300, width=300)):
+                                with me.box(
+                                    style=me.Style(height=300, width=300),
+                                ):
                                     media_tile(
                                         media_type="image",
                                         https_url=create_display_url(img_uri),
@@ -133,7 +135,11 @@ def image_output():
                         me.markdown(
                             text=state.image_commentary,
                             style=me.Style(
-                                padding=me.Padding(left=15, right=15, bottom=15),
+                                padding=me.Padding(
+                                    left=15,
+                                    right=15,
+                                    bottom=15,
+                                ),
                             ),
                         )
         else:

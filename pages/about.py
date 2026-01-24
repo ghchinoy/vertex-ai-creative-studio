@@ -31,7 +31,11 @@ def render_section(section_data: dict):
             align_items="center",
             margin=me.Margin(top=24, bottom=24),
             border=me.Border.all(
-                me.BorderSide(style="solid", width=1, color=me.theme_var("outline")),
+                me.BorderSide(
+                    style="solid",
+                    width=1,
+                    color=me.theme_var("outline"),
+                ),
             ),
             padding=me.Padding.all(16),
             border_radius=12,

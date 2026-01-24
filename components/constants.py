@@ -14,6 +14,7 @@
 
 import mesop as me
 
+
 NUMBER_OF_IMAGES_OPTIONS = [
     me.SelectOption(label="1", value="1"),
     me.SelectOption(label="2", value="2"),
@@ -91,12 +92,18 @@ COMPOSITION_OPTIONS = [
     me.SelectOption(label="None", value="None"),
     me.SelectOption(label="Closeup", value="Closeup"),
     me.SelectOption(label="Knolling", value="Knolling"),
-    me.SelectOption(label="Landscape photography", value="Landscape photography"),
+    me.SelectOption(
+        label="Landscape photography",
+        value="Landscape photography",
+    ),
     me.SelectOption(
         label="Photographed through window",
         value="Photographed through window",
     ),
-    me.SelectOption(label="Shallow depth of field", value="Shallow depth of field"),
+    me.SelectOption(
+        label="Shallow depth of field",
+        value="Shallow depth of field",
+    ),
     me.SelectOption(label="Shot from above", value="Shot from above"),
     me.SelectOption(label="Shot from below", value="Shot from below"),
     me.SelectOption(label="Surface detail", value="Surface detail"),
@@ -141,7 +148,10 @@ ASPECT_RATIO_OPTIONS = [
 ]
 
 IMAGE_MODEL_OPTIONS = [
-    me.SelectOption(label="Imagen 3 Fast", value="imagen-3.0-fast-generate-001"),
+    me.SelectOption(
+        label="Imagen 3 Fast",
+        value="imagen-3.0-fast-generate-001",
+    ),
     me.SelectOption(label="Imagen 3", value="imagen-3.0-generate-001"),
 ]
 

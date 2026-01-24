@@ -18,6 +18,7 @@ import logging
 import time
 import uuid
 
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ from .character_consistency_models import (
     WorkflowStepResult,
 )
 
+
 cfg = Default()
 
 from collections.abc import Generator
@@ -55,7 +57,10 @@ def generate_character_video(
     yielding the result of each step.
     """
     total_start_time = time.time()
-    logger.info("Starting character consistency workflow for user: %s", user_email)
+    logger.info(
+        "Starting character consistency workflow for user: %s",
+        user_email,
+    )
 
     # Step 1: Download image bytes from GCS
     step_start_time = time.time()
@@ -91,7 +96,10 @@ def generate_character_video(
     )
     with concurrent.futures.ThreadPoolExecutor() as executor:
         profiles = list(
-            executor.map(get_facial_composite_profile, reference_image_bytes_list),
+            executor.map(
+                get_facial_composite_profile,
+                reference_image_bytes_list,
+            ),
         )
     with concurrent.futures.ThreadPoolExecutor() as executor:
         all_descriptions = list(
@@ -116,7 +124,10 @@ def generate_character_video(
         duration_seconds=0,
         data={},
     )
-    generated_prompts = generate_final_scene_prompt(character_description, scene_prompt)
+    generated_prompts = generate_final_scene_prompt(
+        character_description,
+        scene_prompt,
+    )
     final_prompt = generated_prompts.prompt
     negative_prompt = generated_prompts.negative_prompt
     step_duration = time.time() - step_start_time
@@ -125,7 +136,10 @@ def generate_character_video(
         status="complete",
         message="Imagen prompt generated.",
         duration_seconds=step_duration,
-        data={"imagen_prompt": final_prompt, "negative_prompt": negative_prompt},
+        data={
+            "imagen_prompt": final_prompt,
+            "negative_prompt": negative_prompt,
+        },
     )
 
     # Step 4: Generate candidate images
@@ -162,7 +176,9 @@ def generate_character_video(
         )
         gemini_candidate_gcs_uris, _, _, _ = gemini_future.result()
 
-    candidate_image_gcs_uris = imagen_candidate_gcs_uris + gemini_candidate_gcs_uris
+    candidate_image_gcs_uris = (
+        imagen_candidate_gcs_uris + gemini_candidate_gcs_uris
+    )
     candidate_image_bytes_list = (
         imagen_candidate_image_bytes_list  # We don't have bytes from Gemini yet
     )
@@ -299,7 +315,11 @@ def _generate_imagen_candidates(
     negative_prompt,
 ):
     """Generates candidate images with Imagen."""
-    client = genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
+    client = genai.Client(
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
+    )
     edit_model = cfg.CHARACTER_CONSISTENCY_IMAGEN_MODEL
     reference_images_for_generation = []
     for i, image_bytes in enumerate(reference_image_bytes_list[:4]):
@@ -381,7 +401,10 @@ def _generate_video_from_image(
     )
     video_prompt = video_prompt_response.text.strip()
 
-    input_image = genai.types.Image(image_bytes=image_bytes, mime_type="image/png")
+    input_image = genai.types.Image(
+        image_bytes=image_bytes,
+        mime_type="image/png",
+    )
 
     operation = veo_client.models.generate_videos(
         model=cfg.CHARACTER_CONSISTENCY_VEO_MODEL,
@@ -407,12 +430,18 @@ def _generate_video_from_image(
     if operation.error:
         raise Exception(f"Error generating video: {operation.error}")
 
-    return operation.response.generated_videos[0].video.video_bytes, video_prompt
+    return operation.response.generated_videos[
+        0
+    ].video.video_bytes, video_prompt
 
 
 def _outpaint_image(image_bytes: bytes, prompt: str) -> bytes:
     """Performs outpainting on an image to a 16:9 aspect ratio."""
-    client = genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
+    client = genai.Client(
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
+    )
     edit_model = cfg.CHARACTER_CONSISTENCY_IMAGEN_MODEL
 
     initial_image = PIL_Image.open(io.BytesIO(image_bytes))
@@ -431,8 +460,12 @@ def _outpaint_image(image_bytes: bytes, prompt: str) -> bytes:
         0,
     )
 
-    image_for_api = types.Image(image_bytes=_get_bytes_from_pil(image_pil_outpaint))
-    mask_for_api = types.Image(image_bytes=_get_bytes_from_pil(mask_pil_outpaint))
+    image_for_api = types.Image(
+        image_bytes=_get_bytes_from_pil(image_pil_outpaint),
+    )
+    mask_for_api = types.Image(
+        image_bytes=_get_bytes_from_pil(mask_pil_outpaint),
+    )
 
     raw_ref_image = types.RawReferenceImage(
         reference_image=image_for_api,

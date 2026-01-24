@@ -65,7 +65,11 @@ def imagen_content(app_state: me.state):
                 ),
             ),
             me.box(
-                style=me.Style(width="80vw", display="flex", flex_direction="column"),
+                style=me.Style(
+                    width="80vw",
+                    display="flex",
+                    flex_direction="column",
+                ),
             ),
         ):
             generation_controls()

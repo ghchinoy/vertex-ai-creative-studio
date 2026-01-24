@@ -40,7 +40,9 @@ def parse_evaluation_markdown(markdown_text: str) -> dict[str, Any]:
         if "Issue not present in the prompt" in content or not json_matches:
             category_data = {
                 "items": {"Issue Found": False},
-                "details": {"Issue Found": "No issue was found for this category."},
+                "details": {
+                    "Issue Found": "No issue was found for this category.",
+                },
                 "explanation": "The model did not find any issues for this category.",
             }
         else:

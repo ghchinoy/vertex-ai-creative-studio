@@ -23,10 +23,14 @@ from common.analytics import log_ui_click
 from common.metadata import MediaItem, get_media_for_page, get_media_item_by_id
 from common.utils import create_display_url, https_url_to_gcs_uri
 from components.header import header
-from components.interior_design.storyboard_video_tile import storyboard_video_tile
+from components.interior_design.storyboard_video_tile import (
+    storyboard_video_tile,
+)
 from components.library.image_details import CarouselState
 from components.lightbox_dialog.lightbox_dialog import lightbox_dialog
-from components.media_detail_viewer.media_detail_viewer import media_detail_viewer
+from components.media_detail_viewer.media_detail_viewer import (
+    media_detail_viewer,
+)
 from components.media_tile.media_tile import get_pills_for_item, media_tile
 from components.page_scaffold import page_frame, page_scaffold
 from components.scroll_sentinel.scroll_sentinel import scroll_sentinel
@@ -202,7 +206,10 @@ def library_content():
                 buttons=[
                     me.ButtonToggleButton(label="Show All", value="all"),
                     me.ButtonToggleButton(label="No Errors", value="no_errors"),
-                    me.ButtonToggleButton(label="Only Errors", value="only_errors"),
+                    me.ButtonToggleButton(
+                        label="Only Errors",
+                        value="only_errors",
+                    ),
                 ],
                 on_change=on_error_filter_change,
             )
@@ -217,7 +224,10 @@ def library_content():
         ):
             if not pagestate.media_items and not pagestate.is_loading:
                 with me.box(
-                    style=me.Style(padding=me.Padding.all(20), text_align="center"),
+                    style=me.Style(
+                        padding=me.Padding.all(20),
+                        text_align="center",
+                    ),
                 ):
                     me.text("No media items found for the selected filters.")
             else:
@@ -260,7 +270,10 @@ def library_content():
         )
 
         library_dialog(pagestate)
-        extend_dialog(pagestate.extend_dialog_state, on_close=on_close_extend_dialog)
+        extend_dialog(
+            pagestate.extend_dialog_state,
+            on_close=on_close_extend_dialog,
+        )
 
 
 def on_media_item_click(e: me.ClickEvent):
@@ -382,7 +395,9 @@ def json_default_serializer(o):
     """A default serializer for json.dumps to handle datetimes."""
     if isinstance(o, (datetime.datetime, datetime.date)):
         return o.isoformat()
-    raise TypeError(f"Object of type {o.__class__.__name__} is not JSON serializable")
+    raise TypeError(
+        f"Object of type {o.__class__.__name__} is not JSON serializable",
+    )
 
 
 @me.component
@@ -458,7 +473,9 @@ def render_tour_detail_dialog(storyboard: dict):
                     style=me.Style(
                         display="flex",
                         border=me.Border.all(
-                            me.BorderSide(color=me.theme_var("outline-variant")),
+                            me.BorderSide(
+                                color=me.theme_var("outline-variant"),
+                            ),
                         ),
                         margin=me.Margin(bottom=16),
                     ),
@@ -486,7 +503,8 @@ def render_tour_detail_dialog(storyboard: dict):
                                         width=2,
                                         style="solid",
                                         color=me.theme_var("primary")
-                                        if pagestate.tour_dialog_active_tab == "details"
+                                        if pagestate.tour_dialog_active_tab
+                                        == "details"
                                         else "transparent",
                                     ),
                                 ),
@@ -515,7 +533,8 @@ def render_tour_detail_dialog(storyboard: dict):
                                         width=2,
                                         style="solid",
                                         color=me.theme_var("primary")
-                                        if pagestate.tour_dialog_active_tab == "raw"
+                                        if pagestate.tour_dialog_active_tab
+                                        == "raw"
                                         else "transparent",
                                     ),
                                 ),
@@ -632,7 +651,11 @@ def render_default_detail_dialog(item: MediaItem):
         i2v_frames.append(item.last_reference_image)
     if i2v_frames:
         # Use a more specific title if it's interpolation
-        title = "Interpolation Frames" if item.last_reference_image else "Source Frame"
+        title = (
+            "Interpolation Frames"
+            if item.last_reference_image
+            else "Source Frame"
+        )
         _render_source_section(title, i2v_frames)
 
     # Virtual Try-On
@@ -684,7 +707,10 @@ def _render_source_section(title: str, uris: list[str]):
                 # Create a dummy MediaItem for pill generation if needed,
                 # though for source assets pills might be overkill.
                 # We keep it for consistency with the previous implementation.
-                source_item = MediaItem(gcsuri=source_uri, media_type=render_type)
+                source_item = MediaItem(
+                    gcsuri=source_uri,
+                    media_type=render_type,
+                )
 
                 media_tile(
                     key=source_uri,

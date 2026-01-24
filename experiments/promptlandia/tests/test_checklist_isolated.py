@@ -64,7 +64,10 @@ def test_extract_json_from_sample():
 
     # Example of how you might check the data
     assert "issue_name" in combined_json
-    assert isinstance(combined_json["issue_name"], list)  # Now a list due to merging
+    assert isinstance(
+        combined_json["issue_name"],
+        list,
+    )  # Now a list due to merging
     print("\nSuccessfully extracted and merged JSON from the sample file!")
 
 

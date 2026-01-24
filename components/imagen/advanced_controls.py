@@ -107,7 +107,9 @@ def on_select_image_count(e: me.SelectSelectionChangeEvent):
         print(
             f"Invalid value for image count: {e.value}. Defaulting or handling error.",
         )
-        state.imagen_image_count = 4  # Or some other default / error state handling
+        state.imagen_image_count = (
+            4  # Or some other default / error state handling
+        )
 
 
 def on_advanced_toggle(e: me.ExpansionPanelToggleEvent):

@@ -49,7 +49,11 @@ def pill(label: str, pill_type: str):
         text_color = me.theme_var("on-surface-variant")
     elif pill_type == "error_present":
         background_color = me.theme_var("error-container")
-    elif pill_type == "genre" or pill_type == "stage" or pill_type == "multi_video":
+    elif (
+        pill_type == "genre"
+        or pill_type == "stage"
+        or pill_type == "multi_video"
+    ):
         background_color = me.theme_var("secondary-container")
         text_color = me.theme_var("on-scecondary-container")
 

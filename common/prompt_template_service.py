@@ -45,7 +45,11 @@ class PromptTemplateService:
     def __init__(self, collection_name: str = "prompt_templates"):
         self.collection_name = collection_name
 
-    def _load_from_json(self, path: str, template_type: str) -> list[PromptTemplate]:
+    def _load_from_json(
+        self,
+        path: str,
+        template_type: str,
+    ) -> list[PromptTemplate]:
         """Loads a list of default templates from a JSON file."""
         templates = []
         try:
@@ -54,7 +58,9 @@ class PromptTemplateService:
                 for item in data:
                     # Ensure the template matches the expected type for this context
                     if item.get("template_type") == template_type:
-                        templates.append(PromptTemplate(**item, is_default=True))
+                        templates.append(
+                            PromptTemplate(**item, is_default=True),
+                        )
         except FileNotFoundError:
             print(f"Warning: Prompt template file not found at {path}")
         except json.JSONDecodeError:

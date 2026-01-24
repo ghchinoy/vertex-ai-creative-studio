@@ -28,6 +28,7 @@ from common.storage import check_gcs_blob_exists
 from config.default import Default
 from config.firebase_config import FirebaseClient
 
+
 # Initialize configuration
 client, model_id = ModelSetup.init()
 MODEL_ID = model_id
@@ -132,7 +133,9 @@ def load_metadata_from_json(
                     continue
 
                 if not isinstance(images, list) or not images:
-                    print(f"No images found for prompt: '{prompt}'. Skipping...")
+                    print(
+                        f"No images found for prompt: '{prompt}'. Skipping...",
+                    )
                     bar()  # Increment the progress bar
                     continue
 
@@ -144,9 +147,7 @@ def load_metadata_from_json(
                 print(f"Model: {model_name}")
                 selected_image = None
                 for image_id in images:
-                    gcs_uri = (
-                        f"gs://{Default.GENMEDIA_BUCKET}/{gcs_sub_folder}/{image_id}"
-                    )
+                    gcs_uri = f"gs://{Default.GENMEDIA_BUCKET}/{gcs_sub_folder}/{image_id}"
                     if check_gcs_blob_exists(gcs_uri):
                         print(f"Selected image: {image_id} exists in GCS.")
                         selected_image = image_id
@@ -186,7 +187,10 @@ def get_elo_ratings(study: str):
             ratings = doc.to_dict().get("ratings", {})
             updated_ratings.update(ratings)
     # Convert to DataFrame
-    df = pd.DataFrame(list(updated_ratings.items()), columns=["Model", "ELO Rating"])
+    df = pd.DataFrame(
+        list(updated_ratings.items()),
+        columns=["Model", "ELO Rating"],
+    )
     df = df.sort_values(by="ELO Rating", ascending=False)  # Sort by rating
     df.reset_index(drop=True, inplace=True)  # Reset index
     return df
@@ -219,7 +223,10 @@ def update_elo_ratings(
             ratings = doc.to_dict().get("ratings", {})
             updated_ratings.update(ratings)
 
-    elo_model1 = updated_ratings.get(model1, 1000)  # Default to 1000 if not found
+    elo_model1 = updated_ratings.get(
+        model1,
+        1000,
+    )  # Default to 1000 if not found
     elo_model2 = updated_ratings.get(model2, 1000)
 
     # Calculate expected scores
@@ -251,7 +258,9 @@ def update_elo_ratings(
                 "timestamp": current_datetime,
             },
         )
-        print(f"ELO ratings updated in Firestore with document ID: {doc_ref.id}")
+        print(
+            f"ELO ratings updated in Firestore with document ID: {doc_ref.id}",
+        )
     else:
         # Document doesn't exist, create it
         doc_ref = db.collection(config.IMAGE_RATINGS_COLLECTION_NAME).document()
@@ -264,7 +273,9 @@ def update_elo_ratings(
             },
         )
 
-        print(f"ELO ratings created in Firestore with document ID: {doc_ref.id}")
+        print(
+            f"ELO ratings created in Firestore with document ID: {doc_ref.id}",
+        )
 
     doc_ref = db.collection(config.IMAGE_RATINGS_COLLECTION_NAME).document()
     doc_ref.set(

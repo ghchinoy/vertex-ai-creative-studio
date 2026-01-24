@@ -26,7 +26,11 @@ def stepper(
 ):
     """A custom stepper component styled to look like Angular Material."""
     with me.box(
-        style=me.Style(display="flex", flex_direction="row", align_items="center"),
+        style=me.Style(
+            display="flex",
+            flex_direction="row",
+            align_items="center",
+        ),
     ):
         for i, step_label in enumerate(steps):
             step_number = i + 1

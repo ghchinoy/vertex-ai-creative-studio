@@ -65,7 +65,10 @@ def storyboarder_content():
                 margin=me.Margin.symmetric(horizontal="auto"),
             ),
         ):
-            me.text("Create a video storyboard from a prompt.", type="headline-5")
+            me.text(
+                "Create a video storyboard from a prompt.",
+                type="headline-5",
+            )
 
             me.textarea(
                 label="Storyboard Prompt",
@@ -75,7 +78,9 @@ def storyboarder_content():
                 style=me.Style(width="100%"),
             )
 
-            with me.box(style=me.Style(display="flex", gap=16, align_items="center")):
+            with me.box(
+                style=me.Style(display="flex", gap=16, align_items="center"),
+            ):
                 me.select(
                     label="Aspect Ratio",
                     value=state.aspect_ratio,
@@ -136,7 +141,11 @@ def storyboarder_content():
 
                 if state.is_generating_video:
                     with me.box(
-                        style=me.Style(display="flex", align_items="center", gap=8),
+                        style=me.Style(
+                            display="flex",
+                            align_items="center",
+                            gap=8,
+                        ),
                     ):
                         me.progress_spinner(diameter=24)
                         me.text(state.video_generation_status)
@@ -194,11 +203,13 @@ def on_generate_images_click(e: me.ClickEvent):
         # If we only got 1, let's loop to get more.
         if len(gcs_uris) < 4:
             for _ in range(4 - len(gcs_uris)):
-                new_uris, _, new_captions, _ = generate_image_from_prompt_and_images(
-                    prompt=state.prompt,
-                    images=[],
-                    aspect_ratio=state.aspect_ratio,
-                    gcs_folder="storyboard_images",
+                new_uris, _, new_captions, _ = (
+                    generate_image_from_prompt_and_images(
+                        prompt=state.prompt,
+                        images=[],
+                        aspect_ratio=state.aspect_ratio,
+                        gcs_folder="storyboard_images",
+                    )
                 )
                 gcs_uris.extend(new_uris)
                 captions.extend(new_captions)
@@ -228,13 +239,13 @@ def on_generate_video_click(e: me.ClickEvent):
     try:
         # 1. Generate video clips for each image
         for i, image_uri in enumerate(state.generated_image_gcs_uris):
-            state.video_generation_status = (
-                f"Generating clip {i + 1}/{len(state.generated_image_gcs_uris)}..."
-            )
+            state.video_generation_status = f"Generating clip {i + 1}/{len(state.generated_image_gcs_uris)}..."
             yield
 
             # Construct enhanced prompt
-            caption = state.image_captions[i] if i < len(state.image_captions) else ""
+            caption = (
+                state.image_captions[i] if i < len(state.image_captions) else ""
+            )
             description = describe_image(image_uri)
 
             veo_prompt = f"{state.prompt}. {caption}. {description}"

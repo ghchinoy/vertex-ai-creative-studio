@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -25,8 +24,7 @@ class APIReferenceImage(BaseModel):
 
 
 class VideoGenerationRequest(BaseModel):
-    """
-    Defines the contract for a video generation request.
+    """Defines the contract for a video generation request.
     This schema is used by the UI to call the model layer and will be
     the schema for the future FastAPI endpoint.
     """
@@ -40,19 +38,19 @@ class VideoGenerationRequest(BaseModel):
     generate_audio: bool = True
     model_version_id: str
     person_generation: str
-    negative_prompt: Optional[str] = None
-    rewriter_type: Optional[str] = None
+    negative_prompt: str | None = None
+    rewriter_type: str | None = None
 
     # For I2V and Interpolation
-    reference_image_gcs: Optional[str] = None
-    last_reference_image_gcs: Optional[str] = None
-    reference_image_mime_type: Optional[str] = None
-    last_reference_image_mime_type: Optional[str] = None
+    reference_image_gcs: str | None = None
+    last_reference_image_gcs: str | None = None
+    reference_image_mime_type: str | None = None
+    last_reference_image_mime_type: str | None = None
 
     # For R2V
-    r2v_references: Optional[List[APIReferenceImage]] = None
-    r2v_style_image: Optional[APIReferenceImage] = None
+    r2v_references: list[APIReferenceImage] | None = None
+    r2v_style_image: APIReferenceImage | None = None
 
     # For Video Extension
-    video_input_gcs: Optional[str] = None
-    video_input_mime_type: Optional[str] = None
+    video_input_gcs: str | None = None
+    video_input_mime_type: str | None = None

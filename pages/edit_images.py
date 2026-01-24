@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any
 
 import mesop as me
 from absl import logging
+
 from common import storage
 from common import utils as helpers
 from common.storage import store_to_gcs
@@ -29,6 +30,7 @@ from components.page_scaffold import page_frame, page_scaffold
 from config.default import Default
 from models import image_models
 from state.state import AppState
+
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -48,7 +50,9 @@ _BOX_STYLE = me.Style(
     flex_basis="max(480px, calc(50% - 48px))",
     background=me.theme_var("background"),
     border_radius=12,
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",
@@ -162,10 +166,14 @@ def content(app_state: me.state):  # pylint: disable=unused-argument
                             for idx, uri in enumerate(
                                 [page_state.edit_uri],
                             ):
-                                with me.box(style=me.Style(width="460px", height=460)):
+                                with me.box(
+                                    style=me.Style(width="460px", height=460),
+                                ):
                                     media_tile(
                                         media_type="image",
-                                        https_url=helpers.create_display_url(uri),
+                                        https_url=helpers.create_display_url(
+                                            uri,
+                                        ),
                                         key=f"edit_{idx}",
                                     )
                         else:
@@ -280,7 +288,9 @@ def on_selection_change_mask_mode(
     yield
 
 
-async def on_click_image_edit(event: me.ClickEvent) -> AsyncGenerator[Any, Any, Any]:
+async def on_click_image_edit(
+    event: me.ClickEvent,
+) -> AsyncGenerator[Any, Any, Any]:
     """Creates images from Imagen and returns a list of gcs uris."""
     del event  # Unused.
     state = me.state(EditImagesPageState)
@@ -290,7 +300,9 @@ async def on_click_image_edit(event: me.ClickEvent) -> AsyncGenerator[Any, Any, 
 
     storage_client = storage.Client(project=config.PROJECT_ID)
     bucket = storage_client.bucket(config.GENMEDIA_BUCKET)
-    blob = bucket.blob(state.upload_uri.replace(f"gs://{config.GENMEDIA_BUCKET}/", ""))
+    blob = bucket.blob(
+        state.upload_uri.replace(f"gs://{config.GENMEDIA_BUCKET}/", ""),
+    )
     image_bytes = blob.download_as_bytes()
 
     edit_uris = await image_models.edit_image(

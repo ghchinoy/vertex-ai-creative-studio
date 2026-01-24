@@ -108,7 +108,9 @@ def generate_image_from_prompt_and_images(
 
     parts = [types.Part.from_text(text=prompt)]
     for image_uri in images:
-        parts.append(types.Part.from_uri(file_uri=image_uri, mime_type="image/png"))
+        parts.append(
+            types.Part.from_uri(file_uri=image_uri, mime_type="image/png"),
+        )
 
     contents = [types.Content(role="user", parts=parts)]
 
@@ -166,7 +168,9 @@ def generate_image_from_prompt_and_images(
                 # google-genai types usually have model_dump()
                 grounding_info = candidate.grounding_metadata.model_dump()
             except Exception as e:
-                analytics_logger.warning(f"Failed to extract grounding metadata: {e}")
+                analytics_logger.warning(
+                    f"Failed to extract grounding metadata: {e}",
+                )
 
         if candidate.content and candidate.content.parts:
             analytics_logger.info(
@@ -199,7 +203,9 @@ def generate_image_from_prompt_and_images(
                         ""  # Reset buffer after associating with an image
                     )
     else:
-        analytics_logger.warning("generate_image_from_prompt_and_images: no images")
+        analytics_logger.warning(
+            "generate_image_from_prompt_and_images: no images",
+        )
     return gcs_uris, execution_time, captions, grounding_info
 
 
@@ -245,7 +251,9 @@ def extract_room_names_from_image(image_uri: str) -> list[str]:
         max=10,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
-    retry=retry_if_exception_type(Exception),  # Retry on all exceptions for robustness
+    retry=retry_if_exception_type(
+        Exception,
+    ),  # Retry on all exceptions for robustness
     reraise=True,  # re-raise the last exception if all retries fail
 )
 def rewriter(original_prompt: str, rewriter_prompt: str) -> str:
@@ -260,7 +268,9 @@ def rewriter(original_prompt: str, rewriter_prompt: str) -> str:
 
     """
     full_prompt = f"{rewriter_prompt} {original_prompt}"
-    analytics_logger.info(f"Rewriter: '{full_prompt}' with model {REWRITER_MODEL_ID}")
+    analytics_logger.info(
+        f"Rewriter: '{full_prompt}' with model {REWRITER_MODEL_ID}",
+    )
     try:
         with track_model_call(model_name=REWRITER_MODEL_ID, task="rewriter"):
             response = client.models.generate_content(
@@ -306,7 +316,10 @@ def analyze_audio_with_gemini(
 
     # Prepare the audio part using from_uri
     try:
-        audio_part = types.Part.from_uri(file_uri=audio_uri, mime_type="audio/wav")
+        audio_part = types.Part.from_uri(
+            file_uri=audio_uri,
+            mime_type="audio/wav",
+        )
         analytics_logger.info(f"Audio part created from URI: {audio_uri}")
     except Exception as e:
         analytics_logger.error(
@@ -396,9 +409,14 @@ Output this as JSON.
     ]
 
     try:
-        analytics_logger.info(f"Sending request to Gemini model: {analysis_model_id}")
+        analytics_logger.info(
+            f"Sending request to Gemini model: {analysis_model_id}",
+        )
 
-        with track_model_call(model_name=analysis_model_id, task="analyze_audio"):
+        with track_model_call(
+            model_name=analysis_model_id,
+            task="analyze_audio",
+        ):
             response = client.models.generate_content(  # Or client.generate_content if client is a model instance
                 model=analysis_model_id,
                 contents=contents_for_api,
@@ -411,7 +429,9 @@ Output this as JSON.
         # Assuming the response.text contains the JSON string due to response_mime_type
         if response.text:
             parsed_json = json.loads(response.text)
-            analytics_logger.info(f"Successfully parsed analysis JSON: {parsed_json}")
+            analytics_logger.info(
+                f"Successfully parsed analysis JSON: {parsed_json}",
+            )
             return parsed_json
             # return response.text
         # Handle cases where response.text might be empty or parts are structured differently
@@ -431,7 +451,9 @@ Output this as JSON.
         return None  # Or raise an error
 
     except Exception as e:
-        analytics_logger.error(f"Error during Gemini API call for audio analysis: {e}")
+        analytics_logger.error(
+            f"Error during Gemini API call for audio analysis: {e}",
+        )
         # The retry decorator will handle re-raising if all attempts fail.
         # If not using retry, you'd raise e here.
         raise  # Re-raise for tenacity or the caller
@@ -502,7 +524,10 @@ def image_critique(original_prompt: str, img_uris: list[str]) -> str:
                 f"Sending critique request to Gemini model: {critique_model_id} with {len(contents_payload)} parts.",
             )
 
-            with track_model_call(model_name=critique_model_id, task="image_critique"):
+            with track_model_call(
+                model_name=critique_model_id,
+                task="image_critique",
+            ):
                 response = client.models.generate_content(
                     model=critique_model_id,
                     contents=contents_payload,
@@ -602,7 +627,9 @@ def generate_compliment(generation_instruction: str, image_output):
         timing = f"Critique generation time: {execution_time:.2f} seconds"  # More precise timing
         analytics_logger.info(timing)
 
-        if error_for_this_op:  # If an error occurred specifically in this operation
+        if (
+            error_for_this_op
+        ):  # If an error occurred specifically in this operation
             raise GenerationError(error_for_this_op)
 
     analytics_logger.info("Critique generation function finished.")
@@ -628,7 +655,10 @@ def get_facial_composite_profile(image_bytes: bytes) -> FacialCompositeProfile:
         "You are a forensic analyst. Analyze the following image and extract a detailed, structured facial profile.",
         types.Part.from_bytes(data=image_bytes, mime_type="image/png"),
     ]
-    with track_model_call(model_name=model_name, task="get_facial_composite_profile"):
+    with track_model_call(
+        model_name=model_name,
+        task="get_facial_composite_profile",
+    ):
         response = client.models.generate_content(
             model=model_name,
             contents=profile_prompt_parts,
@@ -704,7 +734,10 @@ def generate_final_scene_prompt(
     3.  Ensure the final prompt clearly describes the person performing the action or being in the scene requested by the user.
     4.  Generate a standard negative prompt to avoid common artistic flaws.
     """
-    with track_model_call(model_name=model_name, task="generate_final_scene_prompt"):
+    with track_model_call(
+        model_name=model_name,
+        task="generate_final_scene_prompt",
+    ):
         response = client.models.generate_content(
             model=model_name,
             contents=[meta_prompt],
@@ -802,7 +835,10 @@ def select_best_image_with_description(
             types.Part.from_bytes(data=image_bytes, mime_type="image/png"),
         )
 
-    with track_model_call(model_name=model, task="select_best_image_with_description"):
+    with track_model_call(
+        model_name=model,
+        task="select_best_image_with_description",
+    ):
         response = client.models.generate_content(
             model=model,
             contents=prompt_parts,
@@ -882,7 +918,10 @@ def describe_images_and_look(
     for a in look_articles:
         prompt_parts.append(f"Article Image Path {a.clothing_image}")
         prompt_parts.append(
-            types.Part.from_uri(file_uri=a.clothing_image, mime_type="image/png"),
+            types.Part.from_uri(
+                file_uri=a.clothing_image,
+                mime_type="image/png",
+            ),
         )
 
     with track_model_call(model_name=model, task="describe_images_and_look"):
@@ -901,7 +940,9 @@ def describe_images_and_look(
     retry=retry_if_exception_type(Exception),
     reraise=True,
 )
-def generate_transformation_prompts(image_uris: list[str]) -> list[Transformation]:
+def generate_transformation_prompts(
+    image_uris: list[str],
+) -> list[Transformation]:
     """Generate three transformation prompts for a given image."""
     model_name = cfg.MODEL_ID
     config = types.GenerateContentConfig(
@@ -927,7 +968,9 @@ def generate_transformation_prompts(image_uris: list[str]) -> list[Transformatio
 
     prompt_parts = [prompt_text]
     for uri in image_uris:
-        prompt_parts.append(types.Part.from_uri(file_uri=uri, mime_type="image/png"))
+        prompt_parts.append(
+            types.Part.from_uri(file_uri=uri, mime_type="image/png"),
+        )
 
     with track_model_call(
         model_name=model_name,
@@ -1026,7 +1069,10 @@ def evaluate_media_with_questions(
         types.Part.from_uri(file_uri=media_uri, mime_type=mime_type),
     ]
 
-    with track_model_call(model_name=model_name, task="evaluate_media_with_questions"):
+    with track_model_call(
+        model_name=model_name,
+        task="evaluate_media_with_questions",
+    ):
         response = client.models.generate_content(
             model=model_name,
             contents=prompt_parts,
@@ -1063,7 +1109,10 @@ def evaluate_image_with_questions(
         types.Part.from_uri(file_uri=image_uri, mime_type="image/png"),
     ]
 
-    with track_model_call(model_name=model_name, task="evaluate_image_with_questions"):
+    with track_model_call(
+        model_name=model_name,
+        task="evaluate_image_with_questions",
+    ):
         response = client.models.generate_content(
             model=model_name,
             contents=prompt_parts,
@@ -1074,7 +1123,10 @@ def evaluate_image_with_questions(
 
 
 class CritiqueQuestion(BaseModel):
-    question: str = Field(..., description="A yes/no question to evaluate an image.")
+    question: str = Field(
+        ...,
+        description="A yes/no question to evaluate an image.",
+    )
 
 
 class CritiqueQuestionList(BaseModel):
@@ -1109,7 +1161,10 @@ def generate_critique_questions(
         meta_prompt = "Using the following prompt, come up with 5 yes/no questions that we could ask of a generated image to identify whether it meets the intent of the user:\n\n"
         meta_prompt += f"Prompt: {prompt}\n\n"
 
-    with track_model_call(model_name=model_name, task="generate_critique_questions"):
+    with track_model_call(
+        model_name=model_name,
+        task="generate_critique_questions",
+    ):
         response = client.models.generate_content(
             model=model_name,
             contents=[meta_prompt],
@@ -1145,7 +1200,9 @@ def generate_text(
             for ext in [".mp4", ".mov", ".avi", ".mkv", ".webm"]
         ):
             mime_type = "video/mp4"  # General video type
-        elif any(image_uri.lower().endswith(ext) for ext in [".wav", ".mp3", ".flac"]):
+        elif any(
+            image_uri.lower().endswith(ext) for ext in [".wav", ".mp3", ".flac"]
+        ):
             mime_type = "audio/wav"  # General audio type
         elif any(
             image_uri.lower().endswith(ext)
@@ -1158,7 +1215,9 @@ def generate_text(
             # Fallback for unknown types, though this may still cause errors
             mime_type = "application/octet-stream"
 
-        parts.append(types.Part.from_uri(file_uri=image_uri, mime_type=mime_type))
+        parts.append(
+            types.Part.from_uri(file_uri=image_uri, mime_type=mime_type),
+        )
 
     # print(f"Constructed parts for Gemini API: {parts}")
 
@@ -1178,7 +1237,9 @@ def generate_text(
 
     # end_time = time.time()
     # execution_time = end_time - start_time
-    execution_time = 0  # Placeholder, timing is handled by track_model_call logger
+    execution_time = (
+        0  # Placeholder, timing is handled by track_model_call logger
+    )
 
     # print(f"Returning text: {response.text}, execution_time: {execution_time}")
     return response.text, execution_time

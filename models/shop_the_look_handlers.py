@@ -39,6 +39,7 @@ from models.vto import generate_vto_image
 from state.shop_the_look_state import PageState
 from state.state import AppState
 
+
 config = Default()
 
 
@@ -88,7 +89,10 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
 
         # Check for explicit errors in response
         if op.get("done") and op.get("error"):
-            current_error_message = op["error"].get("message", "Unknown API error")
+            current_error_message = op["error"].get(
+                "message",
+                "Unknown API error",
+            )
             print(f"API Error Detected: {current_error_message}")
             # No GCS URI in this case
             gcs_uri = ""
@@ -96,7 +100,10 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
             response_data = op["response"]
             print(f"Response: {response_data}")
 
-            if response_data.get("raiMediaFilteredCount", 0) > 0 and response_data.get(
+            if response_data.get(
+                "raiMediaFilteredCount",
+                0,
+            ) > 0 and response_data.get(
                 "raiMediaFilteredReasons",
             ):
                 # Extract the first reason provided
@@ -152,7 +159,9 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
     finally:
         end_time = time.time()  # Record the ending time
         execution_time = end_time - start_time  # Calculate the elapsed time
-        print(f"Execution time: {execution_time} seconds")  # Print the execution time
+        print(
+            f"Execution time: {execution_time} seconds",
+        )  # Print the execution time
         state.timing = f"Generation time: {round(execution_time)} seconds"
         app_state = me.state(AppState)
 
@@ -190,7 +199,9 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
             print(f"CRITICAL: Failed to store metadata: {meta_err}")
             # Optionally, display another error or log this critical failure
             if not state.show_error_dialog:  # Avoid overwriting primary error
-                state.error_message = f"Failed to store video metadata: {meta_err}"
+                state.error_message = (
+                    f"Failed to store video metadata: {meta_err}"
+                )
                 state.show_error_dialog = True
 
     state.is_loading = False
@@ -276,9 +287,14 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             if e.key != "retry":
-                desc_future = executor.submit(describe_images_and_look, look_articles)
+                desc_future = executor.submit(
+                    describe_images_and_look,
+                    look_articles,
+                )
 
-            article_image_bytes_list = list(executor.map(download_from_gcs, articles))
+            article_image_bytes_list = list(
+                executor.map(download_from_gcs, articles),
+            )
 
             if e.key != "retry":
                 try:
@@ -290,7 +306,9 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
                                 item.item_id.split("/")[-1]
                                 == article.article_image_path.split("/")[-1]
                             ):
-                                item.ai_description = article.article_description
+                                item.ai_description = (
+                                    article.article_description
+                                )
                     yield
                 except Exception as exc:
                     print(f"generated an exception: {exc}")
@@ -305,7 +323,9 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
                 )
 
             for i, row in enumerate(articles_for_vto):
-                state.current_status = f"{status_prefix}Trying on {row.article_type}..."
+                state.current_status = (
+                    f"{status_prefix}Trying on {row.article_type}..."
+                )
                 yield
 
                 potential_images = generate_vto_image(
@@ -315,7 +335,11 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
                 )
 
                 temp_progressions = [
-                    ProgressionImage(image_path=p, best_image=False, reasoning="")
+                    ProgressionImage(
+                        image_path=p,
+                        best_image=False,
+                        reasoning="",
+                    )
                     for p in potential_images
                 ]
 
@@ -323,9 +347,7 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
                     executor.map(download_from_gcs, potential_images),
                 )
 
-                state.current_status = (
-                    f"{status_prefix}Selecting best image of {row.article_type}..."
-                )
+                state.current_status = f"{status_prefix}Selecting best image of {row.article_type}..."
                 yield
 
                 byte_lookup = article_image_bytes_list[
@@ -354,7 +376,9 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
                     # Fallback: if no 'best' image was flagged, use the last one generated.
                     last_best_image = potential_images[-1]
 
-                progressions = ProgressionImages(progression_images=temp_progressions)
+                progressions = ProgressionImages(
+                    progression_images=temp_progressions,
+                )
 
                 if e.key == "retry":
                     state.retry_progression_images.append(progressions)
@@ -365,7 +389,9 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
 
                 if r.primary_view and (i + 1) == len(articles_for_vto):
                     state.result_image_gcs_uri = last_best_image
-                    state.result_image_display_url = create_display_url(last_best_image)
+                    state.result_image_display_url = create_display_url(
+                        last_best_image,
+                    )
                 elif i == len(look_articles):
                     state.alternate_gcs_uris.append(last_best_image)
                     state.alternate_display_urls.append(

@@ -75,7 +75,10 @@ def log_page_view(page_name: str, session_id: str = None):
         "page_name": page_name,
         "session_id": session_id,
     }
-    analytics_logger.info(f"Page view: {page_name}", extra={"extra_data": extra_data})
+    analytics_logger.info(
+        f"Page view: {page_name}",
+        extra={"extra_data": extra_data},
+    )
 
 
 def log_ui_click(

@@ -5,13 +5,12 @@ import time
 
 from google.cloud import aiplatform_v1beta1
 
+
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = "us-central1"
 VEO = "veo-2.0-generate-exp"
 api_regional_endpoint = f"{LOCATION}-aiplatform.googleapis.com"
-veo_model = (
-    f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{VEO}"
-)
+veo_model = f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{VEO}"
 OUTPUT_GCS = os.getenv("OUTPUT_GCS")  # gs://etc
 
 
@@ -60,7 +59,9 @@ def t2v(prompt, seed, aspect_ratio, sample_count, output_gcs, enable_pr):
 def predict_veo_model(data=None):
     """AI Platform Prediction Service Client"""
     client_options = {"api_endpoint": api_regional_endpoint}
-    client = aiplatform_v1beta1.PredictionServiceClient(client_options=client_options)
+    client = aiplatform_v1beta1.PredictionServiceClient(
+        client_options=client_options,
+    )
 
     print(api_regional_endpoint)
     # print(f"Instances: {data['instances']}")
@@ -84,7 +85,9 @@ def predict_veo_model(data=None):
 def fetch_operation(lro_name):
     """Long Running Operation fetch"""
     client_options = {"api_endpoint": api_regional_endpoint}
-    client = aiplatform_v1beta1.PredictionServiceClient(client_options=client_options)
+    client = aiplatform_v1beta1.PredictionServiceClient(
+        client_options=client_options,
+    )
 
     request = {"operationName": lro_name}
     # The generation usually takes 2 minutes. Loop 30 times, around 5 minutes.

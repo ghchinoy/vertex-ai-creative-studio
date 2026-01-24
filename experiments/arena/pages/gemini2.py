@@ -26,6 +26,7 @@ from tenacity import (
 
 from components.header import header
 
+
 client, model_id = ModelSetup.init()
 MODEL_ID = model_id
 

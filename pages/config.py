@@ -88,7 +88,11 @@ def _make_tab_style(selected: bool) -> me.Style:
     if selected:
         style.background = me.theme_var("surface-container")
         style.border = me.Border(
-            bottom=me.BorderSide(width=2, style="solid", color=me.theme_var("primary")),
+            bottom=me.BorderSide(
+                width=2,
+                style="solid",
+                color=me.theme_var("primary"),
+            ),
         )
         style.cursor = "default"
     return style
@@ -162,7 +166,11 @@ def page():
     selected_template = None
     if state.selected_template_key:
         selected_template = next(
-            (t for t in state.templates if t["key"] == state.selected_template_key),
+            (
+                t
+                for t in state.templates
+                if t["key"] == state.selected_template_key
+            ),
             None,
         )
 
@@ -186,7 +194,9 @@ def page():
 
         # Conditionally render the dialog, passing the derived template dict
         if state.show_template_dialog and selected_template:
-            is_editable = selected_template["attribution"] == app_state.user_email
+            is_editable = (
+                selected_template["attribution"] == app_state.user_email
+            )
             prompt_template_form_dialog(
                 template=selected_template,
                 # Use the new mode parameter instead of is_editable
@@ -222,7 +232,9 @@ def get_config_table(app_state: AppState):
             Default.PROJECT_ID,
             Default.LOCATION,
             Default.MODEL_ID,
-            f"gs://{Default.GENMEDIA_BUCKET}" if Default.GENMEDIA_BUCKET else "Not Set",
+            f"gs://{Default.GENMEDIA_BUCKET}"
+            if Default.GENMEDIA_BUCKET
+            else "Not Set",
             f"{Default.GENMEDIA_FIREBASE_DB} / {Default.GENMEDIA_COLLECTION_NAME}"
             if Default.GENMEDIA_FIREBASE_DB and Default.GENMEDIA_COLLECTION_NAME
             else "Not Set",

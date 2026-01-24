@@ -39,7 +39,9 @@ class PageState:
 
     # Evaluation
     is_evaluating: bool = False
-    evaluation_results: dict[str, str] = field(default_factory=dict)  # JSON strings
+    evaluation_results: dict[str, str] = field(
+        default_factory=dict,
+    )  # JSON strings
 
     # UI
     show_snackbar: bool = False

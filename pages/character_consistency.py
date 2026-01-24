@@ -27,6 +27,7 @@ from components.page_scaffold import page_frame, page_scaffold
 from models.character_consistency import generate_character_video
 from state.state import AppState
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -79,7 +80,10 @@ def character_consistency_page_content():
 
     if state.info_dialog_open:
         with dialog(is_open=state.info_dialog_open):  # pylint: disable=not-context-manager
-            me.text(f"About {CHARACTER_CONSISTENCY_INFO['title']}", type="headline-4")
+            me.text(
+                f"About {CHARACTER_CONSISTENCY_INFO['title']}",
+                type="headline-4",
+            )
             me.markdown(CHARACTER_CONSISTENCY_INFO["description"])
             me.divider()
             me.text("Current Settings", type="headline-6")
@@ -153,7 +157,9 @@ def character_consistency_page_content():
         )
 
         if state.total_generation_time > 0:
-            me.text(f"Total generation time: {state.total_generation_time:.2f} seconds")
+            me.text(
+                f"Total generation time: {state.total_generation_time:.2f} seconds",
+            )
 
         if state.candidate_image_display_urls:
             me.text("Candidate Images", type="headline-5")
@@ -293,16 +299,16 @@ def on_generate_click(e: me.ClickEvent):
                 if "outpainted_image_gcs_uri" in step_result.data:
                     gcs_uri = step_result.data["outpainted_image_gcs_uri"]
                     state.outpainted_image_gcs_uri = gcs_uri
-                    state.outpainted_image_display_url = create_display_url(gcs_uri)
+                    state.outpainted_image_display_url = create_display_url(
+                        gcs_uri,
+                    )
                 if "video_gcs_uri" in step_result.data:
                     gcs_uri = step_result.data["video_gcs_uri"]
                     state.final_video_gcs_uri = gcs_uri
                     state.final_video_display_url = create_display_url(gcs_uri)
             yield
 
-        state.status_message = (
-            f"Workflow complete! Total time: {state.total_generation_time:.2f} seconds"
-        )
+        state.status_message = f"Workflow complete! Total time: {state.total_generation_time:.2f} seconds"
 
     except Exception as e:
         logger.error("Error generating character video", exc_info=True)

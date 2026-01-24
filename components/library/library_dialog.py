@@ -44,7 +44,10 @@ def library_dialog(
         dialog(is_open=is_open, dialog_style=dialog_style),
         me.box(
             style=me.Style(
-                display="flex", flex_direction="column", gap=16, flex_grow=1
+                display="flex",
+                flex_direction="column",
+                gap=16,
+                flex_grow=1,
             ),
         ),
     ):

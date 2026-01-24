@@ -33,6 +33,7 @@ from common.storage import store_to_gcs
 from config.default import Default
 from config.firebase_config import FirebaseClient
 
+
 config = Default()
 logging.basicConfig(level=logging.DEBUG)
 
@@ -80,7 +81,9 @@ def generate_images_from_model_garden(
         # Re-raises exceptions from aiplatform.Endpoint.predict
 
     """
-    if not all([prompt, endpoint_id, model_name, output_gcs_folder, parameters]):
+    if not all(
+        [prompt, endpoint_id, model_name, output_gcs_folder, parameters],
+    ):
         raise ValueError(
             "Missing one or more required arguments: prompt, endpoint_id, model_name, output_gcs_folder, parameters",
         )
@@ -125,7 +128,9 @@ def generate_images_from_model_garden(
         image_outputs = []
         for prediction in response.predictions:
             # Check common keys for base64 image data
-            img_data = prediction.get("output") or prediction.get("bytesBase64Encoded")
+            img_data = prediction.get("output") or prediction.get(
+                "bytesBase64Encoded",
+            )
             if img_data:
                 image_outputs.append(img_data)
             else:
@@ -134,7 +139,9 @@ def generate_images_from_model_garden(
                 )
 
         if not image_outputs:
-            logging.error("No valid image data found in any endpoint predictions.")
+            logging.error(
+                "No valid image data found in any endpoint predictions.",
+            )
             return []  # Or raise an error
     except Exception as e:
         logging.error(
@@ -195,7 +202,11 @@ def generate_images_from_model_garden(
     return arena_output
 
 
-def images_from_flux(model_name: str, prompt: str, aspect_ratio: str) -> list[str]:
+def images_from_flux(
+    model_name: str,
+    prompt: str,
+    aspect_ratio: str,
+) -> list[str]:
     """Generates images using the configured Flux.1 model endpoint.
 
     Args:
@@ -243,7 +254,9 @@ def images_from_stable_diffusion(
     """
     _ = aspect_ratio  # aspect ratio is not used in this function
     if not config.MODEL_STABLE_DIFFUSION_ENDPOINT_ID:
-        raise ValueError("config.MODEL_STABLE_DIFFUSION_ENDPOINT_ID is not set.")
+        raise ValueError(
+            "config.MODEL_STABLE_DIFFUSION_ENDPOINT_ID is not set.",
+        )
 
     default_params = {
         "height": 1024,
@@ -320,7 +333,9 @@ def images_from_imagen(model_name: str, prompt: str, aspect_ratio: str):
 
 
 def study_fetch(model_name: str, prompt: str) -> list[str]:
-    db: Client = FirebaseClient(database_id=config.IMAGE_FIREBASE_DB).get_client()
+    db: Client = FirebaseClient(
+        database_id=config.IMAGE_FIREBASE_DB,
+    ).get_client()
     collection_ref = db.collection(config.IMAGE_COLLECTION_NAME)
     print(f"Using: {model_name}")
 

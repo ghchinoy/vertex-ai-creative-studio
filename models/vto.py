@@ -24,12 +24,17 @@ from google.genai.types import (
 
 from config.default import Default
 
+
 cfg = Default()
 
 
 def init_client() -> genai.Client:
     """Initializes the GenAI client."""
-    return genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
+    return genai.Client(
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
+    )
 
 
 def generate_vto_image(

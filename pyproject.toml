@@ -160,16 +160,27 @@ url = "https://pypi.org/simple"
 default = true
 
 [tool.ruff]
-# Python version (optional, defaults to auto-detect)
-# target-version = "py310"
+# Google Python Style Guide standard is 80
+line-length = 80
 
 [tool.ruff.lint]
-# Enable Pyflakes ("F") and Pycodestyle ("E", "W") categories by default.
-# select = ["E", "F", "W", "I"]  # I for isort
-# Can be more specific or add more rules later
-# For example, to emulate Flake8:
+# Enable specific rule sets
 select = ["E", "F", "W", "C90", "I", "N", "D", "UP", "ANN", "S", "BLE", "A", "COM", "LOG", "PT", "Q", "RET", "SIM", "TID", "ARG", "PTH", "ERA", "PD", "PGH", "PIE", "PL", "TRY", "FLY", "NPY", "PERF", "RUF"]
-ignore = ["E501"] # Ignore line too long for now, can be addressed later
+
+# Ignore rules that are either too noisy for legacy code or inherently conflicting
+ignore = [
+    "E501", # Line too long (handled by formatter mostly)
+    "D203", # One blank line before class (conflicts with D211)
+    "D213", # Multi-line docstring summary second line (conflicts with D212)
+    "COM812", # Missing trailing comma (conflicts with formatter)
+    "ANN", # Missing type annotations (too many for now, will address later)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
 
 [tool.ruff.format]
 # Use black-compatible formatting

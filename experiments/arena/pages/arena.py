@@ -37,6 +37,7 @@ from components.header import header
 from config.default import Default
 from state.state import AppState
 
+
 # Initialize configuration
 client, model_id = ModelSetup.init()
 MODEL_ID = model_id
@@ -78,7 +79,9 @@ class PageState:
 def arena_images(input: str, study: str):
     """Create images for arena comparison"""
     state = me.state(PageState)
-    if input == "":  # handle condition where someone hits "random" but doesn't modify
+    if (
+        input == ""
+    ):  # handle condition where someone hits "random" but doesn't modify
         if state.arena_prompt != "":
             input = state.arena_prompt
     state.arena_output.clear()
@@ -124,7 +127,10 @@ def arena_images(input: str, study: str):
                         ),
                     )
                 else:
-                    logging.error("no endpoint defined for %s", state.arena_model1)
+                    logging.error(
+                        "no endpoint defined for %s",
+                        state.arena_model1,
+                    )
             elif state.arena_model1.startswith(config.MODEL_STABLE_DIFFUSION):
                 if config.MODEL_STABLE_DIFFUSION_ENDPOINT_ID:
                     logging.info("model 1: %s", state.arena_model1)
@@ -137,7 +143,10 @@ def arena_images(input: str, study: str):
                         ),
                     )
                 else:
-                    logging.error("no endpoint defined for %s", state.arena_model1)
+                    logging.error(
+                        "no endpoint defined for %s",
+                        state.arena_model1,
+                    )
 
             # model 2
             if state.arena_model2 in IMAGEN_MODELS:
@@ -170,7 +179,10 @@ def arena_images(input: str, study: str):
                         ),
                     )
                 else:
-                    logging.error("no endpoint defined for %s", state.arena_model2)
+                    logging.error(
+                        "no endpoint defined for %s",
+                        state.arena_model2,
+                    )
             elif state.arena_model2.startswith(config.MODEL_STABLE_DIFFUSION):
                 if config.MODEL_STABLE_DIFFUSION_ENDPOINT_ID:
                     logging.info("model 2: %s", state.arena_model2)
@@ -183,7 +195,10 @@ def arena_images(input: str, study: str):
                         ),
                     )
                 else:
-                    logging.error("no endpoint defined for %s", state.arena_model2)
+                    logging.error(
+                        "no endpoint defined for %s",
+                        state.arena_model2,
+                    )
         # Fetch images from study
         else:
             futures.extend(
@@ -218,7 +233,10 @@ def on_click_reload_arena(e: me.ClickEvent):  # pylint: disable=unused-argument
     print(f"Use {state.study_models}")
 
     # get random images
-    state.arena_model1, state.arena_model2 = random.sample(state.study_models, 2)
+    state.arena_model1, state.arena_model2 = random.sample(
+        state.study_models,
+        2,
+    )
     logging.info("%s vs. %s", state.arena_model1, state.arena_model2)
     arena_images(state.arena_prompt, state.study)
 
@@ -249,7 +267,10 @@ def on_click_arena_vote(e: me.ClickEvent):
     state.arena_output.clear()
     state.chosen_model = ""
     state.arena_prompt = prompt_manager.random_prompt()
-    state.arena_model1, state.arena_model2 = random.sample(state.study_models, 2)
+    state.arena_model1, state.arena_model2 = random.sample(
+        state.study_models,
+        2,
+    )
     yield
     arena_images(state.arena_prompt, state.study)
     yield
@@ -281,7 +302,9 @@ def arena_page_content(app_state: me.state):
     if page_state.study == "live":
         app_state.study_models = load_default_models()
     page_state.study_models = app_state.study_models
-    print(f"======> Starting Page state study models: {page_state.study_models}")
+    print(
+        f"======> Starting Page state study models: {page_state.study_models}",
+    )
 
     # TODO this is an initialization function that should be extracted
     if not app_state.welcome_message:
@@ -421,9 +444,13 @@ def arena_page_content(app_state: me.state):
                                 model_name = f"arena_model{idx}"
                                 model_value = getattr(page_state, model_name)
 
-                                replace_url = "https://storage.mtls.cloud.google.com/"
+                                replace_url = (
+                                    "https://storage.mtls.cloud.google.com/"
+                                )
                                 if Default.PUBLIC_BUCKET:
-                                    replace_url = "https://storage.googleapis.com/"
+                                    replace_url = (
+                                        "https://storage.googleapis.com/"
+                                    )
                                 img_url = img.replace("gs://", replace_url)
                                 with me.box(
                                     style=me.Style(
@@ -439,7 +466,10 @@ def arena_page_content(app_state: me.state):
                                         border_radius="35px",
                                     )
                                     if page_state.chosen_model:
-                                        if page_state.chosen_model == model_value:
+                                        if (
+                                            page_state.chosen_model
+                                            == model_value
+                                        ):
                                             # green border
                                             image_border_style = me.Style(
                                                 width="450px",
@@ -468,7 +498,10 @@ def arena_page_content(app_state: me.state):
 
                                     if page_state.chosen_model:
                                         text_style = me.Style()
-                                        if page_state.chosen_model == model_value:
+                                        if (
+                                            page_state.chosen_model
+                                            == model_value
+                                        ):
                                             text_style = me.Style(
                                                 font_weight="bold",
                                             )
@@ -546,7 +579,9 @@ _BOX_STYLE = me.Style(
     flex_basis="max(480px, calc(50% - 48px))",
     background=me.theme_var("background"),
     border_radius=12,
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",

@@ -19,6 +19,7 @@ from utils.logger import LogLevel, log
 
 from config.default import Default
 
+
 config = Default()  # Load default configuration
 
 
@@ -71,7 +72,10 @@ def initialize_study_database(
         )  # Create the database if it doesn't exist
         schema.create_schema()
     except Exception as e:
-        log(f"Failed to initialize the study database schema: {e}", LogLevel.ERROR)
+        log(
+            f"Failed to initialize the study database schema: {e}",
+            LogLevel.ERROR,
+        )
         raise ArenaStudySchemaCreationException(
             "Failed to initialize the study database schema",
         ) from e

@@ -56,7 +56,9 @@ class C2PAService:
 
             # Validate file exists
             if not os.path.exists(local_path):
-                analytics_logger.warning(f"C2PA: File not found at {local_path}")
+                analytics_logger.warning(
+                    f"C2PA: File not found at {local_path}",
+                )
                 return None
 
             # Read C2PA data
@@ -70,7 +72,9 @@ class C2PAService:
                 # This is expected for images without credentials
                 return None
             except Exception as e:
-                analytics_logger.error(f"C2PA Reader error for {image_uri}: {e}")
+                analytics_logger.error(
+                    f"C2PA Reader error for {image_uri}: {e}",
+                )
                 return None
 
         except Exception as e:

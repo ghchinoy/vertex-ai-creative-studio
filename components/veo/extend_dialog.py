@@ -26,6 +26,7 @@ from config.veo_models import VEO_MODELS, get_veo_model_config
 from models.requests import VideoGenerationRequest
 from state.state import AppState
 
+
 config = Default()
 
 
@@ -95,11 +96,16 @@ def extend_dialog(state: VeoExtendDialogState, on_close):
                 )
 
                 # Model Selection (Only show models that support extension)
-                extension_models = [m for m in VEO_MODELS if m.supports_video_extension]
+                extension_models = [
+                    m for m in VEO_MODELS if m.supports_video_extension
+                ]
                 me.select(
                     label="Veo Model",
                     options=[
-                        me.SelectOption(label=m.display_name, value=m.version_id)
+                        me.SelectOption(
+                            label=m.display_name,
+                            value=m.version_id,
+                        )
                         for m in extension_models
                     ],
                     value=state.model_id,
@@ -122,7 +128,10 @@ def extend_dialog(state: VeoExtendDialogState, on_close):
         if state.error_message:
             me.text(
                 state.error_message,
-                style=me.Style(color=me.theme_var("error"), margin=me.Margin(top=16)),
+                style=me.Style(
+                    color=me.theme_var("error"),
+                    margin=me.Margin(top=16),
+                ),
             )
 
         if state.is_loading:
@@ -230,7 +239,9 @@ def on_click_generate_extension(e: me.ClickEvent):
     while state.job_status in ["pending", "processing", "created", "starting"]:
         time.sleep(3)
         try:
-            status_url = f"{config.API_BASE_URL}/api/veo/job/{state.current_job_id}"
+            status_url = (
+                f"{config.API_BASE_URL}/api/veo/job/{state.current_job_id}"
+            )
             resp = requests.get(status_url)
             resp.raise_for_status()
             status_data = resp.json()

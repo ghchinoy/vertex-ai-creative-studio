@@ -98,7 +98,9 @@ def library_chooser_button(
         """Handles the toggle for showing only user's items."""
         # Toggle directly to avoid attribute errors with different Mesop versions
         state.show_only_my_items = not state.show_only_my_items
-        print(f"DEBUG: toggle changed, show_only_my_items={state.show_only_my_items}")
+        print(
+            f"DEBUG: toggle changed, show_only_my_items={state.show_only_my_items}",
+        )
         yield from _fetch_and_update_items()
 
     def _fetch_and_update_items():
@@ -106,10 +108,12 @@ def library_chooser_button(
         state.is_loading = True
         yield
         try:
-            user_email = app_state.user_email if state.show_only_my_items else None
+            user_email = (
+                app_state.user_email if state.show_only_my_items else None
+            )
             # Use the media_type stored in state, which was set when opening the dialog
             print(
-                f"DEBUG: fetching items with media_type={state.media_type}, filter_by_user_email='{user_email}', app_state_email='{app_state.user_email}'"
+                f"DEBUG: fetching items with media_type={state.media_type}, filter_by_user_email='{user_email}', app_state_email='{app_state.user_email}'",
             )
             items, _ = get_media_for_page_optimized(
                 20,
@@ -241,6 +245,10 @@ def library_chooser_button(
                 ):
                     me.button(
                         "Cancel",
-                        on_click=lambda e: setattr(state, "show_library_dialog", False),
+                        on_click=lambda e: setattr(
+                            state,
+                            "show_library_dialog",
+                            False,
+                        ),
                         type="stroked",
                     )

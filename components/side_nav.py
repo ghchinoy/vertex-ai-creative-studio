@@ -25,6 +25,7 @@ from components.svg_icon.svg_icon import svg_icon
 from config.default import Default, get_welcome_page_config
 from state.state import AppState
 
+
 cfg = Default()
 
 
@@ -70,7 +71,9 @@ def sidenav(current_page: str | None):
     with me.sidenav(
         opened=True,
         style=me.Style(
-            width=SIDENAV_MAX_WIDTH if app_state.sidenav_open else SIDENAV_MIN_WIDTH,
+            width=SIDENAV_MAX_WIDTH
+            if app_state.sidenav_open
+            else SIDENAV_MIN_WIDTH,
             background=me.theme_var("secondary-container"),
             transition="width 0.3s ease-in-out",
         ),
@@ -238,7 +241,9 @@ def theme_toggle_icon(key: int, icon: str, text: str, min: bool = True):
             me.tooltip(message=text),
         ):
             me.icon(
-                "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
+                "light_mode"
+                if me.theme_brightness() == "dark"
+                else "dark_mode",
             )
 
     else:  # expanded
@@ -257,10 +262,14 @@ def theme_toggle_icon(key: int, icon: str, text: str, min: bool = True):
             ),
         ):
             me.icon(
-                "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
+                "light_mode"
+                if me.theme_brightness() == "dark"
+                else "dark_mode",
             )
             me.text(
-                "Light mode" if me.theme_brightness() == "dark" else "Dark mode",
+                "Light mode"
+                if me.theme_brightness() == "dark"
+                else "Dark mode",
             )
 
 

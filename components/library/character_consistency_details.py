@@ -24,10 +24,15 @@ from components.download_button.download_button import download_button
 
 
 @me.component
-def character_consistency_details(item: MediaItem, on_click_permalink: Callable):
+def character_consistency_details(
+    item: MediaItem,
+    on_click_permalink: Callable,
+):
     """Renders the details for a character consistency item."""
     gcs_uri = (
-        item.gcsuri if item.gcsuri else (item.gcs_uris[0] if item.gcs_uris else None)
+        item.gcsuri
+        if item.gcsuri
+        else (item.gcs_uris[0] if item.gcs_uris else None)
     )
     item_display_url = gcs_uri_to_https_url(gcs_uri)
 
@@ -38,7 +43,10 @@ def character_consistency_details(item: MediaItem, on_click_permalink: Callable)
             gap=12,
         ),
     ):
-        if item.media_type == "character_consistency" and item.best_candidate_image:
+        if (
+            item.media_type == "character_consistency"
+            and item.best_candidate_image
+        ):
             me.video(
                 src=item_display_url,
                 style=me.Style(
@@ -70,7 +78,11 @@ def character_consistency_details(item: MediaItem, on_click_permalink: Callable)
                     style=me.Style(font_weight="500", margin=me.Margin(top=8)),
                 )
                 with me.box(
-                    style=me.Style(display="flex", flex_direction="row", gap=10),
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        gap=10,
+                    ),
                 ):
                     for src_image_uri in item.source_character_images[:3]:
                         src_url = gcs_uri_to_https_url(src_image_uri)

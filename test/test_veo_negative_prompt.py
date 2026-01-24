@@ -2,8 +2,12 @@ import os
 import sys
 from unittest.mock import MagicMock, patch
 
+
 # Setup sys.path to allow imports from the parent directory.
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(
+    0,
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+)
 
 from common.metadata import MediaItem
 from models.requests import VideoGenerationRequest

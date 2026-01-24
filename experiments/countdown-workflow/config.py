@@ -17,6 +17,7 @@ import os
 
 from dotenv import load_dotenv
 
+
 # Load environment variables from .env file at the project root
 load_dotenv()
 

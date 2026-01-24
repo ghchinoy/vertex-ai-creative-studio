@@ -19,6 +19,7 @@ import uuid
 from common.analytics import get_logger
 from config.firebase_config import FirebaseClient
 
+
 db = FirebaseClient().get_client()
 logger = get_logger(__name__)
 
@@ -38,7 +39,9 @@ def save_object_rotation_project(project: dict) -> dict:
 
     doc_ref = db.collection("object_rotation_projects").document(project["id"])
     doc_ref.set(project)
-    logger.info(f"Object Rotation project saved to Firestore with ID: {project['id']}")
+    logger.info(
+        f"Object Rotation project saved to Firestore with ID: {project['id']}",
+    )
     return project
 
 
@@ -119,7 +122,10 @@ def generate_rotation_video(product_views: dict[str, str]) -> str:
     )
 
     references = [
-        APIReferenceImage(gcs_uri=product_views["front"], mime_type="image/png"),
+        APIReferenceImage(
+            gcs_uri=product_views["front"],
+            mime_type="image/png",
+        ),
         APIReferenceImage(gcs_uri=product_views["back"], mime_type="image/png"),
         APIReferenceImage(gcs_uri=product_views["left"], mime_type="image/png"),
     ]

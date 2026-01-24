@@ -26,6 +26,7 @@ from utils.video_processing import create_final_video
 
 import config
 
+
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,9 @@ class CompanyInfo(BaseModel):
 class ScenePrompt(BaseModel):
     """Schema for the prompts for a single countdown scene."""
 
-    scene_number: int = Field(description="The countdown number for this scene.")
+    scene_number: int = Field(
+        description="The countdown number for this scene.",
+    )
     image_prompt: str | None = Field(
         default=None,
         description="The detailed Imagen prompt for the first scene's static image. Should only be present for the first number in the countdown.",
@@ -229,11 +232,16 @@ def select_best_image_locally(
     logger.info("  - Selecting the best image...")
     text_part = f'You will be provided with {len(candidate_paths)} images and a prompt. Select the image that best fits the prompt: "{prompt}"'
     image_parts = [
-        types.Part.from_bytes(data=pathlib.Path(p).read_bytes(), mime_type="image/png")
+        types.Part.from_bytes(
+            data=pathlib.Path(p).read_bytes(),
+            mime_type="image/png",
+        )
         for p in candidate_paths
     ]
     contents = [text_part] + [
-        elem for i, part in enumerate(image_parts) for elem in (f". Image {i}: ", part)
+        elem
+        for i, part in enumerate(image_parts)
+        for elem in (f". Image {i}: ", part)
     ]
     response = client.models.generate_content(
         model=config.SELECTOR_MODEL,
@@ -280,7 +288,9 @@ def generate_candidate_videos_locally(
 
     for attempt in range(max_retries):
         try:
-            logger.info(f"    - Generation attempt {attempt + 1}/{max_retries}...")
+            logger.info(
+                f"    - Generation attempt {attempt + 1}/{max_retries}...",
+            )
             video_op = client.models.generate_videos(
                 model=config.VIDEO_GENERATION_MODEL,
                 image=input_image,
@@ -293,7 +303,9 @@ def generate_candidate_videos_locally(
                     enhance_prompt=True,
                 ),
             )
-            logger.info("    - Video generation started. This may take a moment...")
+            logger.info(
+                "    - Video generation started. This may take a moment...",
+            )
             while not video_op.done:
                 time.sleep(5)
                 video_op = client.operations.get(video_op)
@@ -303,7 +315,10 @@ def generate_candidate_videos_locally(
             video_response = video_op.response
 
             # Gracefully handle cases where the response is None or lacks the expected attribute
-            if not video_response or not hasattr(video_response, "generated_videos"):
+            if not video_response or not hasattr(
+                video_response,
+                "generated_videos",
+            ):
                 raise AttributeError(
                     "API response is None or does not contain 'generated_videos'.",
                 )
@@ -348,11 +363,16 @@ def select_best_video_locally(
     logger.info("  - Selecting the best video...")
     text_part = f"You will be provided with {len(candidate_paths)} videos. Select the one that best fits the following prompt: {prompt}"
     video_parts = [
-        types.Part.from_bytes(data=pathlib.Path(p).read_bytes(), mime_type="video/mp4")
+        types.Part.from_bytes(
+            data=pathlib.Path(p).read_bytes(),
+            mime_type="video/mp4",
+        )
         for p in candidate_paths
     ]
     contents = [text_part] + [
-        elem for i, part in enumerate(video_parts) for elem in (f". Video {i}: ", part)
+        elem
+        for i, part in enumerate(video_parts)
+        for elem in (f". Video {i}: ", part)
     ]
     response = client.models.generate_content(
         model=config.SELECTOR_MODEL,
@@ -396,11 +416,16 @@ def check_videos_for_digit(
     Your entire response MUST be a single, valid JSON object that conforms to the provided `DigitCheckResponse` schema.
     """
     video_parts = [
-        types.Part.from_bytes(data=pathlib.Path(p).read_bytes(), mime_type="video/mp4")
+        types.Part.from_bytes(
+            data=pathlib.Path(p).read_bytes(),
+            mime_type="video/mp4",
+        )
         for p in candidate_paths
     ]
     contents = [prompt] + [
-        elem for i, part in enumerate(video_parts) for elem in (f". Video {i}: ", part)
+        elem
+        for i, part in enumerate(video_parts)
+        for elem in (f". Video {i}: ", part)
     ]
 
     response = client.models.generate_content(
@@ -446,7 +471,9 @@ def generate_video_from_prompts_service(
     )
 
     # Save the generated script to a file
-    script_path = base_output_dir / f"{company_name.replace(' ', '_')}_script.json"
+    script_path = (
+        base_output_dir / f"{company_name.replace(' ', '_')}_script.json"
+    )
     with open(script_path, "w") as f:
         f.write(script_response.model_dump_json(indent=4))
     logger.info(f"--- Saved generated script to {script_path} ---")
@@ -454,7 +481,9 @@ def generate_video_from_prompts_service(
     logger.info("\n--- Parsed Company & Script Information ---")
     logger.info(f"Company Name: {script_response.company_info.name}")
     logger.info(f"Core Business: {script_response.company_info.core_business}")
-    logger.info(f"Visual Identity: {script_response.company_info.visual_identity}")
+    logger.info(
+        f"Visual Identity: {script_response.company_info.visual_identity}",
+    )
     logger.info("-------------------------------------------")
 
     last_frame_path: str | None = None
@@ -467,7 +496,9 @@ def generate_video_from_prompts_service(
         logger.info(
             f"\n--- Processing Scene {i + 1}/{total_scenes} (Countdown Num: {scene_data.scene_number}) ---",
         )
-        scene_output_prefix = str(scenes_dir / f"scene_{scene_data.scene_number:02d}")
+        scene_output_prefix = str(
+            scenes_dir / f"scene_{scene_data.scene_number:02d}",
+        )
 
         input_image_path: str | None = None
         candidate_image_paths: list[
@@ -494,7 +525,9 @@ def generate_video_from_prompts_service(
                         os.remove(p)
                         logger.info(f"  - Deleted unselected image: {p}")
                     except OSError as e:
-                        logger.warning(f"  - Error deleting unselected image {p}: {e}")
+                        logger.warning(
+                            f"  - Error deleting unselected image {p}: {e}",
+                        )
 
         elif last_frame_path:
             input_image_path = last_frame_path
@@ -554,11 +587,15 @@ def generate_video_from_prompts_service(
                 )
                 break
             if video_0_ok:
-                logger.info("    - Only video 0 contains the digit. Selecting it.")
+                logger.info(
+                    "    - Only video 0 contains the digit. Selecting it.",
+                )
                 chosen_video_path = candidate_video_paths[0]
                 break
             if video_1_ok:
-                logger.info("    - Only video 1 contains the digit. Selecting it.")
+                logger.info(
+                    "    - Only video 1 contains the digit. Selecting it.",
+                )
                 chosen_video_path = candidate_video_paths[1]
                 break
             logger.info("    - Neither video contains the digit. Retrying...")
@@ -581,7 +618,9 @@ def generate_video_from_prompts_service(
                     os.remove(p)
                     logger.info(f"  - Deleted unselected video: {p}")
                 except OSError as e:
-                    logger.warning(f"  - Error deleting unselected video {p}: {e}")
+                    logger.warning(
+                        f"  - Error deleting unselected video {p}: {e}",
+                    )
 
         chosen_video_paths.append(chosen_video_path)
 

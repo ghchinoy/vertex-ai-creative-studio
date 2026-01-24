@@ -97,7 +97,10 @@ def audio_chooser_button(
         dialog(is_open=state.show_dialog, dialog_style=dialog_style),
         me.box(
             style=me.Style(
-                display="flex", flex_direction="column", gap=16, flex_grow=1
+                display="flex",
+                flex_direction="column",
+                gap=16,
+                flex_grow=1,
             ),
         ),
     ):
@@ -115,7 +118,9 @@ def audio_chooser_button(
                     me.progress_spinner()
             else:
                 for item in state.media_items:
-                    uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
+                    uri = item.gcsuri or (
+                        item.gcs_uris[0] if item.gcs_uris else None
+                    )
                     if uri:
                         with me.box(
                             key=uri,

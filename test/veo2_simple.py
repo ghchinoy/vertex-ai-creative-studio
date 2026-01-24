@@ -19,6 +19,7 @@ import time
 from google import genai
 from google.genai import types
 
+
 # --- Configuration ---
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = "us-central1"
@@ -119,7 +120,9 @@ def main():
             print(
                 f"Skipping Image-to-Video: Input GCS URI not found or invalid in '{I2V_GCS_URI}'",
             )
-            print("Please update the I2V_GCS_URI variable to test this feature.")
+            print(
+                "Please update the I2V_GCS_URI variable to test this feature.",
+            )
 
     # --- 3. Interpolate (First and Last Frame) ---
     if run_all or 3 in steps:
@@ -156,7 +159,9 @@ def main():
             )
             poll_operation(interpolate_operation, "Interpolation")
         else:
-            print("Skipping Interpolation: Input GCS URIs not found or invalid.")
+            print(
+                "Skipping Interpolation: Input GCS URIs not found or invalid.",
+            )
             print(
                 "Please update INTERPOLATE_FIRST_FRAME_GCS_URI and INTERPOLATE_LAST_FRAME_GCS_URI to test this feature.",
             )
@@ -183,7 +188,9 @@ def main():
             )
             poll_operation(extend_operation, "Video Extension")
         else:
-            print("Skipping Video Extension: No initial video was generated in step 1.")
+            print(
+                "Skipping Video Extension: No initial video was generated in step 1.",
+            )
 
 
 if __name__ == "__main__":

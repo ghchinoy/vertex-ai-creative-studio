@@ -18,6 +18,7 @@ import pathlib
 from moviepy import AudioFileClip, VideoFileClip, concatenate_videoclips
 from moviepy.video.fx import FadeOut, MultiplySpeed
 
+
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,10 @@ def create_final_video(
         else:
             audio_clip = AudioFileClip(str(audio_path))
             if audio_clip.duration > final_clip_with_fade.duration:
-                audio_clip = audio_clip.subclipped(0, final_clip_with_fade.duration)
+                audio_clip = audio_clip.subclipped(
+                    0,
+                    final_clip_with_fade.duration,
+                )
             final_clip_with_music = final_clip_with_fade.with_audio(audio_clip)
 
         final_clip_with_music.write_videofile(

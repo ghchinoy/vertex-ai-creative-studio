@@ -58,7 +58,12 @@ def prompt_template_form_dialog(
         title = "Save as Prompt Template"
 
     # State synchronization logic for edit mode
-    if is_open and mode == "edit" and template and state.key != template.get("key"):
+    if (
+        is_open
+        and mode == "edit"
+        and template
+        and state.key != template.get("key")
+    ):
         state.label = template.get("label", "")
         state.key = template.get("key", "")
         state.category = template.get("category", "")
@@ -83,7 +88,12 @@ def prompt_template_form_dialog(
             )
         elif mode == "create":
             # For create, we pass the individual fields to the handler
-            yield from on_save(state.label, state.key, state.category, state.prompt)
+            yield from on_save(
+                state.label,
+                state.key,
+                state.category,
+                state.prompt,
+            )
 
         # Clear state after action
         state.label = ""
@@ -149,7 +159,11 @@ def prompt_template_form_dialog(
                         me.input(
                             label="Type",
                             value=state.template_type,
-                            on_blur=lambda e: setattr(state, "template_type", e.value),
+                            on_blur=lambda e: setattr(
+                                state,
+                                "template_type",
+                                e.value,
+                            ),
                         )
                         me.textarea(
                             label="Prompt",
@@ -171,7 +185,10 @@ def prompt_template_form_dialog(
                         _detail_row("Last Edited:", str(template["updated_at"]))
                     me.text(
                         "Prompt:",
-                        style=me.Style(font_weight="bold", margin=me.Margin(top=16)),
+                        style=me.Style(
+                            font_weight="bold",
+                            margin=me.Margin(top=16),
+                        ),
                     )
                     with me.box(
                         style=me.Style(
@@ -188,7 +205,10 @@ def prompt_template_form_dialog(
             if template and template.get("references"):
                 me.text(
                     "References:",
-                    style=me.Style(font_weight="bold", margin=me.Margin(top=16)),
+                    style=me.Style(
+                        font_weight="bold",
+                        margin=me.Margin(top=16),
+                    ),
                 )
                 with me.box(
                     style=me.Style(

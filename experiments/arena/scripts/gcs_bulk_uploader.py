@@ -23,6 +23,7 @@ from google.cloud.storage import transfer_manager
 
 from config.default import Default
 
+
 # Load environment variables from .env file
 dotenv.load_dotenv(override=True)
 
@@ -40,8 +41,12 @@ class GCSUploader:
         key = (bucket_name, project_id)
         if key not in cls._instances:
             cls._instances[key] = super(GCSUploader, cls).__new__(cls)
-            cls._instances[key].storage_client = storage.Client(project=project_id)
-            cls._instances[key].bucket = cls._instances[key].storage_client.bucket(
+            cls._instances[key].storage_client = storage.Client(
+                project=project_id,
+            )
+            cls._instances[key].bucket = cls._instances[
+                key
+            ].storage_client.bucket(
                 bucket_name,
             )
             cls._instances[key]._setup_logging()
@@ -80,8 +85,12 @@ class GCSUploader:
         """Upload every file in a directory, including all files in subdirectories."""
         # Validate the source directory
         if not os.path.isdir(src_dir):
-            self.logger.error(f"Source directory {src_dir} is not a valid directory.")
-            raise ValueError(f"Source directory {src_dir} is not a valid directory.")
+            self.logger.error(
+                f"Source directory {src_dir} is not a valid directory.",
+            )
+            raise ValueError(
+                f"Source directory {src_dir} is not a valid directory.",
+            )
         # Validate the destination directory
         if not gcs_destination_directory:
             self.logger.error("Destination directory cannot be empty.")
@@ -111,7 +120,11 @@ class GCSUploader:
 
         upload_results: dict[str, None | Exception] = {}
         try:
-            with alive_bar(len(paths), title="Uploading...", force_tty=True) as bar:
+            with alive_bar(
+                len(paths),
+                title="Uploading...",
+                force_tty=True,
+            ) as bar:
                 self.logger.info(f"Using {workers} workers for upload.")
                 results = transfer_manager.upload_many_from_filenames(
                     self.bucket,

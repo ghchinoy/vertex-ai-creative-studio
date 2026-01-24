@@ -20,6 +20,7 @@ from video_generator import generate_video_from_best_image
 
 import config
 
+
 # --- CONFIGURATION ---
 # Set the path to the directory containing your input images.
 IMAGE_LOCATION = config.INPUT_DIR
@@ -54,7 +55,9 @@ def run_full_workflow(image_location: str, scenario: str):
         ]
 
         if not image_files:
-            logger.error(f"No image files found in the directory: {image_location}")
+            logger.error(
+                f"No image files found in the directory: {image_location}",
+            )
             return
 
         if not scenario.strip():
@@ -62,7 +65,9 @@ def run_full_workflow(image_location: str, scenario: str):
             return
 
         # 1. Generate images and select the best one
-        logger.info("Step 1: Generating images and selecting the best candidate...")
+        logger.info(
+            "Step 1: Generating images and selecting the best candidate...",
+        )
         output_path, best_image_path, _ = generate_images_and_select_best(
             image_files,
             scenario,
@@ -72,7 +77,10 @@ def run_full_workflow(image_location: str, scenario: str):
 
         # 2. Generate video from the best image
         logger.info("Step 2: Generating video from the best image...")
-        video_path = generate_video_from_best_image(output_path, best_image_path)
+        video_path = generate_video_from_best_image(
+            output_path,
+            best_image_path,
+        )
 
         if video_path:
             logger.info(f"Successfully generated video: {video_path}")
@@ -82,7 +90,10 @@ def run_full_workflow(image_location: str, scenario: str):
             print("\nWorkflow failed during video generation.")
 
     except Exception as e:
-        logger.error(f"An error occurred during the workflow: {e}", exc_info=True)
+        logger.error(
+            f"An error occurred during the workflow: {e}",
+            exc_info=True,
+        )
         print(f"\nAn error occurred: {e}")
 
 

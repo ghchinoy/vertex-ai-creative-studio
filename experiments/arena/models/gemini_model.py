@@ -25,6 +25,7 @@ from tenacity import (
 
 from models.set_up import ModelSetup
 
+
 # Initialize configuration
 client, model_id = ModelSetup.init()
 MODEL_ID = model_id

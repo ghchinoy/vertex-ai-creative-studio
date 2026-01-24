@@ -17,8 +17,12 @@ import sys
 
 import pytest
 
+
 # Add the project root to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(
+    0,
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+)
 
 from models.video_processing import convert_mp4_to_gif
 
@@ -36,7 +40,11 @@ def test_gif_conversion_sizing():
         # A better approach would be to refactor convert_mp4_to_gif to return the local path or size.
         # For this test, we'll proceed with the current interface.
 
-        result_gcs_uri = convert_mp4_to_gif(video_uri, user_email, target_mb=target_mb)
+        result_gcs_uri = convert_mp4_to_gif(
+            video_uri,
+            user_email,
+            target_mb=target_mb,
+        )
 
         assert result_gcs_uri.startswith("gs://")
 

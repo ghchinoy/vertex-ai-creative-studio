@@ -23,6 +23,7 @@ from components.styles import (
 )
 from state.state import AppState
 
+
 page_json = [
     {"display": "Chirp HD", "icon": "display_settings", "route": "/"},
     {"display": "Gemini", "icon": "equalizer", "route": "/gemini"},
@@ -194,7 +195,9 @@ def theme_toggle_icon(key: int, icon: str, text: str, min: bool = True):
         ):
             with me.tooltip(message=text):
                 me.icon(
-                    "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
+                    "light_mode"
+                    if me.theme_brightness() == "dark"
+                    else "dark_mode",
                 )
 
     else:  # expanded
@@ -212,10 +215,14 @@ def theme_toggle_icon(key: int, icon: str, text: str, min: bool = True):
                 ),
             ):
                 me.icon(
-                    "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
+                    "light_mode"
+                    if me.theme_brightness() == "dark"
+                    else "dark_mode",
                 )
                 me.text(
-                    "Light mode" if me.theme_brightness() == "dark" else "Dark mode",
+                    "Light mode"
+                    if me.theme_brightness() == "dark"
+                    else "Dark mode",
                 )
 
 

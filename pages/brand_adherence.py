@@ -60,7 +60,9 @@ def brand_adherence_content():
         ),
     ):
         # --- Step 1: Upload Guidelines ---
-        with me.box(style=me.Style(display="flex", flex_direction="column", gap=16)):
+        with me.box(
+            style=me.Style(display="flex", flex_direction="column", gap=16),
+        ):
             me.text(
                 "1. Upload Brand Guidelines (PDF) & Optional Reference Image",
                 type="headline-6",
@@ -79,7 +81,9 @@ def brand_adherence_content():
                     if state.pdf_filename:
                         with me.box(
                             style=me.Style(
-                                display="flex", align_items="center", gap=16
+                                display="flex",
+                                align_items="center",
+                                gap=16,
                             ),
                         ):
                             me.icon("picture_as_pdf")
@@ -101,7 +105,9 @@ def brand_adherence_content():
                     if state.reference_image_display_url:
                         with me.box(
                             style=me.Style(
-                                display="flex", align_items="center", gap=16
+                                display="flex",
+                                align_items="center",
+                                gap=16,
                             ),
                         ):
                             with me.box(style=me.Style(width=100, height=50)):
@@ -219,16 +225,22 @@ def brand_adherence_content():
                     ),
                 ):
                     # Image
-                    with me.box(style=me.Style(flex_basis="500px", flex_grow=1)):
-                        with me.box(style=me.Style(width="100%", height=500)):
-                            media_tile(
-                                media_type="image",
-                                https_url=state.generated_image_display_url,
-                                object_fit="contain",
-                            )
+                    with (
+                        me.box(
+                            style=me.Style(flex_basis="500px", flex_grow=1),
+                        ),
+                        me.box(style=me.Style(width="100%", height=500)),
+                    ):
+                        media_tile(
+                            media_type="image",
+                            https_url=state.generated_image_display_url,
+                            object_fit="contain",
+                        )
 
                     # Analysis
-                    with me.box(style=me.Style(flex_basis="400px", flex_grow=1)):
+                    with me.box(
+                        style=me.Style(flex_basis="400px", flex_grow=1),
+                    ):
                         if state.is_evaluating:
                             with me.box(
                                 style=me.Style(
@@ -264,14 +276,18 @@ def brand_adherence_content():
                                                 me.icon(
                                                     "check_circle",
                                                     style=me.Style(
-                                                        color=me.theme_var("success"),
+                                                        color=me.theme_var(
+                                                            "success",
+                                                        ),
                                                     ),
                                                 )
                                             else:
                                                 me.icon(
                                                     "cancel",
                                                     style=me.Style(
-                                                        color=me.theme_var("error"),
+                                                        color=me.theme_var(
+                                                            "error",
+                                                        ),
                                                     ),
                                                 )
                                             me.text(detail["question"])
@@ -369,7 +385,9 @@ Brand Guidelines Context:
 
         # Pass reference image if available
         images = (
-            [state.reference_image_gcs_uri] if state.reference_image_gcs_uri else []
+            [state.reference_image_gcs_uri]
+            if state.reference_image_gcs_uri
+            else []
         )
 
         gcs_uris, _, _, _ = generate_image_from_prompt_and_images(
@@ -410,13 +428,16 @@ Brand Guidelines Context:
                     )
 
                     yes_answers = sum(
-                        1 for answer in evaluation_result.answers if answer.answer
+                        1
+                        for answer in evaluation_result.answers
+                        if answer.answer
                     )
                     score_str = f"{yes_answers}/{len(questions)}"
                     evaluation_dict = {
                         "score": score_str,
                         "details": [
-                            ans.model_dump() for ans in evaluation_result.answers
+                            ans.model_dump()
+                            for ans in evaluation_result.answers
                         ],
                     }
                     new_evaluations[category] = json.dumps(evaluation_dict)

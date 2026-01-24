@@ -114,7 +114,10 @@ def _r2v_uploader(
 
     # Default to True, check for override
     show_style_reference = True
-    if selected_config.mode_overrides and "r2v" in selected_config.mode_overrides:
+    if (
+        selected_config.mode_overrides
+        and "r2v" in selected_config.mode_overrides
+    ):
         r2v_override = selected_config.mode_overrides["r2v"]
         if not r2v_override.supports_style_reference:
             show_style_reference = False
@@ -125,9 +128,13 @@ def _r2v_uploader(
 
     with me.box(style=me.Style(display="flex", flex_direction="row", gap=15)):
         # --- Assets Section ---
-        with me.box(style=me.Style(display="flex", flex_direction="column", gap=2)):
+        with me.box(
+            style=me.Style(display="flex", flex_direction="column", gap=2),
+        ):
             me.text("Asset references", style=me.Style(font_size="10pt"))
-            with me.box(style=me.Style(display="flex", flex_direction="row", gap=5)):
+            with me.box(
+                style=me.Style(display="flex", flex_direction="row", gap=5),
+            ):
                 for i in range(MAX_ASSET_IMAGES):
                     if i < len(state.r2v_reference_images):
                         image_uri = state.r2v_reference_images[i]
@@ -150,7 +157,9 @@ def _r2v_uploader(
                         _empty_placeholder()
         # --- Style Section (Conditionally Rendered) ---
         if show_style_reference:
-            with me.box(style=me.Style(display="flex", flex_direction="column", gap=2)):
+            with me.box(
+                style=me.Style(display="flex", flex_direction="column", gap=2),
+            ):
                 me.text("Style reference", style=me.Style(font_size="10pt"))
                 with me.box(
                     style=me.Style(display="flex", flex_direction="row", gap=5),
@@ -206,7 +215,9 @@ def _uploader_placeholder(
             key=f"{key_prefix}_uploader",
             disabled=disabled,
         )
-        with me.box(style=me.Style(pointer_events="none" if disabled else "auto")):
+        with me.box(
+            style=me.Style(pointer_events="none" if disabled else "auto"),
+        ):
             library_chooser_button(
                 key=f"{key_prefix}_library_chooser",
                 on_library_select=on_library_select,
@@ -222,7 +233,11 @@ def _empty_placeholder():
             height=100,
             width=100,
             border=me.Border.all(
-                me.BorderSide(width=1, style="dashed", color=me.theme_var("outline")),
+                me.BorderSide(
+                    width=1,
+                    style="dashed",
+                    color=me.theme_var("outline"),
+                ),
             ),
             border_radius=8,
             opacity=0.5,
@@ -242,7 +257,9 @@ def _image_uploader(
     state = me.state(PageState)
     with me.box(style=me.Style(display="flex", flex_direction="row", gap=15)):
         # First Frame
-        with me.box(style=me.Style(display="flex", flex_direction="column", gap=2)):
+        with me.box(
+            style=me.Style(display="flex", flex_direction="column", gap=2),
+        ):
             me.text("First Frame", style=me.Style(font_size="10pt"))
             if state.reference_image_uri:
                 image_thumbnail(
@@ -261,7 +278,9 @@ def _image_uploader(
 
         # Last Frame (for interpolation, also known as first/last frame)
         if last_image:
-            with me.box(style=me.Style(display="flex", flex_direction="column", gap=2)):
+            with me.box(
+                style=me.Style(display="flex", flex_direction="column", gap=2),
+            ):
                 me.text("Last Frame", style=me.Style(font_size="10pt"))
                 if state.last_reference_image_uri:
                     image_thumbnail(

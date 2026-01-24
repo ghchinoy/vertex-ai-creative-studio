@@ -27,11 +27,16 @@ from components.styles import (
 )
 from state.state import AppState
 
+
 # primary page nav
 page_json = [
     {"display": "Promptlandia", "icon": "try", "route": "/"},
     {"display": "Checklist", "icon": "fact_check", "route": "/checklist"},
-    {"display": "Video Checklist", "icon": "movie", "route": "/video_checklist"},
+    {
+        "display": "Video Checklist",
+        "icon": "movie",
+        "route": "/video_checklist",
+    },
     {"display": "Prompt", "icon": "question_answer", "route": "/prompt"},
     # {"display": "Playground", "icon": "auto_awesome", "route": "/playground"},
 ]
@@ -290,7 +295,9 @@ def theme_toggle_icon(key: int, icon: str, text: str, min: bool = True):
         ):
             with me.tooltip(message=text):
                 me.icon(
-                    "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
+                    "light_mode"
+                    if me.theme_brightness() == "dark"
+                    else "dark_mode",
                 )
 
     else:  # expanded
@@ -308,10 +315,14 @@ def theme_toggle_icon(key: int, icon: str, text: str, min: bool = True):
                 ),
             ):
                 me.icon(
-                    "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
+                    "light_mode"
+                    if me.theme_brightness() == "dark"
+                    else "dark_mode",
                 )
                 me.text(
-                    "Light mode" if me.theme_brightness() == "dark" else "Dark mode",
+                    "Light mode"
+                    if me.theme_brightness() == "dark"
+                    else "Dark mode",
                 )
 
 

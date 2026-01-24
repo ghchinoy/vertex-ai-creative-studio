@@ -38,13 +38,18 @@ from models.virtual_model_generator import DEFAULT_PROMPT, VirtualModelGenerator
 from models.vto import generate_vto_image
 from state.state import AppState
 
+
 config = Default()
 
 IMAGE_BOX_STYLE = me.Style(
     width=400,
     height=400,
     border=me.Border.all(
-        me.BorderSide(width=2, style="dashed", color=me.theme_var("outline-variant")),
+        me.BorderSide(
+            width=2,
+            style="dashed",
+            color=me.theme_var("outline-variant"),
+        ),
     ),
     border_radius=12,
     display="flex",
@@ -90,7 +95,9 @@ class PageState:
     _options: dict = field(default_factory=dict, init=False)  # pylint: disable=E3701:invalid-field-call
 
     def __post_init__(self):
-        config_path = Path(__file__).parent.parent / "config/virtual_model_options.json"
+        config_path = (
+            Path(__file__).parent.parent / "config/virtual_model_options.json"
+        )
         with open(config_path) as f:
             self._options = json.load(f)
 
@@ -160,7 +167,10 @@ def on_click_generate_person(e: me.ClickEvent):
         # Build the prompt
         generator = VirtualModelGenerator(DEFAULT_PROMPT)
         generator.set_value("gender", selected_gender_obj["prompt_fragment"])
-        generator.set_value("silhouette", selected_silhouette_obj["prompt_fragment"])
+        generator.set_value(
+            "silhouette",
+            selected_silhouette_obj["prompt_fragment"],
+        )
         generator.set_value("MST", selected_mst_obj["prompt_fragment"])
         generator.set_value("variant", selected_variant_obj["prompt_fragment"])
         prompt = generator.build_prompt()
@@ -209,7 +219,9 @@ def on_generate(e: me.ClickEvent):
         generation_time = end_time - start_time
         print(f"Result GCS URIs: {result_gcs_uris}")
         state.result_gcs_uris = result_gcs_uris
-        state.result_display_urls = [create_display_url(uri) for uri in result_gcs_uris]
+        state.result_display_urls = [
+            create_display_url(uri) for uri in result_gcs_uris
+        ]
         add_media_item(
             user_email=app_state.user_email,
             model=config.VTO_MODEL_ID,
@@ -321,7 +333,9 @@ def page():
                 on_info_click=open_info_dialog,
             )  # pylint: disable=E1129
 
-            with me.box(style=me.Style(display="flex", flex_direction="row", gap=16)):
+            with me.box(
+                style=me.Style(display="flex", flex_direction="row", gap=16),
+            ):
                 # Person Image Section
                 with me.box(
                     style=me.Style(
@@ -431,7 +445,10 @@ def page():
             ):
                 with me.box(style=me.Style(margin=me.Margin(top=16))):
                     with me.box(
-                        style=me.Style(display="flex", justify_content="space-between"),
+                        style=me.Style(
+                            display="flex",
+                            justify_content="space-between",
+                        ),
                     ):
                         me.text(f"Number of images: {state.vto_sample_count}")
                     me.slider(
@@ -447,7 +464,10 @@ def page():
                 me.select(
                     label="Person Generation",
                     options=[
-                        me.SelectOption(label="Allow (All ages)", value="allow_all"),
+                        me.SelectOption(
+                            label="Allow (All ages)",
+                            value="allow_all",
+                        ),
                         me.SelectOption(
                             label="Allow (Adults only)",
                             value="allow_adult",
@@ -473,7 +493,10 @@ def page():
                             label="Block some",
                             value="block_medium_and_above",
                         ),
-                        me.SelectOption(label="Block few", value="block_only_high"),
+                        me.SelectOption(
+                            label="Block few",
+                            value="block_only_high",
+                        ),
                     ],
                     appearance="outline",
                     value=state.safety_filter_level,

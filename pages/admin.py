@@ -85,7 +85,11 @@ def _make_tab_style(selected: bool) -> me.Style:
     if selected:
         style.background = me.theme_var("surface-container")
         style.border = me.Border(
-            bottom=me.BorderSide(width=2, style="solid", color=me.theme_var("primary")),
+            bottom=me.BorderSide(
+                width=2,
+                style="solid",
+                color=me.theme_var("primary"),
+            ),
         )
         style.cursor = "default"
     return style
@@ -116,7 +120,11 @@ def admin_content():
     with me.box(style=me.Style(margin=me.Margin(top=20))):
         tabs = [
             Tab(key="users", label="Users", icon="people"),
-            Tab(key="logs", label="Unauthorized Logs", icon="history_toggle_off"),
+            Tab(
+                key="logs",
+                label="Unauthorized Logs",
+                icon="history_toggle_off",
+            ),
         ]
         _tab_group(
             tabs=tabs,
@@ -169,7 +177,11 @@ def users_tab():
                     gap=16,
                     padding=me.Padding.all(12),
                     border=me.Border(
-                        bottom=me.BorderSide(width=1, style="solid", color="#eee"),
+                        bottom=me.BorderSide(
+                            width=1,
+                            style="solid",
+                            color="#eee",
+                        ),
                     ),
                     font_weight="bold",
                 ),
@@ -236,7 +248,10 @@ def users_tab():
                         else "Never",
                     )
                     with me.content_button(on_click=on_delete_user, key=email):
-                        me.icon("delete", style=me.Style(color=me.theme_var("error")))
+                        me.icon(
+                            "delete",
+                            style=me.Style(color=me.theme_var("error")),
+                        )
 
     except Exception as e:
         me.text(
@@ -271,8 +286,13 @@ def edit_user_dialog():
                 style=me.Style(font_weight="bold"),
             )
 
-            with me.box(style=me.Style(display="flex", flex_direction="column", gap=8)):
-                me.text("Update Role", style=me.Style(font_size=12, color="#666"))
+            with me.box(
+                style=me.Style(display="flex", flex_direction="column", gap=8),
+            ):
+                me.text(
+                    "Update Role",
+                    style=me.Style(font_size=12, color="#666"),
+                )
                 me.select(
                     label="Select Role",
                     options=[
@@ -303,9 +323,17 @@ def edit_user_dialog():
             ):
                 me.button(
                     "Cancel",
-                    on_click=lambda e: setattr(state, "show_edit_user_dialog", False),
+                    on_click=lambda e: setattr(
+                        state,
+                        "show_edit_user_dialog",
+                        False,
+                    ),
                 )
-                me.button("Save Changes", on_click=on_confirm_edit_user, type="raised")
+                me.button(
+                    "Save Changes",
+                    on_click=on_confirm_edit_user,
+                    type="raised",
+                )
 
 
 def on_confirm_edit_user(e: me.ClickEvent):
@@ -314,7 +342,10 @@ def on_confirm_edit_user(e: me.ClickEvent):
         db = FirebaseClient().get_client()
         user_ref = db.collection("users").document(state.selected_user_email)
         user_ref.update(
-            {"role": state.new_user_role, "updated_at": datetime.datetime.utcnow()},
+            {
+                "role": state.new_user_role,
+                "updated_at": datetime.datetime.utcnow(),
+            },
         )
 
         state.show_edit_user_dialog = False
@@ -348,7 +379,11 @@ def logs_tab():
                     gap=16,
                     padding=me.Padding.all(12),
                     border=me.Border(
-                        bottom=me.BorderSide(width=1, style="solid", color="#eee"),
+                        bottom=me.BorderSide(
+                            width=1,
+                            style="solid",
+                            color="#eee",
+                        ),
                     ),
                     font_weight="bold",
                 ),
@@ -383,7 +418,10 @@ def logs_tab():
                     me.text(log.get("reason", "N/A"))
 
     except Exception as e:
-        me.text(f"Error loading logs: {e}", style=me.Style(color=me.theme_var("error")))
+        me.text(
+            f"Error loading logs: {e}",
+            style=me.Style(color=me.theme_var("error")),
+        )
 
 
 def add_user_dialog():
@@ -404,7 +442,9 @@ def add_user_dialog():
                 on_blur=lambda e: setattr(state, "new_user_email", e.value),
             )
 
-            with me.box(style=me.Style(display="flex", flex_direction="column", gap=8)):
+            with me.box(
+                style=me.Style(display="flex", flex_direction="column", gap=8),
+            ):
                 me.text("Role", style=me.Style(font_size=12, color="#666"))
                 me.select(
                     label="Select Role",
@@ -436,9 +476,17 @@ def add_user_dialog():
             ):
                 me.button(
                     "Cancel",
-                    on_click=lambda e: setattr(state, "show_add_user_dialog", False),
+                    on_click=lambda e: setattr(
+                        state,
+                        "show_add_user_dialog",
+                        False,
+                    ),
                 )
-                me.button("Add User", on_click=on_confirm_add_user, type="raised")
+                me.button(
+                    "Add User",
+                    on_click=on_confirm_add_user,
+                    type="raised",
+                )
 
 
 def on_confirm_add_user(e: me.ClickEvent):

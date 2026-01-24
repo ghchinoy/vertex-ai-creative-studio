@@ -22,7 +22,12 @@ def design_studio(
 ):
     """Component for the Design Studio."""
     with me.box(
-        style=me.Style(display="flex", flex_direction="column", gap=16, width=300),
+        style=me.Style(
+            display="flex",
+            flex_direction="column",
+            gap=16,
+            width=300,
+        ),
     ):
         me.text("Design Studio", type="headline-6")
         with me.box(
@@ -44,7 +49,11 @@ def design_studio(
             )
         if design_image_display_url:
             with me.box(
-                style=me.Style(width="100%", height=200, margin=me.Margin(top=8))
+                style=me.Style(
+                    width="100%",
+                    height=200,
+                    margin=me.Margin(top=8),
+                ),
             ):
                 media_tile(
                     media_type="image",
@@ -56,7 +65,9 @@ def design_studio(
             value=storyboard_item.get("design_prompt", ""),
             style=me.Style(width="100%"),
         )
-        with me.box(style=me.Style(display="flex", flex_direction="row", gap=8)):
+        with me.box(
+            style=me.Style(display="flex", flex_direction="row", gap=8),
+        ):
             me.button("Clear", on_click=on_clear_design, type="stroked")
             with me.content_button(
                 on_click=on_design_click,
@@ -68,5 +79,7 @@ def design_studio(
                 else:
                     me.text("Design")
         veo_button(
-            gcs_uri=storyboard_item["styled_image_uri"] if storyboard_item else "",
+            gcs_uri=storyboard_item["styled_image_uri"]
+            if storyboard_item
+            else "",
         )

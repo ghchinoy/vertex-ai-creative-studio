@@ -99,7 +99,11 @@ def _make_tab_style(selected: bool, disabled: bool) -> me.Style:
         style.cursor = "default"
     elif selected:
         style.border = me.Border(
-            bottom=me.BorderSide(width=2, style="solid", color=me.theme_var("primary")),
+            bottom=me.BorderSide(
+                width=2,
+                style="solid",
+                color=me.theme_var("primary"),
+            ),
         )
         style.cursor = "default"
     return style

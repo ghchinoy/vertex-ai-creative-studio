@@ -20,7 +20,10 @@ from dataclasses import field
 import mesop as me
 
 from common.analytics import track_click, track_model_call
-from common.prompt_template_service import PromptTemplate, prompt_template_service
+from common.prompt_template_service import (
+    PromptTemplate,
+    prompt_template_service,
+)
 from common.storage import store_to_gcs
 from common.utils import create_display_url
 from components.copy_button.copy_button import copy_button
@@ -37,6 +40,7 @@ from components.svg_icon.svg_icon import svg_icon
 from config.default import Default as cfg
 from models.gemini import generate_text
 from state.state import AppState
+
 
 MAX_MEDIA_ASSETS = 3
 
@@ -287,7 +291,10 @@ def gemini_writers_workshop_page_content():
 
     if state.info_dialog_open:
         with dialog(is_open=state.info_dialog_open):  # pylint: disable=E1129:not-context-manager
-            me.text(f"About {WRITERS_WORKSHOP_INFO['title']}", type="headline-6")
+            me.text(
+                f"About {WRITERS_WORKSHOP_INFO['title']}",
+                type="headline-6",
+            )
             me.markdown(WRITERS_WORKSHOP_INFO["description"])
             me.divider()
             me.button("Close", on_click=close_info_dialog, type="flat")
@@ -315,7 +322,9 @@ def gemini_writers_workshop_page_content():
             show_info_button=True,
             on_info_click=open_info_dialog,
         )
-        with me.box(style=me.Style(display="flex", flex_direction="row", gap=16)):
+        with me.box(
+            style=me.Style(display="flex", flex_direction="row", gap=16),
+        ):
             # Left column (controls)
             with me.box(
                 style=me.Style(
@@ -374,7 +383,10 @@ def gemini_writers_workshop_page_content():
                     ),
                 ):
                     _generate_text_button()
-                    with me.content_button(on_click=on_clear_click, type="icon"):
+                    with me.content_button(
+                        on_click=on_clear_click,
+                        type="icon",
+                    ):
                         me.icon("delete_sweep")
                     with me.tooltip(
                         message="Enter a prompt and click outside the text box to enable saving.",
@@ -416,7 +428,9 @@ def gemini_writers_workshop_page_content():
                         ),
                     ):
                         me.text("Generated Text", type="headline-6")
-                        copy_button(text_to_copy=me.state(PageState).generated_text)
+                        copy_button(
+                            text_to_copy=me.state(PageState).generated_text,
+                        )
                     me.markdown(
                         me.state(PageState).generated_text,
                         style=me.Style(margin=me.Margin(top=16)),
@@ -462,7 +476,9 @@ def _media_upload_slots():
                 display_url = state.uploaded_media_display_urls[i]
                 gcs_uri = state.uploaded_media_gcs_uris[i]
 
-                with me.box(style=me.Style(position="relative", width=100, height=100)):
+                with me.box(
+                    style=me.Style(position="relative", width=100, height=100),
+                ):
                     if any(
                         gcs_uri.lower().endswith(ext)
                         for ext in [".png", ".jpg", ".jpeg", ".webp", ".gif"]
@@ -484,7 +500,9 @@ def _media_upload_slots():
                             style=me.Style(
                                 width=100,
                                 height=100,
-                                border=me.Border.all(me.BorderSide(style="dashed")),
+                                border=me.Border.all(
+                                    me.BorderSide(style="dashed"),
+                                ),
                                 display="flex",
                                 align_items="center",
                                 justify_content="center",
@@ -496,7 +514,9 @@ def _media_upload_slots():
                             style=me.Style(
                                 width=100,
                                 height=100,
-                                border=me.Border.all(me.BorderSide(style="dashed")),
+                                border=me.Border.all(
+                                    me.BorderSide(style="dashed"),
+                                ),
                                 display="flex",
                                 align_items="center",
                                 justify_content="center",
@@ -581,7 +601,11 @@ def _empty_placeholder():
             height=100,
             width=100,
             border=me.Border.all(
-                me.BorderSide(width=1, style="dashed", color=me.theme_var("outline")),
+                me.BorderSide(
+                    width=1,
+                    style="dashed",
+                    color=me.theme_var("outline"),
+                ),
             ),
             border_radius=8,
             opacity=0.5,
@@ -643,7 +667,9 @@ def on_upload(e: me.UploadEvent):
         state.uploaded_media_gcs_uris.append(gcs_url)
         state.uploaded_media_display_urls.append(create_display_url(gcs_url))
     else:
-        show_snackbar(f"You can add a maximum of {MAX_MEDIA_ASSETS} media assets.")
+        show_snackbar(
+            f"You can add a maximum of {MAX_MEDIA_ASSETS} media assets.",
+        )
     yield
 
 
@@ -711,7 +737,10 @@ def _generate_text_and_save(base_prompt: str, input_gcs_uris: list[str]):
     model_id = state.selected_model or cfg().GEMINI_WRITERS_WORKSHOP_MODEL_ID
 
     try:
-        with track_model_call(model_name=model_id, prompt_length=len(base_prompt)):
+        with track_model_call(
+            model_name=model_id,
+            prompt_length=len(base_prompt),
+        ):
             text_result, execution_time = generate_text(
                 prompt=base_prompt,
                 images=input_gcs_uris,

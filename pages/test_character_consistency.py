@@ -29,6 +29,7 @@ from components.stepper import stepper
 from models.character_consistency import generate_character_video
 from state.state import AppState
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -136,7 +137,9 @@ This page allows you to test the character consistency workflow step-by-step.
                             ),
                         ):
                             for uri in state.uploaded_image_display_urls:
-                                with me.box(style=me.Style(width=200, height=200)):
+                                with me.box(
+                                    style=me.Style(width=200, height=200),
+                                ):
                                     media_tile(
                                         media_type="image",
                                         https_url=uri,
@@ -145,7 +148,10 @@ This page allows you to test the character consistency workflow step-by-step.
                         label="Scene Prompt",
                         rows=3,
                         on_input=on_prompt_input,
-                        style=me.Style(width="100%", margin=me.Margin(bottom=16)),
+                        style=me.Style(
+                            width="100%",
+                            margin=me.Margin(bottom=16),
+                        ),
                     )
                     me.button(
                         "Generate Alternatives",
@@ -172,36 +178,45 @@ This page allows you to test the character consistency workflow step-by-step.
                         ):
                             for url in state.candidate_image_urls:
                                 is_system_selected = url == state.best_image_url
-                                is_user_selected = url == state.user_selected_image_url
-                                with me.box(
-                                    key=url,
-                                    on_click=on_select_image_click,
-                                    style=me.Style(
-                                        padding=me.Padding.all(4),
-                                        cursor="pointer",
+                                is_user_selected = (
+                                    url == state.user_selected_image_url
+                                )
+                                with (
+                                    me.box(
+                                        key=url,
+                                        on_click=on_select_image_click,
+                                        style=me.Style(
+                                            padding=me.Padding.all(4),
+                                            cursor="pointer",
+                                        ),
                                     ),
-                                ):
-                                    with me.box(
+                                    me.box(
                                         style=me.Style(
                                             border=me.Border(
                                                 bottom=me.BorderSide(
                                                     width=6,
                                                     style="solid",
-                                                    color=me.theme_var("secondary")
+                                                    color=me.theme_var(
+                                                        "secondary",
+                                                    )
                                                     if is_system_selected
                                                     else "transparent",
                                                 ),
                                             ),
                                         ),
-                                    ):
-                                        with me.box(
-                                            style=me.Style(width=200, height=200)
-                                        ):
-                                            media_tile(
-                                                media_type="image",
-                                                https_url=url,
-                                                selected=is_user_selected,
-                                            )
+                                    ),
+                                    me.box(
+                                        style=me.Style(
+                                            width=200,
+                                            height=200,
+                                        ),
+                                    ),
+                                ):
+                                    media_tile(
+                                        media_type="image",
+                                        https_url=url,
+                                        selected=is_user_selected,
+                                    )
                         me.button("Continue", on_click=next_step, type="raised")
 
                 if state.current_step == 3:
@@ -260,7 +275,11 @@ This page allows you to test the character consistency workflow step-by-step.
                                     media_type="image",
                                     https_url=state.user_selected_image_url,
                                 )
-                    me.button("Generate Video", on_click=generate_video, type="raised")
+                    me.button(
+                        "Generate Video",
+                        on_click=generate_video,
+                        type="raised",
+                    )
                     if state.final_video_url:
                         with me.box(style=me.Style(width=600, height=338)):
                             media_tile(
@@ -269,7 +288,10 @@ This page allows you to test the character consistency workflow step-by-step.
                                 controls=True,
                             )
 
-            me.text(state.status_message, style=me.Style(margin=me.Margin(top=24)))
+            me.text(
+                state.status_message,
+                style=me.Style(margin=me.Margin(top=24)),
+            )
 
 
 def open_info_dialog(e: me.ClickEvent):
@@ -367,7 +389,9 @@ def generate_alternatives(e: me.ClickEvent):
             yield
 
             if "character_description" in step_result.data:
-                state.character_description = step_result.data["character_description"]
+                state.character_description = step_result.data[
+                    "character_description"
+                ]
             if "candidate_image_gcs_uris" in step_result.data:
                 gcs_uris = step_result.data["candidate_image_gcs_uris"]
                 state.candidate_image_gcs_uris = gcs_uris
@@ -380,7 +404,10 @@ def generate_alternatives(e: me.ClickEvent):
                 state.best_image_url = create_display_url(gcs_uri)
                 break
     except Exception as e:
-        logger.error("Error during character consistency generation", exc_info=True)
+        logger.error(
+            "Error during character consistency generation",
+            exc_info=True,
+        )
         state.status_message = f"Error: {e!s}"
         state.is_generating = False
         yield

@@ -254,7 +254,9 @@ class MachineProfile(BaseModel):
     primary_materials: list[str] = Field(
         description="List of primary materials, e.g., ['brushed steel', 'carbon fiber', 'matte black polymer'].",
     )
-    color_palette: list[str] = Field(description="The main colors of the machine.")
+    color_palette: list[str] = Field(
+        description="The main colors of the machine.",
+    )
     form_factor: str = Field(
         description="Overall shape and build, e.g., 'bipedal and slender', 'bulky and utilitarian', 'aerodynamic'.",
     )

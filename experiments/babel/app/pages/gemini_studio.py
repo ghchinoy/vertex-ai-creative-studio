@@ -30,6 +30,7 @@ from common.utility import get_uri_by_key_name
 from components.styles import BACKGROUND_COLOR, CONTENT_STYLE
 from config.default import BabelMetadata, Default, gemini_voices
 
+
 logging.basicConfig(level=logging.DEBUG)
 config = Default()
 BUCKET_PATH = "https://storage.mtls.cloud.google.com/" + config.GENMEDIA_BUCKET
@@ -110,7 +111,12 @@ def gemini_studio_page(app_state: me.state):
                             display="flex",
                             flex_direction="column",
                             gap=5,
-                            padding=me.Padding(top=10, left=10, right=10, bottom=12),
+                            padding=me.Padding(
+                                top=10,
+                                left=10,
+                                right=10,
+                                bottom=12,
+                            ),
                         ),
                     ):
                         me.text(

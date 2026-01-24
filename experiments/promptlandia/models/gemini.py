@@ -36,6 +36,7 @@ from models.prompts import (
     PROMPT_IMPROVEMENT_PLANNING_INSTRUCTIONS,
 )
 
+
 client, model_id = ModelSetup.init()
 MODEL_ID = model_id
 

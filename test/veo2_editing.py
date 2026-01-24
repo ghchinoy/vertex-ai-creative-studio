@@ -18,6 +18,7 @@ import time
 
 import requests
 
+
 # --- Configuration ---
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = "us-central1"
@@ -66,16 +67,25 @@ def poll_operation(operation_name, access_token):
         time.sleep(15)
 
 
-def run_video_editing(edit_mode, prompt, source_video_path, mask_video_path=None):
+def run_video_editing(
+    edit_mode,
+    prompt,
+    source_video_path,
+    mask_video_path=None,
+):
     """Run a video editing job using the REST API."""
     print(f"{'=' * 20} Running {edit_mode} {'=' * 20}")
 
     if not os.path.exists(source_video_path):
-        print(f"Skipping {edit_mode}: Source video not found at '{source_video_path}'")
+        print(
+            f"Skipping {edit_mode}: Source video not found at '{source_video_path}'",
+        )
         return
 
     if mask_video_path and not os.path.exists(mask_video_path):
-        print(f"Skipping {edit_mode}: Mask video not found at '{mask_video_path}'")
+        print(
+            f"Skipping {edit_mode}: Mask video not found at '{mask_video_path}'",
+        )
         return
 
     access_token = get_access_token()

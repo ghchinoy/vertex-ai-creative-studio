@@ -9,6 +9,7 @@ import streamlit as st
 from google.cloud.aiplatform.gapic import PredictionServiceClient
 from PIL import Image
 
+
 # Must be first command
 st.set_page_config(page_title="Virtual Try-On", layout="wide")
 
@@ -17,11 +18,15 @@ PROJECT_ID = "consumer-genai-experiments"
 LOCATION = "us-central1"
 MODEL_ID = "virtual-try-on-exp-05-31"
 IMAGE_DIR = "/Users/layolin/Documents/VTO/tryon"
-PRODUCT_IMAGE_FILES = ["red.jpg", "green.png", "dress.png", "blue.png", "yellow.png"]
+PRODUCT_IMAGE_FILES = [
+    "red.jpg",
+    "green.png",
+    "dress.png",
+    "blue.png",
+    "yellow.png",
+]
 TARGET_SIZE = (250, 550)
-model_endpoint = (
-    f"projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL_ID}"
-)
+model_endpoint = f"projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL_ID}"
 
 # --- Utility functions with caching ---
 
@@ -55,7 +60,9 @@ def run_tryon_cached(person_b64, name, b64):
 
     start = time.time()
     client = PredictionServiceClient(
-        client_options={"api_endpoint": f"{LOCATION}-aiplatform.googleapis.com"},
+        client_options={
+            "api_endpoint": f"{LOCATION}-aiplatform.googleapis.com",
+        },
     )
     instances = [
         {
@@ -79,11 +86,16 @@ def run_tryon_cached(person_b64, name, b64):
 st.title("👗 Virtual Try-On")
 st.markdown("Upload your photo and click on dress images to try them on!")
 
-uploaded_person = st.file_uploader("👤 Upload your photo", type=["jpg", "jpeg", "png"])
+uploaded_person = st.file_uploader(
+    "👤 Upload your photo",
+    type=["jpg", "jpeg", "png"],
+)
 
 if uploaded_person:
     person_bytes = uploaded_person.read()
-    person_img = Image.open(io.BytesIO(person_bytes)).convert("RGB").resize(TARGET_SIZE)
+    person_img = (
+        Image.open(io.BytesIO(person_bytes)).convert("RGB").resize(TARGET_SIZE)
+    )
     person_b64 = encode_image(person_bytes)
 
     st.image(person_img, caption="👤 Your Uploaded Image")
@@ -97,11 +109,18 @@ if uploaded_person:
     for i, file_name in enumerate(PRODUCT_IMAGE_FILES):
         img_path = os.path.join(IMAGE_DIR, file_name)
         product_bytes = load_image_bytes(img_path)
-        img = Image.open(io.BytesIO(product_bytes)).convert("RGB").resize((100, 200))
+        img = (
+            Image.open(io.BytesIO(product_bytes))
+            .convert("RGB")
+            .resize((100, 200))
+        )
         is_selected = file_name in st.session_state.selected_dresses
 
         with cols[i]:
-            if st.button(f"{'✅' if is_selected else '🔲'} {file_name}", key=file_name):
+            if st.button(
+                f"{'✅' if is_selected else '🔲'} {file_name}",
+                key=file_name,
+            ):
                 if is_selected:
                     st.session_state.selected_dresses.remove(file_name)
                 else:
@@ -129,7 +148,9 @@ if uploaded_person:
                     return (name, out_img, elapsed)
 
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    futures = [executor.submit(run_thread, pd) for pd in product_data]
+                    futures = [
+                        executor.submit(run_thread, pd) for pd in product_data
+                    ]
                     for f in concurrent.futures.as_completed(futures):
                         results.append(f.result())
 

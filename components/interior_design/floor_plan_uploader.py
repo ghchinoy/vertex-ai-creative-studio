@@ -8,11 +8,16 @@ from common.utils import create_display_url
 from components.library.library_chooser_button import library_chooser_button
 from components.media_tile.media_tile import media_tile
 
+
 IMAGE_PLACEHOLDER_STYLE = me.Style(
     width=400,
     height=400,
     border=me.Border.all(
-        me.BorderSide(width=2, style="dashed", color=me.theme_var("outline-variant")),
+        me.BorderSide(
+            width=2,
+            style="dashed",
+            color=me.theme_var("outline-variant"),
+        ),
     ),
     border_radius=8,
     display="flex",
@@ -62,7 +67,9 @@ def floor_plan_uploader(
             if storyboard and storyboard.get("original_floor_plan_uri"):
                 media_tile(
                     media_type="image",
-                    https_url=create_display_url(storyboard["original_floor_plan_uri"]),
+                    https_url=create_display_url(
+                        storyboard["original_floor_plan_uri"],
+                    ),
                     object_fit="contain",
                 )
             else:

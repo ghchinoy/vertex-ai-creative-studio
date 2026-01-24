@@ -33,7 +33,10 @@ class FacialCompositeProfile(BaseModel):
         description="The shape and thickness of the eyebrows.",
     )
     nose_shape: str = Field(..., description="The shape and size of the nose.")
-    lip_shape: str = Field(..., description="The shape and fullness of the lips.")
+    lip_shape: str = Field(
+        ...,
+        description="The shape and fullness of the lips.",
+    )
     hair_color: str = Field(..., description="The color of the hair.")
     hair_style: str = Field(
         ...,

@@ -8,6 +8,7 @@ from PIL import Image
 
 from config.default import Default
 
+
 # Initialize configuration
 cfg = Default()
 
@@ -21,7 +22,13 @@ def create_dummy_image_bytes():
     return byte_io.getvalue()
 
 
-def call_edit_image(client, model_name, prompt, reference_images, negative_prompt):
+def call_edit_image(
+    client,
+    model_name,
+    prompt,
+    reference_images,
+    negative_prompt,
+):
     """Wrapper to call edit_image, to be used in ThreadPoolExecutor."""
     print(f"Thread calling edit_image with model {model_name}...")
     return client.models.edit_image(
@@ -49,7 +56,11 @@ def test_imagen_capability_subject_reference_threaded():
     )
 
     # 1. Setup Client
-    client = genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
+    client = genai.Client(
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
+    )
     model_name = "imagen-3.0-capability-001"
 
     # 2. Prepare Input Data

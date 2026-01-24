@@ -13,6 +13,7 @@
 # limitations under the License.
 import mesop as me
 
+
 # SIDENAV_MIN_WIDTH, SIDENAV_MAX_WIDTH, MAIN_COLUMN_STYLE,
 # PAGE_BACKGROUND_STYLE, PAGE_BACKGROUND_PADDING_STYLE
 # have been moved to components/styles.py
@@ -33,7 +34,9 @@ _BOX_STYLE_CENTER_DISTRIBUTED = me.Style(
     # background="#fff",
     background=me.theme_var("background"),
     border_radius=12,
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",
@@ -47,7 +50,9 @@ _BOX_STYLE_CENTER_DISTRIBUTED_MARGIN = me.Style(
     # background="#fff",
     background=me.theme_var("background"),
     border_radius=12,
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",

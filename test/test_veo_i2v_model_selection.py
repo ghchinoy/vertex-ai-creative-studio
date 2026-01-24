@@ -2,10 +2,15 @@ import os
 import sys
 from unittest.mock import MagicMock, patch
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+sys.path.insert(
+    0,
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+)
 
 from config.default import Default
 from models.veo import image_to_video
+
 
 # Use an existing test image for consistency
 PERSON_IMAGE = os.environ.get(

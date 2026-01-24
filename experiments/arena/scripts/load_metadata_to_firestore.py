@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 
 from config.default import Default
 
+
 # Load environment variables from .env file
 load_dotenv(override=True)
 
@@ -122,9 +123,13 @@ def main(
         )
         logging.info("Metadata loading process completed successfully.")
     except FileNotFoundError as e:
-        logging.exception(f"Error: Metadata file not found at '{json_file_path}'. {e}")
+        logging.exception(
+            f"Error: Metadata file not found at '{json_file_path}'. {e}",
+        )
     except json.JSONDecodeError as e:
-        logging.exception(f"Error: Failed to decode JSON from '{json_file_path}'. {e}")
+        logging.exception(
+            f"Error: Failed to decode JSON from '{json_file_path}'. {e}",
+        )
     except ValueError as e:
         logging.exception(f"Error during metadata loading: {e}")
     except Exception as e:

@@ -38,7 +38,10 @@ def media_tile(
         gap=5,
         align_items="center",
         border=me.Border().all(
-            me.BorderSide(style="solid", color=me.theme_var("tertiary-fixed-variant")),
+            me.BorderSide(
+                style="solid",
+                color=me.theme_var("tertiary-fixed-variant"),
+            ),
         ),
         border_radius=12,
         height=160,
@@ -83,7 +86,10 @@ def media_tile(
             icon,
             style=icon_style,
         )
-        me.text(label, style=me.Style(font_weight="medium", text_align="center"))
+        me.text(
+            label,
+            style=me.Style(font_weight="medium", text_align="center"),
+        )
 
         with me.box():
             me.text(mode)

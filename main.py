@@ -42,52 +42,26 @@ from config.firebase_config import FirebaseClient
 from models.video_processing import convert_mp4_to_gif
 from routers import veo_router
 
+
 # Initialize Firebase Client with configured database
 FirebaseClient(database_id=config.Default().GENMEDIA_FIREBASE_DB)
+import pages  # noqa: F401
 from common.auth import get_user_role, is_user_authorized
-import pages.shop_the_look
-from pages import about as about_page
-from pages import banana_studio as banana_studio_page
-from pages import character_consistency as character_consistency_page
-from pages import chirp_3hd as chirp_3hd_page
-from pages import config as config_page
-from pages import gemini_image_generation as gemini_image_generation_page
-from pages import gemini_tts as gemini_tts_page
-from pages import gemini_writers_workshop as gemini_writers_workshop_page
-from pages import guideline_analysis as guideline_analysis_page
-from pages import home as home_page
-from pages import forbidden as forbidden_page
-from pages import imagen as imagen_page
-from pages import interior_design_v2 as interior_design_page
-from pages import lyria as lyria_page
-from pages import object_rotation as object_rotation_page
-from pages import pixie_compositor as pixie_compositor_page
-from pages import portraits as motion_portraits
-from pages import recontextualize as recontextualize_page
-from pages import starter_pack as starter_pack_page
-from pages import test_proxy_caching as test_proxy_caching_page
-from pages import selfie as selfie_page
-from pages import veo
-from pages import vto as vto_page
-from pages import welcome as welcome_page
-from pages.edit_images import content as edit_images_content
-from pages.library_v2 import page as library_v2_page
 from pages import admin as admin_page
-import pages.imagen_upscale
-import pages.storyboarder
-import pages.character_sheet
-import pages.brand_adherence
-import pages.styles
-from workflows.retro_games import page as retro_games
 from pages.test_async_veo import page as test_async_veo_page
-from pages.test_character_consistency import page as test_character_consistency_page
+from pages.test_character_consistency import (
+    page as test_character_consistency_page,
+)
 from pages.test_index import page as test_index_page
 from pages.test_infinite_scroll import test_infinite_scroll_page
 from pages.test_media_chooser import page as test_media_chooser_page
 from pages.test_pixie_compositor import test_pixie_compositor_page
 from pages.test_svg import test_svg_page
 from pages.test_uploader import test_uploader_page
-from pages.test_vto_prompt_generator import page as test_vto_prompt_generator_page
+from pages.test_vto_prompt_generator import (
+    page as test_vto_prompt_generator_page,
+)
+from workflows.retro_games import page as retro_games_page
 
 
 class UserInfo(BaseModel):
@@ -142,7 +116,10 @@ async def login(request: LoginRequest):
                 if request.photo_url:
                     update_data["photo_url"] = request.photo_url
                     # Try to mirror the avatar to GCS
-                    gcs_avatar_uri = mirror_user_avatar(email, request.photo_url)
+                    gcs_avatar_uri = mirror_user_avatar(
+                        email,
+                        request.photo_url,
+                    )
                     if gcs_avatar_uri:
                         update_data["gcs_avatar_uri"] = gcs_avatar_uri
 
@@ -287,7 +264,9 @@ async def set_request_context(request: Request, call_next):
         user_email = request.headers.get("X-Goog-Authenticated-User-Email")
 
     # 3. Default to anonymous
-    is_authenticated = user_email is not None and user_email != "anonymous@google.com"
+    is_authenticated = (
+        user_email is not None and user_email != "anonymous@google.com"
+    )
 
     if not user_email:
         user_email = "anonymous@google.com"
@@ -321,7 +300,9 @@ async def set_request_context(request: Request, call_next):
 
     if "text/html" in accept:
         if not is_authenticated:
-            if path not in allowed_paths and not path.startswith(allowed_prefixes):
+            if path not in allowed_paths and not path.startswith(
+                allowed_prefixes,
+            ):
                 return RedirectResponse(url="/welcome")
         elif not is_authorized:
             if path != "/forbidden" and not path.startswith(allowed_prefixes):
@@ -339,7 +320,9 @@ async def set_request_context(request: Request, call_next):
 
     # Pass GA ID to Mesop context if it exists
     if config.Default.GA_MEASUREMENT_ID:
-        request.scope["MESOP_GA_MEASUREMENT_ID"] = config.Default.GA_MEASUREMENT_ID
+        request.scope["MESOP_GA_MEASUREMENT_ID"] = (
+            config.Default.GA_MEASUREMENT_ID
+        )
 
     response = await call_next(request)
     response.set_cookie(
@@ -356,6 +339,7 @@ me.page(path="/test_character_consistency", title="Test Character Consistency")(
     test_character_consistency_page,
 )
 me.page(path="/test_index", title="Test Index")(test_index_page)
+me.page(path="/labs", title="Labs: GenMedia Creative Studio")(test_index_page)
 me.page(path="/test_infinite_scroll", title="Test Infinite Scroll")(
     test_infinite_scroll_page,
 )
@@ -367,8 +351,11 @@ me.page(path="/test_vto_prompt_generator", title="Test VTO Prompt Generator")(
     test_vto_prompt_generator_page,
 )
 me.page(path="/test_svg", title="Test SVG")(test_svg_page)
-me.page(path="/test_media_chooser", title="Test Media Chooser")(test_media_chooser_page)
+me.page(path="/test_media_chooser", title="Test Media Chooser")(
+    test_media_chooser_page,
+)
 me.page(path="/test_async_veo", title="Test Async Veo")(test_async_veo_page)
+me.page(path="/retro_games", title="Retro Games Workflow")(retro_games_page)
 me.page(path="/admin", title="Admin Dashboard")(admin_page.page)
 
 
@@ -402,7 +389,11 @@ async def get_media_proxy(request: Request, bucket_name: str, object_path: str):
 
         # Stream the file content directly from GCS to the user.
         stream = blob.open("rb")
-        return StreamingResponse(stream, media_type=content_type, headers=headers)
+        return StreamingResponse(
+            stream,
+            media_type=content_type,
+            headers=headers,
+        )
 
     except Exception as e:
         print(f"Error proxying GCS object: {e}")
@@ -446,7 +437,9 @@ app.include_router(veo_router.router)
 app.mount(
     "/",
     WSGIMiddleware(
-        me.create_wsgi_app(debug_mode=os.environ.get("DEBUG_MODE", "") == "true"),
+        me.create_wsgi_app(
+            debug_mode=os.environ.get("DEBUG_MODE", "") == "true",
+        ),
     ),
 )
 

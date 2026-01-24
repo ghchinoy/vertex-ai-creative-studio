@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from google import genai
 from rewrite_prompt_for_safety import sanitize_prompt
 
+
 load_dotenv()
 
 # --- Configuration ---
@@ -25,7 +26,11 @@ MAX_WORKERS = os.cpu_count()
 def get_genai_client() -> genai.Client:
     """Initializes and returns a GenAI client."""
     try:
-        return genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
+        return genai.Client(
+            vertexai=True,
+            project=PROJECT_ID,
+            location=LOCATION,
+        )
     except Exception as e:
         print(f"Error initializing GenAI client: {e}")
         raise
@@ -68,10 +73,13 @@ def generate_with_gemini(
         try:
             with open(image_path, "rb") as image_file:
                 image_data = image_file.read()
-                parts.append(genai.types.Part.from_text(text="Image to animate:"))
+                parts.append(
+                    genai.types.Part.from_text(text="Image to animate:"),
+                )
                 parts.append(
                     genai.types.Part.from_bytes(
-                        data=image_data, mime_type="image/jpeg"
+                        data=image_data,
+                        mime_type="image/jpeg",
                     ),
                 )
         except FileNotFoundError:
@@ -132,7 +140,11 @@ def augment_prompt(
     )
 
     full_prompt = f"{optimized_metaprompt}\n\nOriginal Prompt: {original_prompt}\n\nYour output should be solely the augmented prompt text, nothing else."
-    augmented_prompt = generate_with_gemini(client, full_prompt, image_path=image_path)
+    augmented_prompt = generate_with_gemini(
+        client,
+        full_prompt,
+        image_path=image_path,
+    )
 
     result = {
         "original_prompt": original_prompt,
@@ -170,7 +182,9 @@ def main():
         with open("original_prompts.json") as f:
             original_prompts_data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"Error loading or parsing 'original_prompts.json': {e}. Exiting.")
+        print(
+            f"Error loading or parsing 'original_prompts.json': {e}. Exiting.",
+        )
         return
 
     base_prompts = [
@@ -204,7 +218,9 @@ def main():
                 else:
                     print(f"  - Failed for: '{result['original_prompt']}'")
             except Exception as exc:
-                print(f"'{prompt_data['prompt']}' generated an exception: {exc}")
+                print(
+                    f"'{prompt_data['prompt']}' generated an exception: {exc}",
+                )
 
     with open("augmented_prompts.json", "w") as f:
         json.dump(augmented_prompts, f, indent=4)

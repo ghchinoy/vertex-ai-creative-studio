@@ -19,6 +19,7 @@ import pytest
 from google import genai
 from google.genai import types
 
+
 # Define the prompt template used in the GitHub Action workflow
 PROMPT_TEMPLATE = """You are an expert Issue Triage Engineer. Your task is to analyze a list of GitHub issues and assign the most relevant labels.
 
@@ -80,11 +81,15 @@ MOCK_LABELS = [
 @pytest.fixture(scope="module")
 def gemini_client():
     """Initializes the Gemini client for testing."""
-    project_id = os.environ.get("PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT")
+    project_id = os.environ.get("PROJECT_ID") or os.environ.get(
+        "GOOGLE_CLOUD_PROJECT",
+    )
     location = os.environ.get("LOCATION", "us-central1")
 
     if not project_id:
-        pytest.skip("PROJECT_ID or GOOGLE_CLOUD_PROJECT environment variable not set.")
+        pytest.skip(
+            "PROJECT_ID or GOOGLE_CLOUD_PROJECT environment variable not set.",
+        )
 
     return genai.Client(
         vertexai=True,

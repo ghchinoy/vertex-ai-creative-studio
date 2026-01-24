@@ -37,6 +37,7 @@ from common.analytics import track_model_call
 from common.storage import store_to_gcs
 from config.default import Default
 
+
 # class ImageModel(TypedDict): # Remove this definition
 #     """Defines Models For Image Generation."""
 #
@@ -79,7 +80,9 @@ class ImagenModelSetup:
         max=10,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
-    retry=retry_if_exception_type(Exception),  # Retry on all exceptions for robustness
+    retry=retry_if_exception_type(
+        Exception,
+    ),  # Retry on all exceptions for robustness
     reraise=True,  # re-raise the last exception if all retries fail
 )
 def generate_images(
@@ -94,7 +97,9 @@ def generate_images(
     cfg = Default()  # Instantiate Default config to access IMAGE_BUCKET
 
     # Define a GCS path for outputting generated images
-    gcs_output_directory = f"gs://{cfg.IMAGE_BUCKET}/{cfg.IMAGEN_GENERATED_SUBFOLDER}"
+    gcs_output_directory = (
+        f"gs://{cfg.IMAGE_BUCKET}/{cfg.IMAGEN_GENERATED_SUBFOLDER}"
+    )
 
     try:
         print(
@@ -224,7 +229,10 @@ def generate_image_for_vto(prompt: str) -> bytes:
     workflow, ensuring backward compatibility.
     """
     # Use the VirtualModelGenerator to create a single random prompt
-    from models.virtual_model_generator import DEFAULT_PROMPT, VirtualModelGenerator
+    from models.virtual_model_generator import (
+        DEFAULT_PROMPT,
+        VirtualModelGenerator,
+    )
 
     # The VTO page passes a simple prompt, so we use the generator with the default template
     generator = VirtualModelGenerator(DEFAULT_PROMPT)
@@ -249,7 +257,10 @@ def generate_image_for_vto(prompt: str) -> bytes:
             aspect_ratio="1:1",
         ),
     )
-    if response.generated_images and response.generated_images[0].image.image_bytes:
+    if (
+        response.generated_images
+        and response.generated_images[0].image.image_bytes
+    ):
         return response.generated_images[0].image.image_bytes
     raise ValueError("Image generation failed or returned no data.")
 
@@ -266,7 +277,9 @@ def recontextualize_product_in_scene(
     else:
         api_endpoint = f"{cfg.LOCATION}-aiplatform.googleapis.com"
     client_options = {"api_endpoint": api_endpoint}
-    client = aiplatform.gapic.PredictionServiceClient(client_options=client_options)
+    client = aiplatform.gapic.PredictionServiceClient(
+        client_options=client_options,
+    )
 
     model_endpoint = f"projects/{cfg.PROJECT_ID}/locations/{cfg.LOCATION}/publishers/google/models/{cfg.MODEL_IMAGEN_PRODUCT_RECONTEXT}"
 
@@ -321,7 +334,9 @@ def edit_image(
     """Edits an image using the Google GenAI client."""
     client = ImagenModelSetup.init(model_id=model)
     cfg = Default()
-    gcs_output_directory = f"gs://{cfg.IMAGE_BUCKET}/{cfg.IMAGEN_EDITED_SUBFOLDER}"
+    gcs_output_directory = (
+        f"gs://{cfg.IMAGE_BUCKET}/{cfg.IMAGEN_EDITED_SUBFOLDER}"
+    )
 
     raw_ref_image = types.RawReferenceImage(
         reference_id=1,

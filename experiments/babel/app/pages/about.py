@@ -22,6 +22,7 @@ from components.styles import CONTENT_STYLE
 from config.default import Default, reference_voices
 from state.state import AppState
 
+
 logging.basicConfig(level=logging.DEBUG)
 config = Default()
 
@@ -53,12 +54,18 @@ def about_page(app_state: me.state):
             ),
         ):
             with me.box():
-                me.text(f"Chirp 3: HD Voices ({len(state.voices)})", type="headline-6")
+                me.text(
+                    f"Chirp 3: HD Voices ({len(state.voices)})",
+                    type="headline-6",
+                )
 
                 me.html(
                     "<a href='https://cloud.google.com/text-to-speech/docs/voice-types' target='_blank'>Chirp 3: HD voices</a> and <a href='https://cloud.google.com/text-to-speech/docs/voices' target='_blank'>all Cloud TTS voices</a>",
                 )
-                sorted_voices = sorted(state.voices, key=lambda voice: voice["name"])
+                sorted_voices = sorted(
+                    state.voices,
+                    key=lambda voice: voice["name"],
+                )
                 for voice in sorted_voices:
                     me.text(
                         f"{voice.get('name')} / {voice['gender']} / {voice['language_codes'][0]}",
@@ -103,9 +110,17 @@ Translation:
             for idx, voice in enumerate(reference_voices):
                 name = voice.get("name")
                 if "Leda" in name or "Puck" in name:
-                    me.checkbox(f"Chirp 3: HD {name}", checked=True, disabled=True)
+                    me.checkbox(
+                        f"Chirp 3: HD {name}",
+                        checked=True,
+                        disabled=True,
+                    )
                 else:
-                    me.checkbox(f"Chirp 3: HD {name}", checked=False, disabled=True)
+                    me.checkbox(
+                        f"Chirp 3: HD {name}",
+                        checked=False,
+                        disabled=True,
+                    )
 
         me.box(style=me.Style(height="16px"))
 
@@ -121,9 +136,17 @@ Translation:
             for idx, voice in enumerate(reference_voices):
                 name = voice.get("name")
                 if "Leda" in name or "Puck" in name:
-                    me.checkbox(f"Chirp 3: HD {name}", checked=True, disabled=True)
+                    me.checkbox(
+                        f"Chirp 3: HD {name}",
+                        checked=True,
+                        disabled=True,
+                    )
                 else:
-                    me.checkbox(f"Chirp 3: HD {name}", checked=False, disabled=True)
+                    me.checkbox(
+                        f"Chirp 3: HD {name}",
+                        checked=False,
+                        disabled=True,
+                    )
 
         me.box(style=me.Style(height="16px"))
 

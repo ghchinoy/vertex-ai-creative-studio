@@ -104,7 +104,10 @@ class ParsedChecklistResponse(BaseModel):
     categories: dict[str, CategoryData] = Field(default_factory=dict)
 
     @classmethod
-    def from_json_dict(cls, json_dict: dict[str, Any]) -> "ParsedChecklistResponse":
+    def from_json_dict(
+        cls,
+        json_dict: dict[str, Any],
+    ) -> "ParsedChecklistResponse":
         """Creates a ParsedChecklistResponse from a JSON dictionary.
 
         Args:
@@ -117,7 +120,9 @@ class ParsedChecklistResponse(BaseModel):
         parsed_categories = {}
         for cat_name, cat_data in json_dict.items():
             if isinstance(cat_data, dict):
-                parsed_categories[cat_name] = CategoryData.parse_category_data(cat_data)
+                parsed_categories[cat_name] = CategoryData.parse_category_data(
+                    cat_data,
+                )
             else:
                 # Handle cases where a category might not be a dict as expected
                 print(
@@ -196,9 +201,13 @@ def video_checklist_page_content(app_state: me.state):
                 elif state.parsed_response_json_str or state.commentary_suffix:
                     if state.parsed_response_json_str:
                         try:
-                            raw_dict = json.loads(state.parsed_response_json_str)
-                            pydantic_response = ParsedChecklistResponse.from_json_dict(
-                                raw_dict,
+                            raw_dict = json.loads(
+                                state.parsed_response_json_str,
+                            )
+                            pydantic_response = (
+                                ParsedChecklistResponse.from_json_dict(
+                                    raw_dict,
+                                )
                             )
                             # me.text("Evaluation Results", style=me.Style(font_weight="bold", font_size=18, margin=me.Margin(bottom=12)))
                             render_pydantic_response(pydantic_response)
@@ -218,10 +227,15 @@ def video_checklist_page_content(app_state: me.state):
                                         margin=me.Margin(top=8),
                                     ),
                                 )
-                                me.markdown(text=f"```\n{state.prompt_response}\n```")
+                                me.markdown(
+                                    text=f"```\n{state.prompt_response}\n```",
+                                )
 
                     # Display suffix commentary if it exists, in an expansion panel
-                    if state.commentary_suffix and state.commentary_suffix.strip():
+                    if (
+                        state.commentary_suffix
+                        and state.commentary_suffix.strip()
+                    ):
                         me.box(style=me.Style(height=28))
                         with (
                             me.expansion_panel(
@@ -247,7 +261,9 @@ def video_checklist_page_content(app_state: me.state):
                             padding=me.Padding.all(16),
                         ),
                     ):
-                        me.markdown(text=f"```json\n{state.prompt_response}\n```")
+                        me.markdown(
+                            text=f"```json\n{state.prompt_response}\n```",
+                        )
 
 
 @me.component
@@ -317,24 +333,28 @@ def render_pydantic_response(response: ParsedChecklistResponse):
                         for i, (item_name, score) in enumerate(
                             category_data.items.items(),
                         ):
-                            with me.box(style=me.Style(margin=me.Margin(bottom=8))):
-                                with me.box(
+                            with (
+                                me.box(
+                                    style=me.Style(margin=me.Margin(bottom=8)),
+                                ),
+                                me.box(
                                     style=me.Style(
                                         display="flex",
                                         align_items="center",
                                         gap=8,
                                     ),
-                                ):
-                                    me.icon(
-                                        "flag" if score else "check_circle",
-                                        style=me.Style(
-                                            color="red" if score else "green",
-                                        ),
-                                    )
-                                    me.text(
-                                        item_name.replace("_", " ").title(),
-                                        style=me.Style(font_weight="medium"),
-                                    )
+                                ),
+                            ):
+                                me.icon(
+                                    "flag" if score else "check_circle",
+                                    style=me.Style(
+                                        color="red" if score else "green",
+                                    ),
+                                )
+                                me.text(
+                                    item_name.replace("_", " ").title(),
+                                    style=me.Style(font_weight="medium"),
+                                )
 
                             if (
                                 category_data.details
@@ -348,7 +368,9 @@ def render_pydantic_response(response: ParsedChecklistResponse):
                                     ),
                                 ):
                                     if isinstance(detail, IssueDetail):
-                                        me.markdown(f"**Issue:** {detail.issue_name}")
+                                        me.markdown(
+                                            f"**Issue:** {detail.issue_name}",
+                                        )
                                         me.markdown(
                                             f"**Location:** {detail.location_in_prompt}",
                                         )
@@ -396,7 +418,10 @@ def render_pydantic_response(response: ParsedChecklistResponse):
                 padding=me.Padding.all(16),
             ),
         ):
-            for category_name, category_data in categories_without_issues.items():
+            for (
+                category_name,
+                category_data,
+            ) in categories_without_issues.items():
                 with me.box(
                     style=me.Style(
                         display="flex",
@@ -458,7 +483,10 @@ def gemini_prompt_input():
         ):
             with me.content_button(type="icon", on_click=on_click_clear_prompt):
                 me.icon("clear")
-            with me.content_button(type="icon", on_click=on_click_evaluate_prompt):
+            with me.content_button(
+                type="icon",
+                on_click=on_click_evaluate_prompt,
+            ):
                 me.icon("send")
 
 

@@ -34,13 +34,18 @@ from config.default import Default
 from models.image_models import recontextualize_product_in_scene
 from state.state import AppState
 
+
 config = Default()
 
 
 with open("config/about_content.json") as f:
     about_content = json.load(f)
     RECONTEXT_INFO = next(
-        (s for s in about_content["sections"] if s.get("id") == "recontextualize"),
+        (
+            s
+            for s in about_content["sections"]
+            if s.get("id") == "recontextualize"
+        ),
         None,
     )
 
@@ -77,7 +82,11 @@ def recontextualize():
                 me.text(f"Prompt: {state.prompt}")
                 me.text(f"Model: {config.MODEL_IMAGEN_PRODUCT_RECONTEXT}")
                 with me.box(style=me.Style(margin=me.Margin(top=16))):
-                    me.button("Close", on_click=close_info_dialog, type="stroked")
+                    me.button(
+                        "Close",
+                        on_click=close_info_dialog,
+                        type="stroked",
+                    )
 
         with page_frame():  # pylint: disable=not-context-manager
             header(
@@ -127,7 +136,11 @@ def recontextualize():
 
                 if state.uploaded_image_gcs_uris:
                     with me.box(
-                        style=me.Style(display="flex", flex_wrap="wrap", gap=16),
+                        style=me.Style(
+                            display="flex",
+                            flex_wrap="wrap",
+                            gap=16,
+                        ),
                     ):
                         for i, uri in enumerate(state.uploaded_image_gcs_uris):
                             image_thumbnail(
@@ -160,7 +173,9 @@ def recontextualize():
                                 justify_content="space-between",
                             ),
                         ):
-                            me.text(f"Number of images: {state.recontext_sample_count}")
+                            me.text(
+                                f"Number of images: {state.recontext_sample_count}",
+                            )
                         me.slider(
                             min=1,
                             max=4,
@@ -201,7 +216,9 @@ def recontextualize():
                                     gap=8,
                                 ),
                             ):
-                                with me.box(style=me.Style(width=400, height=400)):
+                                with me.box(
+                                    style=me.Style(width=400, height=400),
+                                ):
                                     media_tile(
                                         media_type="image",
                                         https_url=create_display_url(gcs_uri),
@@ -221,7 +238,11 @@ def recontextualize():
                 me.text("Generation Failed", style=me.Style(font_weight="bold"))
                 me.text(state.error_message)
                 with me.box(style=me.Style(margin=me.Margin(top=16))):
-                    me.button("Close", on_click=on_close_error_dialog, type="stroked")
+                    me.button(
+                        "Close",
+                        on_click=on_close_error_dialog,
+                        type="stroked",
+                    )
 
 
 def on_library_choice(e: LibrarySelectionChangeEvent):
@@ -270,7 +291,9 @@ def on_generate(e: me.ClickEvent):
     state.is_loading = True
     yield
 
-    print(f"Generating recontext image with sources: {state.uploaded_image_gcs_uris}")
+    print(
+        f"Generating recontext image with sources: {state.uploaded_image_gcs_uris}",
+    )
     try:
         with track_model_call(
             model_name=config.MODEL_IMAGEN_PRODUCT_RECONTEXT,

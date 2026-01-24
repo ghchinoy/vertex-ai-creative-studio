@@ -68,4 +68,8 @@ def page():
 
         # Simple button that takes them back to welcome.
         # The user can sign out there if they need to switch accounts.
-        me.button("Go Back", on_click=lambda e: me.navigate("/welcome"), type="stroked")
+        me.button(
+            "Go Back",
+            on_click=lambda e: me.navigate("/welcome"),
+            type="stroked",
+        )

@@ -125,7 +125,10 @@ def infinite_scroll_chooser_button(
         dialog(is_open=state.show_dialog, dialog_style=dialog_style),
         me.box(
             style=me.Style(
-                display="flex", flex_direction="column", gap=16, flex_grow=1
+                display="flex",
+                flex_direction="column",
+                gap=16,
+                flex_grow=1,
             ),
         ),
     ):

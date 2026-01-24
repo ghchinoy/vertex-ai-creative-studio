@@ -42,6 +42,7 @@ from workflows.retro_games.backend import (
 )
 from workflows.retro_games.retro_games_config import RetroGameConfig
 
+
 print(f"DEBUG: retro_games loaded. PROJECT_ID={Default().PROJECT_ID}")
 
 
@@ -81,7 +82,9 @@ class PageState:
 
     error_message: str = ""
     show_selfie_dialog: bool = False
-    active_uploader: str = "player1"  # Tracks which player initiated the selfie dialog
+    active_uploader: str = (
+        "player1"  # Tracks which player initiated the selfie dialog
+    )
 
     start_time: float = 0.0
     total_duration: str = ""
@@ -175,7 +178,9 @@ def _run_video_generation_steps(
     if wf_state.status == "error":
         raise Exception(wf_state.error_message)
     if wf_state.final_video_uri:
-        state.final_video_display_url = create_display_url(wf_state.final_video_uri)
+        state.final_video_display_url = create_display_url(
+            wf_state.final_video_uri,
+        )
 
         # Persist to Firestore
         try:
@@ -291,7 +296,12 @@ def on_click_generate(e: me.ClickEvent):
         yield
 
         # Run Video Steps
-        yield from _run_video_generation_steps(state, wf_state, app_state, theme)
+        yield from _run_video_generation_steps(
+            state,
+            wf_state,
+            app_state,
+            theme,
+        )
 
         duration = time.time() - state.start_time
         state.total_duration = f"Total time: {int(duration)} seconds"
@@ -348,7 +358,12 @@ def on_click_regenerate_video(e: me.ClickEvent):
             wf_state.player2_sheet_uri = state.player2_sheet_gcs_uri
 
         # Run Video Steps
-        yield from _run_video_generation_steps(state, wf_state, app_state, theme)
+        yield from _run_video_generation_steps(
+            state,
+            wf_state,
+            app_state,
+            theme,
+        )
 
         duration = time.time() - op_start_time
         state.total_duration = f"Regeneration time: {int(duration)} seconds"
@@ -480,13 +495,19 @@ def retro_games_content():
                         margin=me.Margin(top=16),
                     ),
                 ):
-                    me.button("Cancel", on_click=on_close_selfie_dialog, type="flat")
+                    me.button(
+                        "Cancel",
+                        on_click=on_close_selfie_dialog,
+                        type="flat",
+                    )
 
     with page_frame():  # pylint: disable=E1129:not-context-manager
         header("Retro Games", "videogame_asset")
 
         # Main Content Container
-        with me.box(style=me.Style(display="flex", flex_direction="column", gap=24)):
+        with me.box(
+            style=me.Style(display="flex", flex_direction="column", gap=24),
+        ):
             # Top Section: Two Columns
             with me.box(
                 style=me.Style(
@@ -497,11 +518,19 @@ def retro_games_content():
             ):
                 # Left Column: Inputs
                 with me.box(
-                    style=me.Style(flex_grow=1, flex_basis="300px", min_width="200px"),
+                    style=me.Style(
+                        flex_grow=1,
+                        flex_basis="300px",
+                        min_width="200px",
+                    ),
                 ):
                     # Player 1 & 2
                     with me.box(
-                        style=me.Style(display="flex", flex_direction="row", gap=16),
+                        style=me.Style(
+                            display="flex",
+                            flex_direction="row",
+                            gap=16,
+                        ),
                     ):
                         # Player 1 Input
                         with me.box(style=_BOX_STYLE_CENTER_DISTRIBUTED):
@@ -514,7 +543,7 @@ def retro_games_content():
                                         width="100%",
                                         height=150,
                                         margin=me.Margin(top=16, bottom=16),
-                                    )
+                                    ),
                                 ):
                                     media_tile(
                                         media_type="image",
@@ -526,7 +555,9 @@ def retro_games_content():
                                     style=me.Style(
                                         height=150,
                                         width="100%",
-                                        background=me.theme_var("surface-variant"),
+                                        background=me.theme_var(
+                                            "surface-variant",
+                                        ),
                                         border_radius=8,
                                         margin=me.Margin(top=16, bottom=16),
                                         display="flex",
@@ -538,7 +569,9 @@ def retro_games_content():
                                         "person",
                                         style=me.Style(
                                             font_size=24,
-                                            color=me.theme_var("on-surface-variant"),
+                                            color=me.theme_var(
+                                                "on-surface-variant",
+                                            ),
                                         ),
                                     )
 
@@ -554,7 +587,10 @@ def retro_games_content():
                                 me.uploader(
                                     label="Upload",
                                     on_upload=on_upload_p1,
-                                    accepted_file_types=["image/jpeg", "image/png"],
+                                    accepted_file_types=[
+                                        "image/jpeg",
+                                        "image/png",
+                                    ],
                                     type="flat",
                                 )
                                 library_chooser_button(
@@ -594,7 +630,7 @@ def retro_games_content():
                                         width="100%",
                                         height=150,
                                         margin=me.Margin(top=16, bottom=16),
-                                    )
+                                    ),
                                 ):
                                     media_tile(
                                         media_type="image",
@@ -606,7 +642,9 @@ def retro_games_content():
                                     style=me.Style(
                                         height=150,
                                         width="100%",
-                                        background=me.theme_var("surface-variant"),
+                                        background=me.theme_var(
+                                            "surface-variant",
+                                        ),
                                         border_radius=8,
                                         margin=me.Margin(top=16, bottom=16),
                                         display="flex",
@@ -619,7 +657,9 @@ def retro_games_content():
                                         "person",
                                         style=me.Style(
                                             font_size=24,
-                                            color=me.theme_var("on-surface-variant"),
+                                            color=me.theme_var(
+                                                "on-surface-variant",
+                                            ),
                                         ),
                                     )
 
@@ -635,7 +675,10 @@ def retro_games_content():
                                 me.uploader(
                                     label="Upload",
                                     on_upload=on_upload_p2,
-                                    accepted_file_types=["image/jpeg", "image/png"],
+                                    accepted_file_types=[
+                                        "image/jpeg",
+                                        "image/png",
+                                    ],
                                     type="flat",
                                 )
                                 library_chooser_button(
@@ -681,7 +724,11 @@ def retro_games_content():
                         )
 
                         with me.box(
-                            style=me.Style(display="flex", gap=16, flex_wrap="wrap"),
+                            style=me.Style(
+                                display="flex",
+                                gap=16,
+                                flex_wrap="wrap",
+                            ),
                         ):
                             me.select(
                                 label="Model",
@@ -748,10 +795,14 @@ def retro_games_content():
                             ),
                         ):
                             for theme_name in config.get_theme_names():
-                                is_selected = state.selected_theme_value == theme_name
+                                is_selected = (
+                                    state.selected_theme_value == theme_name
+                                )
                                 logo_uri = config.get_theme_logo(theme_name)
                                 display_url = (
-                                    create_display_url(logo_uri) if logo_uri else ""
+                                    create_display_url(logo_uri)
+                                    if logo_uri
+                                    else ""
                                 )
 
                                 with me.box(
@@ -773,14 +824,16 @@ def retro_games_content():
                                             ),
                                         ),
                                         border_radius=12,
-                                        background=me.theme_var("secondary-container")
+                                        background=me.theme_var(
+                                            "secondary-container",
+                                        )
                                         if is_selected
                                         else "transparent",
                                     ),
                                 ):
                                     if display_url:
                                         with me.box(
-                                            style=me.Style(width=80, height=80)
+                                            style=me.Style(width=80, height=80),
                                         ):
                                             media_tile(
                                                 media_type="image",
@@ -803,7 +856,9 @@ def retro_games_content():
 
                                     me.text(
                                         theme_name,
-                                        type="body-1" if is_selected else "body-2",
+                                        type="body-1"
+                                        if is_selected
+                                        else "body-2",
                                         style=me.Style(
                                             font_weight="bold"
                                             if is_selected
@@ -812,7 +867,10 @@ def retro_games_content():
                                     )
 
                         with me.box(
-                            style=me.Style(margin=me.Margin(top=24), width="100%"),
+                            style=me.Style(
+                                margin=me.Margin(top=24),
+                                width="100%",
+                            ),
                         ):
                             me.button(
                                 "Generate Retro Game",
@@ -824,7 +882,9 @@ def retro_games_content():
                             )
 
                             if state.player1_sheet_display_url:
-                                with me.box(style=me.Style(margin=me.Margin(top=12))):
+                                with me.box(
+                                    style=me.Style(margin=me.Margin(top=12)),
+                                ):
                                     me.button(
                                         "Regenerate Video Only",
                                         on_click=on_click_regenerate_video,
@@ -858,14 +918,19 @@ def retro_games_content():
                     if state.is_running:
                         with me.box(
                             style=me.Style(
-                                display="flex", align_items="center", gap=16
+                                display="flex",
+                                align_items="center",
+                                gap=16,
                             ),
                         ):
                             me.progress_spinner()
                             me.text(state.current_step, type="headline-6")
                     elif state.current_step == "Complete!":
                         with me.box(
-                            style=me.Style(display="flex", flex_direction="column"),
+                            style=me.Style(
+                                display="flex",
+                                flex_direction="column",
+                            ),
                         ):
                             me.text(
                                 "Generation Complete!",
@@ -877,7 +942,11 @@ def retro_games_content():
 
                     # Intermediate Results Row
                     with me.box(
-                        style=me.Style(display="flex", flex_direction="column", gap=16),
+                        style=me.Style(
+                            display="flex",
+                            flex_direction="column",
+                            gap=16,
+                        ),
                     ):
                         # Player 1 Results
                         if state.player1_8bit_display_url:
@@ -895,7 +964,10 @@ def retro_games_content():
                                 me.text(
                                     "Player 1",
                                     type="subtitle-1",
-                                    style=me.Style(font_weight="bold", width="80px"),
+                                    style=me.Style(
+                                        font_weight="bold",
+                                        width="80px",
+                                    ),
                                 )
 
                                 # 8-bit
@@ -906,7 +978,9 @@ def retro_games_content():
                                         align_items="center",
                                     ),
                                 ):
-                                    with me.box(style=me.Style(width=250, height=250)):
+                                    with me.box(
+                                        style=me.Style(width=250, height=250),
+                                    ):
                                         media_tile(
                                             media_type="image",
                                             https_url=state.player1_8bit_display_url,
@@ -927,7 +1001,10 @@ def retro_games_content():
                                         ),
                                     ):
                                         with me.box(
-                                            style=me.Style(width=250, height=250)
+                                            style=me.Style(
+                                                width=250,
+                                                height=250,
+                                            ),
                                         ):
                                             media_tile(
                                                 media_type="image",
@@ -955,7 +1032,10 @@ def retro_games_content():
                                 me.text(
                                     "Player 2",
                                     type="subtitle-1",
-                                    style=me.Style(font_weight="bold", width="80px"),
+                                    style=me.Style(
+                                        font_weight="bold",
+                                        width="80px",
+                                    ),
                                 )
 
                                 # 8-bit
@@ -966,7 +1046,9 @@ def retro_games_content():
                                         align_items="center",
                                     ),
                                 ):
-                                    with me.box(style=me.Style(width=250, height=250)):
+                                    with me.box(
+                                        style=me.Style(width=250, height=250),
+                                    ):
                                         media_tile(
                                             media_type="image",
                                             https_url=state.player2_8bit_display_url,
@@ -987,7 +1069,10 @@ def retro_games_content():
                                         ),
                                     ):
                                         with me.box(
-                                            style=me.Style(width=250, height=250)
+                                            style=me.Style(
+                                                width=250,
+                                                height=250,
+                                            ),
                                         ):
                                             media_tile(
                                                 media_type="image",
@@ -1021,8 +1106,10 @@ def retro_games_content():
                     )  # Larger headline
                     with me.box(
                         style=me.Style(
-                            width="100%", max_width="960px", margin=me.Margin(top=24)
-                        )
+                            width="100%",
+                            max_width="960px",
+                            margin=me.Margin(top=24),
+                        ),
                     ):
                         media_tile(
                             media_type="video",

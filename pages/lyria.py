@@ -20,7 +20,10 @@ from dataclasses import field
 
 import mesop as me
 
-from common.metadata import MediaItem, add_media_item_to_firestore  # Updated import
+from common.metadata import (
+    MediaItem,
+    add_media_item_to_firestore,
+)  # Updated import
 from common.utils import create_display_url
 from components.dialog import dialog, dialog_actions
 from components.header import header
@@ -36,6 +39,7 @@ from models.audio_analysis import analyze_audio_file
 from models.gemini import analyze_audio_with_gemini, rewriter
 from models.lyria import generate_music_with_lyria
 from state.state import AppState
+
 
 cfg = Default()
 
@@ -64,7 +68,9 @@ class AudioMetricsState:
 class PageState:
     """Local Page State"""
 
-    is_loading: bool = False  # Generic loading state for Lyria generation or Rewriter
+    is_loading: bool = (
+        False  # Generic loading state for Lyria generation or Rewriter
+    )
     is_analyzing: bool = False  # Specific loading state for Gemini analysis
 
     loading_operation_message: str = ""  # Message to display during is_loading
@@ -94,7 +100,9 @@ class PageState:
 _BOX_STYLE = me.Style(
     background=me.theme_var("background"),
     border_radius=12,
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",
@@ -104,7 +112,9 @@ _BOX_STYLE = me.Style(
 _ANALYSIS_BOX_STYLE = me.Style(
     background=me.theme_var("background"),
     border_radius=12,
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",
@@ -177,19 +187,21 @@ def lyria_content(app_state: me.state):
             and not pagestate.is_loading  # Check generic loading
             and not pagestate.show_error_dialog
         ):
-            with me.box(
-                style=me.Style(
-                    display="grid",
-                    justify_content="center",
-                    justify_items="center",
-                    margin=me.Margin(bottom=16),
+            with (
+                me.box(
+                    style=me.Style(
+                        display="grid",
+                        justify_content="center",
+                        justify_items="center",
+                        margin=me.Margin(bottom=16),
+                    ),
                 ),
+                me.box(style=me.Style(width=300, height=300)),
             ):
-                with me.box(style=me.Style(width=300, height=300)):
-                    media_tile(
-                        media_type="audio",
-                        https_url=pagestate.music_display_url,
-                    )
+                media_tile(
+                    media_type="audio",
+                    https_url=pagestate.music_display_url,
+                )
 
         # Gemini Analysis Loading Indicator - Show if analyzing AND primary loading is done
         if pagestate.is_analyzing and not pagestate.is_loading:
@@ -222,7 +234,9 @@ def lyria_content(app_state: me.state):
                         style=me.Style(margin=me.Margin(bottom=12)),
                     )
                     if analysis.get("genre-quality"):
-                        with me.box(style=me.Style(margin=me.Margin(bottom=10))):
+                        with me.box(
+                            style=me.Style(margin=me.Margin(bottom=10)),
+                        ):
                             genre_list = analysis["genre-quality"]
 
                             if isinstance(genre_list, list):
@@ -289,7 +303,9 @@ def lyria_content(app_state: me.state):
                             margin=me.Margin(bottom=12),
                         ),
                     )
-                    me.text("Error: Could not display analysis data (invalid format).")
+                    me.text(
+                        "Error: Could not display analysis data (invalid format).",
+                    )
 
         # Analysis Error Display
         elif (
@@ -348,7 +364,10 @@ def lyria_content(app_state: me.state):
                 type="headline-6",
                 style=me.Style(color=me.theme_var("error"), font_weight="bold"),
             )
-            me.text(pagestate.error_message, style=me.Style(margin=me.Margin(top=16)))
+            me.text(
+                pagestate.error_message,
+                style=me.Style(margin=me.Margin(top=16)),
+            )
             with dialog_actions():  # pylint: disable=not-context-manager
                 me.button("Close", on_click=on_close_error_dialog, type="flat")
 
@@ -503,7 +522,10 @@ def on_click_lyria(e: me.ClickEvent):
     yield
 
     print(f"Let's make music with: {prompt_for_api}")
-    if state.original_user_prompt and state.original_user_prompt != prompt_for_api:
+    if (
+        state.original_user_prompt
+        and state.original_user_prompt != prompt_for_api
+    ):
         print(f"Original user prompt was: {state.original_user_prompt}")
 
     start_time = time.time()
@@ -546,7 +568,9 @@ def on_click_lyria(e: me.ClickEvent):
             state.audio_metrics.jitter_percent = metrics.jitter_percent
             state.audio_metrics.shimmer_db = metrics.shimmer_db
             state.audio_metrics.hnr_db = metrics.hnr_db
-            state.audio_metrics.estimated_tempo_bpm = metrics.estimated_tempo_bpm
+            state.audio_metrics.estimated_tempo_bpm = (
+                metrics.estimated_tempo_bpm
+            )
             state.audio_metrics.duration_sec = metrics.duration_sec
             state.has_audio_metrics = True
             print("Technical audio analysis successful.")
@@ -564,7 +588,9 @@ def on_click_lyria(e: me.ClickEvent):
                 music_generation_prompt=prompt_for_api,
             )
             if analysis_result_dict:
-                state.audio_analysis_result_json = json.dumps(analysis_result_dict)
+                state.audio_analysis_result_json = json.dumps(
+                    analysis_result_dict,
+                )
                 analysis_dict_for_metadata = analysis_result_dict
                 print(
                     f"Analysis successful, stored as JSON. Dict: {analysis_result_dict}",
@@ -589,7 +615,10 @@ def on_click_lyria(e: me.ClickEvent):
 
     logged_original_prompt = state.original_user_prompt
     logged_rewritten_prompt = ""
-    if state.original_user_prompt and prompt_for_api != state.original_user_prompt:
+    if (
+        state.original_user_prompt
+        and prompt_for_api != state.original_user_prompt
+    ):
         logged_rewritten_prompt = prompt_for_api
     elif not state.original_user_prompt and prompt_for_api:
         logged_original_prompt = prompt_for_api

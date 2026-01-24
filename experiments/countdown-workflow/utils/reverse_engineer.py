@@ -26,6 +26,7 @@ from utils.extract_frame import extract_first_frame
 
 import config
 
+
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,9 @@ def reverse_engineer_prompts(
 
     """
     if not os.path.exists(full_video_filepath):
-        logger.error(f"Error: Full video file not found at {full_video_filepath}")
+        logger.error(
+            f"Error: Full video file not found at {full_video_filepath}",
+        )
         return None
     if not os.path.exists(chunks_dir):
         logger.error(f"Error: Chunks directory not found at {chunks_dir}")
@@ -89,7 +92,9 @@ def reverse_engineer_prompts(
     )
 
     video_files = [
-        f for f in os.listdir(chunks_dir) if f.endswith((".mp4", ".webm", ".mov"))
+        f
+        for f in os.listdir(chunks_dir)
+        if f.endswith((".mp4", ".webm", ".mov"))
     ]
     if not video_files:
         logger.warning(f"No video files found in '{chunks_dir}'.")
@@ -109,10 +114,14 @@ def reverse_engineer_prompts(
         ]
 
         # 1. Add the full video for context
-        logger.info(f"Preparing full video '{full_video_filepath}' for context...")
+        logger.info(
+            f"Preparing full video '{full_video_filepath}' for context...",
+        )
         with open(full_video_filepath, "rb") as f:
             video_bytes = f.read()
-        contents.append(types.Part.from_bytes(data=video_bytes, mime_type="video/mp4"))
+        contents.append(
+            types.Part.from_bytes(data=video_bytes, mime_type="video/mp4"),
+        )
 
         # 2. Add each chunk and its first frame sequentially
         for i, video_filename in enumerate(video_files):
@@ -125,20 +134,28 @@ def reverse_engineer_prompts(
             contents.extend(
                 [
                     f"\n--- ANALYSIS TASK: CHUNK {i + 1} ({video_filename}) ---",
-                    types.Part.from_bytes(data=chunk_bytes, mime_type="video/mp4"),
+                    types.Part.from_bytes(
+                        data=chunk_bytes,
+                        mime_type="video/mp4",
+                    ),
                 ],
             )
 
             # Extract and add the first frame of the chunk
             frame_image_path = f"temp_frame_{i}.jpg"
             if extract_first_frame(video_filepath, frame_image_path):
-                logger.info(f"  - Preparing first frame image '{frame_image_path}'...")
+                logger.info(
+                    f"  - Preparing first frame image '{frame_image_path}'...",
+                )
                 with open(frame_image_path, "rb") as f:
                     image_bytes = f.read()
                 contents.extend(
                     [
                         "  - First frame of this chunk for detailed analysis:",
-                        types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
+                        types.Part.from_bytes(
+                            data=image_bytes,
+                            mime_type="image/jpeg",
+                        ),
                     ],
                 )
                 os.remove(frame_image_path)
@@ -167,9 +184,17 @@ def reverse_engineer_prompts(
         os.makedirs(output_dir, exist_ok=True)
 
         # Determine output filenames based on the input video name
-        base_filename = os.path.splitext(os.path.basename(full_video_filepath))[0]
-        json_output_path = os.path.join(output_dir, f"{base_filename}_analysis.json")
-        txt_output_path = os.path.join(output_dir, f"{base_filename}_analysis.txt")
+        base_filename = os.path.splitext(os.path.basename(full_video_filepath))[
+            0
+        ]
+        json_output_path = os.path.join(
+            output_dir,
+            f"{base_filename}_analysis.json",
+        )
+        txt_output_path = os.path.join(
+            output_dir,
+            f"{base_filename}_analysis.txt",
+        )
 
         # Save the results to a JSON file
         with open(json_output_path, "w") as f:

@@ -49,6 +49,7 @@ from models.upscale import get_image_resolution
 from services.c2pa_service import c2pa_service
 from state.state import AppState
 
+
 CHIP_STYLE = me.Style(
     padding=me.Padding(top=4, right=12, bottom=4, left=12),
     border_radius=8,
@@ -61,7 +62,9 @@ def get_all_image_presets():
     """Loads dynamic templates and merges them with static presets."""
     # Start with a deep copy of the hardcoded presets
     # to ensure backward compatibility and avoid mutating the original
-    all_presets = {k: [p.copy() for p in v] for k, v in IMAGE_ACTION_PRESETS.items()}
+    all_presets = {
+        k: [p.copy() for p in v] for k, v in IMAGE_ACTION_PRESETS.items()
+    }
 
     try:
         # Load dynamic templates of type 'image'
@@ -105,7 +108,9 @@ class PageState:
     selected_image_url: str = ""
     show_snackbar: bool = False
     snackbar_message: str = ""
-    previous_media_item_id: str | None = None  # For linking generation sequences
+    previous_media_item_id: str | None = (
+        None  # For linking generation sequences
+    )
     aspect_ratio: str = "1:1"
     image_size: str = "1K"
     num_images_to_generate: int = 0
@@ -159,7 +164,10 @@ def _render_grounding_info(grounding_info_str: str, theme_mode: str):
             )
 
         # Render Grounding Chunks as Links
-        if "grounding_chunks" in info and isinstance(info["grounding_chunks"], list):
+        if "grounding_chunks" in info and isinstance(
+            info["grounding_chunks"],
+            list,
+        ):
             me.text(
                 "Sources",
                 style=me.Style(font_weight="bold", margin=me.Margin(bottom=8)),
@@ -218,7 +226,9 @@ def gemini_image_gen_page_content():
             on_info_click=open_info_dialog,
         )
 
-        with me.box(style=me.Style(display="flex", flex_direction="row", gap=16)):
+        with me.box(
+            style=me.Style(display="flex", flex_direction="row", gap=16),
+        ):
             # Left column (controls)
             with me.box(
                 style=me.Style(
@@ -234,8 +244,12 @@ def gemini_image_gen_page_content():
                         margin=me.Margin(bottom=16),
                     ),
                 )
-                max_input_images = model_config.max_input_images if model_config else 3
-                upload_disabled = len(state.uploaded_image_gcs_uris) >= max_input_images
+                max_input_images = (
+                    model_config.max_input_images if model_config else 3
+                )
+                upload_disabled = (
+                    len(state.uploaded_image_gcs_uris) >= max_input_images
+                )
 
                 with me.box(
                     style=me.Style(
@@ -250,7 +264,11 @@ def gemini_image_gen_page_content():
                         label="Upload Images",
                         on_upload=on_upload,
                         multiple=True,
-                        accepted_file_types=["image/jpeg", "image/png", "image/webp"],
+                        accepted_file_types=[
+                            "image/jpeg",
+                            "image/png",
+                            "image/webp",
+                        ],
                         style=me.Style(width="100%"),
                         disabled=upload_disabled,
                     )
@@ -269,7 +287,9 @@ def gemini_image_gen_page_content():
                             margin=me.Margin(bottom=16),
                         ),
                     ):
-                        for i, uri in enumerate(state.uploaded_image_display_urls):
+                        for i, uri in enumerate(
+                            state.uploaded_image_display_urls,
+                        ):
                             image_thumbnail(
                                 image_uri=uri,
                                 index=i,
@@ -287,7 +307,11 @@ def gemini_image_gen_page_content():
                 )
 
                 with me.box(
-                    style=me.Style(display="flex", flex_direction="row", gap=16),
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        gap=16,
+                    ),
                 ):
                     me.select(
                         label="Aspect Ratio",
@@ -380,7 +404,10 @@ def gemini_image_gen_page_content():
                             on_click=generate_images,
                             type="raised",
                         )
-                        with me.content_button(on_click=on_clear_click, type="icon"):
+                        with me.content_button(
+                            on_click=on_clear_click,
+                            type="icon",
+                        ):
                             me.icon("delete_sweep")
 
                     if state.generation_complete and state.generation_time > 0:
@@ -419,7 +446,9 @@ def gemini_image_gen_page_content():
                                 type="stroked",
                             )
                             veo_button(
-                                gcs_uri=https_url_to_gcs_uri(state.selected_image_url),
+                                gcs_uri=https_url_to_gcs_uri(
+                                    state.selected_image_url,
+                                ),
                             )
 
                 # Image presets
@@ -474,17 +503,25 @@ def gemini_image_gen_page_content():
                 ):
                     with me.box(style=me.Style(margin=me.Margin(top=16))):
                         if state.is_suggesting_transformations:
-                            with me.content_button(disabled=True, style=CHIP_STYLE):
-                                with me.box(
+                            with (
+                                me.content_button(
+                                    disabled=True,
+                                    style=CHIP_STYLE,
+                                ),
+                                me.box(
                                     style=me.Style(
                                         display="flex",
                                         flex_direction="row",
                                         align_items="center",
                                         gap=8,
                                     ),
-                                ):
-                                    me.progress_spinner(diameter=20, stroke_width=3)
-                                    me.text("Suggesting...")
+                                ),
+                            ):
+                                me.progress_spinner(
+                                    diameter=20,
+                                    stroke_width=3,
+                                )
+                                me.text("Suggesting...")
                         else:
                             me.button(
                                 "Suggest Transformations",
@@ -512,7 +549,9 @@ def gemini_image_gen_page_content():
                                 gap=8,
                             ),
                         ):
-                            for transformation in state.suggested_transformations:
+                            for (
+                                transformation
+                            ) in state.suggested_transformations:
                                 with (
                                     me.content_button(
                                         on_click=on_transformation_click,
@@ -571,7 +610,10 @@ def gemini_image_gen_page_content():
                                 ),
                             ):
                                 with me.box(
-                                    style=me.Style(width="100%", max_height="85vh"),
+                                    style=me.Style(
+                                        width="100%",
+                                        max_height="85vh",
+                                    ),
                                 ):
                                     media_tile(
                                         media_type="image",
@@ -595,7 +637,9 @@ def gemini_image_gen_page_content():
                                         )
 
                             if state.generated_resolution:
-                                with me.box(style=me.Style(margin=me.Margin(top=8))):
+                                with me.box(
+                                    style=me.Style(margin=me.Margin(top=8)),
+                                ):
                                     pill(
                                         label=f"Resolution: {state.generated_resolution}",
                                         pill_type="resolution",
@@ -632,7 +676,9 @@ def gemini_image_gen_page_content():
                                     else 0
                                 )
                                 caption = (
-                                    state.generated_image_captions[selected_index]
+                                    state.generated_image_captions[
+                                        selected_index
+                                    ]
                                     if selected_index
                                     < len(state.generated_image_captions)
                                     else ""
@@ -647,7 +693,10 @@ def gemini_image_gen_page_content():
                                     ),
                                 ):
                                     with me.box(
-                                        style=me.Style(width="100%", max_height="75vh"),
+                                        style=me.Style(
+                                            width="100%",
+                                            max_height="75vh",
+                                        ),
                                     ):
                                         media_tile(
                                             media_type="image",
@@ -662,8 +711,10 @@ def gemini_image_gen_page_content():
                                             right=16,
                                         ),
                                     ):
-                                        manifest_json = state.c2pa_manifests.get(
-                                            state.selected_image_url,
+                                        manifest_json = (
+                                            state.c2pa_manifests.get(
+                                                state.selected_image_url,
+                                            )
                                         )
                                         if manifest_json:
                                             content_credentials_viewer(
@@ -688,11 +739,18 @@ def gemini_image_gen_page_content():
                                         justify_content="center",
                                     ),
                                 ):
-                                    for i, url in enumerate(state.generated_image_urls):
-                                        is_selected = url == state.selected_image_url
+                                    for i, url in enumerate(
+                                        state.generated_image_urls,
+                                    ):
+                                        is_selected = (
+                                            url == state.selected_image_url
+                                        )
                                         caption = (
                                             state.generated_image_captions[i]
-                                            if i < len(state.generated_image_captions)
+                                            if i
+                                            < len(
+                                                state.generated_image_captions,
+                                            )
                                             else ""
                                         )
                                         with me.box(
@@ -704,7 +762,9 @@ def gemini_image_gen_page_content():
                                                     me.BorderSide(
                                                         width=4,
                                                         style="solid",
-                                                        color=me.theme_var("secondary")
+                                                        color=me.theme_var(
+                                                            "secondary",
+                                                        )
                                                         if is_selected
                                                         else "transparent",
                                                     ),
@@ -714,7 +774,10 @@ def gemini_image_gen_page_content():
                                             ),
                                         ):
                                             with me.box(
-                                                style=me.Style(width=100, height=100),
+                                                style=me.Style(
+                                                    width=100,
+                                                    height=100,
+                                                ),
                                             ):
                                                 media_tile(
                                                     media_type="image",
@@ -755,7 +818,9 @@ def on_upload(e: me.UploadEvent):
     max_input_images = model_config.max_input_images if model_config else 3
 
     # Determine how many new images can be uploaded
-    upload_slots_available = max_input_images - len(state.uploaded_image_gcs_uris)
+    upload_slots_available = max_input_images - len(
+        state.uploaded_image_gcs_uris,
+    )
     files_to_upload = e.files[:upload_slots_available]
 
     if not files_to_upload:
@@ -885,7 +950,10 @@ def on_transformation_click(e: me.ClickEvent):
     # The transformation uses the selected image as the sole input
     # and the button's key as the prompt.
     state.prompt = prompt  # Update the main prompt box for clarity
-    yield from _generate_and_save(base_prompt=prompt, input_gcs_uris=[input_gcs_uri])
+    yield from _generate_and_save(
+        base_prompt=prompt,
+        input_gcs_uris=[input_gcs_uri],
+    )
 
 
 def on_suggest_transformations_click(e: me.ClickEvent):
@@ -905,11 +973,17 @@ def on_suggest_transformations_click(e: me.ClickEvent):
     try:
         # Use the first generated image to get suggestions
         gcs_uri = f"gs://{state.generated_image_urls[0].replace('/media/', '')}"
-        raw_transformations = generate_transformation_prompts(image_uris=[gcs_uri])
+        raw_transformations = generate_transformation_prompts(
+            image_uris=[gcs_uri],
+        )
         # Convert Pydantic objects to dicts for state
-        state.suggested_transformations = [t.model_dump() for t in raw_transformations]
+        state.suggested_transformations = [
+            t.model_dump() for t in raw_transformations
+        ]
     except Exception as ex:
-        analytics_logger.error(f"Could not generate transformation prompts: {ex}")
+        analytics_logger.error(
+            f"Could not generate transformation prompts: {ex}",
+        )
         state.suggested_transformations = []
         yield from show_snackbar(state, f"Failed to get suggestions: {ex}")
     finally:
@@ -956,7 +1030,10 @@ def on_image_action_click(e: me.ClickEvent):
 
     # If there are no images at all (neither from user nor preset), show an error
     if not input_gcs_uris:
-        yield from show_snackbar(state, "Please upload or select an image first.")
+        yield from show_snackbar(
+            state,
+            "Please upload or select an image first.",
+        )
         return
 
     # Log the click event for analytics
@@ -977,7 +1054,10 @@ def on_continue_click(e: me.ClickEvent):
     """Uses the currently selected generated image as the input for a subsequent generation."""
     state = me.state(PageState)
     if not state.selected_image_url:
-        yield from show_snackbar(state, "Please select an image to continue with.")
+        yield from show_snackbar(
+            state,
+            "Please select an image to continue with.",
+        )
         return
 
     gcs_uri = https_url_to_gcs_uri(state.selected_image_url)
@@ -1030,7 +1110,10 @@ def _generate_and_save(base_prompt: str, input_gcs_uris: list[str]):
     # Clear previous suggestions before generating new ones
     state.suggested_transformations = []
 
-    final_prompt = _get_appended_prompt(base_prompt, state.num_images_to_generate)
+    final_prompt = _get_appended_prompt(
+        base_prompt,
+        state.num_images_to_generate,
+    )
     # final_prompt = base_prompt
 
     state.is_generating = True
@@ -1059,7 +1142,9 @@ def _generate_and_save(base_prompt: str, input_gcs_uris: list[str]):
             )
 
         state.generation_time = execution_time
-        state.grounding_info = json.dumps(grounding_info) if grounding_info else ""
+        state.grounding_info = (
+            json.dumps(grounding_info) if grounding_info else ""
+        )
 
         if grounding_info:
             analytics_logger.info(
@@ -1087,7 +1172,9 @@ def _generate_and_save(base_prompt: str, input_gcs_uris: list[str]):
                 "No images were generated, but the attempt was logged to the library.",
             )
         else:
-            state.generated_image_urls = [create_display_url(uri) for uri in gcs_uris]
+            state.generated_image_urls = [
+                create_display_url(uri) for uri in gcs_uris
+            ]
             state.generated_image_captions = captions
             # Measure the actual resolution of the first generated image
             state.generated_resolution = get_image_resolution(gcs_uris[0])
@@ -1178,7 +1265,10 @@ def on_load(e: me.LoadEvent):
                 base_url = image_uri.split("?")[0]
                 final_gcs_uri = https_url_to_gcs_uri(base_url)
 
-            if final_gcs_uri and final_gcs_uri not in state.uploaded_image_gcs_uris:
+            if (
+                final_gcs_uri
+                and final_gcs_uri not in state.uploaded_image_gcs_uris
+            ):
                 state.uploaded_image_gcs_uris.append(final_gcs_uri)
                 state.uploaded_image_display_urls.append(
                     create_display_url(final_gcs_uri),

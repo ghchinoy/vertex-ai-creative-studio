@@ -36,6 +36,7 @@ from config.default import Config
 from models.image_models import ImageModel
 from svg_icon.svg_icon_component import svg_icon_component
 
+
 # Initialize Configuration
 cfg = Config()
 vertexai.init(project=cfg.PROJECT_ID, location=cfg.LOCATION)
@@ -321,7 +322,11 @@ def app():
                     ),
                 ):
                     with me.box(
-                        style=me.Style(display="flex", flex_direction="row", gap=5),
+                        style=me.Style(
+                            display="flex",
+                            flex_direction="row",
+                            gap=5,
+                        ),
                     ):
                         me.icon(icon="auto_fix_high")
                         me.text(
@@ -402,7 +407,9 @@ def app():
                                 type="stroked",
                                 # disabled=disabled,
                             ):
-                                with me.tooltip(message="rewrite prompt with Gemini"):
+                                with me.tooltip(
+                                    message="rewrite prompt with Gemini",
+                                ):
                                     with me.box(
                                         style=me.Style(
                                             display="flex",
@@ -435,19 +442,23 @@ def app():
                                     me.content_button(
                                         on_click=on_click_advanced_controls,
                                     ),
-                                    me.tooltip(message="hide advanced controls"),
+                                    me.tooltip(
+                                        message="hide advanced controls",
+                                    ),
+                                    me.box(style=me.Style(display="flex")),
                                 ):
-                                    with me.box(style=me.Style(display="flex")):
-                                        me.icon("expand_less")
+                                    me.icon("expand_less")
                             else:
                                 with (
                                     me.content_button(
                                         on_click=on_click_advanced_controls,
                                     ),
-                                    me.tooltip(message="show advanced controls"),
+                                    me.tooltip(
+                                        message="show advanced controls",
+                                    ),
+                                    me.box(style=me.Style(display="flex")),
                                 ):
-                                    with me.box(style=me.Style(display="flex")):
-                                        me.icon("expand_more")
+                                    me.icon("expand_more")
 
                             # Default Modifiers
                             me.select(
@@ -468,7 +479,10 @@ def app():
                                 label="Content Type",
                                 options=[
                                     me.SelectOption(label="None", value="None"),
-                                    me.SelectOption(label="Photo", value="Photo"),
+                                    me.SelectOption(
+                                        label="Photo",
+                                        value="Photo",
+                                    ),
                                     me.SelectOption(label="Art", value="Art"),
                                 ],
                                 key="content_type",
@@ -743,7 +757,9 @@ _BOX_STYLE = me.Style(
     flex_basis="max(480px, calc(50% - 48px))",
     background="#fff",
     border_radius=12,
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",
@@ -753,7 +769,9 @@ _BOX_STYLE_ROW = me.Style(
     flex_basis="max(480px, calc(50% - 48px))",
     background="#fff",
     border_radius=12,
-    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
+    box_shadow=(
+        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    ),
     padding=me.Padding(top=12, left=12, right=12, bottom=12),
     display="flex",
     flex_direction="row",

@@ -11,6 +11,7 @@ from google import genai
 from google.genai import types as genai_types
 from PIL import Image
 
+
 load_dotenv()
 
 # --- Configuration ---
@@ -26,7 +27,11 @@ VIDEO_GEN_MAX_WORKERS = 4
 def get_genai_client() -> genai.Client:
     """Initializes and returns a GenAI client."""
     try:
-        return genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
+        return genai.Client(
+            vertexai=True,
+            project=PROJECT_ID,
+            location=LOCATION,
+        )
     except Exception as e:
         print(f"Error initializing GenAI client: {e}")
         raise
@@ -42,7 +47,9 @@ def generate_single_video(
 ):
     """Generates a video from a prompt, optionally with an image."""
     if not prompt_text:
-        print(f"Skipping video generation for {output_path} due to empty prompt.")
+        print(
+            f"Skipping video generation for {output_path} due to empty prompt.",
+        )
         return False
 
     input_image = None
@@ -60,7 +67,9 @@ def generate_single_video(
             )
             return False
         except Exception as e:
-            print(f"Error opening image {image_path}: {e}. Skipping video generation.")
+            print(
+                f"Error opening image {image_path}: {e}. Skipping video generation.",
+            )
             return False
 
     base_delay = 5  # seconds
@@ -85,7 +94,9 @@ def generate_single_video(
             )
             operation = client.models.generate_videos(**generate_videos_kwargs)
 
-            print(f"  - Waiting for '{os.path.basename(output_path)}' to complete...")
+            print(
+                f"  - Waiting for '{os.path.basename(output_path)}' to complete...",
+            )
             while not operation.done:
                 time.sleep(10)
                 operation = client.operations.get(operation)
@@ -108,7 +119,9 @@ def generate_single_video(
                     continue
                 return False
 
-            video_bytes = operation.response.generated_videos[0].video.video_bytes
+            video_bytes = operation.response.generated_videos[
+                0
+            ].video.video_bytes
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             with open(output_path, "wb") as f:
                 f.write(video_bytes)
@@ -196,7 +209,8 @@ def main():
 
     with ThreadPoolExecutor(max_workers=VIDEO_GEN_MAX_WORKERS) as executor:
         futures = [
-            executor.submit(process_prompt_item, client, item) for item in prompts_data
+            executor.submit(process_prompt_item, client, item)
+            for item in prompts_data
         ]
         for future in as_completed(futures):
             try:

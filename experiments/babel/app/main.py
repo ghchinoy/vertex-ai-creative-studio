@@ -31,6 +31,7 @@ from pages.about import about_page, settings_page
 from pages.welcome import welcome_page
 from state.state import AppState
 
+
 # set up Mesop to be hosted via FastAPI
 app = FastAPI()
 
@@ -41,7 +42,9 @@ app.mount("/static", StaticFiles(directory="local_assets"), name="static")
 app.mount(
     "/",
     WSGIMiddleware(
-        me.create_wsgi_app(debug_mode=os.environ.get("DEBUG_MODE", "") == "true"),
+        me.create_wsgi_app(
+            debug_mode=os.environ.get("DEBUG_MODE", "") == "true",
+        ),
     ),
 )
 
@@ -194,7 +197,9 @@ def babel():
                 on_click=toggle_theme,
             ):
                 me.icon(
-                    "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
+                    "light_mode"
+                    if me.theme_brightness() == "dark"
+                    else "dark_mode",
                 )
                 # content area
 
@@ -343,7 +348,9 @@ def babel():
         with me.box(
             style=me.Style(
                 margin=me.Margin(
-                    left=SIDENAV_MAX_WIDTH if state.sidenav_open else SIDENAV_MIN_WIDTH,
+                    left=SIDENAV_MAX_WIDTH
+                    if state.sidenav_open
+                    else SIDENAV_MIN_WIDTH,
                 ),
                 padding=me.Padding(top=10, left=10, right=10, bottom=0),
             ),
