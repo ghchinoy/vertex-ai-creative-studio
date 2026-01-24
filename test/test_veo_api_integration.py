@@ -1,3 +1,18 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import pytest
 
 from config.veo_models import VEO_MODELS
@@ -43,18 +58,14 @@ def test_veo_t2v_api_call(gcs_bucket_for_tests, model_config):
     print("----------------------------------------------------")
 
     # Verify that the operation completed successfully and returned a valid response.
-    assert operation_result is not None, (
-        "The API operation result should not be None."
-    )
+    assert operation_result is not None, "The API operation result should not be None."
     assert operation_result.get("done"), (
         f"The 'done' flag in the operation should be True. Full response: {operation_result}"
     )
 
     # Explicitly check for a top-level error in the operation result.
     if "error" in operation_result:
-        pytest.fail(
-            f"API returned a top-level error: {operation_result['error']}",
-        )
+        pytest.fail(f"API returned a top-level error: {operation_result['error']}")
 
     response_data = operation_result.get("response", {})
     assert "videos" in response_data, (

@@ -22,7 +22,7 @@ from models.video_processing import convert_mp4_to_gif
 from state.state import AppState
 from state.veo_state import PageState
 
-from ..media_tile.media_tile import media_tile
+from ..video_thumbnail.video_thumbnail import video_thumbnail
 
 
 @me.component
@@ -41,9 +41,7 @@ def video_display(on_thumbnail_click: Callable, on_click_extend: Callable):
         if state.is_loading:
             with me.box(
                 style=me.Style(
-                    display="flex",
-                    justify_content="center",
-                    margin=me.Margin(top=24),
+                    display="flex", justify_content="center", margin=me.Margin(top=24),
                 ),
             ):
                 me.progress_spinner()
@@ -58,8 +56,7 @@ def video_display(on_thumbnail_click: Callable, on_click_extend: Callable):
             me.text(
                 "Your generated videos will appear here.",
                 style=me.Style(
-                    padding=me.Padding.all(24),
-                    color=me.theme_var("on-surface-variant"),
+                    padding=me.Padding.all(24), color=me.theme_var("on-surface-variant"),
                 ),
             )
             return
@@ -85,11 +82,15 @@ def video_display(on_thumbnail_click: Callable, on_click_extend: Callable):
                 position="relative",  # Allow for absolute positioning of badge
             ),
         ):
-            media_tile(
+            me.video(
                 key=main_video_url,
-                media_type="video",
-                https_url=main_video_url,
-                controls=True,
+                src=main_video_url,
+                style=me.Style(
+                    border_radius=12,
+                    width="100%",
+                    height="100%",
+                    display="block",
+                ),
             )
 
             # 4K badge overlay (Hidden by default to avoid confusion with video content)
@@ -134,8 +135,7 @@ def video_display(on_thumbnail_click: Callable, on_click_extend: Callable):
                     for duration in model_config.supported_extension_durations:
                         options.append(
                             me.SelectOption(
-                                label=f"{duration} seconds",
-                                value=str(duration),
+                                label=f"{duration} seconds", value=str(duration),
                             ),
                         )
                 else:
@@ -170,9 +170,7 @@ def video_display(on_thumbnail_click: Callable, on_click_extend: Callable):
             )
 
             if state.is_converting_gif:
-                with me.box(
-                    style=me.Style(display="flex", justify_content="center"),
-                ):
+                with me.box(style=me.Style(display="flex", justify_content="center")):
                     me.progress_spinner()
 
         # Thumbnail strip for multiple videos
@@ -190,10 +188,9 @@ def video_display(on_thumbnail_click: Callable, on_click_extend: Callable):
                 for url in state.result_display_urls:
                     is_selected = url == main_video_url
                     with me.box(style=me.Style(height="90px", width="160px")):
-                        media_tile(
+                        video_thumbnail(
                             key=url,
-                            media_type="video",
-                            https_url=url,
+                            video_src=url,
                             selected=is_selected,
                             on_click=on_thumbnail_click,
                         )
@@ -210,11 +207,7 @@ def video_display(on_thumbnail_click: Callable, on_click_extend: Callable):
                 me.text("Video as GIF:", type="headline-5")
                 me.image(
                     src=state.gif_url,
-                    style=me.Style(
-                        width="100%",
-                        max_width="480px",
-                        border_radius=8,
-                    ),
+                    style=me.Style(width="100%", max_width="480px", border_radius=8),
                 )
 
 
@@ -245,10 +238,7 @@ def on_convert_to_gif_click(e: me.ClickEvent):
         gcs_uri = https_url_to_gcs_uri(video_to_convert)
 
         # This function returns the GCS URI of the new GIF
-        new_gif_gcs_uri = convert_mp4_to_gif(
-            gcs_uri,
-            user_email=app_state.user_email,
-        )
+        new_gif_gcs_uri = convert_mp4_to_gif(gcs_uri, user_email=app_state.user_email)
 
         # Convert the new GCS URI into a display URL
         state.gif_url = create_display_url(new_gif_gcs_uri)

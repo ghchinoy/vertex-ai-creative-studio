@@ -203,13 +203,11 @@ def on_generate_images_click(e: me.ClickEvent):
         # If we only got 1, let's loop to get more.
         if len(gcs_uris) < 4:
             for _ in range(4 - len(gcs_uris)):
-                new_uris, _, new_captions, _ = (
-                    generate_image_from_prompt_and_images(
-                        prompt=state.prompt,
-                        images=[],
-                        aspect_ratio=state.aspect_ratio,
-                        gcs_folder="storyboard_images",
-                    )
+                new_uris, _, new_captions, _ = generate_image_from_prompt_and_images(
+                    prompt=state.prompt,
+                    images=[],
+                    aspect_ratio=state.aspect_ratio,
+                    gcs_folder="storyboard_images",
                 )
                 gcs_uris.extend(new_uris)
                 captions.extend(new_captions)
@@ -239,13 +237,13 @@ def on_generate_video_click(e: me.ClickEvent):
     try:
         # 1. Generate video clips for each image
         for i, image_uri in enumerate(state.generated_image_gcs_uris):
-            state.video_generation_status = f"Generating clip {i + 1}/{len(state.generated_image_gcs_uris)}..."
+            state.video_generation_status = (
+                f"Generating clip {i + 1}/{len(state.generated_image_gcs_uris)}..."
+            )
             yield
 
             # Construct enhanced prompt
-            caption = (
-                state.image_captions[i] if i < len(state.image_captions) else ""
-            )
+            caption = state.image_captions[i] if i < len(state.image_captions) else ""
             description = describe_image(image_uri)
 
             veo_prompt = f"{state.prompt}. {caption}. {description}"
@@ -261,7 +259,8 @@ def on_generate_video_click(e: me.ClickEvent):
                 video_count=1,
                 resolution="720p",
                 enhance_prompt=True,
-                person_generation="allow_adult",
+                generate_audio=True,
+                person_generation="Allow (Adults only)",
             )
 
             video_uris, _ = generate_video(request)

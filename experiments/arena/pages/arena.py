@@ -37,7 +37,6 @@ from components.header import header
 from config.default import Default
 from state.state import AppState
 
-
 # Initialize configuration
 client, model_id = ModelSetup.init()
 MODEL_ID = model_id
@@ -79,9 +78,7 @@ class PageState:
 def arena_images(input: str, study: str):
     """Create images for arena comparison"""
     state = me.state(PageState)
-    if (
-        input == ""
-    ):  # handle condition where someone hits "random" but doesn't modify
+    if input == "":  # handle condition where someone hits "random" but doesn't modify
         if state.arena_prompt != "":
             input = state.arena_prompt
     state.arena_output.clear()
@@ -444,13 +441,9 @@ def arena_page_content(app_state: me.state):
                                 model_name = f"arena_model{idx}"
                                 model_value = getattr(page_state, model_name)
 
-                                replace_url = (
-                                    "https://storage.mtls.cloud.google.com/"
-                                )
+                                replace_url = "https://storage.mtls.cloud.google.com/"
                                 if Default.PUBLIC_BUCKET:
-                                    replace_url = (
-                                        "https://storage.googleapis.com/"
-                                    )
+                                    replace_url = "https://storage.googleapis.com/"
                                 img_url = img.replace("gs://", replace_url)
                                 with me.box(
                                     style=me.Style(
@@ -466,10 +459,7 @@ def arena_page_content(app_state: me.state):
                                         border_radius="35px",
                                     )
                                     if page_state.chosen_model:
-                                        if (
-                                            page_state.chosen_model
-                                            == model_value
-                                        ):
+                                        if page_state.chosen_model == model_value:
                                             # green border
                                             image_border_style = me.Style(
                                                 width="450px",
@@ -498,10 +488,7 @@ def arena_page_content(app_state: me.state):
 
                                     if page_state.chosen_model:
                                         text_style = me.Style()
-                                        if (
-                                            page_state.chosen_model
-                                            == model_value
-                                        ):
+                                        if page_state.chosen_model == model_value:
                                             text_style = me.Style(
                                                 font_weight="bold",
                                             )
@@ -579,9 +566,7 @@ _BOX_STYLE = me.Style(
     flex_basis="max(480px, calc(50% - 48px))",
     background=me.theme_var("background"),
     border_radius=12,
-    box_shadow=(
-        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
-    ),
+    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",

@@ -9,9 +9,10 @@ from urllib.request import urlretrieve
 
 import pandas as pd
 
-
 SAFETY_RATIO = 0.03
-METADATA_URL = "https://huggingface.co/datasets/poloclub/diffusiondb/resolve/main/metadata.parquet"
+METADATA_URL = (
+    "https://huggingface.co/datasets/poloclub/diffusiondb/resolve/main/metadata.parquet"
+)
 METADATA_FILE = "metadata.parquet"
 FILTERED_METADATA_FILE = "diffusiondb_metadata.json"
 PROMPTS_IDS_FILE = "prompt_image_names.json"

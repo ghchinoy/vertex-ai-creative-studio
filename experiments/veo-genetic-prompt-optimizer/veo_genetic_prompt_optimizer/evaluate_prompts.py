@@ -21,7 +21,6 @@ from vertexai.preview.evaluation import (
     PointwiseMetric,
 )
 
-
 # Load environment variables from .env file
 load_dotenv()
 

@@ -1,13 +1,24 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 # Setup sys.path to allow imports from the parent directory.
 import os
 import sys
 from unittest.mock import MagicMock, patch
 
-
-sys.path.insert(
-    0,
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
-)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from common.metadata import MediaItem
 from pages.veo import on_click_veo
@@ -16,15 +27,10 @@ from state.veo_state import PageState
 
 
 @patch("pages.veo.add_media_item_to_firestore")
-@patch(
-    "pages.veo.generate_video",
-    return_value="gs://fake-bucket/fake_video.mp4",
-)
+@patch("pages.veo.generate_video", return_value="gs://fake-bucket/fake_video.mp4")
 @patch("mesop.state")
 def test_veo_generation_flow_and_metadata(
-    mock_state,
-    mock_generate_video,
-    mock_add_media_item,
+    mock_state, mock_generate_video, mock_add_media_item,
 ):
     """Tests the VEO generation flow, focusing on the data handling and metadata
     creation after a successful API call.
@@ -66,8 +72,6 @@ def test_veo_generation_flow_and_metadata(
     assert media_item_logged.user_email == "test_user@example.com"
     assert media_item_logged.prompt == "a test prompt for veo"
     assert media_item_logged.gcsuri == "gs://fake-bucket/fake_video.mp4"
-    assert (
-        media_item_logged.model == "veo-2.0-generate-001"
-    )  # This comes from config
+    assert media_item_logged.model == "veo-2.0-generate-001"  # This comes from config
 
     print("\nComponent-level integration test for VEO passed successfully.")

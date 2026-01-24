@@ -503,8 +503,7 @@ def render_tour_detail_dialog(storyboard: dict):
                                         width=2,
                                         style="solid",
                                         color=me.theme_var("primary")
-                                        if pagestate.tour_dialog_active_tab
-                                        == "details"
+                                        if pagestate.tour_dialog_active_tab == "details"
                                         else "transparent",
                                     ),
                                 ),
@@ -533,8 +532,7 @@ def render_tour_detail_dialog(storyboard: dict):
                                         width=2,
                                         style="solid",
                                         color=me.theme_var("primary")
-                                        if pagestate.tour_dialog_active_tab
-                                        == "raw"
+                                        if pagestate.tour_dialog_active_tab == "raw"
                                         else "transparent",
                                     ),
                                 ),
@@ -651,11 +649,7 @@ def render_default_detail_dialog(item: MediaItem):
         i2v_frames.append(item.last_reference_image)
     if i2v_frames:
         # Use a more specific title if it's interpolation
-        title = (
-            "Interpolation Frames"
-            if item.last_reference_image
-            else "Source Frame"
-        )
+        title = "Interpolation Frames" if item.last_reference_image else "Source Frame"
         _render_source_section(title, i2v_frames)
 
     # Virtual Try-On

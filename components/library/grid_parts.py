@@ -24,9 +24,7 @@ from components.pill import pill
 @me.component
 def render_video_pills(item: MediaItem):
     """Renders the pills for a video item."""
-    item_duration_str = (
-        f"{item.duration} sec" if item.duration is not None else "N/A"
-    )
+    item_duration_str = f"{item.duration} sec" if item.duration is not None else "N/A"
 
     pill("Video", "media_type_video")
     if item.gcs_uris and len(item.gcs_uris) > 1:
@@ -40,7 +38,10 @@ def render_video_pills(item: MediaItem):
     if item.duration is not None:
         pill(item_duration_str, "duration")
     if item.resolution:
-        pill(item.resolution, "resolution")
+        pill(
+            item.resolution,
+            "resolution_4k" if item.resolution == "4k" else "resolution",
+        )
     pill("24 fps", "fps")
     if item.enhanced_prompt_used:
         with me.tooltip(message="Prompt was auto-enhanced"):
@@ -63,9 +64,7 @@ def render_image_pills(item: MediaItem):
 @me.component
 def render_audio_pills(item: MediaItem):
     """Renders the pills for an audio item."""
-    item_duration_str = (
-        f"{item.duration} sec" if item.duration is not None else "N/A"
-    )
+    item_duration_str = f"{item.duration} sec" if item.duration is not None else "N/A"
     pill("Audio", "media_type_audio")
     if item.duration is not None:
         pill(item_duration_str, "duration")

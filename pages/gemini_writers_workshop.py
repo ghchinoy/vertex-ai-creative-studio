@@ -41,7 +41,6 @@ from config.default import Default as cfg
 from models.gemini import generate_text
 from state.state import AppState
 
-
 MAX_MEDIA_ASSETS = 3
 
 

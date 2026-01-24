@@ -58,12 +58,7 @@ def prompt_template_form_dialog(
         title = "Save as Prompt Template"
 
     # State synchronization logic for edit mode
-    if (
-        is_open
-        and mode == "edit"
-        and template
-        and state.key != template.get("key")
-    ):
+    if is_open and mode == "edit" and template and state.key != template.get("key"):
         state.label = template.get("label", "")
         state.key = template.get("key", "")
         state.category = template.get("category", "")

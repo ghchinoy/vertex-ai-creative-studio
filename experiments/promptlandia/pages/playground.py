@@ -25,7 +25,6 @@ from collections.abc import Callable
 
 import mesop as me
 
-
 _TEMPERATURE_MIN = 0.0
 _TEMPERATURE_MAX = 2.0
 _TOKEN_LIMIT_MIN = 1
@@ -284,9 +283,7 @@ def tab_box(*, header: str, key: str):
             me.box(style=me.Style(display="flex")),
         ):
             me.icon(
-                icon="keyboard_arrow_down"
-                if tab_open
-                else "keyboard_arrow_right",
+                icon="keyboard_arrow_down" if tab_open else "keyboard_arrow_right",
             )
             me.text(
                 header,
@@ -602,9 +599,7 @@ _STYLE_MODAL_CONTAINER = me.Style(
     box_sizing="content-box",
     height="100vh",
     overflow_y="scroll",
-    box_shadow=(
-        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
-    ),
+    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
 )
 
 _STYLE_MODAL_CONTENT = me.Style(margin=me.Margin.all(30))

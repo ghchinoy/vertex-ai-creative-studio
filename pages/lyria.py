@@ -40,7 +40,6 @@ from models.gemini import analyze_audio_with_gemini, rewriter
 from models.lyria import generate_music_with_lyria
 from state.state import AppState
 
-
 cfg = Default()
 
 
@@ -68,9 +67,7 @@ class AudioMetricsState:
 class PageState:
     """Local Page State"""
 
-    is_loading: bool = (
-        False  # Generic loading state for Lyria generation or Rewriter
-    )
+    is_loading: bool = False  # Generic loading state for Lyria generation or Rewriter
     is_analyzing: bool = False  # Specific loading state for Gemini analysis
 
     loading_operation_message: str = ""  # Message to display during is_loading
@@ -100,9 +97,7 @@ class PageState:
 _BOX_STYLE = me.Style(
     background=me.theme_var("background"),
     border_radius=12,
-    box_shadow=(
-        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
-    ),
+    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",
@@ -112,9 +107,7 @@ _BOX_STYLE = me.Style(
 _ANALYSIS_BOX_STYLE = me.Style(
     background=me.theme_var("background"),
     border_radius=12,
-    box_shadow=(
-        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
-    ),
+    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",
@@ -522,10 +515,7 @@ def on_click_lyria(e: me.ClickEvent):
     yield
 
     print(f"Let's make music with: {prompt_for_api}")
-    if (
-        state.original_user_prompt
-        and state.original_user_prompt != prompt_for_api
-    ):
+    if state.original_user_prompt and state.original_user_prompt != prompt_for_api:
         print(f"Original user prompt was: {state.original_user_prompt}")
 
     start_time = time.time()
@@ -568,9 +558,7 @@ def on_click_lyria(e: me.ClickEvent):
             state.audio_metrics.jitter_percent = metrics.jitter_percent
             state.audio_metrics.shimmer_db = metrics.shimmer_db
             state.audio_metrics.hnr_db = metrics.hnr_db
-            state.audio_metrics.estimated_tempo_bpm = (
-                metrics.estimated_tempo_bpm
-            )
+            state.audio_metrics.estimated_tempo_bpm = metrics.estimated_tempo_bpm
             state.audio_metrics.duration_sec = metrics.duration_sec
             state.has_audio_metrics = True
             print("Technical audio analysis successful.")
@@ -615,10 +603,7 @@ def on_click_lyria(e: me.ClickEvent):
 
     logged_original_prompt = state.original_user_prompt
     logged_rewritten_prompt = ""
-    if (
-        state.original_user_prompt
-        and prompt_for_api != state.original_user_prompt
-    ):
+    if state.original_user_prompt and prompt_for_api != state.original_user_prompt:
         logged_rewritten_prompt = prompt_for_api
     elif not state.original_user_prompt and prompt_for_api:
         logged_original_prompt = prompt_for_api

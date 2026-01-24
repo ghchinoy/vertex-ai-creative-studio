@@ -30,9 +30,7 @@ def character_consistency_details(
 ):
     """Renders the details for a character consistency item."""
     gcs_uri = (
-        item.gcsuri
-        if item.gcsuri
-        else (item.gcs_uris[0] if item.gcs_uris else None)
+        item.gcsuri if item.gcsuri else (item.gcs_uris[0] if item.gcs_uris else None)
     )
     item_display_url = gcs_uri_to_https_url(gcs_uri)
 
@@ -43,10 +41,7 @@ def character_consistency_details(
             gap=12,
         ),
     ):
-        if (
-            item.media_type == "character_consistency"
-            and item.best_candidate_image
-        ):
+        if item.media_type == "character_consistency" and item.best_candidate_image:
             me.video(
                 src=item_display_url,
                 style=me.Style(

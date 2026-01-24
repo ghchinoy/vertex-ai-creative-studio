@@ -203,10 +203,8 @@ def checklist_page_content(app_state: me.state):
                             raw_dict = json.loads(
                                 state.parsed_response_json_str,
                             )
-                            pydantic_response = (
-                                ParsedChecklistResponse.from_json_dict(
-                                    raw_dict,
-                                )
+                            pydantic_response = ParsedChecklistResponse.from_json_dict(
+                                raw_dict,
                             )
                             # me.text("Evaluation Results", style=me.Style(font_weight="bold", font_size=18, margin=me.Margin(bottom=12)))
                             render_pydantic_response(pydantic_response)
@@ -231,10 +229,7 @@ def checklist_page_content(app_state: me.state):
                                 )
 
                     # Display suffix commentary if it exists, in an expansion panel
-                    if (
-                        state.commentary_suffix
-                        and state.commentary_suffix.strip()
-                    ):
+                    if state.commentary_suffix and state.commentary_suffix.strip():
                         me.box(style=me.Style(height=28))
                         with (
                             me.expansion_panel(

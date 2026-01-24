@@ -23,7 +23,6 @@ from config.default import Default
 from models import shop_the_look_workflow
 from state.shop_the_look_state import PageState
 
-
 config = Default()
 
 
@@ -429,9 +428,7 @@ def on_upload_article_image(e: me.UploadEvent):
         file_ext = file.name.split(".")[-1]
         filename = f"{filename_uuid}.{file_ext}"
 
-        file_path = (
-            f"gs://{config.GENMEDIA_BUCKET}/uploads/apparel/{e.key}/{filename}"
-        )
+        file_path = f"gs://{config.GENMEDIA_BUCKET}/uploads/apparel/{e.key}/{filename}"
         gcs_url = store_to_gcs(
             f"uploads/apparel/{e.key}",
             filename.lower(),
@@ -487,10 +484,7 @@ def article_on_click(e: me.ClickEvent):
                         "bottom",
                     ]
                 )
-                or (
-                    selected_type == "top"
-                    and item.article_type in ["dress", "top"]
-                )
+                or (selected_type == "top" and item.article_type in ["dress", "top"])
                 or (
                     selected_type == "bottom"
                     and item.article_type in ["dress", "bottom"]

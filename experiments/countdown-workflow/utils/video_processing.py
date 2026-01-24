@@ -18,7 +18,6 @@ import pathlib
 from moviepy import AudioFileClip, VideoFileClip, concatenate_videoclips
 from moviepy.video.fx import FadeOut, MultiplySpeed
 
-
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 

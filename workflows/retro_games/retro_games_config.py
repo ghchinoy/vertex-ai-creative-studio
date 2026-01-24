@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import json
-import os
 import random
+
+from config.default import get_config_path
 
 
 class RetroGameConfig:
@@ -30,10 +31,8 @@ class RetroGameConfig:
 
     def _load_config(self):
         """Loads the configuration from the JSON file."""
-        base_dir = os.path.dirname(__file__)
-
         # Load Config
-        config_path = os.path.join(base_dir, "config.json")
+        config_path = get_config_path("workflows/retro_games/config.json")
         try:
             with open(config_path) as f:
                 self._config_data = json.load(f)
@@ -42,7 +41,7 @@ class RetroGameConfig:
             self._config_data = {"themes": {}, "bumper_videos": []}
 
         # Load Prompts
-        prompts_path = os.path.join(base_dir, "prompts.json")
+        prompts_path = get_config_path("workflows/retro_games/prompts.json")
         try:
             with open(prompts_path) as f:
                 self._prompts_data = json.load(f)

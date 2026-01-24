@@ -53,7 +53,6 @@ from pages.styles import (
 )
 from state.state import AppState
 
-
 client = GeminiModelSetup.init()
 
 
@@ -64,11 +63,7 @@ veo_model_name = VeoModelSetup.init()
 with open("config/about_content.json") as f:
     about_content = json.load(f)
     MOTION_PORTRAITS_INFO = next(
-        (
-            s
-            for s in about_content["sections"]
-            if s.get("id") == "motion_portraits"
-        ),
+        (s for s in about_content["sections"] if s.get("id") == "motion_portraits"),
         None,
     )
 
@@ -163,9 +158,7 @@ def motion_portraits_content(app_state: me.state):
             )
         )
     ]
-    auto_enhance_disabled = (
-        not selected_model_config.supports_prompt_enhancement
-    )
+    auto_enhance_disabled = not selected_model_config.supports_prompt_enhancement
 
     if state.info_dialog_open:
         with dialog(is_open=state.info_dialog_open):  # pylint: disable=not-context-manager
@@ -439,8 +432,7 @@ def motion_portraits_content(app_state: me.state):
                     on_click=on_click_motion_portraits,
                     type="flat",
                     key="generate_motion_portrait_button",
-                    disabled=state.is_loading
-                    or not state.reference_image_display_url,
+                    disabled=state.is_loading or not state.reference_image_display_url,
                 ),
                 me.box(
                     style=me.Style(
@@ -874,14 +866,10 @@ Examine the picture provided to improve the scene direction.
     final_prompt_for_llm = base_prompt
     if state.modifier_array:
         # Get the full style objects for the selected IDs
-        selected_styles = [
-            s for s in PORTRAIT_STYLES if s.id in state.modifier_array
-        ]
+        selected_styles = [s for s in PORTRAIT_STYLES if s.id in state.modifier_array]
 
         # Append each style's full description
-        final_prompt_for_llm += (
-            "\n\nIncorporate the following stylistic directions:\n"
-        )
+        final_prompt_for_llm += "\n\nIncorporate the following stylistic directions:\n"
         for style in selected_styles:
             final_prompt_for_llm += f"- {style.description}\n"
 
@@ -942,9 +930,7 @@ Do not describe the frame. There should be no lip movement like speaking, but th
             state.result_video_display_url = create_display_url(gcs_uri)
             print(f"Video generated: {gcs_uri}.")
         else:
-            current_error_message = (
-                "Video generation failed to return a GCS URI."
-            )
+            current_error_message = "Video generation failed to return a GCS URI."
 
     except Exception as err:
         print(

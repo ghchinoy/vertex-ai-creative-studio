@@ -19,7 +19,6 @@ import time
 from google import genai
 from google.genai import types
 
-
 # --- Configuration ---
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = "us-central1"

@@ -108,9 +108,7 @@ def library_chooser_button(
         state.is_loading = True
         yield
         try:
-            user_email = (
-                app_state.user_email if state.show_only_my_items else None
-            )
+            user_email = app_state.user_email if state.show_only_my_items else None
             # Use the media_type stored in state, which was set when opening the dialog
             print(
                 f"DEBUG: fetching items with media_type={state.media_type}, filter_by_user_email='{user_email}', app_state_email='{app_state.user_email}'",

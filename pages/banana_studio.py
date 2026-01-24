@@ -51,7 +51,6 @@ from models.gemini import (
 from models.upscale import get_image_resolution
 from state.state import AppState
 
-
 CHIP_STYLE = me.Style(
     padding=me.Padding(top=4, right=12, bottom=4, left=12),
     border_radius=8,
@@ -210,9 +209,7 @@ class PageState:
     selected_image_url: str = ""
     show_snackbar: bool = False
     snackbar_message: str = ""
-    previous_media_item_id: str | None = (
-        None  # For linking generation sequences
-    )
+    previous_media_item_id: str | None = None  # For linking generation sequences
     aspect_ratio: str = "1:1"
     image_size: str = "1K"
     num_images_to_generate: int = 1
@@ -804,10 +801,7 @@ def gemini_image_gen_page_content():
 
                                             me.text("Evaluating generation...")
 
-                                    elif (
-                                        state.selected_image_url
-                                        in state.evaluations
-                                    ):
+                                    elif state.selected_image_url in state.evaluations:
                                         evaluation = state.evaluations[
                                             state.selected_image_url
                                         ]
@@ -873,9 +867,7 @@ def gemini_image_gen_page_content():
                                     ),
                                 ):
                                     for url in state.generated_image_urls:
-                                        is_selected = (
-                                            url == state.selected_image_url
-                                        )
+                                        is_selected = url == state.selected_image_url
 
                                         with me.box(
                                             key=url,
@@ -1020,9 +1012,7 @@ def process_description_queue():
         state.image_descriptions[index_to_process] = description
     except Exception as ex:
         print(f"ERROR: Failed to describe image {gcs_uri}. Details: {ex}")
-        state.image_descriptions[index_to_process] = (
-            "Failed to generate description."
-        )
+        state.image_descriptions[index_to_process] = "Failed to generate description."
 
     # Yield to update the UI with the new description
     yield
@@ -1171,9 +1161,7 @@ def on_suggest_transformations_click(e: me.ClickEvent):
             image_uris=[gcs_uri],
         )
         # Convert Pydantic objects to dicts for state
-        state.suggested_transformations = [
-            t.model_dump() for t in raw_transformations
-        ]
+        state.suggested_transformations = [t.model_dump() for t in raw_transformations]
     except Exception as ex:
         print(f"Could not generate transformation prompts: {ex}")
         state.suggested_transformations = []
@@ -1341,9 +1329,7 @@ def _generate_and_save(base_prompt: str, input_gcs_uris: list[str]):
                 "No images were generated, but the attempt was logged to the library.",
             )
         else:
-            state.generated_image_urls = [
-                create_display_url(uri) for uri in gcs_uris
-            ]
+            state.generated_image_urls = [create_display_url(uri) for uri in gcs_uris]
             # Measure the actual resolution of the first generated image
             state.generated_resolution = get_image_resolution(gcs_uris[0])
             if state.generated_image_urls:
@@ -1383,13 +1369,9 @@ def _generate_and_save(base_prompt: str, input_gcs_uris: list[str]):
 
                         # Process results
                         yes_answers = sum(
-                            1
-                            for answer in evaluation_result.answers
-                            if answer.answer
+                            1 for answer in evaluation_result.answers if answer.answer
                         )
-                        score_str = (
-                            f"{yes_answers}/{len(state.critique_questions)}"
-                        )
+                        score_str = f"{yes_answers}/{len(state.critique_questions)}"
 
                         # Store evaluation
                         # The signed URL was already generated and is in state.generated_image_urls
@@ -1404,8 +1386,7 @@ def _generate_and_save(base_prompt: str, input_gcs_uris: list[str]):
                         state.evaluations[https_url] = Evaluation(
                             score=score_str,
                             details=[
-                                ans.model_dump()
-                                for ans in evaluation_result.answers
+                                ans.model_dump() for ans in evaluation_result.answers
                             ],
                         )
 

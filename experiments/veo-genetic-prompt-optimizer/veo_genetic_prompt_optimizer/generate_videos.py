@@ -11,7 +11,6 @@ from google import genai
 from google.genai import types as genai_types
 from PIL import Image
 
-
 load_dotenv()
 
 # --- Configuration ---
@@ -119,9 +118,7 @@ def generate_single_video(
                     continue
                 return False
 
-            video_bytes = operation.response.generated_videos[
-                0
-            ].video.video_bytes
+            video_bytes = operation.response.generated_videos[0].video.video_bytes
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             with open(output_path, "wb") as f:
                 f.write(video_bytes)
@@ -209,8 +206,7 @@ def main():
 
     with ThreadPoolExecutor(max_workers=VIDEO_GEN_MAX_WORKERS) as executor:
         futures = [
-            executor.submit(process_prompt_item, client, item)
-            for item in prompts_data
+            executor.submit(process_prompt_item, client, item) for item in prompts_data
         ]
         for future in as_completed(futures):
             try:

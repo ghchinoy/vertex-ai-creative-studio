@@ -22,7 +22,6 @@ from components.styles import CONTENT_STYLE
 from config.default import Default, reference_voices
 from state.state import AppState
 
-
 logging.basicConfig(level=logging.DEBUG)
 config = Default()
 

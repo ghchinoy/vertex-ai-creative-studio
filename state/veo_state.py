@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import dataclass, field
+from dataclasses import field
 
 import mesop as me
 
 
 @me.stateclass
-@dataclass
 class PageState:
     """Mesop Page State"""
+
+    # pylint: disable=E3701:invalid-field-call
 
     veo_model: str = "3.1-fast"
     veo_prompt_input: str = ""
@@ -34,7 +35,7 @@ class PageState:
     # The user's negative prompt to steer the model away from certain concepts.
     negative_prompt: str = ""
 
-    original_prompt: str = ""
+    original_prompt: str
 
     video_count: int = 1
     aspect_ratio: str = "16:9"
@@ -43,17 +44,17 @@ class PageState:
     generate_audio: bool = True
 
     # I2V reference Image
-    reference_image_file: me.UploadedFile | None = None
+    reference_image_file: me.UploadedFile = None
     reference_image_file_key: int = 0
-    reference_image_gcs: str = ""
-    reference_image_uri: str = ""
-    reference_image_mime_type: str = ""
+    reference_image_gcs: str
+    reference_image_uri: str
+    reference_image_mime_type: str
 
     # Interpolation last reference image
-    last_reference_image_file: me.UploadedFile | None = None
+    last_reference_image_file: me.UploadedFile = None
     last_reference_image_file_key: int = 0
-    last_reference_image_gcs: str = ""
-    last_reference_image_uri: str = ""
+    last_reference_image_gcs: str
+    last_reference_image_uri: str
     last_reference_image_mime_type: str = ""
 
     # R2V reference images
@@ -70,7 +71,7 @@ class PageState:
     # Rewriter
     auto_enhance_prompt: bool = False
 
-    rewriter_name: str = ""
+    rewriter_name: str
 
     is_loading: bool = False
     is_converting_gif: bool = False
@@ -82,7 +83,7 @@ class PageState:
     result_gcs_uris: list[str] = field(default_factory=list)
     result_display_urls: list[str] = field(default_factory=list)
     selected_video_url: str = ""
-    timing: str = ""
+    timing: str
 
     person_generation: str = "Allow (Adults only)"
 

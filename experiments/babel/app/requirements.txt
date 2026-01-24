@@ -94,7 +94,7 @@ markupsafe==3.0.3
     # via
     #   jinja2
     #   werkzeug
-marshmallow==4.0.1
+marshmallow==4.1.2
     # via dataclasses-json
 mdurl==0.1.2
     # via markdown-it-py
@@ -134,7 +134,7 @@ protobuf==6.31.1
     #   grpcio-status
     #   mesop
     #   proto-plus
-pyasn1==0.6.1
+pyasn1==0.6.2
     # via
     #   pyasn1-modules
     #   rsa

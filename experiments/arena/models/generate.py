@@ -33,7 +33,6 @@ from common.storage import store_to_gcs
 from config.default import Default
 from config.firebase_config import FirebaseClient
 
-
 config = Default()
 logging.basicConfig(level=logging.DEBUG)
 

@@ -12,7 +12,6 @@ from dotenv import load_dotenv
 from google import genai
 from rewrite_prompt_for_safety import sanitize_prompt
 
-
 load_dotenv()
 
 # --- Configuration ---

@@ -33,12 +33,9 @@ from components.styles import BACKGROUND_COLOR, CONTENT_STYLE
 from config.default import BabelMetadata, Default
 from state.state import AppState
 
-
 logging.basicConfig(level=logging.DEBUG)
 config = Default()
-BUCKET_PATH = (
-    "https://storage.mtls.cloud.google.com/" + config.STATIC_PUBLIC_BUCKET
-)
+BUCKET_PATH = "https://storage.mtls.cloud.google.com/" + config.STATIC_PUBLIC_BUCKET
 
 
 @me.stateclass
@@ -74,9 +71,7 @@ def get_chosen_voices():
     voices = app_state.voices
 
     filtered_voices = [
-        voice
-        for voice in voices
-        if "Puck" in voice["name"] or "Leda" in voice["name"]
+        voice for voice in voices if "Puck" in voice["name"] or "Leda" in voice["name"]
     ]
     return filtered_voices
 

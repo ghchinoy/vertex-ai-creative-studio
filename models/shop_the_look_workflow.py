@@ -33,7 +33,6 @@ from models.shop_the_look_models import (
 from state.shop_the_look_state import PageState
 from state.state import AppState
 
-
 config = Default()
 db = FirebaseClient(database_id=config.GENMEDIA_FIREBASE_DB).get_client()
 
@@ -283,16 +282,13 @@ def load_look_data(limit: int = 50):
     for doc in media_ref.stream():
         catalog_data = doc.to_dict()
         record = CatalogRecord(**catalog_data)
-        record.clothing_image = (
-            f"gs://{config.GENMEDIA_BUCKET}/{record.item_id}",
-        )
+        record.clothing_image = (f"gs://{config.GENMEDIA_BUCKET}/{record.item_id}",)
         looks.append(record)
 
     looks.sort(key=lambda item: (item.look_id, item.try_on_order))
     looks = list(
         filter(
-            lambda look: look.article_type
-            not in ("sunglasses", "watch", "hat"),
+            lambda look: look.article_type not in ("sunglasses", "watch", "hat"),
             looks,
         ),
     )

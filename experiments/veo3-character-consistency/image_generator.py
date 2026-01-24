@@ -24,7 +24,6 @@ from utils.select_best import select_best_image
 
 import config
 
-
 # Initialize clients
 client = genai.Client(
     vertexai=True,

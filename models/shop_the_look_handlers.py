@@ -39,7 +39,6 @@ from models.vto import generate_vto_image
 from state.shop_the_look_state import PageState
 from state.state import AppState
 
-
 config = Default()
 
 
@@ -199,9 +198,7 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
             print(f"CRITICAL: Failed to store metadata: {meta_err}")
             # Optionally, display another error or log this critical failure
             if not state.show_error_dialog:  # Avoid overwriting primary error
-                state.error_message = (
-                    f"Failed to store video metadata: {meta_err}"
-                )
+                state.error_message = f"Failed to store video metadata: {meta_err}"
                 state.show_error_dialog = True
 
     state.is_loading = False
@@ -306,9 +303,7 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
                                 item.item_id.split("/")[-1]
                                 == article.article_image_path.split("/")[-1]
                             ):
-                                item.ai_description = (
-                                    article.article_description
-                                )
+                                item.ai_description = article.article_description
                     yield
                 except Exception as exc:
                     print(f"generated an exception: {exc}")
@@ -323,9 +318,7 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
                 )
 
             for i, row in enumerate(articles_for_vto):
-                state.current_status = (
-                    f"{status_prefix}Trying on {row.article_type}..."
-                )
+                state.current_status = f"{status_prefix}Trying on {row.article_type}..."
                 yield
 
                 potential_images = generate_vto_image(
@@ -347,7 +340,9 @@ def on_click_vto_look(e: me.ClickEvent):  # pylint: disable=unused-argument
                     executor.map(download_from_gcs, potential_images),
                 )
 
-                state.current_status = f"{status_prefix}Selecting best image of {row.article_type}..."
+                state.current_status = (
+                    f"{status_prefix}Selecting best image of {row.article_type}..."
+                )
                 yield
 
                 byte_lookup = article_image_bytes_list[

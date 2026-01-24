@@ -21,7 +21,6 @@ from google.cloud import storage
 from config.default import Default
 from config.firebase_config import FirebaseClient
 
-
 cfg = Default()
 
 db = FirebaseClient(cfg.GENMEDIA_FIREBASE_DB).get_client()
@@ -84,7 +83,9 @@ def store_to_gcs(
         blob.upload_from_string(contents, content_type=mime_type)
     else:
         blob.upload_from_string(contents, content_type=mime_type)
-    return f"gs://{actual_bucket_name}/{destination_blob_name}"  # Return full gsutil URI
+    return (
+        f"gs://{actual_bucket_name}/{destination_blob_name}"  # Return full gsutil URI
+    )
 
 
 def download_from_gcs(gcs_uri: str) -> bytes:

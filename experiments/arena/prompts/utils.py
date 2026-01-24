@@ -23,7 +23,6 @@ from google.api_core import exceptions as gapic_exceptions
 from common.storage import download_gcs_blob
 from config.default import Default
 
-
 config = Default()
 
 
@@ -87,9 +86,7 @@ class PromptManager:
         """Returns a random image generation prompt."""
         if self.prompts and self.prompts["prompts"]:
             return random.choice(self.prompts["prompts"])
-        return (
-            "Default prompt: No prompts available."  # Handle empty prompt list
-        )
+        return "Default prompt: No prompts available."  # Handle empty prompt list
 
 
 if __name__ == "__main__":

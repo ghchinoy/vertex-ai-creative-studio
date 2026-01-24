@@ -9,7 +9,6 @@ import streamlit as st
 from google.cloud.aiplatform.gapic import PredictionServiceClient
 from PIL import Image
 
-
 # Must be first command
 st.set_page_config(page_title="Virtual Try-On", layout="wide")
 
@@ -26,7 +25,9 @@ PRODUCT_IMAGE_FILES = [
     "yellow.png",
 ]
 TARGET_SIZE = (250, 550)
-model_endpoint = f"projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL_ID}"
+model_endpoint = (
+    f"projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL_ID}"
+)
 
 # --- Utility functions with caching ---
 
@@ -93,9 +94,7 @@ uploaded_person = st.file_uploader(
 
 if uploaded_person:
     person_bytes = uploaded_person.read()
-    person_img = (
-        Image.open(io.BytesIO(person_bytes)).convert("RGB").resize(TARGET_SIZE)
-    )
+    person_img = Image.open(io.BytesIO(person_bytes)).convert("RGB").resize(TARGET_SIZE)
     person_b64 = encode_image(person_bytes)
 
     st.image(person_img, caption="👤 Your Uploaded Image")
@@ -109,11 +108,7 @@ if uploaded_person:
     for i, file_name in enumerate(PRODUCT_IMAGE_FILES):
         img_path = os.path.join(IMAGE_DIR, file_name)
         product_bytes = load_image_bytes(img_path)
-        img = (
-            Image.open(io.BytesIO(product_bytes))
-            .convert("RGB")
-            .resize((100, 200))
-        )
+        img = Image.open(io.BytesIO(product_bytes)).convert("RGB").resize((100, 200))
         is_selected = file_name in st.session_state.selected_dresses
 
         with cols[i]:
@@ -148,9 +143,7 @@ if uploaded_person:
                     return (name, out_img, elapsed)
 
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    futures = [
-                        executor.submit(run_thread, pd) for pd in product_data
-                    ]
+                    futures = [executor.submit(run_thread, pd) for pd in product_data]
                     for f in concurrent.futures.as_completed(futures):
                         results.append(f.result())
 

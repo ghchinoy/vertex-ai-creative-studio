@@ -24,7 +24,6 @@ from google.adk.tools.mcp_tool.mcp_toolset import (
     StdioServerParameters,
 )
 
-
 load_dotenv()
 
 project_id = os.getenv("GOOGLE_CLOUD_PROJECT")

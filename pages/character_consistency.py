@@ -27,7 +27,6 @@ from components.page_scaffold import page_frame, page_scaffold
 from models.character_consistency import generate_character_video
 from state.state import AppState
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -308,7 +307,9 @@ def on_generate_click(e: me.ClickEvent):
                     state.final_video_display_url = create_display_url(gcs_uri)
             yield
 
-        state.status_message = f"Workflow complete! Total time: {state.total_generation_time:.2f} seconds"
+        state.status_message = (
+            f"Workflow complete! Total time: {state.total_generation_time:.2f} seconds"
+        )
 
     except Exception as e:
         logger.error("Error generating character video", exc_info=True)

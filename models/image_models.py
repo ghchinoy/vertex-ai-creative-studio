@@ -37,7 +37,6 @@ from common.analytics import track_model_call
 from common.storage import store_to_gcs
 from config.default import Default
 
-
 # class ImageModel(TypedDict): # Remove this definition
 #     """Defines Models For Image Generation."""
 #
@@ -97,9 +96,7 @@ def generate_images(
     cfg = Default()  # Instantiate Default config to access IMAGE_BUCKET
 
     # Define a GCS path for outputting generated images
-    gcs_output_directory = (
-        f"gs://{cfg.IMAGE_BUCKET}/{cfg.IMAGEN_GENERATED_SUBFOLDER}"
-    )
+    gcs_output_directory = f"gs://{cfg.IMAGE_BUCKET}/{cfg.IMAGEN_GENERATED_SUBFOLDER}"
 
     try:
         print(
@@ -257,10 +254,7 @@ def generate_image_for_vto(prompt: str) -> bytes:
             aspect_ratio="1:1",
         ),
     )
-    if (
-        response.generated_images
-        and response.generated_images[0].image.image_bytes
-    ):
+    if response.generated_images and response.generated_images[0].image.image_bytes:
         return response.generated_images[0].image.image_bytes
     raise ValueError("Image generation failed or returned no data.")
 
@@ -334,9 +328,7 @@ def edit_image(
     """Edits an image using the Google GenAI client."""
     client = ImagenModelSetup.init(model_id=model)
     cfg = Default()
-    gcs_output_directory = (
-        f"gs://{cfg.IMAGE_BUCKET}/{cfg.IMAGEN_EDITED_SUBFOLDER}"
-    )
+    gcs_output_directory = f"gs://{cfg.IMAGE_BUCKET}/{cfg.IMAGEN_EDITED_SUBFOLDER}"
 
     raw_ref_image = types.RawReferenceImage(
         reference_id=1,

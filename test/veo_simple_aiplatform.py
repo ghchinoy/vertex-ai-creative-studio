@@ -1,3 +1,17 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Generate Video using Veo with PredictionServiceClient"""
 
 import os
@@ -5,12 +19,13 @@ import time
 
 from google.cloud import aiplatform_v1beta1
 
-
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = "us-central1"
 VEO = "veo-2.0-generate-exp"
 api_regional_endpoint = f"{LOCATION}-aiplatform.googleapis.com"
-veo_model = f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{VEO}"
+veo_model = (
+    f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{VEO}"
+)
 OUTPUT_GCS = os.getenv("OUTPUT_GCS")  # gs://etc
 
 
@@ -43,13 +58,7 @@ def compose_videogen_request(
 def t2v(prompt, seed, aspect_ratio, sample_count, output_gcs, enable_pr):
     """Text to Video, using the AI Platform service Prediction client"""
     req = compose_videogen_request(
-        prompt,
-        None,
-        output_gcs,
-        seed,
-        aspect_ratio,
-        sample_count,
-        enable_pr,
+        prompt, None, output_gcs, seed, aspect_ratio, sample_count, enable_pr,
     )
     resp = predict_veo_model(req)
     print(resp)
@@ -59,9 +68,7 @@ def t2v(prompt, seed, aspect_ratio, sample_count, output_gcs, enable_pr):
 def predict_veo_model(data=None):
     """AI Platform Prediction Service Client"""
     client_options = {"api_endpoint": api_regional_endpoint}
-    client = aiplatform_v1beta1.PredictionServiceClient(
-        client_options=client_options,
-    )
+    client = aiplatform_v1beta1.PredictionServiceClient(client_options=client_options)
 
     print(api_regional_endpoint)
     # print(f"Instances: {data['instances']}")
@@ -85,9 +92,7 @@ def predict_veo_model(data=None):
 def fetch_operation(lro_name):
     """Long Running Operation fetch"""
     client_options = {"api_endpoint": api_regional_endpoint}
-    client = aiplatform_v1beta1.PredictionServiceClient(
-        client_options=client_options,
-    )
+    client = aiplatform_v1beta1.PredictionServiceClient(client_options=client_options)
 
     request = {"operationName": lro_name}
     # The generation usually takes 2 minutes. Loop 30 times, around 5 minutes.

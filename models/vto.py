@@ -24,7 +24,6 @@ from google.genai.types import (
 
 from config.default import Default
 
-
 cfg = Default()
 
 

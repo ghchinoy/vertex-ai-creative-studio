@@ -1,13 +1,23 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import sys
 from unittest.mock import MagicMock, patch
 
-
 # Setup sys.path to allow imports from the parent directory.
-sys.path.insert(
-    0,
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
-)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from common.metadata import MediaItem
 from models.requests import VideoGenerationRequest
@@ -20,9 +30,7 @@ from state.veo_state import PageState
 @patch("pages.veo.generate_video")
 @patch("mesop.state")
 def test_veo_negative_prompt_flow(
-    mock_state,
-    mock_generate_video,
-    mock_add_media_item_to_firestore,
+    mock_state, mock_generate_video, mock_add_media_item_to_firestore,
 ):
     """Tests that the negative_prompt is correctly passed from the UI state
     through the generation request and into the final metadata logging.

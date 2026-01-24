@@ -18,7 +18,6 @@ from pydantic import BaseModel
 from config.default import Default
 from models.gemini import client, generate_critique_questions, types
 
-
 # Prompts from test/brandguard/samples.py
 BAS_RUBRIC_GENERATION_PROMPT = """
 Given a brand guideline with multiple criteria and additional free-text guidance, your task is to create a set of precise Yes/No questions to check for compliance. This is for a Brand Alignment Scorecard (BAS).

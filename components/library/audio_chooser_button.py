@@ -118,9 +118,7 @@ def audio_chooser_button(
                     me.progress_spinner()
             else:
                 for item in state.media_items:
-                    uri = item.gcsuri or (
-                        item.gcs_uris[0] if item.gcs_uris else None
-                    )
+                    uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
                     if uri:
                         with me.box(
                             key=uri,

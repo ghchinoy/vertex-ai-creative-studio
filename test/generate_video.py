@@ -1,3 +1,17 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Generate Video using Veo"""
 
 import os
@@ -8,7 +22,6 @@ import google.auth.transport.requests
 import requests
 from google.cloud import aiplatform_v1beta1 as aiplatform
 
-
 # from google.protobuf.struct_pb2 import Value
 
 
@@ -17,7 +30,9 @@ LOCATION = "us-central1"
 # VEO = "veo-2.0-generate-exp"
 VEO = "veo-2.0-generate-001"
 api_regional_endpoint = f"{LOCATION}-aiplatform.googleapis.com"
-veo_model = f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{VEO}"
+veo_model = (
+    f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{VEO}"
+)
 
 video_model = f"https://us-central1-aiplatform.googleapis.com/v1beta1/projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{VEO}"
 prediction_endpoint = f"{video_model}:predictLongRunning"
@@ -50,23 +65,10 @@ def compose_videogen_request(
     return request
 
 
-def text_to_video(
-    prompt,
-    seed,
-    aspect_ratio,
-    sample_count,
-    output_gcs,
-    enable_pr,
-):
+def text_to_video(prompt, seed, aspect_ratio, sample_count, output_gcs, enable_pr):
     """Text to Video"""
     req = compose_videogen_request(
-        prompt,
-        None,
-        output_gcs,
-        seed,
-        aspect_ratio,
-        sample_count,
-        enable_pr,
+        prompt, None, output_gcs, seed, aspect_ratio, sample_count, enable_pr,
     )
     resp = send_request_to_google_api(prediction_endpoint, req)
     print(resp)
@@ -74,23 +76,11 @@ def text_to_video(
 
 
 def image_to_video(
-    prompt,
-    image_gcs,
-    seed,
-    aspect_ratio,
-    sample_count,
-    output_gcs,
-    enable_pr,
+    prompt, image_gcs, seed, aspect_ratio, sample_count, output_gcs, enable_pr,
 ):
     """Image to Video"""
     req = compose_videogen_request(
-        prompt,
-        image_gcs,
-        output_gcs,
-        seed,
-        aspect_ratio,
-        sample_count,
-        enable_pr,
+        prompt, image_gcs, output_gcs, seed, aspect_ratio, sample_count, enable_pr,
     )
     resp = send_request_to_google_api(prediction_endpoint, req)
     print(resp)
@@ -100,13 +90,7 @@ def image_to_video(
 def t2v(prompt, seed, aspect_ratio, sample_count, output_gcs, enable_pr):
     """Text to Video, using the AI Platform service Prediction client"""
     req = compose_videogen_request(
-        prompt,
-        None,
-        output_gcs,
-        seed,
-        aspect_ratio,
-        sample_count,
-        enable_pr,
+        prompt, None, output_gcs, seed, aspect_ratio, sample_count, enable_pr,
     )
     resp = predict_veo_model(req)
     print(resp)
@@ -181,10 +165,7 @@ def show_video(op):
     print(op)
     gcs_uri = ""
     if op["response"]:
-        if (
-            "generatedSamples" in op["response"]
-            and op["response"]["generatedSamples"]
-        ):
+        if "generatedSamples" in op["response"] and op["response"]["generatedSamples"]:
             for video in op["response"]["generatedSamples"]:
                 gcs_uri = video["video"]["uri"]
         elif "videos" in op["response"] and op["response"]["videos"]:
@@ -255,13 +236,7 @@ start_time = time.time()  # Record the starting time
 
 # HTTP API
 op = image_to_video(
-    prompt,
-    source_gcs,
-    seed,
-    aspect_ratio,
-    sample_count,
-    output_gcs,
-    rewrite_prompt,
+    prompt, source_gcs, seed, aspect_ratio, sample_count, output_gcs, rewrite_prompt,
 )
 show_video(op)
 

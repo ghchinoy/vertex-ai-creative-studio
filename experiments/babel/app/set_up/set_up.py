@@ -23,7 +23,6 @@ from dotenv import load_dotenv
 
 from config.default import Default, Voice
 
-
 load_dotenv(override=True)
 logging.basicConfig(level=logging.DEBUG)
 config = Default()

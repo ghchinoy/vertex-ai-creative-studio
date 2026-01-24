@@ -25,7 +25,6 @@ import config
 
 from .extract_frame import extract_last_frames, save_frames_to_temp
 
-
 # Initialize clients
 client = genai.Client(
     vertexai=True,

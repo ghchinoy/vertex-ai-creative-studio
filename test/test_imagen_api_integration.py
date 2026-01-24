@@ -1,3 +1,18 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import pytest
 
 from config.imagen_models import IMAGEN_MODELS
@@ -40,15 +55,11 @@ def test_imagen_api_call(gcs_bucket_for_tests, model_config):
     )
 
     generated_images = response.generated_images
-    assert len(generated_images) > 0, (
-        "The 'generated_images' list should not be empty."
-    )
+    assert len(generated_images) > 0, "The 'generated_images' list should not be empty."
 
     image = generated_images[0].image
     assert image is not None, "The generated image should not be None."
-    assert hasattr(image, "gcs_uri"), (
-        "The image should have a 'gcs_uri' attribute."
-    )
+    assert hasattr(image, "gcs_uri"), "The image should have a 'gcs_uri' attribute."
     assert image.gcs_uri.startswith("gs://"), (
         f"The returned URI should be a GCS URI. Got {image.gcs_uri}"
     )

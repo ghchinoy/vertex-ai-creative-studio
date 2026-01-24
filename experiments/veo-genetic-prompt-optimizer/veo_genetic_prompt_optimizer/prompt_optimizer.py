@@ -17,7 +17,6 @@ import veo_prompt_eval_templates
 from dotenv import load_dotenv
 from google import genai
 
-
 load_dotenv()
 
 # --- Configuration ---
@@ -319,14 +318,12 @@ def get_metaprompt_fitness(
         print(f"  - Avg Effectiveness Score: {avg_effectiveness_score:.3f}")
 
         print("  - Evaluating augmented prompts for intent preservation...")
-        intent_summary, intent_matrix = (
-            evaluate_prompts.evaluate_pointwise_batch(
-                prompts_data=augmented_prompts_data,
-                metric_name="intent_preservation",
-                metric_template=intent_template,
-                experiment="optimizer-intent-check",
-                sampling_count=1,
-            )
+        intent_summary, intent_matrix = evaluate_prompts.evaluate_pointwise_batch(
+            prompts_data=augmented_prompts_data,
+            metric_name="intent_preservation",
+            metric_template=intent_template,
+            experiment="optimizer-intent-check",
+            sampling_count=1,
         )
         avg_intent_score = intent_summary.get("intent_preservation/mean", 0.0)
         aggregated_intent_explanation = " | ".join(
@@ -533,9 +530,7 @@ def select_parents(
             p["metaprompt"] for p in selection.get("ranked_parents", [])
         ]
         parents = [
-            metaprompt_map[mp]
-            for mp in ranked_metaprompts
-            if mp in metaprompt_map
+            metaprompt_map[mp] for mp in ranked_metaprompts if mp in metaprompt_map
         ]
 
         best_parent_metaprompt = selection.get("best_parent", {}).get(
@@ -661,8 +656,7 @@ def main():
                         (
                             item
                             for item in best_parent_augmented_prompts
-                            if item["original_prompt"]
-                            == original_prompt_data["prompt"]
+                            if item["original_prompt"] == original_prompt_data["prompt"]
                         ),
                         None,
                     )
@@ -689,9 +683,7 @@ def main():
                         video_generation_tasks.append(
                             {
                                 "type": "augmented",
-                                "prompt": augmented_prompt_item[
-                                    "augmented_prompt"
-                                ],
+                                "prompt": augmented_prompt_item["augmented_prompt"],
                                 "output_path": augmented_video_path,
                                 "image_path": original_prompt_data.get(
                                     "image_path",
@@ -856,8 +848,7 @@ def main():
                     {
                         "metaprompt": mutated
                         if mutated
-                        else parent_to_mutate["metaprompt"]
-                        + " (mutation failed)",
+                        else parent_to_mutate["metaprompt"] + " (mutation failed)",
                         "provenance": {
                             "type": "mutation",
                             "parent_metaprompt": parent_to_mutate["metaprompt"],
@@ -913,8 +904,7 @@ def main():
                     {
                         "metaprompt": mutated
                         if mutated
-                        else parent_to_mutate["metaprompt"]
-                        + " (mutation failed)",
+                        else parent_to_mutate["metaprompt"] + " (mutation failed)",
                         "provenance": {
                             "type": "mutation",
                             "parent_metaprompt": parent_to_mutate["metaprompt"],

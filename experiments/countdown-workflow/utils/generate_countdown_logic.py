@@ -26,7 +26,6 @@ from utils.video_processing import create_final_video
 
 import config
 
-
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 
@@ -239,9 +238,7 @@ def select_best_image_locally(
         for p in candidate_paths
     ]
     contents = [text_part] + [
-        elem
-        for i, part in enumerate(image_parts)
-        for elem in (f". Image {i}: ", part)
+        elem for i, part in enumerate(image_parts) for elem in (f". Image {i}: ", part)
     ]
     response = client.models.generate_content(
         model=config.SELECTOR_MODEL,
@@ -370,9 +367,7 @@ def select_best_video_locally(
         for p in candidate_paths
     ]
     contents = [text_part] + [
-        elem
-        for i, part in enumerate(video_parts)
-        for elem in (f". Video {i}: ", part)
+        elem for i, part in enumerate(video_parts) for elem in (f". Video {i}: ", part)
     ]
     response = client.models.generate_content(
         model=config.SELECTOR_MODEL,
@@ -423,9 +418,7 @@ def check_videos_for_digit(
         for p in candidate_paths
     ]
     contents = [prompt] + [
-        elem
-        for i, part in enumerate(video_parts)
-        for elem in (f". Video {i}: ", part)
+        elem for i, part in enumerate(video_parts) for elem in (f". Video {i}: ", part)
     ]
 
     response = client.models.generate_content(
@@ -471,9 +464,7 @@ def generate_video_from_prompts_service(
     )
 
     # Save the generated script to a file
-    script_path = (
-        base_output_dir / f"{company_name.replace(' ', '_')}_script.json"
-    )
+    script_path = base_output_dir / f"{company_name.replace(' ', '_')}_script.json"
     with open(script_path, "w") as f:
         f.write(script_response.model_dump_json(indent=4))
     logger.info(f"--- Saved generated script to {script_path} ---")

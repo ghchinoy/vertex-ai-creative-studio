@@ -42,7 +42,6 @@ from workflows.retro_games.backend import (
 )
 from workflows.retro_games.retro_games_config import RetroGameConfig
 
-
 print(f"DEBUG: retro_games loaded. PROJECT_ID={Default().PROJECT_ID}")
 
 
@@ -82,9 +81,7 @@ class PageState:
 
     error_message: str = ""
     show_selfie_dialog: bool = False
-    active_uploader: str = (
-        "player1"  # Tracks which player initiated the selfie dialog
-    )
+    active_uploader: str = "player1"  # Tracks which player initiated the selfie dialog
 
     start_time: float = 0.0
     total_duration: str = ""
@@ -795,14 +792,10 @@ def retro_games_content():
                             ),
                         ):
                             for theme_name in config.get_theme_names():
-                                is_selected = (
-                                    state.selected_theme_value == theme_name
-                                )
+                                is_selected = state.selected_theme_value == theme_name
                                 logo_uri = config.get_theme_logo(theme_name)
                                 display_url = (
-                                    create_display_url(logo_uri)
-                                    if logo_uri
-                                    else ""
+                                    create_display_url(logo_uri) if logo_uri else ""
                                 )
 
                                 with me.box(
@@ -856,9 +849,7 @@ def retro_games_content():
 
                                     me.text(
                                         theme_name,
-                                        type="body-1"
-                                        if is_selected
-                                        else "body-2",
+                                        type="body-1" if is_selected else "body-2",
                                         style=me.Style(
                                             font_weight="bold"
                                             if is_selected

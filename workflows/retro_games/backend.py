@@ -28,7 +28,6 @@ from models.veo import VideoGenerationRequest, generate_video
 from models.video_processing import process_videos
 from workflows.retro_games.retro_games_config import RetroGameConfig
 
-
 # Set up logging
 logger = logging.getLogger(__name__)
 
@@ -59,9 +58,7 @@ class RetroGameWorkflowState:
     player2_sheet_uri: str | None = None
 
     # Step 3 outputs
-    scene_direction: str | None = (
-        None  # Deprecated for multi-scene, keep for compat?
-    )
+    scene_direction: str | None = None  # Deprecated for multi-scene, keep for compat?
     scene_directions: list[str] | None = None
     raw_video_uri: str | None = None  # Deprecated
     raw_video_uris: list[str] | None = None
@@ -100,9 +97,7 @@ def initialize_workflow(
     )
 
 
-def step_1_generate_8bit(
-    state: RetroGameWorkflowState,
-) -> RetroGameWorkflowState:
+def step_1_generate_8bit(state: RetroGameWorkflowState) -> RetroGameWorkflowState:
     """Generates 8-bit versions of the input images based on the theme."""
     state.status = "generating_8bit"
 
@@ -114,9 +109,7 @@ def step_1_generate_8bit(
 
     if not theme_prompt_part:
         state.status = "error"
-        state.error_message = (
-            f"Theme '{state.theme}' not found in configuration."
-        )
+        state.error_message = f"Theme '{state.theme}' not found in configuration."
         return state
 
     # Helper to generate for one image
@@ -172,9 +165,7 @@ def step_2_generate_character_sheet(
         return state
 
     state.status = "generating_char_sheet"
-    logger.info(
-        f"Workflow {state.workflow_id}: Starting Step 2 (Character Sheets)",
-    )
+    logger.info(f"Workflow {state.workflow_id}: Starting Step 2 (Character Sheets)")
 
     config = RetroGameConfig()
     prompt = config.get_prompt("character_sheet")
@@ -203,10 +194,7 @@ def step_2_generate_character_sheet(
 
     # Player 2
     if state.player2_8bit_uri:
-        p2_sheet = _gen_sheet(
-            state.player2_8bit_uri,
-            "retro_games_charsheets_p2",
-        )
+        p2_sheet = _gen_sheet(state.player2_8bit_uri, "retro_games_charsheets_p2")
         if not p2_sheet:
             state.status = "error"
             state.error_message = "Failed to generate P2 character sheet."
@@ -255,9 +243,7 @@ def create_composite_image(image1_uri: str, image2_uri: str) -> str | None:
         return None
 
 
-def step_3_generate_video(
-    state: RetroGameWorkflowState,
-) -> RetroGameWorkflowState:
+def step_3_generate_video(state: RetroGameWorkflowState) -> RetroGameWorkflowState:
     """Generates a video using Veo, guided by a Gemini-generated scene direction."""
     if not state.player1_8bit_uri:
         state.status = "error"
@@ -269,9 +255,7 @@ def step_3_generate_video(
         return state
 
     state.status = "generating_scene_direction"
-    logger.info(
-        f"Workflow {state.workflow_id}: Starting Step 3 (Scene Direction)",
-    )
+    logger.info(f"Workflow {state.workflow_id}: Starting Step 3 (Scene Direction)")
 
     config = RetroGameConfig()
 
@@ -306,14 +290,9 @@ def step_3_generate_video(
 
         try:
             # Force JSON response
-            sb_response, _ = generate_text(
-                prompt=sb_prompt,
-                images=prompt_input_images,
-            )
+            sb_response, _ = generate_text(prompt=sb_prompt, images=prompt_input_images)
             # Clean up response if it has markdown
-            sb_response = (
-                sb_response.replace("```json", "").replace("```", "").strip()
-            )
+            sb_response = sb_response.replace("```json", "").replace("```", "").strip()
             scene_prompts = json.loads(sb_response)
             state.scene_directions = scene_prompts
             logger.info(f"Storyboard generated: {len(scene_prompts)} scenes")
@@ -326,14 +305,12 @@ def step_3_generate_video(
         # --- Single Scene Logic ---
         base_direction_prompt = config.get_prompt("scene_direction")
         direction_prompt = base_direction_prompt.format(
-            duration=state.duration,
-            theme_context=context_str,
+            duration=state.duration, theme_context=context_str,
         ).replace("this character", char_desc)
 
         try:
             scene_direction, _ = generate_text(
-                prompt=direction_prompt,
-                images=prompt_input_images,
+                prompt=direction_prompt, images=prompt_input_images,
             )
             state.scene_direction = scene_direction
             state.scene_directions = [scene_direction]
@@ -352,9 +329,7 @@ def step_3_generate_video(
         theme_logo_uri = config.get_theme_8bit_logo(state.theme)
         if not theme_logo_uri:
             state.status = "error"
-            state.error_message = (
-                f"8-bit logo for theme '{state.theme}' not found."
-            )
+            state.error_message = f"8-bit logo for theme '{state.theme}' not found."
             return state
 
         # Prepare References
@@ -364,12 +339,10 @@ def step_3_generate_video(
                 f"Workflow {state.workflow_id}: Creating composites for 2-player mode",
             )
             p1_composite = create_composite_image(
-                state.player1_8bit_uri,
-                state.player1_sheet_uri,
+                state.player1_8bit_uri, state.player1_sheet_uri,
             )
             p2_composite = create_composite_image(
-                state.player2_8bit_uri,
-                state.player2_sheet_uri,
+                state.player2_8bit_uri, state.player2_sheet_uri,
             )
 
             if not p1_composite or not p2_composite:
@@ -380,31 +353,21 @@ def step_3_generate_video(
             r2v_references = [
                 APIReferenceImage(gcs_uri=p1_composite, mime_type="image/png"),
                 APIReferenceImage(gcs_uri=p2_composite, mime_type="image/png"),
-                APIReferenceImage(
-                    gcs_uri=theme_logo_uri,
-                    mime_type="image/png",
-                ),
+                APIReferenceImage(gcs_uri=theme_logo_uri, mime_type="image/png"),
             ]
         else:
             r2v_references = [
                 APIReferenceImage(
-                    gcs_uri=state.player1_8bit_uri,
-                    mime_type="image/png",
+                    gcs_uri=state.player1_8bit_uri, mime_type="image/png",
                 ),
                 APIReferenceImage(
-                    gcs_uri=state.player1_sheet_uri,
-                    mime_type="image/png",
+                    gcs_uri=state.player1_sheet_uri, mime_type="image/png",
                 ),
-                APIReferenceImage(
-                    gcs_uri=theme_logo_uri,
-                    mime_type="image/png",
-                ),
+                APIReferenceImage(gcs_uri=theme_logo_uri, mime_type="image/png"),
             ]
 
         for i, prompt in enumerate(scene_prompts):
-            logger.info(
-                f"Generating video for Scene {i + 1}/{len(scene_prompts)}",
-            )
+            logger.info(f"Generating video for Scene {i + 1}/{len(scene_prompts)}")
 
             request = VideoGenerationRequest(
                 prompt=prompt,
@@ -415,6 +378,7 @@ def step_3_generate_video(
                 video_count=1,
                 resolution="720p",
                 enhance_prompt=True,
+                generate_audio=True,
                 person_generation="allow_all",
             )
 
@@ -423,9 +387,7 @@ def step_3_generate_video(
                 state.raw_video_uris.append(video_uris[0])
             else:
                 state.status = "error"
-                state.error_message = (
-                    f"Failed to generate video for scene {i + 1}"
-                )
+                state.error_message = f"Failed to generate video for scene {i + 1}"
                 return state
 
         # Success
@@ -441,9 +403,7 @@ def step_3_generate_video(
     return state
 
 
-def step_4_append_bumper(
-    state: RetroGameWorkflowState,
-) -> RetroGameWorkflowState:
+def step_4_append_bumper(state: RetroGameWorkflowState) -> RetroGameWorkflowState:
     """Appends a bumper video to the generated video(s)."""
     # Handle single vs multi-scene
     videos_to_process = []
@@ -475,9 +435,7 @@ def step_4_append_bumper(
         except Exception as e:
             logger.error(f"Error fetching bumper: {e}")
     else:
-        logger.info(
-            f"Workflow {state.workflow_id}: Bumper skipped by user request.",
-        )
+        logger.info(f"Workflow {state.workflow_id}: Bumper skipped by user request.")
 
     # Construct sequence
     video_sequence = videos_to_process
@@ -494,8 +452,7 @@ def step_4_append_bumper(
 
     try:
         final_video_uri = process_videos(
-            video_gcs_uris=video_sequence,
-            transition="concat",
+            video_gcs_uris=video_sequence, transition="concat",
         )
 
         state.final_video_uri = final_video_uri
@@ -510,9 +467,7 @@ def step_4_append_bumper(
 
 
 def run_full_workflow(
-    user_email: str,
-    theme: str,
-    input_image_uri: str,
+    user_email: str, theme: str, input_image_uri: str,
 ) -> RetroGameWorkflowState:
     """Runs the full workflow synchronously (blocking)."""
     state = initialize_workflow(user_email, theme, input_image_uri)

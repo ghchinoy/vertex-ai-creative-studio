@@ -33,7 +33,6 @@ from google.genai.types import (
     Tool,
 )
 
-
 # ======== Environment Set up ========
 
 BUCKET = os.environ.get("BUCKET")
@@ -519,9 +518,7 @@ def make_clickable_text_box(text, page):
 @me.stateclass
 class State:
     # Loaded from files
-    showcase_df: pd.DataFrame | None = (
-        None  # showcase video locations and details
-    )
+    showcase_df: pd.DataFrame | None = None  # showcase video locations and details
     # Inspiration related
     inspo_prompt: str = "How might I tailor a marketing campaign for homewares in a department store to young professionals for this summer? Suggest and outline 3 campaign ideas."
     inspo_output_refs: str
@@ -734,9 +731,7 @@ def page_create():
             if len(s.creative_output) > 0:
                 # me.markdown(s.creative_output) # for debug
                 markdown_output = []
-                for key, value in json.loads(s.creative_output)[
-                    "response"
-                ].items():
+                for key, value in json.loads(s.creative_output)["response"].items():
                     heading = key.replace("_", " ").title()
                     markdown_output.append(f"## {heading}\n")
                     markdown_output.append(f"{value}\n\n")
@@ -801,9 +796,7 @@ WELCOME_HOLDING = me.Style(
     width="min(800px, 100%)",
     background="white",
     border_radius=15,
-    box_shadow=(
-        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
-    ),
+    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
     padding=me.Padding.all(30),
     margin=me.Margin.all("auto"),  # pushes this box into the middle
     # align_items="center", # pushes items inside into middle and squeezes size down of all items...
@@ -813,9 +806,7 @@ TEXT_STYLE_AGENT = me.Style(
     background=AGENT_TEXT_BACKGROUND,
     width="75%",
     border_radius=15,
-    box_shadow=(
-        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
-    ),
+    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
     padding=me.Padding.all(20),
 )
 
@@ -825,9 +816,7 @@ TEXT_HOLDING_USER = me.Style(
     flex_direction="row",
     background=BACKGROUND_COLOUR_CONTENT,
     border_radius=15,
-    box_shadow=(
-        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
-    ),
+    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
     # width="75%",
     padding=me.Padding.all(15),
     margin=me.Margin.all(5),
@@ -871,9 +860,7 @@ STYLE_BOX_WHITE = me.Style(
     flex_basis="max(480px, calc(50% - 48px))",
     background="#fff",
     border_radius=12,
-    box_shadow=(
-        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
-    ),
+    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",

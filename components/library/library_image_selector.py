@@ -45,12 +45,8 @@ def library_image_selector(
         else:
             for item in media_items:
                 # The signed_url attribute is now added by the parent component.
-                https_url = (
-                    item.signed_url if hasattr(item, "signed_url") else ""
-                )
-                gcs_uri = item.gcsuri or (
-                    item.gcs_uris[0] if item.gcs_uris else None
-                )
+                https_url = item.signed_url if hasattr(item, "signed_url") else ""
+                gcs_uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
 
                 # Explicitly determine render type for the tile if possible
                 render_type = item.media_type

@@ -39,7 +39,6 @@ from models.veo import APIReferenceImage, VideoGenerationRequest
 from state.state import AppState
 from state.veo_state import PageState
 
-
 config = Default()
 
 veo_model = VeoModelSetup.init()
@@ -341,9 +340,7 @@ def on_click_extend_video(e: me.ClickEvent):
     # --- Model Validation ---
     model_config = get_veo_model_config(state.veo_model)
     if not model_config or not model_config.supports_video_extension:
-        state.error_message = (
-            "Video extension is not supported by the current model."
-        )
+        state.error_message = "Video extension is not supported by the current model."
         state.show_error_dialog = True
         yield
         return
@@ -427,9 +424,7 @@ def on_click_extend_video(e: me.ClickEvent):
     while state.job_status in ["pending", "processing", "created"]:
         time.sleep(2)
         try:
-            status_url = (
-                f"{config.API_BASE_URL}/api/veo/job/{state.current_job_id}"
-            )
+            status_url = f"{config.API_BASE_URL}/api/veo/job/{state.current_job_id}"
             resp = requests.get(status_url)
             resp.raise_for_status()
             status_data = resp.json()
@@ -449,9 +444,7 @@ def on_click_extend_video(e: me.ClickEvent):
 
                 end_time = time.time()
                 execution_time = end_time - start_time
-                state.timing = (
-                    f"Extension time: {round(execution_time)} seconds"
-                )
+                state.timing = f"Extension time: {round(execution_time)} seconds"
                 state.is_loading = False
                 yield
                 break
@@ -653,9 +646,7 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
     while state.job_status in ["pending", "processing", "created"]:
         time.sleep(2)
         try:
-            status_url = (
-                f"{config.API_BASE_URL}/api/veo/job/{state.current_job_id}"
-            )
+            status_url = f"{config.API_BASE_URL}/api/veo/job/{state.current_job_id}"
             resp = requests.get(status_url)
             resp.raise_for_status()
             status_data = resp.json()
@@ -676,9 +667,7 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
 
                 end_time = time.time()
                 execution_time = end_time - start_time
-                state.timing = (
-                    f"Generation time: {round(execution_time)} seconds"
-                )
+                state.timing = f"Generation time: {round(execution_time)} seconds"
                 state.is_loading = False
                 yield
                 break

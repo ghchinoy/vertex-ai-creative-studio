@@ -79,7 +79,5 @@ def design_studio(
                 else:
                     me.text("Design")
         veo_button(
-            gcs_uri=storyboard_item["styled_image_uri"]
-            if storyboard_item
-            else "",
+            gcs_uri=storyboard_item["styled_image_uri"] if storyboard_item else "",
         )

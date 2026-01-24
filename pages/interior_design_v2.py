@@ -54,15 +54,10 @@ from models.video_processing import process_videos
 from state.interior_design_v2_state import PageState
 from state.state import AppState
 
-
 with open("config/about_content.json") as f:
     about_content = json.load(f)
     INTERIOR_DESIGN_INFO = next(
-        (
-            s
-            for s in about_content["sections"]
-            if s.get("id") == "interior_design"
-        ),
+        (s for s in about_content["sections"] if s.get("id") == "interior_design"),
         None,
     )
 
@@ -88,20 +83,16 @@ def on_load(e: me.LoadEvent):
                 ) and not storyboard.get(
                     "original_floor_plan_display_url",
                 ):
-                    storyboard["original_floor_plan_display_url"] = (
-                        create_display_url(
-                            storyboard["original_floor_plan_uri"],
-                        )
+                    storyboard["original_floor_plan_display_url"] = create_display_url(
+                        storyboard["original_floor_plan_uri"],
                     )
                 if storyboard.get(
                     "generated_3d_view_uri",
                 ) and not storyboard.get(
                     "generated_3d_view_display_url",
                 ):
-                    storyboard["generated_3d_view_display_url"] = (
-                        create_display_url(
-                            storyboard["generated_3d_view_uri"],
-                        )
+                    storyboard["generated_3d_view_display_url"] = create_display_url(
+                        storyboard["generated_3d_view_uri"],
                     )
                 if storyboard.get("final_video_uri") and not storyboard.get(
                     "final_video_display_url",
@@ -120,10 +111,8 @@ def on_load(e: me.LoadEvent):
                     if item.get("generated_video_uri") and not item.get(
                         "generated_video_display_url",
                     ):
-                        item["generated_video_display_url"] = (
-                            create_display_url(
-                                item["generated_video_uri"],
-                            )
+                        item["generated_video_display_url"] = create_display_url(
+                            item["generated_video_uri"],
                         )
 
                 state.storyboard = storyboard
@@ -224,8 +213,7 @@ def page_content():
                         ):
                             if (
                                 state.is_generating_zoom
-                                and state.storyboard.get("selected_room")
-                                == room
+                                and state.storyboard.get("selected_room") == room
                             ):
                                 me.progress_spinner(diameter=18)
                             else:
@@ -252,8 +240,7 @@ def page_content():
                         (
                             item
                             for item in state.storyboard["storyboard_items"]
-                            if item["room_name"]
-                            == state.storyboard["selected_room"]
+                            if item["room_name"] == state.storyboard["selected_room"]
                         ),
                         None,
                     ),
@@ -441,10 +428,8 @@ def on_generate_3d_view_click(e: me.ClickEvent):
 
         if gcs_uris:
             state.storyboard["generated_3d_view_uri"] = gcs_uris[0]
-            state.storyboard["generated_3d_view_display_url"] = (
-                create_display_url(
-                    gcs_uris[0],
-                )
+            state.storyboard["generated_3d_view_display_url"] = create_display_url(
+                gcs_uris[0],
             )
 
             try:
@@ -689,8 +674,9 @@ def on_generate_video_click(e: me.ClickEvent):
                     aspect_ratio="16:9",
                     video_count=1,
                     enhance_prompt=False,
+                    generate_audio=False,
                     resolution="720p",
-                    person_generation="allow_all",
+                    person_generation="Allow (Adults only)",
                 )
                 video_uris, _ = generate_video(request=request)
                 if video_uris:

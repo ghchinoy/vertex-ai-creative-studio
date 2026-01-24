@@ -20,7 +20,6 @@ from typing import TypedDict
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-
 load_dotenv(override=True)
 
 
@@ -213,9 +212,7 @@ class Default:
 
     IMAGEN_PROMPTS_JSON = "prompts/imagen_prompts.json"
 
-    USE_MEDIA_PROXY: bool = (
-        os.environ.get("USE_MEDIA_PROXY", "false").lower() == "true"
-    )
+    USE_MEDIA_PROXY: bool = os.environ.get("USE_MEDIA_PROXY", "false").lower() == "true"
 
     # Firebase Web Config
     FIREBASE_API_KEY: str = os.environ.get("FIREBASE_API_KEY", "")

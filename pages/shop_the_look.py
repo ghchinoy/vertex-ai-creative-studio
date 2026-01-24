@@ -67,10 +67,7 @@ def tab_stl():
     if not state.models:
         state.models = shop_the_look_workflow.load_model_data()
         shop_the_look_workflow.load_article_data()
-    if (
-        state.reference_image_gcs_model is None
-        or not state.reference_image_gcs_model
-    ):
+    if state.reference_image_gcs_model is None or not state.reference_image_gcs_model:
         model_selection()
     elif not state.look or state.look == 0:
         look_selection()
@@ -90,8 +87,7 @@ def build_tab_nav():
 
     visible = (
         True
-        if app_state.user_email
-        in ["andrewturner@google.com", "rouzbeha@google.com"]
+        if app_state.user_email in ["andrewturner@google.com", "rouzbeha@google.com"]
         else True
     )
     tabs = [

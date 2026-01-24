@@ -59,9 +59,7 @@ def generate_look_from_starter_pack(
 
 def generate_virtual_model() -> str:
     """Generates a virtual model image."""
-    config_path = (
-        Path(__file__).parent.parent / "config/virtual_model_options.json"
-    )
+    config_path = Path(__file__).parent.parent / "config/virtual_model_options.json"
     with open(config_path) as f:
         options = json.load(f)
 

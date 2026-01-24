@@ -272,19 +272,11 @@ def render_chooser_dialog():
                                 for item in items_to_render:
                                     https_url = create_display_url(
                                         item.gcsuri
-                                        or (
-                                            item.gcs_uris[0]
-                                            if item.gcs_uris
-                                            else ""
-                                        ),
+                                        or (item.gcs_uris[0] if item.gcs_uris else ""),
                                     )
                                     media_tile(
                                         key=item.gcsuri
-                                        or (
-                                            item.gcs_uris[0]
-                                            if item.gcs_uris
-                                            else ""
-                                        ),
+                                        or (item.gcs_uris[0] if item.gcs_uris else ""),
                                         on_click=handle_item_selected,
                                         media_type=item.media_type
                                         or state.dialog_media_type,

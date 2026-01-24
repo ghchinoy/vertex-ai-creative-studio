@@ -18,7 +18,6 @@ from typing import TypedDict
 
 from dotenv import load_dotenv
 
-
 load_dotenv(override=True)
 
 
@@ -55,9 +54,7 @@ class Default:
         "BABEL_ENDPOINT",
         "http://localhost:8080",
     )  # defaults to # "http://localhost:8080"
-    STATIC_PUBLIC_BUCKET: str = (
-        "github-repo/audio_ai/audio_generation/chirp3_hd_babel"
-    )
+    STATIC_PUBLIC_BUCKET: str = "github-repo/audio_ai/audio_generation/chirp3_hd_babel"
 
     voices: list[Voice] = field(default_factory=list)
 

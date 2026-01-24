@@ -25,8 +25,7 @@ from common.analytics import get_logger
 from common.error_handling import GenerationError
 from config.default import Default
 from config.veo_models import get_veo_model_config
-from models.requests import APIReferenceImage, VideoGenerationRequest
-
+from models.requests import VideoGenerationRequest
 
 config = Default()
 
@@ -221,9 +220,7 @@ def generate_video(request: VideoGenerationRequest) -> tuple[str, str]:
                 hasattr(operation.result, "generated_videos")
                 and operation.result.generated_videos
             ):
-                video_uris = [
-                    v.video.uri for v in operation.result.generated_videos
-                ]
+                video_uris = [v.video.uri for v in operation.result.generated_videos]
                 logger.info(f"Successfully generated {len(video_uris)} videos.")
                 return video_uris, request.resolution
             raise GenerationError(

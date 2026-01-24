@@ -21,7 +21,6 @@ from config.default import Default
 from config.veo_models import get_veo_model_config
 from models.requests import VideoGenerationRequest
 
-
 logger = logging.getLogger(__name__)
 config = Default()
 

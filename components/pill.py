@@ -40,6 +40,10 @@ def pill(label: str, pill_type: str):
     elif pill_type == "resolution":
         background_color = me.theme_var("surface-container-high")
         text_color = me.theme_var("on-surface")
+    elif pill_type == "resolution_4k":
+        # A distinctive gold-themed style for 4K
+        background_color = "#FFD700"  # Gold
+        text_color = "#000000"  # Black for high contrast
     elif (
         pill_type == "media_type_audio"
         or pill_type == "media_type_video"
@@ -49,11 +53,7 @@ def pill(label: str, pill_type: str):
         text_color = me.theme_var("on-surface-variant")
     elif pill_type == "error_present":
         background_color = me.theme_var("error-container")
-    elif (
-        pill_type == "genre"
-        or pill_type == "stage"
-        or pill_type == "multi_video"
-    ):
+    elif pill_type == "genre" or pill_type == "stage" or pill_type == "multi_video":
         background_color = me.theme_var("secondary-container")
         text_color = me.theme_var("on-scecondary-container")
 

@@ -28,7 +28,6 @@ from config.default import Default
 from state.starter_pack_state import StarterPackState
 from state.state import AppState
 
-
 cfg = Default()
 
 from common.utils import create_display_url

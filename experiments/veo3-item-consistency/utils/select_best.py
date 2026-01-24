@@ -24,7 +24,6 @@ from pydantic import BaseModel
 
 import config
 
-
 # Initialize the Gemini client to use Vertex AI
 client = Client(
     vertexai=True,

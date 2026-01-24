@@ -18,7 +18,6 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types as genai_types
 
-
 load_dotenv()
 
 PROJECT_ID = os.getenv("PROJECT_ID")
@@ -365,9 +364,7 @@ def main():
                 sanitized_name = "".join(
                     c for c in original_prompt if c.isalnum() or c in " _-"
                 ).rstrip()
-                base_name = (
-                    f"text_{sanitized_name.replace(' ', '_').lower()[:30]}"
-                )
+                base_name = f"text_{sanitized_name.replace(' ', '_').lower()[:30]}"
 
             pair_dir = os.path.join(video_pairs_dir, base_name)
 

@@ -28,7 +28,6 @@ from common.storage import check_gcs_blob_exists
 from config.default import Default
 from config.firebase_config import FirebaseClient
 
-
 # Initialize configuration
 client, model_id = ModelSetup.init()
 MODEL_ID = model_id
@@ -147,7 +146,9 @@ def load_metadata_from_json(
                 print(f"Model: {model_name}")
                 selected_image = None
                 for image_id in images:
-                    gcs_uri = f"gs://{Default.GENMEDIA_BUCKET}/{gcs_sub_folder}/{image_id}"
+                    gcs_uri = (
+                        f"gs://{Default.GENMEDIA_BUCKET}/{gcs_sub_folder}/{image_id}"
+                    )
                     if check_gcs_blob_exists(gcs_uri):
                         print(f"Selected image: {image_id} exists in GCS.")
                         selected_image = image_id

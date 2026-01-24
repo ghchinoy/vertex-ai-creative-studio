@@ -117,10 +117,8 @@ def on_load(e: me.LoadEvent):
                 project = doc.to_dict()
                 # Hydrate display URLs
                 if project.get("main_product_image_uri"):
-                    project["main_product_image_display_url"] = (
-                        create_display_url(
-                            project["main_product_image_uri"],
-                        )
+                    project["main_product_image_display_url"] = create_display_url(
+                        project["main_product_image_uri"],
                     )
                 if project.get("final_video_uri"):
                     project["final_video_display_url"] = create_display_url(

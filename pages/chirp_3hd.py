@@ -37,7 +37,6 @@ from config.chirp_3hd import (
 from models.chirp_3hd import synthesize_chirp_speech
 from state.state import AppState
 
-
 # Load about content from JSON
 with open("config/about_content.json") as f:
     about_content = json.load(f)
@@ -49,7 +48,9 @@ with open("config/about_content.json") as f:
 
 @me.stateclass
 class Chirp3hdState:
-    text: str = "Hello, Chirp is the latest generation of Google's Text-to-Speech technology."
+    text: str = (
+        "Hello, Chirp is the latest generation of Google's Text-to-Speech technology."
+    )
     selected_voice: str = "Orus"
     selected_language: str = "en-US"
     speaking_rate: float = 1.0
@@ -560,7 +561,9 @@ def on_click_generate(e: me.ClickEvent):
 def on_click_clear(e: me.ClickEvent):
     """Resets the page state to its default values."""
     state = me.state(Chirp3hdState)
-    state.text = "Hello, Chirp is the latest generation of Google's Text-to-Speech technology."
+    state.text = (
+        "Hello, Chirp is the latest generation of Google's Text-to-Speech technology."
+    )
     state.selected_voice = "Orus"
     state.selected_language = "en-US"
     state.speaking_rate = 1.0

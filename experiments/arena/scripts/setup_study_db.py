@@ -19,7 +19,6 @@ from utils.logger import LogLevel, log
 
 from config.default import Default
 
-
 config = Default()  # Load default configuration
 
 

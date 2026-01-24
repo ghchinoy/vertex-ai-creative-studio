@@ -19,7 +19,6 @@ import uuid
 from common.analytics import get_logger
 from config.firebase_config import FirebaseClient
 
-
 db = FirebaseClient().get_client()
 logger = get_logger(__name__)
 
@@ -139,6 +138,7 @@ def generate_rotation_video(product_views: dict[str, str]) -> str:
         ],  # Use the first supported ratio
         resolution="720p",
         enhance_prompt=True,
+        generate_audio=True,
         model_version_id=model_version,
         person_generation="dont_allow",
         r2v_references=references,

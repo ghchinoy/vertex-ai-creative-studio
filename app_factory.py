@@ -23,7 +23,6 @@ from mesop.events import LoadEvent
 from common.error_handling import UnknownHandlerIdFilter
 from state.state import AppState
 
-
 # Apply the filter to the root logger to suppress the benign error
 root_logger = logging.getLogger()
 root_logger.addFilter(UnknownHandlerIdFilter())

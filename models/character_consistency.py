@@ -18,7 +18,6 @@ import logging
 import time
 import uuid
 
-
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -41,7 +40,6 @@ from models.gemini import (
 from .character_consistency_models import (
     WorkflowStepResult,
 )
-
 
 cfg = Default()
 
@@ -176,9 +174,7 @@ def generate_character_video(
         )
         gemini_candidate_gcs_uris, _, _, _ = gemini_future.result()
 
-    candidate_image_gcs_uris = (
-        imagen_candidate_gcs_uris + gemini_candidate_gcs_uris
-    )
+    candidate_image_gcs_uris = imagen_candidate_gcs_uris + gemini_candidate_gcs_uris
     candidate_image_bytes_list = (
         imagen_candidate_image_bytes_list  # We don't have bytes from Gemini yet
     )
@@ -430,9 +426,7 @@ def _generate_video_from_image(
     if operation.error:
         raise Exception(f"Error generating video: {operation.error}")
 
-    return operation.response.generated_videos[
-        0
-    ].video.video_bytes, video_prompt
+    return operation.response.generated_videos[0].video.video_bytes, video_prompt
 
 
 def _outpaint_image(image_bytes: bytes, prompt: str) -> bytes:

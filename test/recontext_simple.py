@@ -1,3 +1,17 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Product Recontextualization brings Google's cutting edge Imagen model to generate high quality images of products "recontextualized" in new scenes and backgrounds.
 you will be exploring the features of Imagen Product Recontextualization using the Vertex AI Python SDK.
 You will
@@ -25,12 +39,13 @@ from typing import Any
 from google.cloud import aiplatform
 from google.cloud.aiplatform.gapic import PredictResponse
 
-
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = "us-central1"
 RECONTEXT = "imagen-product-recontext-preview-06-30"
 api_regional_endpoint = f"{LOCATION}-aiplatform.googleapis.com"
-model_endpoint = f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{RECONTEXT}"
+model_endpoint = (
+    f"projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{RECONTEXT}"
+)
 OUTPUT_GCS = os.getenv(
     "OUTPUT_GCS",
     f"gs://{PROJECT_ID}-assets",
@@ -58,9 +73,7 @@ def call_product_recontext(
 
     if image_bytes_list:
         for product_image_bytes in image_bytes_list:
-            product_image = {
-                "image": {"bytesBase64Encoded": product_image_bytes},
-            }
+            product_image = {"image": {"bytesBase64Encoded": product_image_bytes}}
             instance["productImages"].append(product_image)
 
     if image_uris_list:
@@ -103,9 +116,7 @@ def call_product_recontext(
     start = timeit.default_timer()
 
     response = client.predict(
-        endpoint=model_endpoint,
-        instances=instances,
-        parameters=parameters,
+        endpoint=model_endpoint, instances=instances, parameters=parameters,
     )
     end = timeit.default_timer()
     print(f"Product Recontextualization took {end - start:.2f}s.")
@@ -126,7 +137,9 @@ person_generation = "allow_adult"  # ["dont_allow", "allow_adult", "allow_all"]
 
 product_1 = "gs://genai-blackbelt-fishfooding-assets/vto_product_images/product_hawaiian_shirt.png"
 product_2 = "gs://genai-blackbelt-fishfooding-assets/images/generated_images/1752171998606/sample_0.png"
-product_3 = "gs://genai-blackbelt-fishfooding-assets/uploads/girlwithapearlearing_vermeer.jpg"
+product_3 = (
+    "gs://genai-blackbelt-fishfooding-assets/uploads/girlwithapearlearing_vermeer.jpg"
+)
 
 r = call_product_recontext(
     prompt=prompt,

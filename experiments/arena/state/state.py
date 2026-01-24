@@ -18,7 +18,6 @@ import mesop as me
 
 from config.default import Default
 
-
 cnfg = Default()
 
 

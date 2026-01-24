@@ -236,9 +236,7 @@ def render_video_video_tab():
                         media_tile(
                             key=state.selected_videos["video_1"],
                             media_type="video",
-                            https_url=state.selected_videos_display_urls[
-                                "video_1"
-                            ],
+                            https_url=state.selected_videos_display_urls["video_1"],
                             object_fit="contain",
                         )
                     else:
@@ -274,9 +272,7 @@ def render_video_video_tab():
                         media_tile(
                             key=state.selected_videos["video_2"],
                             media_type="video",
-                            https_url=state.selected_videos_display_urls[
-                                "video_2"
-                            ],
+                            https_url=state.selected_videos_display_urls["video_2"],
                             object_fit="contain",
                         )
                     else:

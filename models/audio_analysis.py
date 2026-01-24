@@ -96,12 +96,8 @@ def analyze_audio_file(gcs_uri: str) -> AudioMetrics:
                 1.0,
             ).values.mean()
 
-            metrics.jitter_percent = (
-                float(jitter) if not np.isnan(jitter) else 0.0
-            )
-            metrics.shimmer_db = (
-                float(shimmer) if not np.isnan(shimmer) else 0.0
-            )
+            metrics.jitter_percent = float(jitter) if not np.isnan(jitter) else 0.0
+            metrics.shimmer_db = float(shimmer) if not np.isnan(shimmer) else 0.0
             metrics.hnr_db = float(hnr) if not np.isnan(hnr) else 0.0
         except Exception as e:
             print(f"Warning: Voice quality analysis failed: {e}")

@@ -20,7 +20,6 @@ from video_generator import generate_video_from_best_image
 
 import config
 
-
 # --- CONFIGURATION ---
 # Set the path to the directory containing your input images.
 IMAGE_LOCATION = config.INPUT_DIR

@@ -33,7 +33,6 @@ from models.image_models import generate_images_from_prompt
 from state.imagen_state import PageState
 from state.state import AppState
 
-
 app_config_instance = Default()
 
 
@@ -156,7 +155,9 @@ def on_click_generate_images(e: me.ClickEvent):
         )
 
     if not current_prompt:
-        state.error_message = "Image prompt cannot be empty. Please enter a prompt or use 'Random'."
+        state.error_message = (
+            "Image prompt cannot be empty. Please enter a prompt or use 'Random'."
+        )
         state.is_loading = False  # Ensure loading is false if we exit early
         yield
         return
@@ -328,9 +329,7 @@ def on_click_rewrite_prompt(e: me.ClickEvent):
             state.image_prompt_input,
         )  # Changed function name for clarity
         state.image_prompt_input = rewritten_prompt
-        state.image_prompt_placeholder = (
-            rewritten_prompt  # Update placeholder as well
-        )
+        state.image_prompt_placeholder = rewritten_prompt  # Update placeholder as well
         state.image_textarea_key += 1  # Force re-render
         print(f"Rewritten prompt: '{rewritten_prompt}'")
     except Exception as ex:

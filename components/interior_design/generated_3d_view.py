@@ -7,7 +7,6 @@ import mesop as me
 from common.utils import create_display_url
 from components.media_tile.media_tile import media_tile
 
-
 IMAGE_PLACEHOLDER_STYLE = me.Style(
     width=400,
     height=400,
@@ -55,9 +54,7 @@ def generated_3d_view(
             me.button(
                 "Generate 3D View",
                 on_click=on_generate,
-                disabled=not (
-                    storyboard and storyboard.get("original_floor_plan_uri")
-                )
+                disabled=not (storyboard and storyboard.get("original_floor_plan_uri"))
                 or is_generating,
                 type="raised",
             )

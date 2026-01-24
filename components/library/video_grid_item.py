@@ -24,13 +24,9 @@ from components.pill import pill
 @me.component
 def video_grid_item(item: MediaItem):
     """Renders a grid item for a video media type."""
-    item_duration_str = (
-        f"{item.duration} sec" if item.duration is not None else "N/A"
-    )
+    item_duration_str = f"{item.duration} sec" if item.duration is not None else "N/A"
     gcs_uri = (
-        item.gcsuri
-        if item.gcsuri
-        else (item.gcs_uris[0] if item.gcs_uris else None)
+        item.gcsuri if item.gcsuri else (item.gcs_uris[0] if item.gcs_uris else None)
     )
     item_url = create_display_url(gcs_uri)
 

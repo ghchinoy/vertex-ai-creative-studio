@@ -19,7 +19,6 @@ import pytest
 from google import genai
 from google.genai import types
 
-
 # Define the prompt template used in the GitHub Action workflow
 PROMPT_TEMPLATE = """You are an expert Issue Triage Engineer. Your task is to analyze a list of GitHub issues and assign the most relevant labels.
 

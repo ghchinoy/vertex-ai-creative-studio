@@ -125,7 +125,9 @@ def get_image_dimensions_from_base64(base64_string: str) -> tuple[int, int]:
 
 
 def make_local_request(endpoint: str) -> dict[str, Any]:
-    filepath = f"mocks/{endpoint}.json"  # Assuming mock files are in a 'mocks' directory
+    filepath = (
+        f"mocks/{endpoint}.json"  # Assuming mock files are in a 'mocks' directory
+    )
     try:
         with open(filepath) as f:
             return json.load(f)

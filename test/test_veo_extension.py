@@ -16,14 +16,12 @@ import logging
 import os
 import sys
 
-
 # Add the project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from common.error_handling import GenerationError
 from models.requests import VideoGenerationRequest
 from models.veo import generate_video
-
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -49,6 +47,7 @@ def test_veo_extension(
         duration_seconds=7,
         video_count=1,
         enhance_prompt=False,
+        generate_audio=True,
         person_generation="allow_all",
         video_input_gcs=input_video_gcs,
         video_input_mime_type="video/mp4",
@@ -79,9 +78,7 @@ if __name__ == "__main__":
     else:
         # Default to a known accessible video
         # gs://cloud-samples-data/generative-ai/video/flower.mp4
-        input_video = (
-            "gs://genai-blackbelt-fishfooding-assets/videos/flower.mp4"
-        )
+        input_video = "gs://genai-blackbelt-fishfooding-assets/videos/flower.mp4"
 
     # 2. Output Bucket (Optional)
     if len(sys.argv) > 2:

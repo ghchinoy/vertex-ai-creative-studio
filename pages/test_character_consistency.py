@@ -29,7 +29,6 @@ from components.stepper import stepper
 from models.character_consistency import generate_character_video
 from state.state import AppState
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -178,9 +177,7 @@ This page allows you to test the character consistency workflow step-by-step.
                         ):
                             for url in state.candidate_image_urls:
                                 is_system_selected = url == state.best_image_url
-                                is_user_selected = (
-                                    url == state.user_selected_image_url
-                                )
+                                is_user_selected = url == state.user_selected_image_url
                                 with (
                                     me.box(
                                         key=url,
@@ -389,9 +386,7 @@ def generate_alternatives(e: me.ClickEvent):
             yield
 
             if "character_description" in step_result.data:
-                state.character_description = step_result.data[
-                    "character_description"
-                ]
+                state.character_description = step_result.data["character_description"]
             if "candidate_image_gcs_uris" in step_result.data:
                 gcs_uris = step_result.data["candidate_image_gcs_uris"]
                 state.candidate_image_gcs_uris = gcs_uris

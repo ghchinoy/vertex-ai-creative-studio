@@ -21,7 +21,6 @@ from dotenv import load_dotenv
 
 from config.default import Default
 
-
 # Load environment variables from .env file
 load_dotenv(override=True)
 

@@ -14,7 +14,6 @@
 
 import logging
 
-
 # Dedicated logger for tracking the suppressed error
 race_condition_logger = logging.getLogger("genmedia.race_condition_tracker")
 

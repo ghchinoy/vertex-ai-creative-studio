@@ -16,7 +16,6 @@ import logging
 
 from yt_dlp import YoutubeDL
 
-
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 

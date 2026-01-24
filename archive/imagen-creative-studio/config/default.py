@@ -89,9 +89,7 @@ class Config:
         self.gemini_settings.generation["temperature"] = self.TEMPERATURE
         self.gemini_settings.generation["top_p"] = self.TOP_P
         self.gemini_settings.generation["top_k"] = self.TOP_K
-        self.gemini_settings.generation["max_output_tokens"] = (
-            self.MAX_OUTPUT_TOKENS
-        )
+        self.gemini_settings.generation["max_output_tokens"] = self.MAX_OUTPUT_TOKENS
         self.gemini_settings.generation["candidate_count"] = 1
         self.gemini_settings.generation["stop_sequences"] = []
         self.gemini_settings.safety_settings["HARASSMENT"] = (

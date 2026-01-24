@@ -14,13 +14,8 @@
 
 import mesop as me
 
-
-SIDENAV_MIN_WIDTH = (
-    76  # Updated to match usage in page_scaffold via pages.styles
-)
-SIDENAV_MAX_WIDTH = (
-    202  # Updated to match usage in page_scaffold via pages.styles
-)
+SIDENAV_MIN_WIDTH = 76  # Updated to match usage in page_scaffold via pages.styles
+SIDENAV_MAX_WIDTH = 202  # Updated to match usage in page_scaffold via pages.styles
 
 DEFAULT_MENU_STYLE = me.Style(align_content="left")
 

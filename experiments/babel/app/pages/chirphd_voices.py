@@ -30,7 +30,6 @@ import mesop as me
 from components.styles import BACKGROUND_COLOR, CONTENT_STYLE
 from config.default import BabelMetadata, Default
 
-
 logging.basicConfig(level=logging.DEBUG)
 config = Default()
 BUCKET_PATH = "https://storage.mtls.cloud.google.com/" + config.GENMEDIA_BUCKET

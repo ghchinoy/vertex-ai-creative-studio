@@ -38,7 +38,6 @@ from models.virtual_model_generator import DEFAULT_PROMPT, VirtualModelGenerator
 from models.vto import generate_vto_image
 from state.state import AppState
 
-
 config = Default()
 
 IMAGE_BOX_STYLE = me.Style(
@@ -95,9 +94,7 @@ class PageState:
     _options: dict = field(default_factory=dict, init=False)  # pylint: disable=E3701:invalid-field-call
 
     def __post_init__(self):
-        config_path = (
-            Path(__file__).parent.parent / "config/virtual_model_options.json"
-        )
+        config_path = Path(__file__).parent.parent / "config/virtual_model_options.json"
         with open(config_path) as f:
             self._options = json.load(f)
 
@@ -219,9 +216,7 @@ def on_generate(e: me.ClickEvent):
         generation_time = end_time - start_time
         print(f"Result GCS URIs: {result_gcs_uris}")
         state.result_gcs_uris = result_gcs_uris
-        state.result_display_urls = [
-            create_display_url(uri) for uri in result_gcs_uris
-        ]
+        state.result_display_urls = [create_display_url(uri) for uri in result_gcs_uris]
         add_media_item(
             user_email=app_state.user_email,
             model=config.VTO_MODEL_ID,

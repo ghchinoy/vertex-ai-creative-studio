@@ -9,7 +9,6 @@ import time
 from dotenv import load_dotenv
 from google import genai
 
-
 load_dotenv()
 
 # --- Configuration ---

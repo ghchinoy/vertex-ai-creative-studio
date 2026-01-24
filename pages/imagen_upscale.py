@@ -30,7 +30,6 @@ from components.snackbar import snackbar
 from models.upscale import UPSCALE_MODEL, get_image_resolution, upscale_image
 from state.state import AppState
 
-
 IMAGE_BOX_STYLE = me.Style(
     width=512,
     height=512,
@@ -269,8 +268,7 @@ def page():
                             "Upscale",
                             on_click=on_upscale,
                             type="raised",
-                            disabled=state.is_loading
-                            or not state.input_image_gcs,
+                            disabled=state.is_loading or not state.input_image_gcs,
                             style=me.Style(width="100%"),
                         )
 

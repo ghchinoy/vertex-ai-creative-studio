@@ -27,7 +27,6 @@ from PIL import Image as PIL_Image
 
 import config
 
-
 # Initialize the Gemini client to use Vertex AI
 client = genai.Client(
     vertexai=True,

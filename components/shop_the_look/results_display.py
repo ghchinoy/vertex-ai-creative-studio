@@ -343,14 +343,10 @@ def results_display():
                         style=me.Style(
                             margin=me.Margin(left=10),
                             width=(
-                                "250px"
-                                if state.result_video_display_url
-                                else "500px"
+                                "250px" if state.result_video_display_url else "500px"
                             ),
                             height=(
-                                "250px"
-                                if state.result_video_display_url
-                                else "500px"
+                                "250px" if state.result_video_display_url else "500px"
                             ),
                         ),
                     ):
@@ -547,9 +543,7 @@ def results_display():
                     ),
                 ):
                     for img in p.progression_images:
-                        image_url = (
-                            f"/media/{img.image_path.replace('gs://', '')}"
-                        )
+                        image_url = f"/media/{img.image_path.replace('gs://', '')}"
 
                         with me.box(
                             style=me.Style(

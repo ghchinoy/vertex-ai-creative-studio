@@ -14,7 +14,6 @@
 
 import mesop as me
 
-
 NUMBER_OF_IMAGES_OPTIONS = [
     me.SelectOption(label="1", value="1"),
     me.SelectOption(label="2", value="2"),

@@ -29,9 +29,7 @@ from components.media_tile.media_tile import media_tile
 def audio_details(item: MediaItem, on_click_permalink: Callable):
     """Renders the details for an audio item."""
     gcs_uri = (
-        item.gcsuri
-        if item.gcsuri
-        else (item.gcs_uris[0] if item.gcs_uris else None)
+        item.gcsuri if item.gcsuri else (item.gcs_uris[0] if item.gcs_uris else None)
     )
     item_display_url = create_display_url(gcs_uri)
 

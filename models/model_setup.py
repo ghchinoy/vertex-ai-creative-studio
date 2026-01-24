@@ -20,7 +20,6 @@ from google.cloud import aiplatform
 
 from config.default import Default
 
-
 load_dotenv(override=True)
 
 

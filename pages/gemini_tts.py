@@ -43,7 +43,6 @@ from models.gemini import evaluate_tts_audio
 from models.gemini_tts import synthesize_speech
 from state.state import AppState
 
-
 # Load about content from JSON
 with open("config/about_content.json") as f:
     about_content = json.load(f)
@@ -198,8 +197,7 @@ def gemini_tts_page_content():
                     me.select(
                         label="Voice",
                         options=[
-                            me.SelectOption(label=v, value=v)
-                            for v in GEMINI_TTS_VOICES
+                            me.SelectOption(label=v, value=v) for v in GEMINI_TTS_VOICES
                         ],
                         on_selection_change=on_select_voice,
                         value=state.selected_voice,
@@ -588,9 +586,7 @@ def on_click_generate(e: me.ClickEvent):
             state.evaluation_result.audio_metrics.jitter_percent = (
                 audio_metrics.jitter_percent
             )
-            state.evaluation_result.audio_metrics.shimmer_db = (
-                audio_metrics.shimmer_db
-            )
+            state.evaluation_result.audio_metrics.shimmer_db = audio_metrics.shimmer_db
             state.evaluation_result.audio_metrics.hnr_db = audio_metrics.hnr_db
             state.evaluation_result.audio_metrics.estimated_tempo_bpm = (
                 audio_metrics.estimated_tempo_bpm

@@ -23,7 +23,6 @@ from google import genai
 
 from config.default import Default
 
-
 load_dotenv(override=True)
 
 

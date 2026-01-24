@@ -21,6 +21,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from common.metadata import db
+from config.default import get_config_path
 
 
 class PromptTemplate(BaseModel):
@@ -45,11 +46,7 @@ class PromptTemplateService:
     def __init__(self, collection_name: str = "prompt_templates"):
         self.collection_name = collection_name
 
-    def _load_from_json(
-        self,
-        path: str,
-        template_type: str,
-    ) -> list[PromptTemplate]:
+    def _load_from_json(self, path: str, template_type: str) -> list[PromptTemplate]:
         """Loads a list of default templates from a JSON file."""
         templates = []
         try:
@@ -58,9 +55,7 @@ class PromptTemplateService:
                 for item in data:
                     # Ensure the template matches the expected type for this context
                     if item.get("template_type") == template_type:
-                        templates.append(
-                            PromptTemplate(**item, is_default=True),
-                        )
+                        templates.append(PromptTemplate(**item, is_default=True))
         except FileNotFoundError:
             print(f"Warning: Prompt template file not found at {path}")
         except json.JSONDecodeError:
@@ -72,9 +67,7 @@ class PromptTemplateService:
         return templates
 
     def load_templates(
-        self,
-        config_path: str,
-        template_type: str,
+        self, config_path: str, template_type: str,
     ) -> list[PromptTemplate]:
         """Loads default templates from a JSON file and combines them with user-created templates from Firestore."""
         default_templates = self._load_from_json(config_path, template_type)
@@ -85,9 +78,7 @@ class PromptTemplateService:
             try:
                 # Simplified query to avoid needing a composite index
                 query = db.collection("prompt_templates").where(
-                    "template_type",
-                    "==",
-                    template_type,
+                    "template_type", "==", template_type,
                 )
                 for doc in query.stream():
                     try:
@@ -110,8 +101,7 @@ class PromptTemplateService:
 
         # Sort the final list in Python
         final_list = sorted(
-            all_templates_map.values(),
-            key=lambda t: (t.category, t.label),
+            all_templates_map.values(), key=lambda t: (t.category, t.label),
         )
 
         return final_list
@@ -124,13 +114,13 @@ class PromptTemplateService:
         # Load defaults from both files
         default_templates.extend(
             self._load_from_json(
-                "config/text_prompt_templates.json",
+                get_config_path("config/text_prompt_templates.json"),
                 template_type="text",
             ),
         )
         default_templates.extend(
             self._load_from_json(
-                "config/image_prompt_templates.json",
+                get_config_path("config/image_prompt_templates.json"),
                 template_type="image",
             ),
         )
@@ -159,13 +149,13 @@ class PromptTemplateService:
 
         # Sort the final list in Python
         final_list = sorted(
-            all_templates_map.values(),
-            key=lambda t: (t.category, t.label),
+            all_templates_map.values(), key=lambda t: (t.category, t.label),
         )
         return final_list
 
     def add_template(self, template: PromptTemplate) -> PromptTemplate:
-        """Adds a new template to the Firestore collection."""
+        """Adds a new template to the Firestore collection.
+        """
         if not db:
             raise ConnectionError("Firestore client is not initialized.")
 

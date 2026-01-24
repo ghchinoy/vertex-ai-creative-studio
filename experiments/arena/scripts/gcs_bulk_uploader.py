@@ -23,7 +23,6 @@ from google.cloud.storage import transfer_manager
 
 from config.default import Default
 
-
 # Load environment variables from .env file
 dotenv.load_dotenv(override=True)
 
@@ -44,9 +43,7 @@ class GCSUploader:
             cls._instances[key].storage_client = storage.Client(
                 project=project_id,
             )
-            cls._instances[key].bucket = cls._instances[
-                key
-            ].storage_client.bucket(
+            cls._instances[key].bucket = cls._instances[key].storage_client.bucket(
                 bucket_name,
             )
             cls._instances[key]._setup_logging()

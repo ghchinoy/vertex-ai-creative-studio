@@ -93,9 +93,7 @@ def page_scaffold(page_name: str):
             flex_direction="column",
             height="100%",
             margin=me.Margin(
-                left=SIDENAV_MAX_WIDTH
-                if app_state.sidenav_open
-                else SIDENAV_MIN_WIDTH,
+                left=SIDENAV_MAX_WIDTH if app_state.sidenav_open else SIDENAV_MIN_WIDTH,
             ),
         ),
     ):

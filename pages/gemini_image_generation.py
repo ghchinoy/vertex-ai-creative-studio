@@ -49,7 +49,6 @@ from models.upscale import get_image_resolution
 from services.c2pa_service import c2pa_service
 from state.state import AppState
 
-
 CHIP_STYLE = me.Style(
     padding=me.Padding(top=4, right=12, bottom=4, left=12),
     border_radius=8,
@@ -62,9 +61,7 @@ def get_all_image_presets():
     """Loads dynamic templates and merges them with static presets."""
     # Start with a deep copy of the hardcoded presets
     # to ensure backward compatibility and avoid mutating the original
-    all_presets = {
-        k: [p.copy() for p in v] for k, v in IMAGE_ACTION_PRESETS.items()
-    }
+    all_presets = {k: [p.copy() for p in v] for k, v in IMAGE_ACTION_PRESETS.items()}
 
     try:
         # Load dynamic templates of type 'image'
@@ -108,9 +105,7 @@ class PageState:
     selected_image_url: str = ""
     show_snackbar: bool = False
     snackbar_message: str = ""
-    previous_media_item_id: str | None = (
-        None  # For linking generation sequences
-    )
+    previous_media_item_id: str | None = None  # For linking generation sequences
     aspect_ratio: str = "1:1"
     image_size: str = "1K"
     num_images_to_generate: int = 0
@@ -244,12 +239,8 @@ def gemini_image_gen_page_content():
                         margin=me.Margin(bottom=16),
                     ),
                 )
-                max_input_images = (
-                    model_config.max_input_images if model_config else 3
-                )
-                upload_disabled = (
-                    len(state.uploaded_image_gcs_uris) >= max_input_images
-                )
+                max_input_images = model_config.max_input_images if model_config else 3
+                upload_disabled = len(state.uploaded_image_gcs_uris) >= max_input_images
 
                 with me.box(
                     style=me.Style(
@@ -549,9 +540,7 @@ def gemini_image_gen_page_content():
                                 gap=8,
                             ),
                         ):
-                            for (
-                                transformation
-                            ) in state.suggested_transformations:
+                            for transformation in state.suggested_transformations:
                                 with (
                                     me.content_button(
                                         on_click=on_transformation_click,
@@ -676,9 +665,7 @@ def gemini_image_gen_page_content():
                                     else 0
                                 )
                                 caption = (
-                                    state.generated_image_captions[
-                                        selected_index
-                                    ]
+                                    state.generated_image_captions[selected_index]
                                     if selected_index
                                     < len(state.generated_image_captions)
                                     else ""
@@ -711,10 +698,8 @@ def gemini_image_gen_page_content():
                                             right=16,
                                         ),
                                     ):
-                                        manifest_json = (
-                                            state.c2pa_manifests.get(
-                                                state.selected_image_url,
-                                            )
+                                        manifest_json = state.c2pa_manifests.get(
+                                            state.selected_image_url,
                                         )
                                         if manifest_json:
                                             content_credentials_viewer(
@@ -742,9 +727,7 @@ def gemini_image_gen_page_content():
                                     for i, url in enumerate(
                                         state.generated_image_urls,
                                     ):
-                                        is_selected = (
-                                            url == state.selected_image_url
-                                        )
+                                        is_selected = url == state.selected_image_url
                                         caption = (
                                             state.generated_image_captions[i]
                                             if i
@@ -977,9 +960,7 @@ def on_suggest_transformations_click(e: me.ClickEvent):
             image_uris=[gcs_uri],
         )
         # Convert Pydantic objects to dicts for state
-        state.suggested_transformations = [
-            t.model_dump() for t in raw_transformations
-        ]
+        state.suggested_transformations = [t.model_dump() for t in raw_transformations]
     except Exception as ex:
         analytics_logger.error(
             f"Could not generate transformation prompts: {ex}",
@@ -1142,9 +1123,7 @@ def _generate_and_save(base_prompt: str, input_gcs_uris: list[str]):
             )
 
         state.generation_time = execution_time
-        state.grounding_info = (
-            json.dumps(grounding_info) if grounding_info else ""
-        )
+        state.grounding_info = json.dumps(grounding_info) if grounding_info else ""
 
         if grounding_info:
             analytics_logger.info(
@@ -1172,9 +1151,7 @@ def _generate_and_save(base_prompt: str, input_gcs_uris: list[str]):
                 "No images were generated, but the attempt was logged to the library.",
             )
         else:
-            state.generated_image_urls = [
-                create_display_url(uri) for uri in gcs_uris
-            ]
+            state.generated_image_urls = [create_display_url(uri) for uri in gcs_uris]
             state.generated_image_captions = captions
             # Measure the actual resolution of the first generated image
             state.generated_resolution = get_image_resolution(gcs_uris[0])
@@ -1265,10 +1242,7 @@ def on_load(e: me.LoadEvent):
                 base_url = image_uri.split("?")[0]
                 final_gcs_uri = https_url_to_gcs_uri(base_url)
 
-            if (
-                final_gcs_uri
-                and final_gcs_uri not in state.uploaded_image_gcs_uris
-            ):
+            if final_gcs_uri and final_gcs_uri not in state.uploaded_image_gcs_uris:
                 state.uploaded_image_gcs_uris.append(final_gcs_uri)
                 state.uploaded_image_display_urls.append(
                     create_display_url(final_gcs_uri),

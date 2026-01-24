@@ -25,7 +25,6 @@ from utils.logger import LogLevel, log
 
 from config.default import Default
 
-
 config = Default()
 
 
@@ -90,9 +89,7 @@ class ArenaStudyTracker:
 
     def _generate_unique_id(self, number_characters: int = 8) -> str:
         """Generate a unique ID of a specified length."""
-        characters = (
-            string.ascii_uppercase + string.ascii_lowercase + string.digits
-        )
+        characters = string.ascii_uppercase + string.ascii_lowercase + string.digits
         unique_id = "".join(
             secrets.choice(characters) for _ in range(number_characters)
         )

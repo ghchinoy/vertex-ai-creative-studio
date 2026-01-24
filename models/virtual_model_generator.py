@@ -16,7 +16,6 @@ import json
 import random
 from pathlib import Path
 
-
 # The default prompt, used as a fallback if the user's prompt is invalid.
 DEFAULT_PROMPT = "A full-length studio shot of {gender} model with {silhouette}, posed for a virtual try-on application. The model has an {MST} skin tone. Lighting is bright and even, highlighting the model's form without harsh shadows. The model is {variant}. The focus is sharp and clear, capturing the details of clothing textures and fit, suitable for e-commerce apparel display."
 
@@ -37,9 +36,7 @@ class VirtualModelGenerator:
 
     def _load_options(self):
         """Loads the generation options from the JSON config file."""
-        config_path = (
-            Path(__file__).parent.parent / "config/virtual_model_options.json"
-        )
+        config_path = Path(__file__).parent.parent / "config/virtual_model_options.json"
         with open(config_path) as f:
             self.options = json.load(f)
 
@@ -56,9 +53,7 @@ class VirtualModelGenerator:
         )
         self.set_value(
             "silhouette",
-            random.choice(self.options["silhouette_presets"])[
-                "prompt_fragment"
-            ],
+            random.choice(self.options["silhouette_presets"])["prompt_fragment"],
         )
         self.set_value("MST", random.choice(self.options["MST"]))
         return self

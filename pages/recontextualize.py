@@ -34,18 +34,13 @@ from config.default import Default
 from models.image_models import recontextualize_product_in_scene
 from state.state import AppState
 
-
 config = Default()
 
 
 with open("config/about_content.json") as f:
     about_content = json.load(f)
     RECONTEXT_INFO = next(
-        (
-            s
-            for s in about_content["sections"]
-            if s.get("id") == "recontextualize"
-        ),
+        (s for s in about_content["sections"] if s.get("id") == "recontextualize"),
         None,
     )
 

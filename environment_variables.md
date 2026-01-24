@@ -14,7 +14,8 @@ These variables define the fundamental operating context of the application.
 | :--- | :--- | :--- |
 | **`PROJECT_ID`** | *None* (Required) | The Google Cloud Project ID where resources (Vertex AI, Firestore, Storage) are located. |
 | **`LOCATION`** | `us-central1` | The default GCP region for most services (Vertex AI, etc.). |
-| **`APP_ENV`** | `""` (Empty) | Defines the environment (e.g., `dev`, `prod`). Used to load environment-specific content files like `config/about_content.{env}.json`. |
+| **`APP_ENV`** | `""` (Empty) | Defines the environment name (e.g., `dev`, `godemos`). This is used as a metadata tag on the Config page. |
+| **`GMCS_OVERRIDE_PATH`** | *None* | **(Development Only)** An absolute path to a directory containing configuration overrides. If a file exists in this path (e.g., `config/about_content.json`), the app will prioritize it over the local version. |
 | **`API_BASE_URL`** | `http://localhost:{PORT}` | The base URL for the application's backend APIs. |
 | **`PORT`** | `8080` | The port the application server listens on. |
 | **`SERVICE_ACCOUNT_EMAIL`** | *None* | The email of the service account used for authentication, if applicable. |
@@ -57,7 +58,7 @@ Specific configuration for the Virtual Try-On feature.
 | Variable | Default | Description |
 | :--- | :--- | :--- |
 | **`VTO_LOCATION`** | `us-central1` | Region for the VTO API. |
-| **`VTO_MODEL_ID`** | `virtual-try-on-preview-08-04` | The specific VTO model version. |
+| **`VTO_MODEL_ID`** | `virtual-try-on-001` | The specific VTO model version. |
 | **`GENMEDIA_VTO_MODEL_COLLECTION_NAME`** | `genmedia-vto-model` | Firestore collection for VTO model data. |
 | **`GENMEDIA_VTO_CATALOG_COLLECTION_NAME`** | `genmedia-vto-catalog` | Firestore collection for VTO product catalog data. |
 
@@ -89,8 +90,19 @@ Defines where data and media assets are stored.
 | :--- | :--- | :--- |
 | **`LIBRARY_MEDIA_PER_PAGE`** | `15` | Controls how many items appear per page in the media library. |
 | **`USE_MEDIA_PROXY`** | `true` | If `true`, media URLs are proxied to avoid CORS/hotlinking issues. |
-| **`CHARACTER_CONSISTENCY_VEO_MODEL`** | `veo-3.0-fast-generate-001` | Model used specifically in the Character Consistency workflow. |
-| **`CHARACTER_CONSISTENCY_GEMINI_MODEL`** | `MODEL_ID` | Gemini model used in the Character Consistency workflow. |
+
+## 📦 Build Metadata
+The application can display detailed build information on the **Config** page. This is populated from an optional JSON file:
+
+*   **File Path**: `config/build.json` (or via `GMCS_OVERRIDE_PATH`)
+*   **Format**:
+    ```json
+    {
+      "commit": "a1b2c3d",
+      "date": "2026-01-13 14:30:00"
+    }
+    ```
+*   If present, these values populate the `BUILD_COMMIT` and `BUILD_DATE` fields in the application state.
 
 ## 🏗️ Terraform Configuration & Deployment
 

@@ -627,9 +627,7 @@ def generate_compliment(generation_instruction: str, image_output):
         timing = f"Critique generation time: {execution_time:.2f} seconds"  # More precise timing
         analytics_logger.info(timing)
 
-        if (
-            error_for_this_op
-        ):  # If an error occurred specifically in this operation
+        if error_for_this_op:  # If an error occurred specifically in this operation
             raise GenerationError(error_for_this_op)
 
     analytics_logger.info("Critique generation function finished.")
@@ -1200,9 +1198,7 @@ def generate_text(
             for ext in [".mp4", ".mov", ".avi", ".mkv", ".webm"]
         ):
             mime_type = "video/mp4"  # General video type
-        elif any(
-            image_uri.lower().endswith(ext) for ext in [".wav", ".mp3", ".flac"]
-        ):
+        elif any(image_uri.lower().endswith(ext) for ext in [".wav", ".mp3", ".flac"]):
             mime_type = "audio/wav"  # General audio type
         elif any(
             image_uri.lower().endswith(ext)
@@ -1237,9 +1233,7 @@ def generate_text(
 
     # end_time = time.time()
     # execution_time = end_time - start_time
-    execution_time = (
-        0  # Placeholder, timing is handled by track_model_call logger
-    )
+    execution_time = 0  # Placeholder, timing is handled by track_model_call logger
 
     # print(f"Returning text: {response.text}, execution_time: {execution_time}")
     return response.text, execution_time

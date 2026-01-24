@@ -28,7 +28,6 @@ from common.metadata import MediaItem, add_media_item_to_firestore
 from common.storage import download_from_gcs, store_to_gcs
 from config.default import Default
 
-
 config = Default()
 
 
@@ -80,7 +79,6 @@ def _upload_to_gcs(
 import datetime
 
 import moviepy
-
 
 print(
     f"DEBUG: Loading video_processing.py at {datetime.datetime.now()}. Moviepy version: {moviepy.__version__}",
@@ -476,7 +474,9 @@ def convert_mp4_to_gif(
     with tempfile.TemporaryDirectory() as tmpdir:
         local_path = _download_videos_to_temp([source_video_gcs_uri], tmpdir)[0]
 
-        output_filename = f"{os.path.splitext(os.path.basename(local_path))[0]}{uuid.uuid4()}.gif"
+        output_filename = (
+            f"{os.path.splitext(os.path.basename(local_path))[0]}{uuid.uuid4()}.gif"
+        )
         output_path = os.path.join(tmpdir, output_filename)
 
         clip = VideoFileClip(local_path)
@@ -522,9 +522,7 @@ def convert_mp4_to_gif(
         )
 
         # Iteratively reduce quality if estimate is too high
-        while estimated_size > TARGET_SIZE_BYTES and (
-            resize_factor > 0.2 or fps > 8
-        ):
+        while estimated_size > TARGET_SIZE_BYTES and (resize_factor > 0.2 or fps > 8):
             if resize_factor > 0.3:
                 resize_factor -= 0.1
             elif fps > 8:
@@ -545,7 +543,9 @@ def convert_mp4_to_gif(
                 f"Adjusting parameters. New resize_factor: {resize_factor:.2f}, New fps: {fps}, Estimated Size: {estimated_size / 1024 / 1024:.2f} MB",
             )
 
-        final_params_comment = f"GIF generation params: resize_factor={resize_factor:.2f}, fps={fps}"
+        final_params_comment = (
+            f"GIF generation params: resize_factor={resize_factor:.2f}, fps={fps}"
+        )
         logging.info(f"FINAL PARAMS: {final_params_comment}")
 
         final_clip = clip.resized(resize_factor)

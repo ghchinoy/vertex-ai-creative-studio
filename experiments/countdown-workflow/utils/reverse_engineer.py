@@ -26,7 +26,6 @@ from utils.extract_frame import extract_first_frame
 
 import config
 
-
 # Set up logging for this module
 logger = logging.getLogger(__name__)
 
@@ -92,9 +91,7 @@ def reverse_engineer_prompts(
     )
 
     video_files = [
-        f
-        for f in os.listdir(chunks_dir)
-        if f.endswith((".mp4", ".webm", ".mov"))
+        f for f in os.listdir(chunks_dir) if f.endswith((".mp4", ".webm", ".mov"))
     ]
     if not video_files:
         logger.warning(f"No video files found in '{chunks_dir}'.")
@@ -184,9 +181,7 @@ def reverse_engineer_prompts(
         os.makedirs(output_dir, exist_ok=True)
 
         # Determine output filenames based on the input video name
-        base_filename = os.path.splitext(os.path.basename(full_video_filepath))[
-            0
-        ]
+        base_filename = os.path.splitext(os.path.basename(full_video_filepath))[0]
         json_output_path = os.path.join(
             output_dir,
             f"{base_filename}_analysis.json",

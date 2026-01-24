@@ -13,7 +13,6 @@
 # limitations under the License.
 import mesop as me
 
-
 SIDENAV_MIN_WIDTH = 68
 SIDENAV_MAX_WIDTH = 185
 

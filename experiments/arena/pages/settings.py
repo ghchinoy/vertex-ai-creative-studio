@@ -25,7 +25,6 @@ from components.page_scaffold import (
 from config.default import Default
 from config.firebase_config import FirebaseClient
 
-
 cnfg = Default()
 db = FirebaseClient(cnfg.IMAGE_FIREBASE_DB).get_client()
 
@@ -165,9 +164,7 @@ _BOX_STYLE = me.Style(
     flex_basis="max(480px, calc(50% - 48px))",
     background=me.theme_var("background"),
     border_radius=12,
-    box_shadow=(
-        "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
-    ),
+    box_shadow=("0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"),
     padding=me.Padding(top=16, left=16, right=16, bottom=16),
     display="flex",
     flex_direction="column",

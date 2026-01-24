@@ -26,7 +26,6 @@ from common.analytics import get_logger
 from config.default import Default
 from config.firebase_config import FirebaseClient
 
-
 # Initialize configuration
 # client, model_id = ModelSetup.init()
 # MODEL_ID = model_id
@@ -40,19 +39,17 @@ class MediaItem:
     """Represents a single media item in the library for Firestore storage and retrieval."""
 
     id: str | None = None  # Firestore document ID
-    status: str = "created"  # Options: "created", "pending", "processing", "complete", "failed"
+    status: str = (
+        "created"  # Options: "created", "pending", "processing", "complete", "failed"
+    )
     related_media_item_id: str | None = None  # For linking generation sequences
     user_email: str | None = None
     timestamp: datetime.datetime | None = None  # Store as datetime object
 
     # Common fields across media types
     prompt: str | None = None  # The final prompt used for generation
-    original_prompt: str | None = (
-        None  # User's initial prompt if rewriting occurred
-    )
-    rewritten_prompt: str | None = (
-        None  # The prompt after any rewriter (Gemini, etc.)
-    )
+    original_prompt: str | None = None  # User's initial prompt if rewriting occurred
+    rewritten_prompt: str | None = None  # The prompt after any rewriter (Gemini, etc.)
     model: str | None = (
         None  # Specific model ID used (e.g., "imagen-3.0-fast", "veo-2.0")
     )
@@ -84,9 +81,7 @@ class MediaItem:
     last_reference_image: str | None = None
     negative_prompt: str | None = None
     enhanced_prompt_used: bool = False
-    comment: str | None = (
-        None  # General comment field, e.g., for video generation type
-    )
+    comment: str | None = None  # General comment field, e.g., for video generation type
 
     # Image specific
     # aspect is shared with Video
@@ -321,11 +316,7 @@ def _create_media_item_from_dict(doc_id: str, raw_item_data: dict) -> MediaItem:
     # Handle GCS URI (which can be a string or list)
     gcsuri: str = None
     if isinstance(raw_item_data.get("gcsuri"), list):
-        gcsuri = (
-            raw_item_data.get("gcsuri")[0]
-            if raw_item_data.get("gcsuri")
-            else None
-        )
+        gcsuri = raw_item_data.get("gcsuri")[0] if raw_item_data.get("gcsuri") else None
     elif raw_item_data.get("gcsuri") is not None:
         gcsuri = str(raw_item_data.get("gcsuri"))
 
@@ -524,9 +515,7 @@ def get_media_for_page(
         A list of MediaItem objects.
 
     """
-    fetch_limit = (
-        1000  # Max items to fetch for client-side filtering/pagination
-    )
+    fetch_limit = 1000  # Max items to fetch for client-side filtering/pagination
 
     try:
         query = db.collection(config.GENMEDIA_COLLECTION_NAME)
@@ -682,9 +671,7 @@ def get_media_for_page_optimized(
             if isinstance(raw_timestamp, datetime.datetime):
                 timestamp_iso_str = raw_timestamp.isoformat()
             elif isinstance(raw_timestamp, str):
-                timestamp_iso_str = (
-                    raw_timestamp  # Assuming it's already ISO format
-                )
+                timestamp_iso_str = raw_timestamp  # Assuming it's already ISO format
             elif hasattr(
                 raw_timestamp,
                 "isoformat",

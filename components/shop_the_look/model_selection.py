@@ -23,7 +23,6 @@ from config.default import Default
 from models import shop_the_look_workflow
 from state.shop_the_look_state import PageState
 
-
 config = Default()
 
 

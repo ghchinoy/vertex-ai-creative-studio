@@ -18,7 +18,6 @@ import time
 
 import requests
 
-
 # --- Configuration ---
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = "us-central1"

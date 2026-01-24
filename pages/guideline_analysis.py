@@ -167,9 +167,7 @@ def on_evaluate_criteria_click(e: me.ClickEvent):
             score_str = f"{yes_answers}/{len(questions)}"
             evaluation_dict = {
                 "score": score_str,
-                "details": [
-                    ans.model_dump() for ans in evaluation_result.answers
-                ],
+                "details": [ans.model_dump() for ans in evaluation_result.answers],
             }
             new_evaluations[category] = json.dumps(evaluation_dict)
         state.evaluations = new_evaluations
@@ -230,9 +228,7 @@ def page_content():
                         if display_url:
                             mime_type = item.mime_type or ""
                             render_type = (
-                                "video"
-                                if mime_type.startswith("video/")
-                                else "image"
+                                "video" if mime_type.startswith("video/") else "image"
                             )
                             with me.box(
                                 style=me.Style(width="100%", height=400),
@@ -240,9 +236,7 @@ def page_content():
                                 media_tile(
                                     media_type=render_type,
                                     https_url=display_url,
-                                    controls=True
-                                    if render_type == "video"
-                                    else False,
+                                    controls=True if render_type == "video" else False,
                                     object_fit="contain",
                                 )
                         else:
@@ -326,40 +320,39 @@ def page_content():
                             evaluation = json.loads(evaluation_json)
                             with me.box(
                                 style=me.Style(margin=me.Margin(top=16)),
+                            ), me.expansion_panel(
+                                title=f"{category} Score: {evaluation['score']}",
+                                icon="rule",
                             ):
-                                with me.expansion_panel(
-                                    title=f"{category} Score: {evaluation['score']}",
-                                    icon="rule",
-                                ):
-                                    for detail in evaluation["details"]:
-                                        with me.box(
-                                            style=me.Style(
-                                                display="flex",
-                                                flex_direction="row",
-                                                align_items="center",
-                                                gap=8,
-                                                margin=me.Margin(bottom=8),
-                                            ),
-                                        ):
-                                            if detail["answer"]:
-                                                me.icon(
-                                                    "check_circle",
-                                                    style=me.Style(
-                                                        color=me.theme_var(
-                                                            "success",
-                                                        ),
+                                for detail in evaluation["details"]:
+                                    with me.box(
+                                        style=me.Style(
+                                            display="flex",
+                                            flex_direction="row",
+                                            align_items="center",
+                                            gap=8,
+                                            margin=me.Margin(bottom=8),
+                                        ),
+                                    ):
+                                        if detail["answer"]:
+                                            me.icon(
+                                                "check_circle",
+                                                style=me.Style(
+                                                    color=me.theme_var(
+                                                        "success",
                                                     ),
-                                                )
-                                            else:
-                                                me.icon(
-                                                    "cancel",
-                                                    style=me.Style(
-                                                        color=me.theme_var(
-                                                            "error",
-                                                        ),
+                                                ),
+                                            )
+                                        else:
+                                            me.icon(
+                                                "cancel",
+                                                style=me.Style(
+                                                    color=me.theme_var(
+                                                        "error",
                                                     ),
-                                                )
-                                            me.text(detail["question"])
+                                                ),
+                                            )
+                                        me.text(detail["question"])
             else:
                 me.text("No media item selected.")
 
@@ -486,9 +479,7 @@ def render_chooser_dialog():
         )
 
         for item in new_items:
-            gcs_uri = item.gcsuri or (
-                item.gcs_uris[0] if item.gcs_uris else None
-            )
+            gcs_uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
             item.signed_url = create_display_url(gcs_uri) if gcs_uri else ""
 
         state.chooser_media_items.extend(new_items)
@@ -543,10 +534,7 @@ def render_chooser_dialog():
                         padding=me.Padding.all(10),
                     ),
                 ):
-                    if (
-                        state.chooser_is_loading
-                        and not state.chooser_media_items
-                    ):
+                    if state.chooser_is_loading and not state.chooser_media_items:
                         me.progress_spinner()
                     else:
                         with me.box(
@@ -570,15 +558,9 @@ def render_chooser_dialog():
                                     elif item.mime_type.startswith("audio/"):
                                         render_type = "audio"
                                 elif https_url:
-                                    if (
-                                        ".mp4" in https_url
-                                        or ".webm" in https_url
-                                    ):
+                                    if ".mp4" in https_url or ".webm" in https_url:
                                         render_type = "video"
-                                    elif (
-                                        ".wav" in https_url
-                                        or ".mp3" in https_url
-                                    ):
+                                    elif ".wav" in https_url or ".mp3" in https_url:
                                         render_type = "audio"
 
                                 media_tile(

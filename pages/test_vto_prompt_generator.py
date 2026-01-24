@@ -50,9 +50,7 @@ class PageState:
     _options: dict = field(default_factory=dict, init=False)  # pylint: disable=invalid-field-call
 
     def __post_init__(self):
-        config_path = (
-            Path(__file__).parent.parent / "config/virtual_model_options.json"
-        )
+        config_path = Path(__file__).parent.parent / "config/virtual_model_options.json"
         with open(config_path) as f:
             self._options = json.load(f)
 
@@ -192,8 +190,7 @@ It is crucial to describe gender based on presentation rather than identity beca
                                 width=2,
                                 style="solid",
                                 color=me.theme_var("primary")
-                                if state.selected_silhouette_name
-                                == preset["name"]
+                                if state.selected_silhouette_name == preset["name"]
                                 else me.theme_var("outline"),
                             ),
                         ),
@@ -306,7 +303,9 @@ def on_mst_select(e: me.SelectSelectionChangeEvent):
     state.selected_mst = e.value
     # MST-1 -> 01, MST-10 -> 10
     mst_number = e.value.split("-")[-1].zfill(2)
-    state.selected_mst_orb_url = f"https://google-ai-skin-tone-research.imgix.net/orbs/monk-{mst_number}.png"
+    state.selected_mst_orb_url = (
+        f"https://google-ai-skin-tone-research.imgix.net/orbs/monk-{mst_number}.png"
+    )
     yield
 
 
@@ -321,7 +320,9 @@ def on_click_randomize(e: me.ClickEvent):
     selected_mst_obj = random.choice(state._options.get("MST", []))
     state.selected_mst = selected_mst_obj["name"]
     mst_number = selected_mst_obj["name"].split("-")[-1].zfill(2)
-    state.selected_mst_orb_url = f"https://google-ai-skin-tone-research.imgix.net/orbs/monk-{mst_number}.png"
+    state.selected_mst_orb_url = (
+        f"https://google-ai-skin-tone-research.imgix.net/orbs/monk-{mst_number}.png"
+    )
     yield
 
 
@@ -354,11 +355,7 @@ def on_click_generate_matrix(e: me.ClickEvent):
         None,
     )
 
-    if (
-        not selected_gender_obj
-        or not selected_silhouette_obj
-        or not selected_mst_obj
-    ):
+    if not selected_gender_obj or not selected_silhouette_obj or not selected_mst_obj:
         print("Error: Could not find selected gender or silhouette.")
         state.loading = False
         yield

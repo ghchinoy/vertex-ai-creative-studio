@@ -114,10 +114,7 @@ def _r2v_uploader(
 
     # Default to True, check for override
     show_style_reference = True
-    if (
-        selected_config.mode_overrides
-        and "r2v" in selected_config.mode_overrides
-    ):
+    if selected_config.mode_overrides and "r2v" in selected_config.mode_overrides:
         r2v_override = selected_config.mode_overrides["r2v"]
         if not r2v_override.supports_style_reference:
             show_style_reference = False

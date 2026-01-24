@@ -21,7 +21,6 @@ from components.styles import (
 )
 from state.state import AppState
 
-
 page_json = [
     {"id": 0, "display": "Arena", "icon": "stadium", "route": "/"},
     {
@@ -129,9 +128,7 @@ def sidenav(current_page: str):
         me.box(style=me.Style(height=16))
         # standard pages
         for idx, page in enumerate(page_json):
-            if (
-                "align" not in page
-            ):  # ignore pages with alignment, handle elsewhere
+            if "align" not in page:  # ignore pages with alignment, handle elsewhere
                 menu_item(
                     idx,
                     page["icon"],
@@ -239,9 +236,7 @@ def theme_toggle_icon(key: int, icon: str, text: str, min: bool = True):
         ):
             with me.tooltip(message=text):
                 me.icon(
-                    "light_mode"
-                    if me.theme_brightness() == "dark"
-                    else "dark_mode",
+                    "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
                 )
 
     else:  # expanded
@@ -259,12 +254,8 @@ def theme_toggle_icon(key: int, icon: str, text: str, min: bool = True):
                 ),
             ):
                 me.icon(
-                    "light_mode"
-                    if me.theme_brightness() == "dark"
-                    else "dark_mode",
+                    "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
                 )
                 me.text(
-                    "Light mode"
-                    if me.theme_brightness() == "dark"
-                    else "Dark mode",
+                    "Light mode" if me.theme_brightness() == "dark" else "Dark mode",
                 )

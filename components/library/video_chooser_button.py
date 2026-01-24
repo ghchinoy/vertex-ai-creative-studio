@@ -65,11 +65,7 @@ def video_chooser_button(
 
     def handle_load_more(e: me.WebEvent):
         """Load the next page of videos when the user scrolls to the bottom."""
-        if (
-            state.is_loading
-            or not state.has_more_items
-            or not state.media_items
-        ):
+        if state.is_loading or not state.has_more_items or not state.media_items:
             return
 
         state.is_loading = True
@@ -77,9 +73,7 @@ def video_chooser_button(
 
         last_item_id = state.media_items[-1].id
         last_doc_ref = (
-            db.collection(config.GENMEDIA_COLLECTION_NAME)
-            .document(last_item_id)
-            .get()
+            db.collection(config.GENMEDIA_COLLECTION_NAME).document(last_item_id).get()
         )
 
         new_items, last_doc = get_media_for_page_optimized(

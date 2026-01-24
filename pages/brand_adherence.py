@@ -385,9 +385,7 @@ Brand Guidelines Context:
 
         # Pass reference image if available
         images = (
-            [state.reference_image_gcs_uri]
-            if state.reference_image_gcs_uri
-            else []
+            [state.reference_image_gcs_uri] if state.reference_image_gcs_uri else []
         )
 
         gcs_uris, _, _, _ = generate_image_from_prompt_and_images(
@@ -428,16 +426,13 @@ Brand Guidelines Context:
                     )
 
                     yes_answers = sum(
-                        1
-                        for answer in evaluation_result.answers
-                        if answer.answer
+                        1 for answer in evaluation_result.answers if answer.answer
                     )
                     score_str = f"{yes_answers}/{len(questions)}"
                     evaluation_dict = {
                         "score": score_str,
                         "details": [
-                            ans.model_dump()
-                            for ans in evaluation_result.answers
+                            ans.model_dump() for ans in evaluation_result.answers
                         ],
                     }
                     new_evaluations[category] = json.dumps(evaluation_dict)

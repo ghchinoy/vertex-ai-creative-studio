@@ -42,7 +42,6 @@ from config.firebase_config import FirebaseClient
 from models.video_processing import convert_mp4_to_gif
 from routers import veo_router
 
-
 # Initialize Firebase Client with configured database
 FirebaseClient(database_id=config.Default().GENMEDIA_FIREBASE_DB)
 import pages  # noqa: F401
@@ -264,9 +263,7 @@ async def set_request_context(request: Request, call_next):
         user_email = request.headers.get("X-Goog-Authenticated-User-Email")
 
     # 3. Default to anonymous
-    is_authenticated = (
-        user_email is not None and user_email != "anonymous@google.com"
-    )
+    is_authenticated = user_email is not None and user_email != "anonymous@google.com"
 
     if not user_email:
         user_email = "anonymous@google.com"
@@ -320,9 +317,7 @@ async def set_request_context(request: Request, call_next):
 
     # Pass GA ID to Mesop context if it exists
     if config.Default.GA_MEASUREMENT_ID:
-        request.scope["MESOP_GA_MEASUREMENT_ID"] = (
-            config.Default.GA_MEASUREMENT_ID
-        )
+        request.scope["MESOP_GA_MEASUREMENT_ID"] = config.Default.GA_MEASUREMENT_ID
 
     response = await call_next(request)
     response.set_cookie(

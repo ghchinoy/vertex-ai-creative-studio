@@ -24,7 +24,6 @@ from PIL import Image
 from common.storage import download_from_gcs, store_to_gcs
 from config.default import Default
 
-
 cfg = Default()
 
 UPSCALE_MODEL = "imagen-4.0-upscale-preview"
