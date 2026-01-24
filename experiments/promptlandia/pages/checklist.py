@@ -213,7 +213,8 @@ def checklist_page_content(app_state: me.state):
                                 me.text(
                                     "Raw response:",
                                     style=me.Style(
-                                        font_weight="bold", margin=me.Margin(top=8),
+                                        font_weight="bold",
+                                        margin=me.Margin(top=8),
                                     ),
                                 )
                                 me.markdown(text=f"```\n{state.prompt_response}\n```")
@@ -221,9 +222,13 @@ def checklist_page_content(app_state: me.state):
                     # Display suffix commentary if it exists, in an expansion panel
                     if state.commentary_suffix and state.commentary_suffix.strip():
                         me.box(style=me.Style(height=28))
-                        with me.expansion_panel(
-                            title="View Additional Commentary", expanded=True,
-                        ), me.box(style=me.Style(padding=me.Padding.all(16))):
+                        with (
+                            me.expansion_panel(
+                                title="View Additional Commentary",
+                                expanded=True,
+                            ),
+                            me.box(style=me.Style(padding=me.Padding.all(16))),
+                        ):
                             me.markdown(state.commentary_suffix)
 
                 elif state.prompt_response:  # Fallback for completely unparsable response (no JSON, no suffix extracted)
@@ -266,12 +271,17 @@ def render_pydantic_response(response: ParsedChecklistResponse):
         me.text(
             f"Checklist found {len(categories_with_issues)} issues",
             style=me.Style(
-                font_weight="bold", font_size=18, margin=me.Margin(bottom=12),
+                font_weight="bold",
+                font_size=18,
+                margin=me.Margin(bottom=12),
             ),
         )
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", flex_wrap="wrap", gap=16,
+                display="flex",
+                flex_direction="row",
+                flex_wrap="wrap",
+                gap=16,
             ),
         ):
             for category_name, category_data in categories_with_issues.items():
@@ -288,7 +298,9 @@ def render_pydantic_response(response: ParsedChecklistResponse):
                     me.text(
                         category_name.replace("_", " ").title(),
                         style=me.Style(
-                            font_weight="bold", font_size=16, margin=me.Margin(bottom=8),
+                            font_weight="bold",
+                            font_size=16,
+                            margin=me.Margin(bottom=8),
                         ),
                     )
 
@@ -307,7 +319,9 @@ def render_pydantic_response(response: ParsedChecklistResponse):
                             with me.box(style=me.Style(margin=me.Margin(bottom=8))):
                                 with me.box(
                                     style=me.Style(
-                                        display="flex", align_items="center", gap=8,
+                                        display="flex",
+                                        align_items="center",
+                                        gap=8,
                                     ),
                                 ):
                                     me.icon(
@@ -369,7 +383,9 @@ def render_pydantic_response(response: ParsedChecklistResponse):
         me.text(
             "The following checks passed without issues",
             style=me.Style(
-                font_weight="bold", font_size=18, margin=me.Margin(bottom=12),
+                font_weight="bold",
+                font_size=18,
+                margin=me.Margin(bottom=12),
             ),
         )
         with me.box(

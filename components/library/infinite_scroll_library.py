@@ -26,8 +26,7 @@ def infinite_scroll_library(
     on_image_selected: typing.Callable[[me.WebEvent], None],
     key: str | None = None,
 ):
-    """A web component for displaying a library of images with infinite scroll.
-    """
+    """A web component for displaying a library of images with infinite scroll."""
     return me.insert_web_component(
         key=key,
         name="infinite-scroll-library",

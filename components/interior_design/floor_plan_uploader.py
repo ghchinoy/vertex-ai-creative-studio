@@ -1,5 +1,4 @@
-"""Component for uploading a floor plan.
-"""
+"""Component for uploading a floor plan."""
 
 from collections.abc import Callable
 
@@ -30,8 +29,7 @@ def floor_plan_uploader(
     on_upload: Callable,
     on_library_select: Callable,
 ):
-    """Component for uploading a floor plan.
-    """
+    """Component for uploading a floor plan."""
     with me.box(
         style=me.Style(
             display="flex",
@@ -57,7 +55,8 @@ def floor_plan_uploader(
                 style=me.Style(width="100%"),
             )
             library_chooser_button(
-                key="floor_plan", on_library_select=on_library_select,
+                key="floor_plan",
+                on_library_select=on_library_select,
             )
         with me.box(style=IMAGE_PLACEHOLDER_STYLE):
             if storyboard and storyboard.get("original_floor_plan_uri"):

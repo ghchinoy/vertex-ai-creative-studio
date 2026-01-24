@@ -1,5 +1,4 @@
-"""This script sanitizes a given prompt for safety using the Gemini API.
-"""
+"""This script sanitizes a given prompt for safety using the Gemini API."""
 
 import argparse
 import os
@@ -74,7 +73,9 @@ def get_genai_client() -> genai.Client:
 
 
 def _generate_content_with_retry(
-    client: genai.Client, *args, **kwargs,
+    client: genai.Client,
+    *args,
+    **kwargs,
 ) -> genai.types.GenerateContentResponse:
     """Wrapper for generate_content with exponential backoff."""
     max_retries = 5
@@ -103,7 +104,8 @@ def sanitize_prompt(client: genai.Client, prompt_to_sanitize: str) -> str:
 
     contents = [
         genai.types.Content(
-            role="user", parts=[genai.types.Part.from_text(text=full_prompt)],
+            role="user",
+            parts=[genai.types.Part.from_text(text=full_prompt)],
         ),
     ]
     config_dict = {
@@ -113,16 +115,20 @@ def sanitize_prompt(client: genai.Client, prompt_to_sanitize: str) -> str:
         "thinking_config": genai.types.ThinkingConfig(thinking_budget=-1),
         "safety_settings": [
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_HATE_SPEECH", threshold="OFF",
+                category="HARM_CATEGORY_HATE_SPEECH",
+                threshold="OFF",
             ),
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="OFF",
+                category="HARM_CATEGORY_DANGEROUS_CONTENT",
+                threshold="OFF",
             ),
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="OFF",
+                category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                threshold="OFF",
             ),
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_HARASSMENT", threshold="OFF",
+                category="HARM_CATEGORY_HARASSMENT",
+                threshold="OFF",
             ),
         ],
     }
@@ -130,7 +136,10 @@ def sanitize_prompt(client: genai.Client, prompt_to_sanitize: str) -> str:
 
     try:
         response = _generate_content_with_retry(
-            client, model=GEMINI_MODEL_ID, contents=contents, config=config,
+            client,
+            model=GEMINI_MODEL_ID,
+            contents=contents,
+            config=config,
         )
         return response.text.strip()
     except Exception as e:

@@ -55,7 +55,9 @@ def extract_last_frames(video_path: str, num_frames: int = 4) -> list:
 
 
 def save_frames_to_temp(
-    frames: list, folder_name: str = "temp", prefix: str = "frame_",
+    frames: list,
+    folder_name: str = "temp",
+    prefix: str = "frame_",
 ) -> str:
     """Saves a list of frames into a local folder in the current directory.
 
@@ -96,7 +98,8 @@ if __name__ == "__main__":
 
     # Step 1: Call the function to extract the last frames.
     last_frames = extract_last_frames(
-        video_path=video_file, num_frames=num_frames_to_get,
+        video_path=video_file,
+        num_frames=num_frames_to_get,
     )
 
     # Step 2: Check if frames were extracted before trying to save them.

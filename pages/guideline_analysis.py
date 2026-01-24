@@ -153,7 +153,9 @@ def on_evaluate_criteria_click(e: me.ClickEvent):
             if not questions:
                 continue
             evaluation_result = evaluate_media_with_questions(
-                media_uri=gcs_uri, mime_type=item.mime_type, questions=questions,
+                media_uri=gcs_uri,
+                mime_type=item.mime_type,
+                questions=questions,
             )
             yes_answers = sum(
                 1 for answer in evaluation_result.answers if answer.answer
@@ -195,7 +197,10 @@ def page_content():
             me.text("Select a media asset to analyze")
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="row", align_items="center", gap=16,
+                    display="flex",
+                    flex_direction="row",
+                    align_items="center",
+                    gap=16,
                 ),
             ):
                 _uploader_placeholder(on_library_select=open_chooser_dialog)
@@ -209,11 +214,14 @@ def page_content():
                 ):
                     with me.box(style=me.Style(width="50%")):
                         display_url = create_display_url(
-                            item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None),
+                            item.gcsuri
+                            or (item.gcs_uris[0] if item.gcs_uris else None),
                         )
                         if display_url:
                             mime_type = item.mime_type or ""
-                            render_type = "video" if mime_type.startswith("video/") else "image"
+                            render_type = (
+                                "video" if mime_type.startswith("video/") else "image"
+                            )
                             with me.box(style=me.Style(width="100%", height=400)):
                                 media_tile(
                                     media_type=render_type,
@@ -387,13 +395,15 @@ def _uploader_placeholder(on_library_select: Callable):
 
 
 def get_all_media_for_chooser(
-    page_size: int, start_after=None,
+    page_size: int,
+    start_after=None,
 ) -> tuple[list[MediaItem], firestore.DocumentSnapshot | None]:
     if not db:
         return [], None
     try:
         query = db.collection(config.GENMEDIA_COLLECTION_NAME).order_by(
-            "timestamp", direction=firestore.Query.DESCENDING,
+            "timestamp",
+            direction=firestore.Query.DESCENDING,
         )
         if start_after:
             query = query.start_after(start_after)
@@ -451,14 +461,20 @@ def render_chooser_dialog():
         yield
 
     dialog_style = me.Style(
-        width="95vw", height="80vh", display="flex", flex_direction="column",
+        width="95vw",
+        height="80vh",
+        display="flex",
+        flex_direction="column",
     )
 
     with dialog(is_open=state.show_chooser_dialog, dialog_style=dialog_style):  # pylint: disable=E1129:not-context-manager
         if state.show_chooser_dialog:
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="column", gap=16, flex_grow=1,
+                    display="flex",
+                    flex_direction="column",
+                    gap=16,
+                    flex_grow=1,
                 ),
             ):
                 with me.box(
@@ -479,7 +495,9 @@ def render_chooser_dialog():
 
                 with me.box(
                     style=me.Style(
-                        flex_grow=1, overflow_y="auto", padding=me.Padding.all(10),
+                        flex_grow=1,
+                        overflow_y="auto",
+                        padding=me.Padding.all(10),
                     ),
                 ):
                     if state.chooser_is_loading and not state.chooser_media_items:
@@ -565,7 +583,8 @@ def on_generate_criteria_click(e: me.ClickEvent):
 
     try:
         criteria_result = generate_guideline_criteria(
-            item.prompt, state.additional_guidance,
+            item.prompt,
+            state.additional_guidance,
         )
         if not any(criteria_result.values()):
             state.criteria_error = "Failed to generate any guideline criteria. The model may have returned an empty response."

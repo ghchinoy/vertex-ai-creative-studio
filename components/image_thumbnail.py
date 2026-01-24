@@ -21,7 +21,10 @@ from components.media_tile.media_tile import media_tile
 
 @me.component
 def image_thumbnail(
-    image_uri: str, index: int, on_remove: Callable, icon_size: int = 18,
+    image_uri: str,
+    index: int,
+    on_remove: Callable,
+    icon_size: int = 18,
 ):
     # Calculate the container dimension based on the icon size.
     # This creates a consistent 4px "padding" on all sides.

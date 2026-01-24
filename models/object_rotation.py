@@ -62,7 +62,8 @@ async def _generate_single_view(prompt: str, image_uri: str) -> str:
 
 
 async def generate_product_views(
-    product_description: str, image_uri: str,
+    product_description: str,
+    image_uri: str,
 ) -> dict[str, str]:
     """Generates four views of a product concurrently."""
     logger.info(f"Generating four views for source image: {image_uri}")

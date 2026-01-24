@@ -72,7 +72,8 @@ def settings_page(app_state: me.state):
         me.text("Settings", type="headline-6")
 
         me.text(
-            "Gemini Translation Prompt (simple)", style=me.Style(font_weight="bold"),
+            "Gemini Translation Prompt (simple)",
+            style=me.Style(font_weight="bold"),
         )
 
         me.markdown(
@@ -147,7 +148,8 @@ def on_click_set_gemini_voice(e: me.ClickEvent):
     if uri:
         print(f"the gsuri is: {uri}")
         state.gemini_reference_voice_uri = uri.replace(
-            "gs://", "https://storage.mtls.cloud.google.com/",
+            "gs://",
+            "https://storage.mtls.cloud.google.com/",
         )
     else:
         print("Couldn't find URI for voice")

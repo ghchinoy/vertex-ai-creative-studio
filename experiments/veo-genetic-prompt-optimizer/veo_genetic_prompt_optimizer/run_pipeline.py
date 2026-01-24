@@ -1,5 +1,4 @@
-"""Main pipeline script to run the entire VEO Prompt Wizard workflow.
-"""
+"""Main pipeline script to run the entire VEO Prompt Wizard workflow."""
 
 import evaluate_videos
 import generate_prompts

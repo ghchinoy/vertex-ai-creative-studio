@@ -21,8 +21,7 @@ DEFAULT_PROMPT = "A full-length studio shot of {gender} model with {silhouette},
 
 
 class VirtualModelGenerator:
-    """A class to generate prompts for creating virtual models by substituting placeholders.
-    """
+    """A class to generate prompts for creating virtual models by substituting placeholders."""
 
     def __init__(self, base_prompt: str):
         """Initializes the VirtualModelGenerator with a base prompt.
@@ -49,7 +48,8 @@ class VirtualModelGenerator:
     def randomize_all(self):
         """Sets a random value for all major placeholders."""
         self.set_value(
-            "gender", random.choice(self.options["genders"])["prompt_fragment"],
+            "gender",
+            random.choice(self.options["genders"])["prompt_fragment"],
         )
         self.set_value(
             "silhouette",

@@ -194,7 +194,9 @@ This page allows you to test the character consistency workflow step-by-step.
                                             ),
                                         ),
                                     ):
-                                        with me.box(style=me.Style(width=200, height=200)):
+                                        with me.box(
+                                            style=me.Style(width=200, height=200)
+                                        ):
                                             media_tile(
                                                 media_type="image",
                                                 https_url=url,

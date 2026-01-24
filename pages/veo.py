@@ -392,7 +392,9 @@ def on_click_extend_video(e: me.ClickEvent):
             mode="extension",
         ):
             response = requests.post(
-                api_url, json=request.model_dump(), headers=headers,
+                api_url,
+                json=request.model_dump(),
+                headers=headers,
             )
             response.raise_for_status()
             data = response.json()
@@ -438,7 +440,8 @@ def on_click_extend_video(e: me.ClickEvent):
 
             elif state.job_status == "failed":
                 state.error_message = status_data.get(
-                    "error_message", "Unknown error during extension.",
+                    "error_message",
+                    "Unknown error during extension.",
                 )
                 state.show_error_dialog = True
                 state.is_loading = False
@@ -575,13 +578,15 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
         r2v_references=[
             APIReferenceImage(gcs_uri=uri, mime_type=mime)
             for uri, mime in zip(
-                state.r2v_reference_images, state.r2v_reference_mime_types,
+                state.r2v_reference_images,
+                state.r2v_reference_mime_types,
             )
         ]
         if state.veo_mode == "r2v" and state.r2v_reference_images
         else None,
         r2v_style_image=APIReferenceImage(
-            gcs_uri=state.r2v_style_image, mime_type=state.r2v_style_image_mime_type,
+            gcs_uri=state.r2v_style_image,
+            mime_type=state.r2v_style_image_mime_type,
         )
         if state.veo_mode == "r2v" and state.r2v_style_image
         else None,
@@ -606,7 +611,9 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
             mode=state.veo_mode,
         ):
             response = requests.post(
-                api_url, json=request.model_dump(), headers=headers,
+                api_url,
+                json=request.model_dump(),
+                headers=headers,
             )
             response.raise_for_status()
             data = response.json()
@@ -657,7 +664,8 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
             elif state.job_status == "failed":
                 # Failure. Show error.
                 state.error_message = status_data.get(
-                    "error_message", "Unknown error during generation.",
+                    "error_message",
+                    "Unknown error during generation.",
                 )
                 state.show_error_dialog = True
                 state.is_loading = False
@@ -717,7 +725,10 @@ def on_upload_image(e: me.UploadEvent):
     try:
         # Store the uploaded file to GCS
         gcs_path = store_to_gcs(
-            "uploads", e.file.name, e.file.mime_type, e.file.getvalue(),
+            "uploads",
+            e.file.name,
+            e.file.mime_type,
+            e.file.getvalue(),
         )
         # Update the state with the new image details
         state.reference_image_gcs = gcs_path
@@ -736,7 +747,10 @@ def on_upload_last_image(e: me.UploadEvent):
     try:
         # Store the uploaded file to GCS
         gcs_path = store_to_gcs(
-            "uploads", e.file.name, e.file.mime_type, e.file.getvalue(),
+            "uploads",
+            e.file.name,
+            e.file.mime_type,
+            e.file.getvalue(),
         )
         # Update the state with the new image details
         state.last_reference_image_gcs = gcs_path
@@ -759,7 +773,10 @@ def on_r2v_asset_add(e: me.UploadEvent):
 
     try:
         gcs_path = store_to_gcs(
-            "uploads", e.file.name, e.file.mime_type, e.file.getvalue(),
+            "uploads",
+            e.file.name,
+            e.file.mime_type,
+            e.file.getvalue(),
         )
         state.r2v_reference_images.append(gcs_path)
         state.r2v_reference_mime_types.append(e.file.mime_type)
@@ -784,7 +801,10 @@ def on_r2v_style_add(e: me.UploadEvent):
     state = me.state(PageState)
     try:
         gcs_path = store_to_gcs(
-            "uploads", e.file.name, e.file.mime_type, e.file.getvalue(),
+            "uploads",
+            e.file.name,
+            e.file.mime_type,
+            e.file.getvalue(),
         )
         state.r2v_style_image = gcs_path
         state.r2v_style_image_mime_type = e.file.mime_type

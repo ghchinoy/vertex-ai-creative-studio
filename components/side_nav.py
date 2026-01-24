@@ -92,14 +92,19 @@ def sidenav(current_page: str | None):
                     align_items="center",
                 ),
             ):
-                with me.content_button(
-                    type="icon",
-                    on_click=on_sidenav_menu_click,
-                ), me.box(), me.tooltip(message="Expand menu"):
+                with (
+                    me.content_button(
+                        type="icon",
+                        on_click=on_sidenav_menu_click,
+                    ),
+                    me.box(),
+                    me.tooltip(message="Expand menu"),
+                ):
                     me.icon(icon="menu")
                 if app_state.sidenav_open:
                     with me.box(
-                        on_click=on_click_title, style=me.Style(cursor="pointer"),
+                        on_click=on_click_title,
+                        style=me.Style(cursor="pointer"),
                     ):
                         me.text("GENMEDIA STUDIO", style=_FANCY_TEXT_GRADIENT)
 
@@ -169,27 +174,33 @@ def menu_item(
             me.icon(icon=icon_name)
 
     if minimized:  # minimized
-        with me.tooltip(message=text), me.content_button(
-            key=button_key,
-            on_click=navigate_to if is_clickable else None,
-            style=content_style,
-            type="icon",
-            disabled=not is_clickable,
+        with (
+            me.tooltip(message=text),
+            me.content_button(
+                key=button_key,
+                on_click=navigate_to if is_clickable else None,
+                style=content_style,
+                type="icon",
+                disabled=not is_clickable,
+            ),
         ):
             render_icon(icon)
 
     else:  # expanded
-        with me.content_button(
-            key=button_key,
-            on_click=navigate_to,
-            style=content_style,
-            disabled=not is_clickable,
-        ), me.box(
-            style=me.Style(
-                display="flex",
-                flex_direction="row",
-                gap=5,
-                align_items="center",
+        with (
+            me.content_button(
+                key=button_key,
+                on_click=navigate_to,
+                style=content_style,
+                disabled=not is_clickable,
+            ),
+            me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    gap=5,
+                    align_items="center",
+                ),
             ),
         ):
             render_icon(icon)
@@ -210,32 +221,39 @@ def toggle_theme(e: me.ClickEvent):  # pylint: disable=unused-argument
 def theme_toggle_icon(key: int, icon: str, text: str, min: bool = True):
     """Theme toggle icon"""
     if min:  # minimized
-        with me.box(
-            style=me.Style(
-                display="flex",
-                flex_direction="row",
-                gap=5,
-                align_items="center",
+        with (
+            me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    gap=5,
+                    align_items="center",
+                ),
             ),
-        ), me.content_button(
-            key=str(key),
-            on_click=toggle_theme,
-            type="icon",
-        ), me.tooltip(message=text):
+            me.content_button(
+                key=str(key),
+                on_click=toggle_theme,
+                type="icon",
+            ),
+            me.tooltip(message=text),
+        ):
             me.icon(
                 "light_mode" if me.theme_brightness() == "dark" else "dark_mode",
             )
 
     else:  # expanded
-        with me.content_button(
-            key=str(key),
-            on_click=toggle_theme,
-        ), me.box(
-            style=me.Style(
-                display="flex",
-                flex_direction="row",
-                gap=5,
-                align_items="center",
+        with (
+            me.content_button(
+                key=str(key),
+                on_click=toggle_theme,
+            ),
+            me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    gap=5,
+                    align_items="center",
+                ),
             ),
         ):
             me.icon(

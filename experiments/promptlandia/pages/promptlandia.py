@@ -59,25 +59,29 @@ def promptlandia_page_content(app_state: me.state):
     """
     state = me.state(PageState)
 
-    with me.box(
-        style=me.Style(
-            display="flex",
-            flex_direction="column",
-            height="100%",
+    with (
+        me.box(
+            style=me.Style(
+                display="flex",
+                flex_direction="column",
+                height="100%",
+            ),
         ),
-    ), me.box(
-        style=me.Style(
-            background=me.theme_var("background"),
-            height="100%",
-            overflow_y="scroll",
-            margin=me.Margin(bottom=20),
+        me.box(
+            style=me.Style(
+                background=me.theme_var("background"),
+                height="100%",
+                overflow_y="scroll",
+                margin=me.Margin(bottom=20),
+            ),
         ),
-    ), me.box(
-        style=me.Style(
-            background=me.theme_var("background"),
-            padding=me.Padding(top=24, left=24, right=24, bottom=24),
-            display="flex",
-            flex_direction="column",
+        me.box(
+            style=me.Style(
+                background=me.theme_var("background"),
+                padding=me.Padding(top=24, left=24, right=24, bottom=24),
+                display="flex",
+                flex_direction="column",
+            ),
         ),
     ):
         header("Promptlandia", "try")
@@ -163,12 +167,15 @@ def promptlandia_page_content(app_state: me.state):
             ):
                 if state.processing:
                     me.text(
-                        "Improving prompt", style=me.Style(font_weight="bold"),
+                        "Improving prompt",
+                        style=me.Style(font_weight="bold"),
                     )
                     me.box(style=me.Style(height=8))
                     with me.box(
                         style=me.Style(
-                            display="flex", flex_direction="row", gap=5,
+                            display="flex",
+                            flex_direction="row",
+                            gap=5,
                         ),
                     ):
                         me.progress_spinner(diameter=16)
@@ -213,17 +220,20 @@ def promptlandia_page_content(app_state: me.state):
 def gemini_prompt_input():
     """Renders the Gemini prompt input text area."""
     page_state = me.state(PageState)
-    with me.box(
-        style=me.Style(
-            border_radius=16,
-            padding=me.Padding.all(8),
-            background=BACKGROUND_COLOR,
-            display="flex",
-            width="100%",
+    with (
+        me.box(
+            style=me.Style(
+                border_radius=16,
+                padding=me.Padding.all(8),
+                background=BACKGROUND_COLOR,
+                display="flex",
+                width="100%",
+            ),
         ),
-    ), me.box(
-        style=me.Style(
-            flex_grow=1,
+        me.box(
+            style=me.Style(
+                flex_grow=1,
+            ),
         ),
     ):
         me.native_textarea(
@@ -293,17 +303,20 @@ def on_blur_prompt(e: me.InputBlurEvent):
 def gemini_system_prompt_input():
     """Renders the Gemini system prompt input text area."""
     page_state = me.state(PageState)
-    with me.box(
-        style=me.Style(
-            border_radius=16,
-            padding=me.Padding.all(8),
-            background=BACKGROUND_COLOR,
-            display="flex",
-            width="100%",
+    with (
+        me.box(
+            style=me.Style(
+                border_radius=16,
+                padding=me.Padding.all(8),
+                background=BACKGROUND_COLOR,
+                display="flex",
+                width="100%",
+            ),
         ),
-    ), me.box(
-        style=me.Style(
-            flex_grow=1,
+        me.box(
+            style=me.Style(
+                flex_grow=1,
+            ),
         ),
     ):
         me.native_textarea(
@@ -356,17 +369,20 @@ def on_blur_system_prompt(e: me.InputBlurEvent):
 def gemini_improvement_prompt_input():
     """Renders the Gemini improvement prompt input text area."""
     page_state = me.state(PageState)
-    with me.box(
-        style=me.Style(
-            border_radius=16,
-            padding=me.Padding.all(8),
-            background=BACKGROUND_COLOR,
-            display="flex",
-            width="100%",
+    with (
+        me.box(
+            style=me.Style(
+                border_radius=16,
+                padding=me.Padding.all(8),
+                background=BACKGROUND_COLOR,
+                display="flex",
+                width="100%",
+            ),
         ),
-    ), me.box(
-        style=me.Style(
-            flex_grow=1,
+        me.box(
+            style=me.Style(
+                flex_grow=1,
+            ),
         ),
     ):
         me.native_textarea(

@@ -38,7 +38,9 @@ def r2v_video_display(on_thumbnail_click: Callable):
         if state.is_loading:
             with me.box(
                 style=me.Style(
-                    display="flex", justify_content="center", margin=me.Margin(top=24),
+                    display="flex",
+                    justify_content="center",
+                    margin=me.Margin(top=24),
                 ),
             ):
                 me.progress_spinner()
@@ -52,7 +54,8 @@ def r2v_video_display(on_thumbnail_click: Callable):
             me.text(
                 "Your generated videos will appear here.",
                 style=me.Style(
-                    padding=me.Padding.all(24), color=me.theme_var("on-surface-variant"),
+                    padding=me.Padding.all(24),
+                    color=me.theme_var("on-surface-variant"),
                 ),
             )
             return

@@ -13,7 +13,6 @@
 # limitations under the License.
 """Setup the study database for GenMedia Arena on Spanner."""
 
-
 import fire
 from config.spanner_config import ArenaStudySchema
 from utils.logger import LogLevel, log

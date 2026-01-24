@@ -17,12 +17,15 @@ import mesop as me
 @me.component
 def header(title: str, icon: str):
     """Header component"""
-    with me.box(
-        style=me.Style(
-            display="flex",
-            justify_content="space-between",
+    with (
+        me.box(
+            style=me.Style(
+                display="flex",
+                justify_content="space-between",
+            ),
         ),
-    ), me.box(style=me.Style(display="flex", flex_direction="row", gap=5)):
+        me.box(style=me.Style(display="flex", flex_direction="row", gap=5)),
+    ):
         me.icon(icon=icon)
         me.text(
             title,

@@ -15,7 +15,9 @@ from state.veo_state import PageState
 @patch("pages.veo.generate_video", return_value="gs://fake-bucket/fake_video.mp4")
 @patch("mesop.state")
 def test_veo_generation_flow_and_metadata(
-    mock_state, mock_generate_video, mock_add_media_item,
+    mock_state,
+    mock_generate_video,
+    mock_add_media_item,
 ):
     """Tests the VEO generation flow, focusing on the data handling and metadata
     creation after a successful API call.

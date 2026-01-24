@@ -289,29 +289,34 @@ def arena_page_content(app_state: me.state):
     if not page_state.arena_prompt:
         page_state.arena_prompt = prompt_manager.random_prompt()
         page_state.arena_model1, page_state.arena_model2 = random.sample(
-            app_state.study_models, 2,
+            app_state.study_models,
+            2,
         )
         arena_images(page_state.arena_prompt, app_state.study)
 
-    with me.box(
-        style=me.Style(
-            display="flex",
-            flex_direction="column",
-            height="100%",
+    with (
+        me.box(
+            style=me.Style(
+                display="flex",
+                flex_direction="column",
+                height="100%",
+            ),
         ),
-    ), me.box(
-        style=me.Style(
-            background=me.theme_var("background"),
-            height="100%",
-            overflow_y="scroll",
-            margin=me.Margin(bottom=20),
+        me.box(
+            style=me.Style(
+                background=me.theme_var("background"),
+                height="100%",
+                overflow_y="scroll",
+                margin=me.Margin(bottom=20),
+            ),
         ),
-    ), me.box(
-        style=me.Style(
-            background=me.theme_var("background"),
-            padding=me.Padding(top=24, left=24, right=24, bottom=24),
-            display="flex",
-            flex_direction="column",
+        me.box(
+            style=me.Style(
+                background=me.theme_var("background"),
+                padding=me.Padding(top=24, left=24, right=24, bottom=24),
+                display="flex",
+                flex_direction="column",
+            ),
         ),
     ):
         header(
@@ -377,7 +382,8 @@ def arena_page_content(app_state: me.state):
                 )
                 me.box(style=me.Style(height=16))
                 me.text(
-                    page_state.arena_prompt, style=me.Style(font_size="20pt"),
+                    page_state.arena_prompt,
+                    style=me.Style(font_size="20pt"),
                 )
 
             # Image outputs
@@ -402,23 +408,22 @@ def arena_page_content(app_state: me.state):
                         # Generated images row
                         with me.box(
                             style=me.Style(
-                                flex_wrap="wrap", display="flex", gap="15px",
+                                flex_wrap="wrap",
+                                display="flex",
+                                gap="15px",
                             ),
                         ):
                             for idx, img in enumerate(
-                                page_state.arena_output, start=1,
+                                page_state.arena_output,
+                                start=1,
                             ):
                                 print(f"===> idx: {idx}, img: {img}")
                                 model_name = f"arena_model{idx}"
                                 model_value = getattr(page_state, model_name)
 
-                                replace_url = (
-                                    "https://storage.mtls.cloud.google.com/"
-                                )
+                                replace_url = "https://storage.mtls.cloud.google.com/"
                                 if Default.PUBLIC_BUCKET:
-                                    replace_url = (
-                                        "https://storage.googleapis.com/"
-                                    )
+                                    replace_url = "https://storage.googleapis.com/"
                                 img_url = img.replace("gs://", replace_url)
                                 with me.box(
                                     style=me.Style(
@@ -434,10 +439,7 @@ def arena_page_content(app_state: me.state):
                                         border_radius="35px",
                                     )
                                     if page_state.chosen_model:
-                                        if (
-                                            page_state.chosen_model
-                                            == model_value
-                                        ):
+                                        if page_state.chosen_model == model_value:
                                             # green border
                                             image_border_style = me.Style(
                                                 width="450px",
@@ -466,10 +468,7 @@ def arena_page_content(app_state: me.state):
 
                                     if page_state.chosen_model:
                                         text_style = me.Style()
-                                        if (
-                                            page_state.chosen_model
-                                            == model_value
-                                        ):
+                                        if page_state.chosen_model == model_value:
                                             text_style = me.Style(
                                                 font_weight="bold",
                                             )
@@ -492,14 +491,18 @@ def arena_page_content(app_state: me.state):
                             ),
                         ):
                             # left choice button
-                            with me.content_button(
-                                type="flat",
-                                key="arena_model1",
-                                on_click=on_click_arena_vote,
-                                disabled=disabled_choice,
-                            ), me.box(
-                                style=me.Style(
-                                    display="flex", align_items="center",
+                            with (
+                                me.content_button(
+                                    type="flat",
+                                    key="arena_model1",
+                                    on_click=on_click_arena_vote,
+                                    disabled=disabled_choice,
+                                ),
+                                me.box(
+                                    style=me.Style(
+                                        display="flex",
+                                        align_items="center",
+                                    ),
                                 ),
                             ):
                                 me.icon("arrow_left")
@@ -511,14 +514,18 @@ def arena_page_content(app_state: me.state):
                                 on_click=on_click_reload_arena,
                             )
                             # right choice button
-                            with me.content_button(
-                                type="flat",
-                                key="arena_model2",
-                                on_click=on_click_arena_vote,
-                                disabled=disabled_choice,
-                            ), me.box(
-                                style=me.Style(
-                                    display="flex", align_items="center",
+                            with (
+                                me.content_button(
+                                    type="flat",
+                                    key="arena_model2",
+                                    on_click=on_click_arena_vote,
+                                    disabled=disabled_choice,
+                                ),
+                                me.box(
+                                    style=me.Style(
+                                        display="flex",
+                                        align_items="center",
+                                    ),
                                 ),
                             ):
                                 me.text("right")

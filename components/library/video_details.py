@@ -42,7 +42,9 @@ def video_details(
     ):
         # Main video player
         if selected_url and not item.error_message:
-            with me.box(style=me.Style(width="100%", height=400, margin=me.Margin(bottom=16))):
+            with me.box(
+                style=me.Style(width="100%", height=400, margin=me.Margin(bottom=16))
+            ):
                 media_tile(
                     key=selected_url,
                     media_type="video",
@@ -149,7 +151,10 @@ def video_details(
 
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=10, margin=me.Margin(top=16),
+                display="flex",
+                flex_direction="row",
+                gap=10,
+                margin=me.Margin(top=16),
             ),
         ):
             with me.content_button(

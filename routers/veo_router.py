@@ -55,8 +55,7 @@ async def generate_veo_async(
 
 @router.get("/job/{job_id}")
 async def get_veo_job_status(job_id: str):
-    """Checks the status of a Veo generation job.
-    """
+    """Checks the status of a Veo generation job."""
     item = get_media_item_by_id(job_id)
     if not item:
         return {"error": "Job not found"}, 404

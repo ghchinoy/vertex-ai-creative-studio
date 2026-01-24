@@ -35,7 +35,8 @@ def create_app():
 
 
 def create_on_load_handler(
-    user_email: str, session_id: str,
+    user_email: str,
+    session_id: str,
 ) -> Callable[[LoadEvent], Generator[None] | None]:
     """Create the on_load event handler."""
 

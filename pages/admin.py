@@ -48,7 +48,9 @@ def _tab_group(tabs: list[Tab], on_tab_click: Callable, selected_tab_key: str):
             display="flex",
             border=me.Border(
                 bottom=me.BorderSide(
-                    width=1, style="solid", color=me.theme_var("outline-variant"),
+                    width=1,
+                    style="solid",
+                    color=me.theme_var("outline-variant"),
                 ),
             ),
         ),
@@ -143,10 +145,13 @@ def users_tab():
         ),
     ):
         me.text("Authorized Users", type="headline-6")
-        with me.content_button(
-            on_click=lambda e: setattr(state, "show_add_user_dialog", True),
-            type="raised",
-        ), me.box(style=me.Style(display="flex", align_items="center", gap=8)):
+        with (
+            me.content_button(
+                on_click=lambda e: setattr(state, "show_add_user_dialog", True),
+                type="raised",
+            ),
+            me.box(style=me.Style(display="flex", align_items="center", gap=8)),
+        ):
             me.icon("person_add")
             me.text("Add User")
 
@@ -205,7 +210,9 @@ def users_tab():
                         align_items="center",
                         border=me.Border(
                             bottom=me.BorderSide(
-                                width=1, style="solid", color="#f9f9f9",
+                                width=1,
+                                style="solid",
+                                color="#f9f9f9",
                             ),
                         ),
                         cursor="pointer",
@@ -233,7 +240,8 @@ def users_tab():
 
     except Exception as e:
         me.text(
-            f"Error loading users: {e}", style=me.Style(color=me.theme_var("error")),
+            f"Error loading users: {e}",
+            style=me.Style(color=me.theme_var("error")),
         )
 
 
@@ -259,7 +267,8 @@ def edit_user_dialog():
             ),
         ):
             me.text(
-                f"User: {state.selected_user_email}", style=me.Style(font_weight="bold"),
+                f"User: {state.selected_user_email}",
+                style=me.Style(font_weight="bold"),
             )
 
             with me.box(style=me.Style(display="flex", flex_direction="column", gap=8)):
@@ -272,7 +281,9 @@ def edit_user_dialog():
                         me.SelectOption(label="Admin", value="admin"),
                     ],
                     on_selection_change=lambda e: setattr(
-                        state, "new_user_role", e.value,
+                        state,
+                        "new_user_role",
+                        e.value,
                     ),
                 )
 
@@ -355,7 +366,9 @@ def logs_tab():
                         padding=me.Padding.all(12),
                         border=me.Border(
                             bottom=me.BorderSide(
-                                width=1, style="solid", color="#f9f9f9",
+                                width=1,
+                                style="solid",
+                                color="#f9f9f9",
                             ),
                         ),
                     ),
@@ -401,7 +414,9 @@ def add_user_dialog():
                         me.SelectOption(label="Admin", value="admin"),
                     ],
                     on_selection_change=lambda e: setattr(
-                        state, "new_user_role", e.value,
+                        state,
+                        "new_user_role",
+                        e.value,
                     ),
                 )
 

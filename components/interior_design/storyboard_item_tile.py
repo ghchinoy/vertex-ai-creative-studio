@@ -1,5 +1,4 @@
-"""Component for displaying a single item in the storyboard.
-"""
+"""Component for displaying a single item in the storyboard."""
 
 from collections.abc import Callable
 
@@ -16,8 +15,7 @@ def storyboard_item_tile(
     on_click: Callable,
     key: str,
 ):
-    """A simple tile for displaying a storyboard item.
-    """
+    """A simple tile for displaying a storyboard item."""
     display_url = (
         create_display_url(image_url) if image_url.startswith("gs://") else image_url
     )

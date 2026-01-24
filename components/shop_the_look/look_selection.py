@@ -49,29 +49,35 @@ def look_selection():
             text="Choose a Look",
             type="headline-2",
         )
-    with me.box(), me.box(
-        style=me.Style(
-            height="100%",
-            width="100%",
-            display="flex",
-            flex_direction="row",
-            flex_wrap="wrap",
-        ),
-    ):
-        with me.box(
+    with (
+        me.box(),
+        me.box(
             style=me.Style(
+                height="100%",
+                width="100%",
                 display="flex",
                 flex_direction="row",
-                gap=5,
-                align_items="left",
+                flex_wrap="wrap",
             ),
-        ), me.box(
-            style=me.Style(
-                position="relative",
-                height="100%",
-                cursor="pointer",
+        ),
+    ):
+        with (
+            me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    gap=5,
+                    align_items="left",
+                ),
             ),
-            key="apparel",
+            me.box(
+                style=me.Style(
+                    position="relative",
+                    height="100%",
+                    cursor="pointer",
+                ),
+                key="apparel",
+            ),
         ):
             me.uploader(
                 label="",
@@ -465,11 +471,23 @@ def article_on_click(e: me.ClickEvent):
 
     for item in state.articles:
         if item.item_id != selected_id:
-            if (selected_type == "shoe" and item.article_type == "shoe") or (selected_type == "dress" and item.article_type in [
-                "dress",
-                "top",
-                "bottom",
-            ]) or (selected_type == "top" and item.article_type in ["dress", "top"]) or (selected_type == "bottom" and item.article_type in ["dress", "bottom"]):
+            if (
+                (selected_type == "shoe" and item.article_type == "shoe")
+                or (
+                    selected_type == "dress"
+                    and item.article_type
+                    in [
+                        "dress",
+                        "top",
+                        "bottom",
+                    ]
+                )
+                or (selected_type == "top" and item.article_type in ["dress", "top"])
+                or (
+                    selected_type == "bottom"
+                    and item.article_type in ["dress", "bottom"]
+                )
+            ):
                 item.available_to_select = not selected
                 item.selected = False
     yield

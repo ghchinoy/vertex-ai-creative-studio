@@ -69,7 +69,9 @@ def image_output():
                         if img_uri:
                             with me.box(
                                 style=me.Style(
-                                    display="flex", flex_direction="column", gap=8,
+                                    display="flex",
+                                    flex_direction="column",
+                                    gap=8,
                                 ),
                             ):
                                 # Use media_tile to handle gs:// URIs natively via Firebase SDK
@@ -79,7 +81,8 @@ def image_output():
                                         https_url=create_display_url(img_uri),
                                         pills_json=get_pills_for_item(
                                             MediaItem(
-                                                gcsuri=img_uri, media_type="image",
+                                                gcsuri=img_uri,
+                                                media_type="image",
                                             ),
                                             img_uri,
                                         ),

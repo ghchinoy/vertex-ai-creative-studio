@@ -69,21 +69,27 @@ def test_pixie_compositor_page():
 
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="column", gap=10, flex_grow=1,
+                        display="flex",
+                        flex_direction="column",
+                        gap=10,
+                        flex_grow=1,
                     ),
                 ):
-                    with me.content_button(
-                        on_click=on_start_click,
-                        disabled=not state.ffmpeg_loaded
-                        or state.is_encoding
-                        or not state.selected_video_url,
-                        type="flat",
-                    ), me.box(
-                        style=me.Style(
-                            display="flex",
-                            flex_direction="row",
-                            align_items="center",
-                            gap=8,
+                    with (
+                        me.content_button(
+                            on_click=on_start_click,
+                            disabled=not state.ffmpeg_loaded
+                            or state.is_encoding
+                            or not state.selected_video_url,
+                            type="flat",
+                        ),
+                        me.box(
+                            style=me.Style(
+                                display="flex",
+                                flex_direction="row",
+                                align_items="center",
+                                gap=8,
+                            ),
                         ),
                     ):
                         if state.is_encoding:

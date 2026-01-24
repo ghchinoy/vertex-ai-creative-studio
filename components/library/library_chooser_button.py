@@ -65,7 +65,9 @@ def library_chooser_button(
         # Use the media_type stored in state, which was set when opening the dialog
         print(f"DEBUG: fetching items with media_type={state.media_type}")
         items, _ = get_media_for_page_optimized(
-            20, state.media_type, filter_by_user_email=user_email,
+            20,
+            state.media_type,
+            filter_by_user_email=user_email,
         )
 
         # Convert GCS URIs to display URLs using the centralized helper.
@@ -106,9 +108,13 @@ def library_chooser_button(
         try:
             user_email = app_state.user_email if state.show_only_my_items else None
             # Use the media_type stored in state, which was set when opening the dialog
-            print(f"DEBUG: fetching items with media_type={state.media_type}, filter_by_user_email='{user_email}', app_state_email='{app_state.user_email}'")
+            print(
+                f"DEBUG: fetching items with media_type={state.media_type}, filter_by_user_email='{user_email}', app_state_email='{app_state.user_email}'"
+            )
             items, _ = get_media_for_page_optimized(
-                20, state.media_type, filter_by_user_email=user_email,
+                20,
+                state.media_type,
+                filter_by_user_email=user_email,
             )
             print(f"DEBUG: fetch returned {len(items)} items")
 
@@ -144,17 +150,20 @@ def library_chooser_button(
     elif "all" in current_media_type:
         icon_name = "perm_media"
 
-    with me.content_button(
-        on_click=partial(open_dialog, media_type=current_media_type),
-        type=button_type,
-        key=key,
-        disabled=disabled,
-    ), me.box(
-        style=me.Style(
-            display="flex",
-            flex_direction="row",
-            gap=8,
-            align_items="center",
+    with (
+        me.content_button(
+            on_click=partial(open_dialog, media_type=current_media_type),
+            type=button_type,
+            key=key,
+            disabled=disabled,
+        ),
+        me.box(
+            style=me.Style(
+                display="flex",
+                flex_direction="row",
+                gap=8,
+                align_items="center",
+            ),
         ),
     ):
         me.icon(icon_name)
@@ -173,7 +182,10 @@ def library_chooser_button(
         if is_active:
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="column", gap=16, flex_grow=1,
+                    display="flex",
+                    flex_direction="column",
+                    gap=16,
+                    flex_grow=1,
                 ),
             ):
                 # Header with title and toggle
@@ -195,7 +207,8 @@ def library_chooser_button(
                         media_type_label = "Audio"
 
                     me.text(
-                        f"Select {media_type_label} from Library", type="headline-6",
+                        f"Select {media_type_label} from Library",
+                        type="headline-6",
                     )
                     me.slide_toggle(
                         label="Show only my items",

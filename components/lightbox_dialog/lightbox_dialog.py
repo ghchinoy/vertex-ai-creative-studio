@@ -27,30 +27,33 @@ def lightbox_dialog(
     key: str | None = None,
 ):
     """Render a lightbox-style dialog that covers most of the screen."""
-    with me.box(
-        key=key,
-        style=me.Style(
-            background="rgba(0, 0, 0, 0.7)",
-            display="flex" if is_open else "none",
-            align_items="center",
-            justify_content="center",
-            height="100%",
-            left=0,
-            top=0,
-            position="fixed",
-            width="100%",
-            z_index=1000,
+    with (
+        me.box(
+            key=key,
+            style=me.Style(
+                background="rgba(0, 0, 0, 0.7)",
+                display="flex" if is_open else "none",
+                align_items="center",
+                justify_content="center",
+                height="100%",
+                left=0,
+                top=0,
+                position="fixed",
+                width="100%",
+                z_index=1000,
+            ),
         ),
-    ), me.box(
-        style=me.Style(
-            background=me.theme_var("surface"),
-            border_radius=12,
-            box_shadow=me.theme_var("shadow_elevation_2"),
-            display="flex",
-            flex_direction="column",
-            width="90vw",
-            height="90vh",
-            position="relative",
+        me.box(
+            style=me.Style(
+                background=me.theme_var("surface"),
+                border_radius=12,
+                box_shadow=me.theme_var("shadow_elevation_2"),
+                display="flex",
+                flex_direction="column",
+                width="90vw",
+                height="90vh",
+                position="relative",
+            ),
         ),
     ):
         with me.content_button(

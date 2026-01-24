@@ -92,7 +92,8 @@ def on_load(e: me.LoadEvent):
         state.selected_model = cfg().GEMINI_WRITERS_WORKSHOP_MODEL_ID
     if not state.prompt_templates:
         templates = prompt_template_service.load_templates(
-            config_path="config/text_prompt_templates.json", template_type="text",
+            config_path="config/text_prompt_templates.json",
+            template_type="text",
         )
         state.prompt_templates = [t.model_dump() for t in templates]
     yield
@@ -175,7 +176,8 @@ def on_save_template(label: str, key: str, category: str, prompt: str):
         # Reload templates
 
         templates = prompt_template_service.load_templates(
-            config_path="config/text_prompt_templates.json", template_type="text",
+            config_path="config/text_prompt_templates.json",
+            template_type="text",
         )
 
         state.prompt_templates = [t.model_dump() for t in templates]
@@ -299,7 +301,9 @@ def gemini_writers_workshop_page_content():
         me.text(state.error_message, style=me.Style(margin=me.Margin(top=16)))
         with me.box(
             style=me.Style(
-                display="flex", justify_content="flex-end", margin=me.Margin(top=24),
+                display="flex",
+                justify_content="flex-end",
+                margin=me.Margin(top=24),
             ),
         ):
             me.button("Close", on_click=on_close_error_dialog, type="flat")
@@ -418,20 +422,23 @@ def gemini_writers_workshop_page_content():
                         style=me.Style(margin=me.Margin(top=16)),
                     )
                 else:
-                    with me.box(
-                        style=me.Style(
-                            display="flex",
-                            flex_direction="column",
-                            align_items="center",
-                            justify_content="center",
-                            height="100%",
+                    with (
+                        me.box(
+                            style=me.Style(
+                                display="flex",
+                                flex_direction="column",
+                                align_items="center",
+                                justify_content="center",
+                                height="100%",
+                            ),
                         ),
-                    ), me.box(
-                        style=me.Style(
-                            opacity=0.2,
-                            width=128,
-                            height=128,
-                            color=me.theme_var("on-surface-variant"),
+                        me.box(
+                            style=me.Style(
+                                opacity=0.2,
+                                width=128,
+                                height=128,
+                                color=me.theme_var("on-surface-variant"),
+                            ),
                         ),
                     ):
                         svg_icon(icon_name="spark")
@@ -587,12 +594,15 @@ def _generate_text_button():
     """Renders the main generate button and its loading state."""
     state = me.state(PageState)
     if state.is_generating:
-        with me.content_button(type="raised", disabled=True), me.box(
-            style=me.Style(
-                display="flex",
-                flex_direction="row",
-                align_items="center",
-                gap=8,
+        with (
+            me.content_button(type="raised", disabled=True),
+            me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    align_items="center",
+                    gap=8,
+                ),
             ),
         ):
             me.progress_spinner(diameter=20, stroke_width=3)

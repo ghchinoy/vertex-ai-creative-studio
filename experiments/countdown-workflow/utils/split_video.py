@@ -68,11 +68,13 @@ def split_video_into_chunks(
             for i in range(num_chunks_to_process):
                 start_time = i * chunk_duration_seconds
                 end_time = min(
-                    duration, start_time + chunk_duration_seconds,
+                    duration,
+                    start_time + chunk_duration_seconds,
                 )  # Ensure end_time does not exceed video duration
 
                 output_filename = os.path.join(
-                    output_dir, f"{base_name}_chunk_{i + 1:03d}{extension}",
+                    output_dir,
+                    f"{base_name}_chunk_{i + 1:03d}{extension}",
                 )
 
                 logger.info(
@@ -80,10 +82,14 @@ def split_video_into_chunks(
                 )
                 try:
                     subclip = clip.subclipped(
-                        start_time, end_time,
+                        start_time,
+                        end_time,
                     )  # Use subclip for precise start/end
                     subclip.write_videofile(
-                        output_filename, codec="libx264", audio_codec="aac", logger=None,
+                        output_filename,
+                        codec="libx264",
+                        audio_codec="aac",
+                        logger=None,
                     )
                     logger.info(f"Successfully created {output_filename}")
                 except Exception as e:

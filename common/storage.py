@@ -37,8 +37,7 @@ class Session:
 
 
 def get_or_create_session(session_id: str, user_email: str) -> Session:
-    """Retrieves a session from Firestore or creates a new one if it doesn't exist.
-    """
+    """Retrieves a session from Firestore or creates a new one if it doesn't exist."""
     session_ref = db.collection(cfg.SESSIONS_COLLECTION_NAME).document(session_id)
     session_doc = session_ref.get()
 

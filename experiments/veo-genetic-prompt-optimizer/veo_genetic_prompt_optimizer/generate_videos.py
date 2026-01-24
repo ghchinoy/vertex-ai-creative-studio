@@ -40,8 +40,7 @@ def generate_single_video(
     max_retries=3,
     enhance_prompt=False,
 ):
-    """Generates a video from a prompt, optionally with an image.
-    """
+    """Generates a video from a prompt, optionally with an image."""
     if not prompt_text:
         print(f"Skipping video generation for {output_path} due to empty prompt.")
         return False
@@ -140,8 +139,7 @@ def generate_single_video(
 
 
 def process_prompt_item(client: genai.Client, prompt_item: dict[str, Any]):
-    """Processes a single item from the prompts file to generate original and augmented videos.
-    """
+    """Processes a single item from the prompts file to generate original and augmented videos."""
     original_prompt = prompt_item.get("original_prompt")
     augmented_prompt = prompt_item.get("augmented_prompt")
     image_path = prompt_item.get("image_path")
@@ -179,8 +177,7 @@ def process_prompt_item(client: genai.Client, prompt_item: dict[str, Any]):
 
 
 def main():
-    """Loads prompts and generates video pairs in parallel.
-    """
+    """Loads prompts and generates video pairs in parallel."""
     client = get_genai_client()
 
     try:

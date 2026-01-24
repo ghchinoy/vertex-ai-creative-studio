@@ -55,15 +55,18 @@ def imagen_content(app_state: me.state):
             show_info_button=True,
             on_info_click=open_info_dialog,
         )
-        with me.box(
-            style=me.Style(
-                width="100%",
-                display="flex",
-                flex_direction="column",
-                align_items="center",
+        with (
+            me.box(
+                style=me.Style(
+                    width="100%",
+                    display="flex",
+                    flex_direction="column",
+                    align_items="center",
+                ),
             ),
-        ), me.box(
-            style=me.Style(width="80vw", display="flex", flex_direction="column"),
+            me.box(
+                style=me.Style(width="80vw", display="flex", flex_direction="column"),
+            ),
         ):
             generation_controls()
             modifier_controls()

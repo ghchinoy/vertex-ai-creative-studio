@@ -28,10 +28,14 @@ def initialize_clients():
     for prompt generation and video generation respectively.
     """
     gemini_client = genai.Client(
-        vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION,
+        vertexai=True,
+        project=config.PROJECT_ID,
+        location=config.GEMINI_LOCATION,
     )
     veo_client = genai.Client(
-        vertexai=True, project=config.PROJECT_ID, location=config.VEO_LOCATION,
+        vertexai=True,
+        project=config.PROJECT_ID,
+        location=config.VEO_LOCATION,
     )
     return gemini_client, veo_client
 

@@ -16,7 +16,9 @@ from state.veo_state import PageState
 @patch("pages.veo.generate_video")
 @patch("mesop.state")
 def test_veo_negative_prompt_flow(
-    mock_state, mock_generate_video, mock_add_media_item_to_firestore,
+    mock_state,
+    mock_generate_video,
+    mock_add_media_item_to_firestore,
 ):
     """Tests that the negative_prompt is correctly passed from the UI state
     through the generation request and into the final metadata logging.

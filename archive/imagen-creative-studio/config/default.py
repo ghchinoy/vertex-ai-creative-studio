@@ -71,7 +71,8 @@ class Config:
         ],
     )
     gemini_settings: GeminiModelConfig = field(
-        default_factory=GeminiModelConfig, init=False,
+        default_factory=GeminiModelConfig,
+        init=False,
     )
     display_image_models: list[ImageModel] = field(
         default_factory=lambda: [

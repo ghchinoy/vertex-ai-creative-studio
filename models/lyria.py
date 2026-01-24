@@ -116,9 +116,7 @@ def generate_music_with_lyria(prompt: str):
         raise ValueError(error_message) from e
     except Exception as e:
         # Catch any other unexpected errors during the process (e.g., issues in store_to_gcs not caught there)
-        error_message = (
-            f"An unexpected error occurred during music generation: {e!s}"
-        )
+        error_message = f"An unexpected error occurred during music generation: {e!s}"
         print(error_message)
         raise Exception(
             error_message,

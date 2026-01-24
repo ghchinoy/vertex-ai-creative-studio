@@ -39,7 +39,7 @@ class MediaTile extends LitElement {
     .preview video {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: var(--object-fit, cover);
     }
 
     .preview .icon {
@@ -107,6 +107,7 @@ class MediaTile extends LitElement {
       pillsJson: { type: String },
       controls: { type: Boolean },
       selected: { type: Boolean },
+      objectFit: { type: String },
       clickEvent: { type: String }, // Added to receive the event handler ID
       _resolvedThumbnailSrc: { state: true },
       _resolvedAudioSrc: { state: true },
@@ -120,6 +121,7 @@ class MediaTile extends LitElement {
     this.audioSrc = "";
     this.pillsJson = "[]";
     this.controls = false;
+    this.objectFit = "cover";
     this.clickEvent = ""; // Initialize
     this._resolvedThumbnailSrc = "";
     this._resolvedAudioSrc = "";
@@ -234,10 +236,11 @@ class MediaTile extends LitElement {
 
     switch (this.mediaType) {
       case "image":
-        return html`<img .src=${src} />`;
+        return html`<img .src=${src} style="--object-fit: ${this.objectFit}" />`;
       case "video":
         return html`<video
           .src=${src}
+          style="--object-fit: ${this.objectFit}"
           .muted=${!this.controls}
           .autoplay=${this.controls}
           ?controls=${this.controls}

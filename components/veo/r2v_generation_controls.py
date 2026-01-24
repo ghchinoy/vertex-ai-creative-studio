@@ -86,7 +86,8 @@ def r2v_generation_controls(on_selection_change_veo_model):
             appearance="outline",
             options=[
                 me.SelectOption(
-                    label=f"{state.video_length}s", value=str(state.video_length),
+                    label=f"{state.video_length}s",
+                    value=str(state.video_length),
                 ),
             ],
             value=str(state.video_length),

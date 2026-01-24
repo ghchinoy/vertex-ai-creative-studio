@@ -18,7 +18,11 @@ from google.cloud import texttospeech
 
 
 def synthesize_speech(
-    text: str, prompt: str, model_name: str, voice_name: str, language_code: str,
+    text: str,
+    prompt: str,
+    model_name: str,
+    voice_name: str,
+    language_code: str,
 ) -> bytes:
     """Synthesizes speech from text using the Gemini TTS API.
 
@@ -37,7 +41,9 @@ def synthesize_speech(
     response = client.synthesize_speech(
         input=texttospeech.SynthesisInput(text=text, prompt=prompt),
         voice=texttospeech.VoiceSelectionParams(
-            language_code=language_code, name=voice_name, model_name=model_name,
+            language_code=language_code,
+            name=voice_name,
+            model_name=model_name,
         ),
         audio_config=texttospeech.AudioConfig(
             audio_encoding=texttospeech.AudioEncoding.LINEAR16,

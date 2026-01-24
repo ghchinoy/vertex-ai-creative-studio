@@ -13,7 +13,6 @@
 # limitations under the License.
 """Welcome page"""
 
-
 import mesop as me
 
 
@@ -55,17 +54,20 @@ def media_tile(
         # Optionally, style non-clickable items differently
         box_style.opacity = 0.6  # Example: make it look disabled
         box_style.cursor = "default"
-    with me.box(
-        style=box_style,
-        key=route if is_clickable else f"tile_{label}_{icon}",
-        on_click=go_to_page if is_clickable else None,
-    ), me.box(
-        style=me.Style(
-            display="flex",
-            flex_direction="column",
-            align_items="center",
-            font_size="18px",
-            gap=5,
+    with (
+        me.box(
+            style=box_style,
+            key=route if is_clickable else f"tile_{label}_{icon}",
+            on_click=go_to_page if is_clickable else None,
+        ),
+        me.box(
+            style=me.Style(
+                display="flex",
+                flex_direction="column",
+                align_items="center",
+                font_size="18px",
+                gap=5,
+            ),
         ),
     ):
         icon_style = me.Style(

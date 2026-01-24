@@ -109,7 +109,8 @@ def on_load(e: me.LoadEvent):
                 print(f"Loaded storyboard {storyboard_id} from Firestore.")
             else:
                 yield from show_snackbar(
-                    state, f"Could not find storyboard with ID: {storyboard_id}",
+                    state,
+                    f"Could not find storyboard with ID: {storyboard_id}",
                 )
         state.initial_load_complete = True
     yield
@@ -149,13 +150,19 @@ def page_content():
 
     with me.box(
         style=me.Style(
-            display="flex", flex_direction="column", gap=24, align_items="center",
+            display="flex",
+            flex_direction="column",
+            gap=24,
+            align_items="center",
         ),
     ):
         # Input and Output Area
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=32, justify_content="center",
+                display="flex",
+                flex_direction="row",
+                gap=32,
+                justify_content="center",
             ),
         ):
             floor_plan_uploader(
@@ -190,7 +197,9 @@ def page_content():
                 ):
                     for room in state.storyboard["room_names"]:
                         with me.content_button(
-                            key=room, on_click=on_room_button_click, type="stroked",
+                            key=room,
+                            on_click=on_room_button_click,
+                            type="stroked",
                         ):
                             if (
                                 state.is_generating_zoom
@@ -271,20 +280,27 @@ def page_content():
                                 room_name=item["room_name"],
                                 on_click=on_storyboard_item_click,
                             )
-                with me.box(
-                    style=me.Style(
-                        width="100%", text_align="center", margin=me.Margin(top=24),
+                with (
+                    me.box(
+                        style=me.Style(
+                            width="100%",
+                            text_align="center",
+                            margin=me.Margin(top=24),
+                        ),
                     ),
-                ), me.content_button(
-                    on_click=on_generate_video_click,
-                    type="raised",
-                    disabled=state.is_generating_video
-                    or not state.storyboard.get("storyboard_items"),
+                    me.content_button(
+                        on_click=on_generate_video_click,
+                        type="raised",
+                        disabled=state.is_generating_video
+                        or not state.storyboard.get("storyboard_items"),
+                    ),
                 ):
                     if state.is_generating_video:
                         with me.box(
                             style=me.Style(
-                                display="flex", align_items="center", gap=8,
+                                display="flex",
+                                align_items="center",
+                                gap=8,
                             ),
                         ):
                             me.progress_spinner(diameter=18)
@@ -304,7 +320,9 @@ def page_content():
                         with me.box(style=me.Style(width="100%", max_width="720px")):
                             media_tile(
                                 media_type="video",
-                                https_url=state.storyboard.get("final_video_display_url", ""),
+                                https_url=state.storyboard.get(
+                                    "final_video_display_url", ""
+                                ),
                                 controls=True,
                             )
 
@@ -325,7 +343,10 @@ def on_upload_floor_plan(e: me.UploadEvent):
     app_state = me.state(AppState)
     file = e.files[0]
     gcs_url = store_to_gcs(
-        "interior_design_uploads", file.name, file.mime_type, file.getvalue(),
+        "interior_design_uploads",
+        file.name,
+        file.mime_type,
+        file.getvalue(),
     )
     state.storyboard = {
         "user_email": app_state.user_email,
@@ -391,7 +412,8 @@ def on_generate_3d_view_click(e: me.ClickEvent):
                 )
                 if not room_names:
                     yield from show_snackbar(
-                        state, "No rooms were identified in the floor plan.",
+                        state,
+                        "No rooms were identified in the floor plan.",
                     )
                 state.storyboard["room_names"] = room_names
             except Exception as room_ex:
@@ -403,7 +425,8 @@ def on_generate_3d_view_click(e: me.ClickEvent):
 
         else:
             yield from show_snackbar(
-                state, "Image generation failed to return a result.",
+                state,
+                "Image generation failed to return a result.",
             )
 
     except Exception as ex:
@@ -460,12 +483,14 @@ def on_room_button_click(e: me.ClickEvent):
             storyboard_item["style_history"].append(gcs_uris[0])
         else:
             yield from show_snackbar(
-                state, "Zoomed view generation failed to return a result.",
+                state,
+                "Zoomed view generation failed to return a result.",
             )
 
     except Exception as ex:
         yield from show_snackbar(
-            state, f"An error occurred during zoom generation: {ex}",
+            state,
+            f"An error occurred during zoom generation: {ex}",
         )
     finally:
         state.is_generating_zoom = False
@@ -493,7 +518,10 @@ def on_upload_design_image(e: me.UploadEvent):
     state = me.state(PageState)
     file = e.files[0]
     gcs_url = store_to_gcs(
-        "interior_design_uploads", file.name, file.mime_type, file.getvalue(),
+        "interior_design_uploads",
+        file.name,
+        file.mime_type,
+        file.getvalue(),
     )
     state.design_image_uri = gcs_url
     state.design_image_display_url = create_display_url(gcs_url)
@@ -555,12 +583,14 @@ def on_design_click(e: me.ClickEvent):
             state.design_image_uri = ""
         else:
             yield from show_snackbar(
-                state, "Design generation failed to return a result.",
+                state,
+                "Design generation failed to return a result.",
             )
 
     except Exception as ex:
         yield from show_snackbar(
-            state, f"An error occurred during design generation: {ex}",
+            state,
+            f"An error occurred during design generation: {ex}",
         )
     finally:
         state.is_designing = False
@@ -683,7 +713,8 @@ def on_generate_video_click(e: me.ClickEvent):
 
     except Exception as ex:
         yield from show_snackbar(
-            state, f"An error occurred during video generation: {ex}",
+            state,
+            f"An error occurred during video generation: {ex}",
         )
         state.video_generation_status = "An error occurred."
     finally:
@@ -711,7 +742,10 @@ def item_detail_dialog(on_close: Callable):
         me.text(f"Details for {item['room_name']}", type="headline-6")
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=16, margin=me.Margin(top=16),
+                display="flex",
+                flex_direction="row",
+                gap=16,
+                margin=me.Margin(top=16),
             ),
         ):
             with me.box(style=me.Style(flex_grow=1)):
@@ -751,7 +785,9 @@ def item_detail_dialog(on_close: Callable):
                 type="stroked",
             )
             me.button(
-                "Regenerate Video", on_click=on_regenerate_video_click, type="stroked",
+                "Regenerate Video",
+                on_click=on_regenerate_video_click,
+                type="stroked",
             )
 
 

@@ -29,17 +29,22 @@ def advanced_controls():
     if not selected_config:
         return
 
-    with me.box(style=_BOX_STYLE), me.accordion(), me.expansion_panel(
-        title="Advanced Controls",
-        expanded=state.show_advanced,
-        on_toggle=on_advanced_toggle,
-    ), me.box(
-        style=me.Style(
-            display="flex",
-            flex_direction="row",
-            flex_wrap="wrap",
-            gap="16px",
-            margin=me.Margin(top=16),
+    with (
+        me.box(style=_BOX_STYLE),
+        me.accordion(),
+        me.expansion_panel(
+            title="Advanced Controls",
+            expanded=state.show_advanced,
+            on_toggle=on_advanced_toggle,
+        ),
+        me.box(
+            style=me.Style(
+                display="flex",
+                flex_direction="row",
+                flex_wrap="wrap",
+                gap="16px",
+                margin=me.Margin(top=16),
+            ),
         ),
     ):
         me.input(

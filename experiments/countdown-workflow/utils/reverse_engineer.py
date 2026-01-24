@@ -54,7 +54,9 @@ class FullAnalysisResponse(BaseModel):
 
 
 def reverse_engineer_prompts(
-    full_video_filepath: str, chunks_dir: str, output_dir: str = "engineered_prompts",
+    full_video_filepath: str,
+    chunks_dir: str,
+    output_dir: str = "engineered_prompts",
 ) -> dict[str, Any] | None:
     """Analyzes a full video and its chunks in a single multimodal prompt
     to infer the creative prompts that might have generated them.

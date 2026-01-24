@@ -39,7 +39,10 @@ def page():
         me.icon(
             "lock",
             style=me.Style(
-                font_size=64, height=64, width=64, color=me.theme_var("error"),
+                font_size=64,
+                height=64,
+                width=64,
+                color=me.theme_var("error"),
             ),
         )
 
@@ -53,7 +56,8 @@ def page():
             f"Sorry, {app_state.user_email}, you do not have permission to access this application.",
             type="headline-6",
             style=me.Style(
-                text_align="center", padding=me.Padding.symmetric(horizontal=40),
+                text_align="center",
+                padding=me.Padding.symmetric(horizontal=40),
             ),
         )
 

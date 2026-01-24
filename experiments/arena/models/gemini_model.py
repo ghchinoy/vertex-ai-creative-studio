@@ -32,7 +32,9 @@ MODEL_ID = model_id
 
 @retry(
     wait=wait_exponential(
-        multiplier=2, min=1, max=25,
+        multiplier=2,
+        min=1,
+        max=25,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
     retry=retry_if_exception_type(Exception),  # Retry on all exceptions
@@ -58,7 +60,9 @@ def generate_images(prompt: str) -> list[str]:
 
 @retry(
     wait=wait_exponential(
-        multiplier=2, min=1, max=25,
+        multiplier=2,
+        min=1,
+        max=25,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
     retry=retry_if_exception_type(Exception),  # Retry on all exceptions

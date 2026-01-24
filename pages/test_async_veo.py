@@ -40,7 +40,10 @@ def page():
 
     with me.box(
         style=me.Style(
-            padding=me.Padding.all(20), display="flex", flex_direction="column", gap=20,
+            padding=me.Padding.all(20),
+            display="flex",
+            flex_direction="column",
+            gap=20,
         ),
     ):
         me.text("Async Veo Generation Test", type="headline-4")
@@ -73,7 +76,6 @@ def page():
                     https_url=create_display_url(state.video_uri),
                     controls=True,
                 )
-
 
         if state.error_message:
             me.text(f"Error: {state.error_message}", style=me.Style(color="red"))
@@ -119,7 +121,9 @@ def on_click_generate(e: me.ClickEvent):
         headers = {"X-Goog-Authenticated-User-Email": "test_user@example.com"}
 
         response = requests.post(
-            api_url, json=request_data.model_dump(), headers=headers,
+            api_url,
+            json=request_data.model_dump(),
+            headers=headers,
         )
         response.raise_for_status()
         data = response.json()

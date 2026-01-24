@@ -44,7 +44,13 @@ def compose_videogen_request(
 def t2v(prompt, seed, aspect_ratio, sample_count, output_gcs, enable_pr):
     """Text to Video, using the AI Platform service Prediction client"""
     req = compose_videogen_request(
-        prompt, None, output_gcs, seed, aspect_ratio, sample_count, enable_pr,
+        prompt,
+        None,
+        output_gcs,
+        seed,
+        aspect_ratio,
+        sample_count,
+        enable_pr,
     )
     resp = predict_veo_model(req)
     print(resp)

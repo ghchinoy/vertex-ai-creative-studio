@@ -42,7 +42,9 @@ MODEL_ID = model_id
 
 @retry(
     wait=wait_exponential(
-        multiplier=1, min=1, max=10,
+        multiplier=1,
+        min=1,
+        max=10,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
     retry=retry_if_exception_type(Exception),  # Retry on all exceptions
@@ -91,7 +93,9 @@ def gemini_generate_content(system_prompt: str = "", prompt: str = "") -> str:
 
 @retry(
     wait=wait_exponential(
-        multiplier=1, min=1, max=10,
+        multiplier=1,
+        min=1,
+        max=10,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
     retry=retry_if_exception_type(Exception),  # Retry on all exceptions
@@ -143,14 +147,18 @@ def gemini_improve_this_prompt(
 
 @retry(
     wait=wait_exponential(
-        multiplier=1, min=1, max=10,
+        multiplier=1,
+        min=1,
+        max=10,
     ),  # Exponential backoff (1s, 2s, 4s... up to 10s)
     stop=stop_after_attempt(3),  # Stop after 3 attempts
     retry=retry_if_exception_type(Exception),  # Retry on all exceptions
     reraise=True,  # re-raise the last exception if all retries fail
 )
 def gemini_thinking_thoughts(
-    system_prompt: str = "", prompt: str = "", prompt_improvement_instructions: str = "",
+    system_prompt: str = "",
+    prompt: str = "",
+    prompt_improvement_instructions: str = "",
 ) -> str:
     """Generates a plan for improving a prompt using the Gemini model.
 

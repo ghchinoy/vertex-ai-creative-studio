@@ -30,7 +30,6 @@ class AsyncVeoPollingFailedError(Exception):
     """Exception for failures during async Veo job polling."""
 
 
-
 class UnknownHandlerIdFilter(logging.Filter):
     """A logging filter to suppress 'Unknown handler id' errors."""
 

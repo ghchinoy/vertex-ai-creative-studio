@@ -76,7 +76,8 @@ def generate_video(request: VideoGenerationRequest) -> tuple[str, str]:
         "output_gcs_uri": f"gs://{config.VIDEO_BUCKET}",
         "resolution": request.resolution,
         "person_generation": PERSON_GENERATION_MAP.get(
-            request.person_generation, "allow_adult",
+            request.person_generation,
+            "allow_adult",
         ),
     }
 

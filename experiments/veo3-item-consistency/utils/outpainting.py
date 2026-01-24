@@ -29,7 +29,9 @@ import config
 
 # Initialize the Gemini client to use Vertex AI
 client = genai.Client(
-    vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION,
+    vertexai=True,
+    project=config.PROJECT_ID,
+    location=config.GEMINI_LOCATION,
 )
 edit_model = "imagen-3.0-capability-001"
 
@@ -66,7 +68,9 @@ def pad_to_target_size(
 
     if mode == "RGB":
         source_image_padded = PIL_Image.new(
-            mode, target_size, color=(fill_val, fill_val, fill_val),
+            mode,
+            target_size,
+            color=(fill_val, fill_val, fill_val),
         )
     elif mode == "L":
         source_image_padded = PIL_Image.new(mode, target_size, color=(fill_val))
@@ -163,7 +167,8 @@ def outpaint_image(image_path: str, prompt: str) -> str:
     # Save the outpainted image
     outpainted_image = edited_image_response.generated_images[0].image
     outpainted_image_path = os.path.join(
-        os.path.dirname(image_path), "outpainted_image.png",
+        os.path.dirname(image_path),
+        "outpainted_image.png",
     )
 
     # To save the PIL image from the response, we need to access the private _pil_image attribute

@@ -25,7 +25,9 @@ logger = logging.getLogger(__name__)
 
 
 def process_veo_generation_task(
-    job_id: str, request_data: VideoGenerationRequest, user_email: str,
+    job_id: str,
+    request_data: VideoGenerationRequest,
+    user_email: str,
 ):
     """Background task to process Veo video generation.
     Updates Firestore with status changes.
@@ -70,7 +72,10 @@ def _update_job_status(job_id: str, status: str):
 
 
 def _complete_job(
-    job_id: str, video_uris: list[str], resolution: str, duration: float = None,
+    job_id: str,
+    video_uris: list[str],
+    resolution: str,
+    duration: float = None,
 ):
     """Helper to mark a job as complete with results."""
     item = get_media_item_by_id(job_id)

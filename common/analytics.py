@@ -79,7 +79,10 @@ def log_page_view(page_name: str, session_id: str = None):
 
 
 def log_ui_click(
-    element_id: str, page_name: str, session_id: str = None, extras: dict = None,
+    element_id: str,
+    page_name: str,
+    session_id: str = None,
+    extras: dict = None,
 ):
     """Logs a UI click event."""
     extra_data = {
@@ -91,12 +94,16 @@ def log_ui_click(
     if extras:
         extra_data.update(extras)
     analytics_logger.info(
-        f"UI Click: {element_id} on {page_name}", extra={"extra_data": extra_data},
+        f"UI Click: {element_id} on {page_name}",
+        extra={"extra_data": extra_data},
     )
 
 
 def log_model_call(
-    model_name: str, status: str, duration_ms: float = 0, details: dict = None,
+    model_name: str,
+    status: str,
+    duration_ms: float = 0,
+    details: dict = None,
 ):
     """Logs a generative model call event."""
     try:
@@ -118,7 +125,8 @@ def log_model_call(
         "details": details or {},
     }
     analytics_logger.info(
-        f"Model Call: {model_name} ({status})", extra={"extra_data": extra_data},
+        f"Model Call: {model_name} ({status})",
+        extra={"extra_data": extra_data},
     )
 
 
@@ -149,7 +157,10 @@ def track_model_call(model_name: str, **kwargs):
         yield
         duration_ms = (time.time() - start_time) * 1000
         log_model_call(
-            model_name, status="success", duration_ms=duration_ms, details=kwargs,
+            model_name,
+            status="success",
+            duration_ms=duration_ms,
+            details=kwargs,
         )
     except Exception as e:
         duration_ms = (time.time() - start_time) * 1000

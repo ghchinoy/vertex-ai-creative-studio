@@ -113,7 +113,8 @@ def gemini_grounding_call():
     s = me.state(State)
     print("Calling gemini with grounding")
     generation_config = GenerateContentConfig(
-        temperature=0.0, tools=([Tool(google_search=GoogleSearch())]),
+        temperature=0.0,
+        tools=([Tool(google_search=GoogleSearch())]),
     )
     contents = [s.inspo_prompt]
     print(f"Prompt: {s.inspo_prompt}")
@@ -165,7 +166,8 @@ def gemini_grounding_call():
         # Convert GCS URIs to public HTTPS URLs
         if uri and uri.startswith("gs://"):
             uri = uri.replace("gs://", "https://storage.googleapis.com/", 1).replace(
-                " ", "%20",
+                " ",
+                "%20",
             )
         markdown_parts.append(f"{i}. [{title}]({uri})\n")
 
@@ -288,7 +290,8 @@ def gemini_creative_call():
     print(f" **[IMAGE]**: {s.input_creative['image_url']}")
     # image_file = Part.from_uri(file_uri=s.input_creative['image_url'], mime_type="image/webp")
     image_file = Part.from_uri(
-        file_uri=s.input_creative["image_url"], mime_type="image/png",
+        file_uri=s.input_creative["image_url"],
+        mime_type="image/png",
     )
     contents.append("**[ITEM_TITLE]**")
     contents.append(s.input_creative["title"])
@@ -297,7 +300,8 @@ def gemini_creative_call():
     # Get branding guidelines doc
     print(f" **[BRAND_GUIDELINES]**: {s.input_creative['brand_uri']}")
     brand_file = Part.from_uri(
-        file_uri=s.input_creative["brand_uri"], mime_type="application/pdf",
+        file_uri=s.input_creative["brand_uri"],
+        mime_type="application/pdf",
     )
     contents.append("**[BRAND_GUIDELINES]**")
     contents.append(brand_file)
@@ -536,13 +540,17 @@ def page_index():
         )
         with me.box(style=WELCOME_HOLDING):
             me.text(
-                text="How can I help today?", type="headline-5", style=TEXT_STYLE_AGENT,
+                text="How can I help today?",
+                type="headline-5",
+                style=TEXT_STYLE_AGENT,
             )
             make_clickable_text_box(
-                text="I need inspiration related to trends", page="inspo",
+                text="I need inspiration related to trends",
+                page="inspo",
             )
             make_clickable_text_box(
-                text="I want to create media from existing content", page="create",
+                text="I want to create media from existing content",
+                page="create",
             )
             make_clickable_text_box(text="Show me some outputs", page="showcase")
     with me.box(
@@ -571,7 +579,9 @@ def page_inspo():
             rows=2,
         )
         me.button(
-            "Ask Gemini", on_click=handle_button_inspo_submit, style=BUTTON_STYLE,
+            "Ask Gemini",
+            on_click=handle_button_inspo_submit,
+            style=BUTTON_STYLE,
         )
         if len(s.inspo_output_refs) > 0:
             me.markdown(s.inspo_output_refs, style=me.Style(line_height=1.5))
@@ -585,11 +595,15 @@ def page_create():
             page_header(page_title="Let's get creative!")
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="row", justify_content="space-evenly",
+                    display="flex",
+                    flex_direction="row",
+                    justify_content="space-evenly",
                 ),
             ):
                 with me.box(
-                    style=me.Style(display="flex", flex_direction="column", flex_grow=1),
+                    style=me.Style(
+                        display="flex", flex_direction="column", flex_grow=1
+                    ),
                 ):
                     me.input(
                         label="Item title",
@@ -632,7 +646,8 @@ def page_create():
             with me.expansion_panel(
                 title="Brand guidelines and base prompt",
                 style=me.Style(
-                    background=BACKGROUND_COLOUR_CONTENT, margin=me.Margin(bottom=20),
+                    background=BACKGROUND_COLOUR_CONTENT,
+                    margin=me.Margin(bottom=20),
                 ),
             ):
                 if len(s.input_creative["brand_uri"]) > 0:
@@ -669,7 +684,9 @@ def page_create():
                     )
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="column", align_items="flex-end",
+                        display="flex",
+                        flex_direction="column",
+                        align_items="flex-end",
                     ),
                 ):
                     #     me.button("Insert item", on_click=handle_button_insert_item, type="stroked", style=BUTTON_STYLE_BACK)

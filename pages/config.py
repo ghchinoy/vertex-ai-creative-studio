@@ -51,7 +51,9 @@ def _tab_group(tabs: list[Tab], on_tab_click: Callable, selected_tab_key: str):
             display="flex",
             border=me.Border(
                 bottom=me.BorderSide(
-                    width=1, style="solid", color=me.theme_var("outline-variant"),
+                    width=1,
+                    style="solid",
+                    color=me.theme_var("outline-variant"),
                 ),
             ),
         ),
@@ -286,7 +288,9 @@ def _render_prompt_templates_list(app_state: AppState):
                     padding=me.Padding(bottom=8),
                     border=me.Border(
                         bottom=me.BorderSide(
-                            width=1, style="solid", color=me.theme_var("outline"),
+                            width=1,
+                            style="solid",
+                            color=me.theme_var("outline"),
                         ),
                     ),
                 ),

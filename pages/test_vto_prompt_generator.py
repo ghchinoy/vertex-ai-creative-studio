@@ -77,7 +77,8 @@ def page():
             ):
                 me.text("About The Virtual Model Generator", type="headline-6")
                 with me.box(
-                    on_click=on_close_info_dialog, style=me.Style(cursor="pointer"),
+                    on_click=on_close_info_dialog,
+                    style=me.Style(cursor="pointer"),
                 ):
                     me.icon("close")
             me.markdown(
@@ -146,7 +147,8 @@ It is crucial to describe gender based on presentation rather than identity beca
                     label="Monk Skin Tone",
                     options=[
                         me.SelectOption(
-                            label=f"{mst['name']} ({mst['hex']})", value=mst["name"],
+                            label=f"{mst['name']} ({mst['hex']})",
+                            value=mst["name"],
                         )
                         for mst in state._options.get("MST", [])
                     ],
@@ -202,11 +204,16 @@ It is crucial to describe gender based on presentation rather than identity beca
 
         with me.box(
             style=me.Style(
-                display="flex", gap=10, margin=me.Margin(top=20), align_items="center",
+                display="flex",
+                gap=10,
+                margin=me.Margin(top=20),
+                align_items="center",
             ),
         ):
             me.button(
-                "Generate Matrix", on_click=on_click_generate_matrix, type="raised",
+                "Generate Matrix",
+                on_click=on_click_generate_matrix,
+                type="raised",
             )
             me.button("I'm Feeling Lucky", on_click=on_click_randomize, type="flat")
             me.button(
@@ -245,7 +252,9 @@ It is crucial to describe gender based on presentation rather than identity beca
             )
             with me.box(
                 style=me.Style(
-                    display="grid", grid_template_columns="repeat(3, 1fr)", gap=10,
+                    display="grid",
+                    grid_template_columns="repeat(3, 1fr)",
+                    gap=10,
                 ),
             ):
                 for image_row in state.generated_images:
@@ -335,7 +344,8 @@ def on_click_generate_matrix(e: me.ClickEvent):
         None,
     )
     selected_mst_obj = next(
-        (m for m in state._options["MST"] if m["name"] == state.selected_mst), None,
+        (m for m in state._options["MST"] if m["name"] == state.selected_mst),
+        None,
     )
 
     if not selected_gender_obj or not selected_silhouette_obj or not selected_mst_obj:

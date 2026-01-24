@@ -250,7 +250,8 @@ def random_prompt_generator(e: me.ClickEvent):
     state = me.state(PageState)
     try:
         with open(
-            app_config_instance.IMAGEN_PROMPTS_JSON, encoding="utf-8",
+            app_config_instance.IMAGEN_PROMPTS_JSON,
+            encoding="utf-8",
         ) as file:
             data = json.load(file)  # Use json.load for direct parsing
         prompts_list = data.get("imagen", [])

@@ -193,7 +193,12 @@ def get_elo_ratings(study: str):
 
 
 def update_elo_ratings(
-    model1: str, model2: str, winner: str, images: list[str], prompt: str, study: str,
+    model1: str,
+    model2: str,
+    winner: str,
+    images: list[str],
+    prompt: str,
+    study: str,
 ):
     """Update ELO ratings for models"""
     current_datetime = datetime.datetime.now()
@@ -290,7 +295,9 @@ def update_elo_ratings(
     elo_ratings_by_model = []
     for model, elo in updated_ratings.items():
         elo_study_entry = ArenaModelEvaluation(
-            model_name=model, rating=elo, study=study,
+            model_name=model,
+            rating=elo,
+            study=study,
         )
         elo_ratings_by_model.append(elo_study_entry)
 

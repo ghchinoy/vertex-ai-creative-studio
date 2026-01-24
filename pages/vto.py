@@ -58,7 +58,8 @@ IMAGE_BOX_STYLE = me.Style(
 with open("config/about_content.json") as f:
     about_content = json.load(f)
     VTO_INFO = next(
-        (s for s in about_content["sections"] if s.get("id") == "vto"), None,
+        (s for s in about_content["sections"] if s.get("id") == "vto"),
+        None,
     )
 
 
@@ -99,7 +100,10 @@ def on_upload_person(e: me.UploadEvent):
     state = me.state(PageState)
     state.person_image_file = e.file
     gcs_url = store_to_gcs(
-        "vto_person_images", e.file.name, e.file.mime_type, e.file.getvalue(),
+        "vto_person_images",
+        e.file.name,
+        e.file.mime_type,
+        e.file.getvalue(),
     )
     state.person_image_gcs = gcs_url
     state.person_image_display_url = create_display_url(gcs_url)
@@ -127,7 +131,10 @@ def on_upload_product(e: me.UploadEvent):
     state = me.state(PageState)
     state.product_image_file = e.file
     gcs_url = store_to_gcs(
-        "vto_product_images", e.file.name, e.file.mime_type, e.file.getvalue(),
+        "vto_product_images",
+        e.file.name,
+        e.file.mime_type,
+        e.file.getvalue(),
     )
     state.product_image_gcs = gcs_url
     state.product_image_display_url = create_display_url(gcs_url)
@@ -359,7 +366,9 @@ def page():
                             me.icon(
                                 "person_outline",
                                 style=me.Style(
-                                    font_size=32, width="50px", height="60px",
+                                    font_size=32,
+                                    width="50px",
+                                    height="60px",
                                 ),
                             )
                             me.text("Upload a person image")
@@ -402,7 +411,9 @@ def page():
                             me.icon(
                                 "backpack",
                                 style=me.Style(
-                                    font_size=32, width="50px", height="60px",
+                                    font_size=32,
+                                    width="50px",
+                                    height="60px",
                                 ),
                             )
                             me.text("Upload a product image")
@@ -438,7 +449,8 @@ def page():
                     options=[
                         me.SelectOption(label="Allow (All ages)", value="allow_all"),
                         me.SelectOption(
-                            label="Allow (Adults only)", value="allow_adult",
+                            label="Allow (Adults only)",
+                            value="allow_adult",
                         ),
                         # me.SelectOption(label="Don't Allow", value="dont_allow"),
                     ],
@@ -454,10 +466,12 @@ def page():
                     label="Safety Filter",
                     options=[
                         me.SelectOption(
-                            label="Block most", value="block_low_and_above",
+                            label="Block most",
+                            value="block_low_and_above",
                         ),
                         me.SelectOption(
-                            label="Block some", value="block_medium_and_above",
+                            label="Block some",
+                            value="block_medium_and_above",
                         ),
                         me.SelectOption(label="Block few", value="block_only_high"),
                     ],
@@ -497,7 +511,9 @@ def page():
                         gcs_uri = state.result_gcs_uris[i]
                         with me.box(
                             style=me.Style(
-                                display="flex", flex_direction="column", gap=8,
+                                display="flex",
+                                flex_direction="column",
+                                gap=8,
                             ),
                         ):
                             with me.box(style=me.Style(width=400, height=400)):

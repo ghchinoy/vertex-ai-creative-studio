@@ -47,7 +47,8 @@ from state.state import AppState
 with open("config/about_content.json") as f:
     about_content = json.load(f)
     GEMINI_TTS_INFO = next(
-        (s for s in about_content["sections"] if s.get("id") == "gemini-tts"), None,
+        (s for s in about_content["sections"] if s.get("id") == "gemini-tts"),
+        None,
     )
 
 # Load presets from JSON
@@ -224,7 +225,10 @@ def gemini_tts_page_content():
                 # Dynamically render presets based on selected language
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="row", gap=16, flex_wrap="wrap",
+                        display="flex",
+                        flex_direction="row",
+                        gap=16,
+                        flex_wrap="wrap",
                     ),
                 ):
                     filtered_presets = [
@@ -291,7 +295,8 @@ def gemini_tts_page_content():
                                 f"Quality Score: {state.evaluation_result.quality_score}/100",
                                 type="subtitle-1",
                                 style=me.Style(
-                                    font_weight="bold", color=me.theme_var("primary"),
+                                    font_weight="bold",
+                                    color=me.theme_var("primary"),
                                 ),
                             )
                             me.markdown(state.evaluation_result.justification)
@@ -309,7 +314,8 @@ def gemini_tts_page_content():
                             # Technical Metrics Expansion Panel
                             me.box(style=me.Style(height=8))
                             with me.expansion_panel(
-                                title="Technical Audio Metrics", icon="graphic_eq",
+                                title="Technical Audio Metrics",
+                                icon="graphic_eq",
                             ):
                                 metrics = state.evaluation_result.audio_metrics
                                 with me.box(

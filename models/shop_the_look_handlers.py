@@ -107,9 +107,7 @@ def on_click_veo(e: me.ClickEvent):  # pylint: disable=unused-argument
 
             else:
                 # Extract GCS URI from different possible locations
-                if (
-                    response_data.get("generatedSamples")
-                ):
+                if response_data.get("generatedSamples"):
                     # print(f"Generated Samples: {response_data["generatedSamples"]}")
                     gcs_uri = (
                         response_data["generatedSamples"][0]

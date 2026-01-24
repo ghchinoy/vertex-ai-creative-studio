@@ -152,7 +152,8 @@ def generation_controls(
             options=[
                 me.SelectOption(label="Allow (All ages)", value="Allow (All ages)"),
                 me.SelectOption(
-                    label="Allow (Adults only)", value="Allow (Adults only)",
+                    label="Allow (Adults only)",
+                    value="Allow (Adults only)",
                 ),
                 me.SelectOption(label="Don't Allow", value="Don't Allow"),
             ],

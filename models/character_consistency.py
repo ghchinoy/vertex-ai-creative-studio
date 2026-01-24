@@ -47,7 +47,9 @@ from collections.abc import Generator
 
 
 def generate_character_video(
-    user_email: str, reference_image_gcs_uris: list[str], scene_prompt: str,
+    user_email: str,
+    reference_image_gcs_uris: list[str],
+    scene_prompt: str,
 ) -> Generator[WorkflowStepResult]:
     """Orchestrates the entire character consistency workflow as a generator,
     yielding the result of each step.
@@ -187,7 +189,9 @@ def generate_character_video(
         data={},
     )
     best_image_selection = select_best_image(
-        reference_image_bytes_list, candidate_image_bytes_list, candidate_image_gcs_uris,
+        reference_image_bytes_list,
+        candidate_image_bytes_list,
+        candidate_image_gcs_uris,
     )
     best_image_gcs_uri = best_image_selection.best_image_path
     step_duration = time.time() - step_start_time
@@ -242,7 +246,8 @@ def generate_character_video(
         data={},
     )
     video_bytes, veo_prompt = _generate_video_from_image(
-        outpainted_image_bytes, scene_prompt,
+        outpainted_image_bytes,
+        scene_prompt,
     )
     video_gcs_uri = store_to_gcs(
         folder="character_consistency_videos",
@@ -288,7 +293,10 @@ def generate_character_video(
 
 
 def _generate_imagen_candidates(
-    reference_image_bytes_list, all_descriptions, final_prompt, negative_prompt,
+    reference_image_bytes_list,
+    all_descriptions,
+    final_prompt,
+    negative_prompt,
 ):
     """Generates candidate images with Imagen."""
     client = genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
@@ -335,14 +343,19 @@ def _generate_imagen_candidates(
 
 
 def _generate_video_from_image(
-    image_bytes: bytes, provided_prompt: str | None = None,
+    image_bytes: bytes,
+    provided_prompt: str | None = None,
 ) -> tuple[bytes, str]:
     """Generates a video from an image."""
     gemini_client = genai.Client(
-        vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION,
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
     )
     veo_client = genai.Client(
-        vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION,
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
     )
 
     pil_image = PIL_Image.open(io.BytesIO(image_bytes))
@@ -355,7 +368,8 @@ def _generate_video_from_image(
     ]
     if provided_prompt:
         gemini_contents.insert(
-            1, f"the user has provided this prompt as a starter {provided_prompt}",
+            1,
+            f"the user has provided this prompt as a starter {provided_prompt}",
         )
 
     video_prompt_response = gemini_client.models.generate_content(
@@ -397,8 +411,7 @@ def _generate_video_from_image(
 
 
 def _outpaint_image(image_bytes: bytes, prompt: str) -> bytes:
-    """Performs outpainting on an image to a 16:9 aspect ratio.
-    """
+    """Performs outpainting on an image to a 16:9 aspect ratio."""
     client = genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
     edit_model = cfg.CHARACTER_CONSISTENCY_IMAGEN_MODEL
 
@@ -422,7 +435,8 @@ def _outpaint_image(image_bytes: bytes, prompt: str) -> bytes:
     mask_for_api = types.Image(image_bytes=_get_bytes_from_pil(mask_pil_outpaint))
 
     raw_ref_image = types.RawReferenceImage(
-        reference_image=image_for_api, reference_id=0,
+        reference_image=image_for_api,
+        reference_id=0,
     )
     mask_ref_image = types.MaskReferenceImage(
         reference_id=1,
@@ -478,7 +492,9 @@ def _pad_to_target_size(
 
     if mode == "RGB":
         source_image_padded = PIL_Image.new(
-            mode, target_size, color=(fill_val, fill_val, fill_val),
+            mode,
+            target_size,
+            color=(fill_val, fill_val, fill_val),
         )
     elif mode == "L":
         source_image_padded = PIL_Image.new(mode, target_size, color=(fill_val))

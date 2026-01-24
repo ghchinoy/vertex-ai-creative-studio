@@ -28,10 +28,14 @@ def initialize_clients():
     for prompt generation and video generation respectively.
     """
     gemini_client = genai.Client(
-        vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION,
+        vertexai=True,
+        project=config.PROJECT_ID,
+        location=config.GEMINI_LOCATION,
     )
     veo_client = genai.Client(
-        vertexai=True, project=config.PROJECT_ID, location=config.VEO_LOCATION,
+        vertexai=True,
+        project=config.PROJECT_ID,
+        location=config.VEO_LOCATION,
     )
     return gemini_client, veo_client
 
@@ -95,7 +99,8 @@ def generate_video(gemini_client, veo_client, image_path, output_dir):
 
 
 def generate_video_from_best_image(
-    output_path: str, best_image_path: str,
+    output_path: str,
+    best_image_path: str,
 ) -> str | None:
     """Generates a single video from the selected best image. This is the final
     step in the workflow, creating the video from the outpainted image.

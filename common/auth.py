@@ -72,8 +72,7 @@ def is_user_authorized(email: str) -> bool:
 
 
 def get_user_avatar(email: str) -> str | None:
-    """Retrieves the cached GCS avatar URI for a user from Firestore.
-    """
+    """Retrieves the cached GCS avatar URI for a user from Firestore."""
     if not email or email == "anonymous@google.com":
         return None
     try:
@@ -88,8 +87,7 @@ def get_user_avatar(email: str) -> str | None:
 
 @lru_cache(maxsize=1024)
 def get_user_role(email: str) -> str:
-    """Retrieves the user's role from Firestore, defaulting to 'creator'.
-    """
+    """Retrieves the user's role from Firestore, defaulting to 'creator'."""
     if not email or email == "anonymous@google.com":
         return "guest"
     try:

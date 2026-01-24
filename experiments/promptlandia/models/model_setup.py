@@ -18,7 +18,6 @@ It includes a class with a static method to initialize the `genai` client with
 the appropriate project ID, location, and model ID.
 """
 
-
 from dotenv import load_dotenv
 from google import genai
 

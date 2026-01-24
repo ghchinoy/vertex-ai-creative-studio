@@ -53,7 +53,10 @@ def brand_adherence_content():
 
     with me.box(
         style=me.Style(
-            display="flex", flex_direction="column", gap=24, padding=me.Padding.all(24),
+            display="flex",
+            flex_direction="column",
+            gap=24,
+            padding=me.Padding.all(24),
         ),
     ):
         # --- Step 1: Upload Guidelines ---
@@ -65,19 +68,26 @@ def brand_adherence_content():
 
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="row", gap=16, flex_wrap="wrap",
+                    display="flex",
+                    flex_direction="row",
+                    gap=16,
+                    flex_wrap="wrap",
                 ),
             ):
                 # PDF Uploader
                 with me.box(style=me.Style(flex_grow=1)):
                     if state.pdf_filename:
                         with me.box(
-                            style=me.Style(display="flex", align_items="center", gap=16),
+                            style=me.Style(
+                                display="flex", align_items="center", gap=16
+                            ),
                         ):
                             me.icon("picture_as_pdf")
                             me.text(state.pdf_filename)
                             me.button(
-                                "Clear PDF", on_click=on_clear_pdf, type="stroked",
+                                "Clear PDF",
+                                on_click=on_clear_pdf,
+                                type="stroked",
                             )
                     else:
                         me.uploader(
@@ -90,7 +100,9 @@ def brand_adherence_content():
                 with me.box(style=me.Style(flex_grow=1)):
                     if state.reference_image_display_url:
                         with me.box(
-                            style=me.Style(display="flex", align_items="center", gap=16),
+                            style=me.Style(
+                                display="flex", align_items="center", gap=16
+                            ),
                         ):
                             with me.box(style=me.Style(width=100, height=50)):
                                 media_tile(
@@ -129,7 +141,10 @@ def brand_adherence_content():
             me.divider()
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="row", gap=24, flex_wrap="wrap",
+                    display="flex",
+                    flex_direction="row",
+                    gap=24,
+                    flex_wrap="wrap",
                 ),
             ):
                 # Left Column: Guidelines
@@ -197,7 +212,10 @@ def brand_adherence_content():
 
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="row", gap=24, flex_wrap="wrap",
+                        display="flex",
+                        flex_direction="row",
+                        gap=24,
+                        flex_wrap="wrap",
                     ),
                 ):
                     # Image
@@ -214,7 +232,9 @@ def brand_adherence_content():
                         if state.is_evaluating:
                             with me.box(
                                 style=me.Style(
-                                    display="flex", align_items="center", gap=8,
+                                    display="flex",
+                                    align_items="center",
+                                    gap=8,
                                 ),
                             ):
                                 me.progress_spinner(diameter=20)
@@ -264,7 +284,10 @@ def on_upload_pdf(e: me.UploadEvent):
     state = me.state(PageState)
     file = e.files[0]
     gcs_uri = store_to_gcs(
-        "brand_guidelines", file.name, file.mime_type, file.getvalue(),
+        "brand_guidelines",
+        file.name,
+        file.mime_type,
+        file.getvalue(),
     )
     state.pdf_gcs_uri = gcs_uri
     state.pdf_filename = file.name
@@ -283,7 +306,10 @@ def on_upload_reference_image(e: me.UploadEvent):
     state = me.state(PageState)
     file = e.files[0]
     gcs_uri = store_to_gcs(
-        "brand_reference_images", file.name, file.mime_type, file.getvalue(),
+        "brand_reference_images",
+        file.name,
+        file.mime_type,
+        file.getvalue(),
     )
     state.reference_image_gcs_uri = gcs_uri
     state.reference_image_display_url = create_display_url(gcs_uri)

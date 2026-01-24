@@ -28,7 +28,10 @@ def _description_tab_content(description: str):
         rows=4,
         autosize=True,
         style=me.Style(
-            width="100%", font_size="12pt", border=None, background="transparent",
+            width="100%",
+            font_size="12pt",
+            border=None,
+            background="transparent",
         ),
     )
 
@@ -61,7 +64,9 @@ def _tab_header(tabs: list[Tab], on_tab_click_handler: Callable):
             width="100%",
             border=me.Border(
                 bottom=me.BorderSide(
-                    width=1, style="solid", color=me.theme_var("outline-variant"),
+                    width=1,
+                    style="solid",
+                    color=me.theme_var("outline-variant"),
                 ),
             ),
         ),

@@ -13,7 +13,6 @@
 # limitations under the License.
 """Pill mesop component"""
 
-
 import mesop as me
 
 

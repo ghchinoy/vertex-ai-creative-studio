@@ -193,7 +193,9 @@ def dipToBlack(clip1, clip2, transition_duration, **kwargs):
     )
 
     black_clip = ColorClip(
-        size=clip1.size, color=(0, 0, 0), duration=clip1.duration + clip2.duration,
+        size=clip1.size,
+        color=(0, 0, 0),
+        duration=clip1.duration + clip2.duration,
     )
 
     final_clip = CompositeVideoClip([black_clip, clip1_faded, clip2_faded])
@@ -211,10 +213,13 @@ def dipToBlack(clip1, clip2, transition_duration, **kwargs):
 
 
 def add_blur_transition(
-    clip, blur_duration, max_blur_strength=1.0, reverse=False, position="end",
+    clip,
+    blur_duration,
+    max_blur_strength=1.0,
+    reverse=False,
+    position="end",
 ):
-    """Add a gradual blur effect to the start or end of a video clip.
-    """
+    """Add a gradual blur effect to the start or end of a video clip."""
     if blur_duration > clip.duration:
         blur_duration = clip.duration
         print(
@@ -252,7 +257,9 @@ def add_blur_transition(
         return frame
 
     return VideoClip(
-        make_frame=make_frame_for_blur, duration=clip.duration, fps=clip.fps,
+        make_frame=make_frame_for_blur,
+        duration=clip.duration,
+        fps=clip.fps,
     )
 
 
@@ -308,13 +315,16 @@ def process_videos(
 
                 # Resize clip2 to fit within clip1's dimensions, preserving aspect ratio
                 ratio = min(
-                    clip1.size[0] / clip2.size[0], clip1.size[1] / clip2.size[1],
+                    clip1.size[0] / clip2.size[0],
+                    clip1.size[1] / clip2.size[1],
                 )
                 resized_clip2 = clip2.resize(ratio)
 
                 # Create a black background clip with the size of clip1
                 background = ColorClip(
-                    size=clip1.size, color=(0, 0, 0), duration=resized_clip2.duration,
+                    size=clip1.size,
+                    color=(0, 0, 0),
+                    duration=resized_clip2.duration,
                 )
 
                 # Composite the resized clip2 onto the center of the background
@@ -386,7 +396,8 @@ def layer_audio_on_video(video_gcs_uri: str, audio_gcs_uri: str) -> str:
 
 
 def _calculate_motion_score(
-    clip: VideoFileClip, sample_interval_seconds: float = 0.5,
+    clip: VideoFileClip,
+    sample_interval_seconds: float = 0.5,
 ) -> float:
     """Calculates a motion score based on frame-to-frame differences."""
     frame_diffs = []
@@ -409,8 +420,7 @@ def _calculate_motion_score(
 
 
 def get_video_duration(gcs_uri: str) -> float:
-    """Downloads the video from GCS and returns its duration in seconds.
-    """
+    """Downloads the video from GCS and returns its duration in seconds."""
     with tempfile.TemporaryDirectory() as tmpdir:
         try:
             local_path = _download_videos_to_temp([gcs_uri], tmpdir)[0]
@@ -426,7 +436,9 @@ def get_video_duration(gcs_uri: str) -> float:
 
 
 def convert_mp4_to_gif(
-    source_video_gcs_uri: str, user_email: str, target_mb: int = 8,
+    source_video_gcs_uri: str,
+    user_email: str,
+    target_mb: int = 8,
 ) -> str:
     with tempfile.TemporaryDirectory() as tmpdir:
         local_path = _download_videos_to_temp([source_video_gcs_uri], tmpdir)[0]

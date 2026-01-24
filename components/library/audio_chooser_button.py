@@ -71,9 +71,15 @@ def audio_chooser_button(
         state.show_dialog = False
         yield
 
-    with me.content_button(on_click=open_dialog, type=button_type, key=key), me.box(
-        style=me.Style(
-            display="flex", flex_direction="row", gap=8, align_items="center",
+    with (
+        me.content_button(on_click=open_dialog, type=button_type, key=key),
+        me.box(
+            style=me.Style(
+                display="flex",
+                flex_direction="row",
+                gap=8,
+                align_items="center",
+            ),
         ),
     ):
         me.icon("music_note")
@@ -81,11 +87,19 @@ def audio_chooser_button(
             me.text(button_label)
 
     dialog_style = me.Style(
-        width="95vw", height="80vh", display="flex", flex_direction="column",
+        width="95vw",
+        height="80vh",
+        display="flex",
+        flex_direction="column",
     )
 
-    with dialog(is_open=state.show_dialog, dialog_style=dialog_style), me.box(
-        style=me.Style(display="flex", flex_direction="column", gap=16, flex_grow=1),
+    with (
+        dialog(is_open=state.show_dialog, dialog_style=dialog_style),
+        me.box(
+            style=me.Style(
+                display="flex", flex_direction="column", gap=16, flex_grow=1
+            ),
+        ),
     ):
         me.text("Select Audio from Library", type="headline-6")
         with me.box(style=me.Style(flex_grow=1, overflow_y="auto")):
@@ -101,22 +115,23 @@ def audio_chooser_button(
                     me.progress_spinner()
             else:
                 for item in state.media_items:
-                    uri = item.gcsuri or (
-                        item.gcs_uris[0] if item.gcs_uris else None
-                    )
+                    uri = item.gcsuri or (item.gcs_uris[0] if item.gcs_uris else None)
                     if uri:
                         with me.box(
                             key=uri,
                             on_click=handle_image_selected,
                             style=me.Style(
-                                padding=me.Padding.all(8), cursor="pointer",
+                                padding=me.Padding.all(8),
+                                cursor="pointer",
                             ),
                         ):
                             me.text(uri.split("/")[-1])
 
         with me.box(
             style=me.Style(
-                display="flex", justify_content="flex-end", margin=me.Margin(top=24),
+                display="flex",
+                justify_content="flex-end",
+                margin=me.Margin(top=24),
             ),
         ):
             me.button(

@@ -165,7 +165,9 @@ class QAList(BaseModel):
 
 
 def _generate_questions_from_prompt(
-    prompt_template: str, image_uri: str | None = None, **kwargs,
+    prompt_template: str,
+    image_uri: str | None = None,
+    **kwargs,
 ) -> list[str]:
     """Helper to generate questions from a given prompt template."""
     cfg = Default()
@@ -185,7 +187,9 @@ def _generate_questions_from_prompt(
         contents.append(types.Part.from_uri(file_uri=image_uri, mime_type="image/png"))
 
     response = client.models.generate_content(
-        model=model_name, contents=contents, config=config,
+        model=model_name,
+        contents=contents,
+        config=config,
     )
     try:
         qa_list = QAList.model_validate_json(response.text)
@@ -201,12 +205,15 @@ def generate_dsg_gqm_questions(source_prompt: str) -> list[str]:
     if not source_prompt:
         return []
     return _generate_questions_from_prompt(
-        DSG_RUBRIC_GENERATION_PROMPT, source_prompt=source_prompt,
+        DSG_RUBRIC_GENERATION_PROMPT,
+        source_prompt=source_prompt,
     )
 
 
 def generate_bas_questions(
-    prompt: str, additional_guidance: str, image_uri: str | None = None,
+    prompt: str,
+    additional_guidance: str,
+    image_uri: str | None = None,
 ) -> list[str]:
     """Generates BAS questions from a prompt."""
     if not prompt:
@@ -221,7 +228,9 @@ def generate_bas_questions(
 
 
 def generate_guideline_criteria(
-    prompt: str, additional_guidance: str, reference_image_uri: str | None = None,
+    prompt: str,
+    additional_guidance: str,
+    reference_image_uri: str | None = None,
 ) -> dict[str, list[str]]:
     """Generates a dictionary of critique questions based on a prompt."""
     if not prompt:

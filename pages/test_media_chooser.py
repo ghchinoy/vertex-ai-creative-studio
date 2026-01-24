@@ -94,7 +94,10 @@ def page_content():
         # Test the video chooser
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=16, align_items="center",
+                display="flex",
+                flex_direction="row",
+                gap=16,
+                align_items="center",
             ),
         ):
             media_chooser_button(
@@ -125,7 +128,10 @@ def page_content():
         # Test the image chooser
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=16, align_items="center",
+                display="flex",
+                flex_direction="row",
+                gap=16,
+                align_items="center",
             ),
         ):
             media_chooser_button(
@@ -174,7 +180,9 @@ def render_chooser_dialog():
         )
 
         new_items, last_doc = get_media_for_chooser(
-            media_type=state.dialog_media_type, page_size=20, start_after=last_doc_ref,
+            media_type=state.dialog_media_type,
+            page_size=20,
+            start_after=last_doc_ref,
         )
         state.media_items.extend(new_items)
         state.last_doc_id = last_doc.id if last_doc else ""
@@ -184,7 +192,10 @@ def render_chooser_dialog():
         yield
 
     dialog_style = me.Style(
-        width="95vw", height="80vh", display="flex", flex_direction="column",
+        width="95vw",
+        height="80vh",
+        display="flex",
+        flex_direction="column",
     )
 
     with dialog(is_open=state.show_dialog, dialog_style=dialog_style):  # pylint: disable=E1129:not-context-manager
@@ -220,7 +231,9 @@ def render_chooser_dialog():
                 # Main content area with grid and scroller
                 with me.box(
                     style=me.Style(
-                        flex_grow=1, overflow_y="auto", padding=me.Padding.all(10),
+                        flex_grow=1,
+                        overflow_y="auto",
+                        padding=me.Padding.all(10),
                     ),
                 ):
                     if state.is_loading and not state.media_items:

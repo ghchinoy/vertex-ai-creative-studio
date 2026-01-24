@@ -138,7 +138,8 @@ def generate_images_from_model_garden(
             return []  # Or raise an error
     except Exception as e:
         logging.error(
-            f"Error calling Vertex AI endpoint {endpoint_path}: {e}", exc_info=True,
+            f"Error calling Vertex AI endpoint {endpoint_path}: {e}",
+            exc_info=True,
         )
         raise
 
@@ -225,7 +226,9 @@ def images_from_flux(model_name: str, prompt: str, aspect_ratio: str) -> list[st
 
 
 def images_from_stable_diffusion(
-    model_name: str, prompt: str, aspect_ratio: str,
+    model_name: str,
+    prompt: str,
+    aspect_ratio: str,
 ) -> list[str]:
     """Generates images using the configured Stable Diffusion model endpoint.
     *Adjust default_params based on your specific Stable Diffusion deployment.*

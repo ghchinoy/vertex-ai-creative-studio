@@ -1,5 +1,4 @@
-"""This script generates augmented prompts based on an optimized metaprompt.
-"""
+"""This script generates augmented prompts based on an optimized metaprompt."""
 
 import json
 import os
@@ -33,7 +32,9 @@ def get_genai_client() -> genai.Client:
 
 
 def _generate_content_with_retry(
-    client: genai.Client, *args, **kwargs,
+    client: genai.Client,
+    *args,
+    **kwargs,
 ) -> genai.types.GenerateContentResponse:
     """Wrapper for generate_content with exponential backoff."""
     max_retries = 5
@@ -57,7 +58,9 @@ def _generate_content_with_retry(
 
 
 def generate_with_gemini(
-    client: genai.Client, prompt_text: str, image_path: str | None = None,
+    client: genai.Client,
+    prompt_text: str,
+    image_path: str | None = None,
 ) -> str:
     """Generic function to call Gemini with a specific configuration, optionally including an image."""
     parts = [genai.types.Part.from_text(text=prompt_text)]
@@ -67,7 +70,9 @@ def generate_with_gemini(
                 image_data = image_file.read()
                 parts.append(genai.types.Part.from_text(text="Image to animate:"))
                 parts.append(
-                    genai.types.Part.from_bytes(data=image_data, mime_type="image/jpeg"),
+                    genai.types.Part.from_bytes(
+                        data=image_data, mime_type="image/jpeg"
+                    ),
                 )
         except FileNotFoundError:
             print(f"  - Image file not found: {image_path}")
@@ -80,16 +85,20 @@ def generate_with_gemini(
         "max_output_tokens": 65535,
         "safety_settings": [
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_HATE_SPEECH", threshold="OFF",
+                category="HARM_CATEGORY_HATE_SPEECH",
+                threshold="OFF",
             ),
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="OFF",
+                category="HARM_CATEGORY_DANGEROUS_CONTENT",
+                threshold="OFF",
             ),
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="OFF",
+                category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                threshold="OFF",
             ),
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_HARASSMENT", threshold="OFF",
+                category="HARM_CATEGORY_HARASSMENT",
+                threshold="OFF",
             ),
         ],
         "thinking_config": genai.types.ThinkingConfig(thinking_budget=-1),
@@ -97,7 +106,10 @@ def generate_with_gemini(
     config = genai.types.GenerateContentConfig(**config_dict)
     try:
         response = _generate_content_with_retry(
-            client, model=GEMINI_MODEL_ID, contents=contents, config=config,
+            client,
+            model=GEMINI_MODEL_ID,
+            contents=contents,
+            config=config,
         )
         return response.text
     except Exception as e:
@@ -106,7 +118,9 @@ def generate_with_gemini(
 
 
 def augment_prompt(
-    client: genai.Client, prompt_data: dict[str, Any], optimized_metaprompt: str,
+    client: genai.Client,
+    prompt_data: dict[str, Any],
+    optimized_metaprompt: str,
 ) -> dict[str, Any]:
     """Generates and sanitizes an augmented prompt, handling optional images."""
     original_prompt = prompt_data["prompt"]
@@ -173,7 +187,10 @@ def main():
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         future_to_prompt = {
             executor.submit(
-                augment_prompt, client, prompt_data, optimized_metaprompt,
+                augment_prompt,
+                client,
+                prompt_data,
+                optimized_metaprompt,
             ): prompt_data
             for prompt_data in base_prompts
         }

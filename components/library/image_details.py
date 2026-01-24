@@ -85,7 +85,10 @@ def image_details(item: MediaItem, on_click_permalink: Callable) -> None:
 
     with me.box(
         style=me.Style(
-            display="flex", flex_direction="column", align_items="center", gap=16,
+            display="flex",
+            flex_direction="column",
+            align_items="center",
+            gap=16,
         ),
     ):
         # Image display
@@ -154,35 +157,35 @@ def image_details(item: MediaItem, on_click_permalink: Callable) -> None:
                             gap=4,
                         ),
                     ):
-                                            me.text("Person Image")
-                                            person_url = create_display_url(person_gcs_uri)
-                                            with me.box(style=me.Style(width=200, height=200)):
-                                                media_tile(
-                                                    media_type="image",
-                                                    https_url=person_url,
-                                                    object_fit="contain",
-                                                )
-                        
-                                        # Product Image
-                                        product_gcs_uri = item.raw_data.get("product_image_gcs")
-                                        if product_gcs_uri:
-                                            with me.box(
-                                                style=me.Style(
-                                                    display="flex",
-                                                    flex_direction="column",
-                                                    align_items="center",
-                                                    gap=4,
-                                                ),
-                                            ):
-                                                me.text("Product Image")
-                                                product_url = create_display_url(product_gcs_uri)
-                                                with me.box(style=me.Style(width=200, height=200)):
-                                                    media_tile(
-                                                        media_type="image",
-                                                        https_url=product_url,
-                                                        object_fit="contain",
-                                                    )
-                        
+                        me.text("Person Image")
+                        person_url = create_display_url(person_gcs_uri)
+                        with me.box(style=me.Style(width=200, height=200)):
+                            media_tile(
+                                media_type="image",
+                                https_url=person_url,
+                                object_fit="contain",
+                            )
+
+                # Product Image
+                product_gcs_uri = item.raw_data.get("product_image_gcs")
+                if product_gcs_uri:
+                    with me.box(
+                        style=me.Style(
+                            display="flex",
+                            flex_direction="column",
+                            align_items="center",
+                            gap=4,
+                        ),
+                    ):
+                        me.text("Product Image")
+                        product_url = create_display_url(product_gcs_uri)
+                        with me.box(style=me.Style(width=200, height=200)):
+                            media_tile(
+                                media_type="image",
+                                https_url=product_url,
+                                object_fit="contain",
+                            )
+
     if item.comment == "product recontext":
         with me.box(style=me.Style(margin=me.Margin(top=16))):
             me.text(
@@ -206,7 +209,10 @@ def image_details(item: MediaItem, on_click_permalink: Callable) -> None:
                         )
     with me.box(
         style=me.Style(
-            display="flex", flex_direction="row", gap=10, margin=me.Margin(top=16),
+            display="flex",
+            flex_direction="row",
+            gap=10,
+            margin=me.Margin(top=16),
         ),
     ):
         with me.content_button(

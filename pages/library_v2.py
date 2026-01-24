@@ -307,8 +307,7 @@ def on_close_extend_dialog(e: me.ClickEvent):
 
 @me.component
 def library_dialog(pagestate: PageState):
-    """Renders the details dialog. Fetches the item on-demand to avoid state issues.
-    """
+    """Renders the details dialog. Fetches the item on-demand to avoid state issues."""
     # The dialog is always in the DOM, just hidden/shown via is_open.
     # We only fetch and render the content if an item is selected.
     if pagestate.show_details_dialog and pagestate.selected_media_item_id:
@@ -399,13 +398,19 @@ def render_tour_detail_dialog(storyboard: dict):
 
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=24, margin=me.Margin(top=16),
+                display="flex",
+                flex_direction="row",
+                gap=24,
+                margin=me.Margin(top=16),
             ),
         ):
             # Left Column: Video and Carousel
             with me.box(
                 style=me.Style(
-                    flex_grow=1, display="flex", flex_direction="column", gap=16,
+                    flex_grow=1,
+                    display="flex",
+                    flex_direction="column",
+                    gap=16,
                 ),
             ):
                 final_video_uri = storyboard.get("final_video_uri")
@@ -442,7 +447,10 @@ def render_tour_detail_dialog(storyboard: dict):
             # Right Column: Metadata with Tabs
             with me.box(
                 style=me.Style(
-                    width=300, flex_shrink=0, max_height="80vh", overflow_y="auto",
+                    width=300,
+                    flex_shrink=0,
+                    max_height="80vh",
+                    overflow_y="auto",
                 ),
             ):
                 # Tab header
@@ -457,7 +465,9 @@ def render_tour_detail_dialog(storyboard: dict):
                 ):
                     with me.content_button(
                         on_click=lambda e: setattr(
-                            pagestate, "tour_dialog_active_tab", "details",
+                            pagestate,
+                            "tour_dialog_active_tab",
+                            "details",
                         ),
                         style=me.Style(
                             border=me.Border.all(me.BorderSide(width=0)),
@@ -484,7 +494,9 @@ def render_tour_detail_dialog(storyboard: dict):
                         )
                     with me.content_button(
                         on_click=lambda e: setattr(
-                            pagestate, "tour_dialog_active_tab", "raw",
+                            pagestate,
+                            "tour_dialog_active_tab",
+                            "raw",
                         ),
                         style=me.Style(
                             border=me.Border.all(me.BorderSide(width=0)),
@@ -583,7 +595,9 @@ def render_default_detail_dialog(item: MediaItem):
         metadata_json=json.dumps(metadata),
         id=item.id,
         raw_metadata_json=json.dumps(
-            asdict(item), indent=2, default=json_default_serializer,
+            asdict(item),
+            indent=2,
+            default=json_default_serializer,
         ),
         on_edit_click=handle_edit_click,
         on_veo_click=on_veo_click,

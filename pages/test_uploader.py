@@ -70,7 +70,10 @@ def test_uploader_page():
 
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=16, margin=me.Margin(top=24),
+                display="flex",
+                flex_direction="row",
+                gap=16,
+                margin=me.Margin(top=24),
             ),
         ):
             if state.selected_gcs_uri_A:

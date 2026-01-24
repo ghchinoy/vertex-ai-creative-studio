@@ -18,7 +18,6 @@ It compares the generated images with the original input images to ensure
 character consistency and selects the one with the highest likeness.
 """
 
-
 from google.genai import Client, types
 from pydantic import BaseModel
 
@@ -26,7 +25,9 @@ import config
 
 # Initialize the Gemini client to use Vertex AI
 client = Client(
-    vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION,
+    vertexai=True,
+    project=config.PROJECT_ID,
+    location=config.GEMINI_LOCATION,
 )
 
 
@@ -38,7 +39,8 @@ class BestImage(BaseModel):
 
 
 def select_best_image(
-    real_image_paths: list[str], generated_image_paths: list[str],
+    real_image_paths: list[str],
+    generated_image_paths: list[str],
 ) -> BestImage:
     """Selects the best generated image by comparing it against a set of real
     images. This function uses a multimodal model to analyze the images and
@@ -81,6 +83,8 @@ def select_best_image(
         )
 
     response = client.models.generate_content(
-        model=model, contents=prompt_parts, config=config,
+        model=model,
+        contents=prompt_parts,
+        config=config,
     )
     return BestImage.model_validate_json(response.text)

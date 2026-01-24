@@ -87,7 +87,9 @@ def tab_header(tabs: list[Tab], on_tab_click: Callable):
             display="flex",
             border=me.Border(
                 bottom=me.BorderSide(
-                    width=1, style="solid", color=me.theme_var("outline-variant"),
+                    width=1,
+                    style="solid",
+                    color=me.theme_var("outline-variant"),
                 ),
             ),
         ),

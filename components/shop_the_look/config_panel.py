@@ -31,13 +31,16 @@ def config_panel():
     state = me.state(PageState)
     app_state = me.state(AppState)
 
-    with me.box(), me.box(
-        style=me.Style(
-            height="100%",
-            width="100%",
-            display="flex",
-            flex_direction="row",
-            flex_wrap="wrap",
+    with (
+        me.box(),
+        me.box(
+            style=me.Style(
+                height="100%",
+                width="100%",
+                display="flex",
+                flex_direction="row",
+                flex_wrap="wrap",
+            ),
         ),
     ):
         with me.box(

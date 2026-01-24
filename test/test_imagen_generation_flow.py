@@ -22,7 +22,10 @@ from state.state import AppState
 )
 @patch("mesop.state")
 def test_imagen_generation_flow_and_metadata(
-    mock_state, mock_generate_images, mock_generate_compliment, mock_add_media_item,
+    mock_state,
+    mock_generate_images,
+    mock_generate_compliment,
+    mock_add_media_item,
 ):
     """Tests the Imagen generation flow, focusing on the data handling and metadata
     creation after a successful API call.

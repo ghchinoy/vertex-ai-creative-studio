@@ -189,7 +189,8 @@ def explore_page(app_state: me.state):
             ):
                 me.icon("navigate_before")
             location_image = photos[state.location]["photo"].replace(
-                "local_assets/", "static/",
+                "local_assets/",
+                "static/",
             )
             location_credit = photos[state.location]["credit"]
             location_audio = photos[state.location]["audio"]
@@ -227,7 +228,9 @@ def explore_page(app_state: me.state):
         elif state.audio_output_metadata:
             with me.box(
                 style=me.Style(
-                    display="grid", grid_template_columns="1fr 1fr", text_align="center",
+                    display="grid",
+                    grid_template_columns="1fr 1fr",
+                    text_align="center",
                 ),
             ):
                 # for uri in state.audio_output_infos:

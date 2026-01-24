@@ -66,36 +66,52 @@ def prompt_inputs(
                 font_size=10,
                 align_items="center",
             )
-            with me.content_button(
-                type="icon", on_click=on_click_generate, disabled=state.is_loading,
-            ), me.box(style=icon_style):
+            with (
+                me.content_button(
+                    type="icon",
+                    on_click=on_click_generate,
+                    disabled=state.is_loading,
+                ),
+                me.box(style=icon_style),
+            ):
                 me.icon("play_arrow")
                 me.text("Create")
-            with me.content_button(
-                type="icon",
-                on_click=on_click_rewrite,
-                disabled=state.is_loading,
-            ), me.box(style=icon_style):
+            with (
+                me.content_button(
+                    type="icon",
+                    on_click=on_click_rewrite,
+                    disabled=state.is_loading,
+                ),
+                me.box(style=icon_style),
+            ):
                 me.icon("auto_awesome")
                 me.text("Rewriter")
-            with me.content_button(
-                type="icon", on_click=on_click_clear, disabled=state.is_loading,
-            ), me.box(style=icon_style):
+            with (
+                me.content_button(
+                    type="icon",
+                    on_click=on_click_clear,
+                    disabled=state.is_loading,
+                ),
+                me.box(style=icon_style),
+            ):
                 me.icon("clear")
                 me.text("Clear")
 
     me.box(style=me.Style(height="16px"))
 
     # Negative prompt input
-    with me.box(
-        style=me.Style(
-            border_radius=16,
-            padding=me.Padding.all(8),
-            background=me.theme_var("secondary-container"),
-            display="flex",
-            width="100%",
+    with (
+        me.box(
+            style=me.Style(
+                border_radius=16,
+                padding=me.Padding.all(8),
+                background=me.theme_var("secondary-container"),
+                display="flex",
+                width="100%",
+            ),
         ),
-    ), me.box(style=me.Style(flex_grow=1)):
+        me.box(style=me.Style(flex_grow=1)),
+    ):
         me.native_textarea(
             placeholder="Enter concepts to avoid (negative prompt)",
             on_blur=on_blur_negative_prompt,

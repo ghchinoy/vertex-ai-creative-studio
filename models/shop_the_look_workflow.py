@@ -96,7 +96,10 @@ def on_click_upload_models(e: me.UploadEvent):
     state.reference_model_file = e.file
     contents = e.file.getvalue()
     destination_blob_name = store_to_gcs(
-        "uploads", e.file.name, e.file.mime_type, contents,
+        "uploads",
+        e.file.name,
+        e.file.mime_type,
+        contents,
     )
 
     state.reference_model_file_gs_uri = f"gs://{destination_blob_name}"
@@ -159,7 +162,10 @@ def on_click_upload_catalog(e: me.UploadEvent):
     state.reference_catalog_file = e.file
     contents = e.file.getvalue()
     destination_blob_name = store_to_gcs(
-        "uploads", e.file.name, e.file.mime_type, contents,
+        "uploads",
+        e.file.name,
+        e.file.mime_type,
+        contents,
     )
 
     state.reference_catalog_file_gs_uri = f"gs://{destination_blob_name}"
@@ -253,7 +259,8 @@ def load_article_data(limit: int = 50):
 def load_look_data(limit: int = 50):
     state = me.state(PageState)
     media_ref = db.collection(config.GENMEDIA_VTO_CATALOG_COLLECTION_NAME).order_by(
-        "look_id", direction=firestore.Query.ASCENDING,
+        "look_id",
+        direction=firestore.Query.ASCENDING,
     )
     looks = []
     for doc in media_ref.stream():

@@ -167,7 +167,9 @@ def welcome_page(app_state: me.state):
         elif state.audio_output_metadata:
             with me.box(
                 style=me.Style(
-                    display="grid", grid_template_columns="1fr 1fr", text_align="center",
+                    display="grid",
+                    grid_template_columns="1fr 1fr",
+                    text_align="center",
                 ),
             ):
                 # for uri in state.audio_output_infos:

@@ -38,8 +38,7 @@ class AudioMetrics(BaseModel):
 
 
 def analyze_audio_file(gcs_uri: str) -> AudioMetrics:
-    """Analyzes an audio file from GCS to extract technical metrics.
-    """
+    """Analyzes an audio file from GCS to extract technical metrics."""
     # Download audio bytes from GCS
     audio_bytes = download_from_gcs(gcs_uri)
 

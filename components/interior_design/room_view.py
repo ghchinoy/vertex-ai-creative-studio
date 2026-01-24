@@ -1,5 +1,4 @@
-"""Component for displaying the room view.
-"""
+"""Component for displaying the room view."""
 
 import mesop as me
 
@@ -8,8 +7,7 @@ from components.media_tile.media_tile import media_tile
 
 @me.component
 def room_view(storyboard: dict, is_generating_zoom: bool):
-    """Component for displaying the room view.
-    """
+    """Component for displaying the room view."""
     with me.box(
         style=me.Style(
             display="flex",
@@ -33,7 +31,9 @@ def room_view(storyboard: dict, is_generating_zoom: bool):
                 me.progress_spinner()
             # Use the pre-signed display URL. Use .get() for safety with old data.
             elif storyboard_item.get("styled_image_display_url"):
-                with me.box(style=me.Style(width="100%", max_width="600px", height=400)):
+                with me.box(
+                    style=me.Style(width="100%", max_width="600px", height=400)
+                ):
                     media_tile(
                         media_type="image",
                         https_url=storyboard_item.get("styled_image_display_url"),

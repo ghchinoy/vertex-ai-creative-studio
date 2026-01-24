@@ -41,7 +41,8 @@ from state.state import AppState
 with open("config/about_content.json") as f:
     about_content = json.load(f)
     CHIRP3_HD_INFO = next(
-        (s for s in about_content["sections"] if s.get("id") == "chirp-3hd"), None,
+        (s for s in about_content["sections"] if s.get("id") == "chirp-3hd"),
+        None,
     )
 
 
@@ -103,7 +104,8 @@ def page():
                         style=me.Style(color=me.theme_var("error")),
                     )
                     me.text(
-                        state.error_message, style=me.Style(margin=me.Margin(top=16)),
+                        state.error_message,
+                        style=me.Style(margin=me.Margin(top=16)),
                     )
                     with dialog_actions():  # pylint: disable=E1129
                         me.button("Close", on_click=close_error_dialog, type="flat")

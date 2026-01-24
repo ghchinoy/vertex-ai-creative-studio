@@ -73,7 +73,9 @@ def main():
         # --- Stage 1: 2. Split Video into Chunks ---
         logger.info("\n--- Stage 1: Step 2: Splitting video into chunks ---")
         split_video_into_chunks(
-            downloaded_filepath, chunk_duration, config.CHUNKS_OUTPUT_DIR,
+            downloaded_filepath,
+            chunk_duration,
+            config.CHUNKS_OUTPUT_DIR,
         )
 
         # --- Stage 1: 3. Reverse Engineer Prompts ---
@@ -97,7 +99,8 @@ def main():
     logger.info("\n--- Stage 2: Generating Branded Countdown Video ---")
 
     EXAMPLE_SCRIPT_PATH = os.path.join(
-        config.ENGINEERED_PROMPTS_OUTPUT_DIR, "Google I⧸O '25 Keynote_analysis.txt",
+        config.ENGINEERED_PROMPTS_OUTPUT_DIR,
+        "Google I⧸O '25 Keynote_analysis.txt",
     )
 
     generate_video_from_prompts_service(

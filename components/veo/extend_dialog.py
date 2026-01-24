@@ -56,7 +56,10 @@ def extend_dialog(state: VeoExtendDialogState, on_close):
 
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=24, margin=me.Margin(top=16),
+                display="flex",
+                flex_direction="row",
+                gap=24,
+                margin=me.Margin(top=16),
             ),
         ):
             # Left Column: Input Video Preview
@@ -66,7 +69,9 @@ def extend_dialog(state: VeoExtendDialogState, on_close):
                     me.video(
                         src=create_display_url(state.input_video_uri),
                         style=me.Style(
-                            width="100%", border_radius=8, margin=me.Margin(top=8),
+                            width="100%",
+                            border_radius=8,
+                            margin=me.Margin(top=8),
                         ),
                     )
                 else:
@@ -75,7 +80,10 @@ def extend_dialog(state: VeoExtendDialogState, on_close):
             # Right Column: Controls
             with me.box(
                 style=me.Style(
-                    flex_grow=1, display="flex", flex_direction="column", gap=16,
+                    flex_grow=1,
+                    display="flex",
+                    flex_direction="column",
+                    gap=16,
                 ),
             ):
                 # Prompt
@@ -201,7 +209,9 @@ def on_click_generate_extension(e: me.ClickEvent):
             mode="extension",
         ):
             response = requests.post(
-                api_url, json=request.model_dump(), headers=headers,
+                api_url,
+                json=request.model_dump(),
+                headers=headers,
             )
             response.raise_for_status()
             data = response.json()
@@ -237,7 +247,8 @@ def on_click_generate_extension(e: me.ClickEvent):
                 break
             elif state.job_status == "failed":
                 state.error_message = status_data.get(
-                    "error_message", "Generation failed.",
+                    "error_message",
+                    "Generation failed.",
                 )
                 state.is_loading = False
                 yield

@@ -102,7 +102,9 @@ def call_product_recontext(
     start = timeit.default_timer()
 
     response = client.predict(
-        endpoint=model_endpoint, instances=instances, parameters=parameters,
+        endpoint=model_endpoint,
+        instances=instances,
+        parameters=parameters,
     )
     end = timeit.default_timer()
     print(f"Product Recontextualization took {end - start:.2f}s.")

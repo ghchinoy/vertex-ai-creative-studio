@@ -181,7 +181,8 @@ def page():
                 padding=me.Padding.all(16),
                 border=me.Border(
                     top=me.BorderSide(
-                        width=1, color=me.theme_var("tertiary-fixed-variant"),
+                        width=1,
+                        color=me.theme_var("tertiary-fixed-variant"),
                     ),
                 ),
                 display="flex",

@@ -305,12 +305,14 @@ def step_3_generate_video(state: RetroGameWorkflowState) -> RetroGameWorkflowSta
         # --- Single Scene Logic ---
         base_direction_prompt = config.get_prompt("scene_direction")
         direction_prompt = base_direction_prompt.format(
-            duration=state.duration, theme_context=context_str,
+            duration=state.duration,
+            theme_context=context_str,
         ).replace("this character", char_desc)
 
         try:
             scene_direction, _ = generate_text(
-                prompt=direction_prompt, images=prompt_input_images,
+                prompt=direction_prompt,
+                images=prompt_input_images,
             )
             state.scene_direction = scene_direction
             state.scene_directions = [scene_direction]
@@ -339,10 +341,12 @@ def step_3_generate_video(state: RetroGameWorkflowState) -> RetroGameWorkflowSta
                 f"Workflow {state.workflow_id}: Creating composites for 2-player mode",
             )
             p1_composite = create_composite_image(
-                state.player1_8bit_uri, state.player1_sheet_uri,
+                state.player1_8bit_uri,
+                state.player1_sheet_uri,
             )
             p2_composite = create_composite_image(
-                state.player2_8bit_uri, state.player2_sheet_uri,
+                state.player2_8bit_uri,
+                state.player2_sheet_uri,
             )
 
             if not p1_composite or not p2_composite:
@@ -358,10 +362,12 @@ def step_3_generate_video(state: RetroGameWorkflowState) -> RetroGameWorkflowSta
         else:
             r2v_references = [
                 APIReferenceImage(
-                    gcs_uri=state.player1_8bit_uri, mime_type="image/png",
+                    gcs_uri=state.player1_8bit_uri,
+                    mime_type="image/png",
                 ),
                 APIReferenceImage(
-                    gcs_uri=state.player1_sheet_uri, mime_type="image/png",
+                    gcs_uri=state.player1_sheet_uri,
+                    mime_type="image/png",
                 ),
                 APIReferenceImage(gcs_uri=theme_logo_uri, mime_type="image/png"),
             ]
@@ -451,7 +457,8 @@ def step_4_append_bumper(state: RetroGameWorkflowState) -> RetroGameWorkflowStat
 
     try:
         final_video_uri = process_videos(
-            video_gcs_uris=video_sequence, transition="concat",
+            video_gcs_uris=video_sequence,
+            transition="concat",
         )
 
         state.final_video_uri = final_video_uri
@@ -466,7 +473,9 @@ def step_4_append_bumper(state: RetroGameWorkflowState) -> RetroGameWorkflowStat
 
 
 def run_full_workflow(
-    user_email: str, theme: str, input_image_uri: str,
+    user_email: str,
+    theme: str,
+    input_image_uri: str,
 ) -> RetroGameWorkflowState:
     """Runs the full workflow synchronously (blocking)."""
     state = initialize_workflow(user_email, theme, input_image_uri)

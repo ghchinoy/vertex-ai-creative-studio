@@ -56,7 +56,10 @@ def infinite_scroll_chooser_button(
         yield
 
         items = get_media_for_page(
-            state.current_page, 20, ["images"], sort_by_timestamp=True,
+            state.current_page,
+            20,
+            ["images"],
+            sort_by_timestamp=True,
         )
         state.media_items = items
         state.is_loading = False
@@ -74,7 +77,10 @@ def infinite_scroll_chooser_button(
         yield
 
         new_items = get_media_for_page(
-            state.current_page, 20, ["images"], sort_by_timestamp=True,
+            state.current_page,
+            20,
+            ["images"],
+            sort_by_timestamp=True,
         )
         if new_items:
             state.media_items.extend(new_items)
@@ -93,9 +99,15 @@ def infinite_scroll_chooser_button(
         state.show_dialog = False
         yield
 
-    with me.content_button(on_click=open_dialog, type=button_type, key=key), me.box(
-        style=me.Style(
-            display="flex", flex_direction="row", gap=8, align_items="center",
+    with (
+        me.content_button(on_click=open_dialog, type=button_type, key=key),
+        me.box(
+            style=me.Style(
+                display="flex",
+                flex_direction="row",
+                gap=8,
+                align_items="center",
+            ),
         ),
     ):
         me.icon("photo_library")
@@ -103,11 +115,19 @@ def infinite_scroll_chooser_button(
             me.text(button_label)
 
     dialog_style = me.Style(
-        width="95vw", height="80vh", display="flex", flex_direction="column",
+        width="95vw",
+        height="80vh",
+        display="flex",
+        flex_direction="column",
     )
 
-    with dialog(is_open=state.show_dialog, dialog_style=dialog_style), me.box(
-        style=me.Style(display="flex", flex_direction="column", gap=16, flex_grow=1),
+    with (
+        dialog(is_open=state.show_dialog, dialog_style=dialog_style),
+        me.box(
+            style=me.Style(
+                display="flex", flex_direction="column", gap=16, flex_grow=1
+            ),
+        ),
     ):
         me.text("Select an Image from Library", type="headline-6")
         with me.box(style=me.Style(flex_grow=1, overflow_y="auto")):
@@ -139,7 +159,9 @@ def infinite_scroll_chooser_button(
                 )
         with me.box(
             style=me.Style(
-                display="flex", justify_content="flex-end", margin=me.Margin(top=24),
+                display="flex",
+                justify_content="flex-end",
+                margin=me.Margin(top=24),
             ),
         ):
             me.button(

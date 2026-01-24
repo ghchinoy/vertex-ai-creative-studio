@@ -131,7 +131,8 @@ def on_click_set_gemini_voice(e: me.ClickEvent):
     if uri:
         # print(f"the gsuri is: {uri}")
         state.gemini_reference_voice_uri = uri.replace(
-            "gs://", "https://storage.mtls.cloud.google.com/",
+            "gs://",
+            "https://storage.mtls.cloud.google.com/",
         )
     else:
         print("Couldn't find URI for voice")
@@ -140,7 +141,8 @@ def on_click_set_gemini_voice(e: me.ClickEvent):
     if image:
         print(f"the image gsuri is: {image}")
         state.gemini_reference_voice_image_uri = uri.replace(
-            "gs://", "https://storage.mtls.cloud.google.com/",
+            "gs://",
+            "https://storage.mtls.cloud.google.com/",
         )
     else:
         print("Couldn't find URI for voice")

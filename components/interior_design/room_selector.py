@@ -1,5 +1,4 @@
-"""Component for selecting a room.
-"""
+"""Component for selecting a room."""
 
 from collections.abc import Callable
 
@@ -12,8 +11,7 @@ def room_selector(
     is_generating_zoom: bool,
     on_room_select: Callable,
 ):
-    """Component for selecting a room.
-    """
+    """Component for selecting a room."""
     if storyboard and storyboard.get("room_names"):
         print(
             f"room_selector: Rendering buttons for rooms: {storyboard.get('room_names')}",

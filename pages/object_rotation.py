@@ -186,7 +186,10 @@ def step1_content():
         )
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="column", gap=8, align_items="center",
+                display="flex",
+                flex_direction="column",
+                gap=8,
+                align_items="center",
             ),
         ):
             me.text("Product Image", type="headline-6")
@@ -207,7 +210,9 @@ def step1_content():
 
     with me.box(
         style=me.Style(
-            display="flex", justify_content="flex-end", margin=me.Margin(top=24),
+            display="flex",
+            justify_content="flex-end",
+            margin=me.Margin(top=24),
         ),
     ):
         me.button(
@@ -234,7 +239,10 @@ def on_main_image_upload(e: me.UploadEvent):
     app_state = me.state(AppState)
     file = e.files[0]
     gcs_uri = store_to_gcs(
-        "object_rotation_uploads", file.name, file.mime_type, file.getvalue(),
+        "object_rotation_uploads",
+        file.name,
+        file.mime_type,
+        file.getvalue(),
     )
 
     if not state.rotation_project:
@@ -356,14 +364,19 @@ def step2_content():
             # Front View
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="column", gap=8, align_items="center",
+                    display="flex",
+                    flex_direction="column",
+                    gap=8,
+                    align_items="center",
                 ),
             ):
                 me.text("Front", type="headline-6")
                 if state.rotation_project.get("product_views", {}).get("front"):
                     image_thumbnail(
                         image_uri=create_display_url(
-                            state.rotation_project.get("product_views", {}).get("front"),
+                            state.rotation_project.get("product_views", {}).get(
+                                "front"
+                            ),
                         ),
                         on_remove=on_front_view_remove,
                         index=0,
@@ -378,7 +391,10 @@ def step2_content():
             # Back View
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="column", gap=8, align_items="center",
+                    display="flex",
+                    flex_direction="column",
+                    gap=8,
+                    align_items="center",
                 ),
             ):
                 me.text("Back", type="headline-6")
@@ -400,7 +416,10 @@ def step2_content():
             # Left View
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="column", gap=8, align_items="center",
+                    display="flex",
+                    flex_direction="column",
+                    gap=8,
+                    align_items="center",
                 ),
             ):
                 me.text("Left", type="headline-6")
@@ -422,14 +441,19 @@ def step2_content():
             # Right View
             with me.box(
                 style=me.Style(
-                    display="flex", flex_direction="column", gap=8, align_items="center",
+                    display="flex",
+                    flex_direction="column",
+                    gap=8,
+                    align_items="center",
                 ),
             ):
                 me.text("Right", type="headline-6")
                 if state.rotation_project.get("product_views", {}).get("right"):
                     image_thumbnail(
                         image_uri=create_display_url(
-                            state.rotation_project.get("product_views", {}).get("right"),
+                            state.rotation_project.get("product_views", {}).get(
+                                "right"
+                            ),
                         ),
                         on_remove=on_right_view_remove,
                         index=3,
@@ -443,7 +467,9 @@ def step2_content():
 
     with me.box(
         style=me.Style(
-            display="flex", justify_content="flex-end", margin=me.Margin(top=24),
+            display="flex",
+            justify_content="flex-end",
+            margin=me.Margin(top=24),
         ),
     ):
         me.button(
@@ -607,7 +633,9 @@ def step3_content():
             ):
                 media_tile(
                     media_type="video",
-                    https_url=create_display_url(state.rotation_project["final_video_uri"]),
+                    https_url=create_display_url(
+                        state.rotation_project["final_video_uri"]
+                    ),
                     controls=True,
                 )
 

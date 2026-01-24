@@ -47,8 +47,7 @@ def download_ranges_callback(info_dict: dict, ydl: YoutubeDL) -> list[dict]:
 
 
 def my_progress_hook(d: dict) -> None:
-    """Progress hook for yt-dlp to capture the final downloaded filename.
-    """
+    """Progress hook for yt-dlp to capture the final downloaded filename."""
     global _downloaded_file_path_global
     if d["status"] == "finished":
         _downloaded_file_path_global = d["filename"]
@@ -58,6 +57,5 @@ def my_progress_hook(d: dict) -> None:
 
 
 def get_downloaded_filepath() -> str | None:
-    """Returns the path of the downloaded file, or None if not yet available.
-    """
+    """Returns the path of the downloaded file, or None if not yet available."""
     return _downloaded_file_path_global

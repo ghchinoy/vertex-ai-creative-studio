@@ -254,7 +254,10 @@ async def on_upload(e: me.UploadEvent):
     state = me.state(EditImagesPageState)
     contents = e.file.getvalue()
     destination_blob_name = store_to_gcs(
-        "uploads", e.file.name, e.file.mime_type, contents,
+        "uploads",
+        e.file.name,
+        e.file.mime_type,
+        contents,
     )
     state.upload_uri = f"gs://{destination_blob_name}"
     state.upload_file_key += 1

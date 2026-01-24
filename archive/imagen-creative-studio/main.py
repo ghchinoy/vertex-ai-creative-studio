@@ -240,8 +240,7 @@ def rewrite_prompt(original_prompt: str):
 
 
 def generate_compliment(generation_instruction: str):
-    """Outputs a Gemini generated comment about images
-    """
+    """Outputs a Gemini generated comment about images"""
     state = me.state(State)
     with telemetry.tool_context_manager("creative-studio"):
         generation_model = GenerativeModel(cfg.MODEL_GEMINI_MULTIMODAL)
@@ -334,7 +333,8 @@ def app():
                     for c in state.image_models:
                         image_model_options.append(
                             me.SelectOption(
-                                label=c.get("display"), value=c.get("model_name"),
+                                label=c.get("display"),
+                                value=c.get("model_name"),
                             ),
                         )
                     me.select(
@@ -377,7 +377,8 @@ def app():
                         me.box(style=me.Style(height=12))
                         with me.box(
                             style=me.Style(
-                                display="flex", justify_content="space-between",
+                                display="flex",
+                                justify_content="space-between",
                             ),
                         ):
                             me.button(
@@ -430,15 +431,21 @@ def app():
                             ),
                         ):
                             if state.show_advanced:
-                                with me.content_button(
-                                    on_click=on_click_advanced_controls,
-                                ), me.tooltip(message="hide advanced controls"):
+                                with (
+                                    me.content_button(
+                                        on_click=on_click_advanced_controls,
+                                    ),
+                                    me.tooltip(message="hide advanced controls"),
+                                ):
                                     with me.box(style=me.Style(display="flex")):
                                         me.icon("expand_less")
                             else:
-                                with me.content_button(
-                                    on_click=on_click_advanced_controls,
-                                ), me.tooltip(message="show advanced controls"):
+                                with (
+                                    me.content_button(
+                                        on_click=on_click_advanced_controls,
+                                    ),
+                                    me.tooltip(message="show advanced controls"),
+                                ):
                                     with me.box(style=me.Style(display="flex")):
                                         me.icon("expand_more")
 
@@ -608,7 +615,9 @@ def app():
                                 # Generated images row
                                 with me.box(
                                     style=me.Style(
-                                        flex_wrap="wrap", display="flex", gap="15px",
+                                        flex_wrap="wrap",
+                                        display="flex",
+                                        gap="15px",
                                     ),
                                 ):
                                     for _, img in enumerate(state.image_output):
@@ -667,20 +676,24 @@ def app():
 
                     # Image commentary
                     if len(state.image_output) != 0:
-                        with me.box(style=_BOX_STYLE), me.box(
-                            style=me.Style(
-                                display="flex",
-                                justify_content="space-between",
-                                gap=2,
-                                width="100%",
+                        with (
+                            me.box(style=_BOX_STYLE),
+                            me.box(
+                                style=me.Style(
+                                    display="flex",
+                                    justify_content="space-between",
+                                    gap=2,
+                                    width="100%",
+                                ),
                             ),
-                        ), me.box(
-                            style=me.Style(
-                                flex_wrap="wrap",
-                                display="flex",
-                                flex_direction="row",
-                                # width="85%",
-                                padding=me.Padding.all(10),
+                            me.box(
+                                style=me.Style(
+                                    flex_wrap="wrap",
+                                    display="flex",
+                                    flex_direction="row",
+                                    # width="85%",
+                                    padding=me.Padding.all(10),
+                                ),
                             ),
                         ):
                             me.icon("assistant")

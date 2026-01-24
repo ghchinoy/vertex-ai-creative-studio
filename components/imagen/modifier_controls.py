@@ -22,13 +22,16 @@ from state.imagen_state import PageState
 def modifier_controls():
     """Image style modifier controls"""
     state = me.state(PageState)
-    with me.box(style=_BOX_STYLE), me.box(
-        style=me.Style(
-            display="flex",
-            justify_content="space-between",  # This might crowd if many items
-            flex_wrap="wrap",  # Allow wrapping for smaller screens
-            gap="8px",  # Use gap for spacing
-            width="100%",
+    with (
+        me.box(style=_BOX_STYLE),
+        me.box(
+            style=me.Style(
+                display="flex",
+                justify_content="space-between",  # This might crowd if many items
+                flex_wrap="wrap",  # Allow wrapping for smaller screens
+                gap="8px",  # Use gap for spacing
+                width="100%",
+            ),
         ),
     ):
         # Default Modifiers

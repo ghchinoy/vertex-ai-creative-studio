@@ -35,7 +35,9 @@ def get_genai_client() -> genai.Client:
     """Initializes and returns a GenAI client."""
     try:
         return genai.Client(
-            vertexai=True, project=PROJECT_ID, location=AUTORATER_LOCATION,
+            vertexai=True,
+            project=PROJECT_ID,
+            location=AUTORATER_LOCATION,
         )
     except Exception as e:
         print(f"Error initializing GenAI client: {e}")
@@ -46,7 +48,9 @@ def get_genai_client() -> genai.Client:
 
 
 def _generate_content_with_retry(
-    client: genai.Client, *args, **kwargs,
+    client: genai.Client,
+    *args,
+    **kwargs,
 ) -> genai.types.GenerateContentResponse:
     """Wrapper for generate_content with exponential backoff."""
     max_retries = 5
@@ -75,24 +79,27 @@ def _get_autorater_response(
     metric_name: str,
     response_schema: dict,
 ) -> dict[str, Any]:
-    """Calls the autorater model with a given prompt and returns the parsed JSON response.
-    """
+    """Calls the autorater model with a given prompt and returns the parsed JSON response."""
     config_dict = {
         "temperature": 1,
         "top_p": 0.95,
         "max_output_tokens": 65535,
         "safety_settings": [
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_HATE_SPEECH", threshold="OFF",
+                category="HARM_CATEGORY_HATE_SPEECH",
+                threshold="OFF",
             ),
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="OFF",
+                category="HARM_CATEGORY_DANGEROUS_CONTENT",
+                threshold="OFF",
             ),
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="OFF",
+                category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                threshold="OFF",
             ),
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_HARASSMENT", threshold="OFF",
+                category="HARM_CATEGORY_HARASSMENT",
+                threshold="OFF",
             ),
         ],
         "thinking_config": genai.types.ThinkingConfig(thinking_budget=-1),
@@ -103,7 +110,10 @@ def _get_autorater_response(
 
     try:
         response = _generate_content_with_retry(
-            client, model=AUTORATER_MODEL_ID, contents=prompt_parts, config=config,
+            client,
+            model=AUTORATER_MODEL_ID,
+            contents=prompt_parts,
+            config=config,
         )
         response_json = json.loads(response.text)
         return response_json
@@ -136,7 +146,9 @@ def custom_metric_fn(
             with open(image_path, "rb") as f:
                 image_data = f.read()
                 prompt_parts.append(
-                    genai.types.Part.from_bytes(data=image_data, mime_type="image/jpeg"),
+                    genai.types.Part.from_bytes(
+                        data=image_data, mime_type="image/jpeg"
+                    ),
                 )
         except (FileNotFoundError, Exception) as e:
             print(
@@ -197,18 +209,25 @@ def evaluate_pointwise_single(
         }
         client = get_genai_client()
         metric_function = lambda instance: custom_metric_fn(
-            instance, client, metric_template, metric_name, response_schema,
+            instance,
+            client,
+            metric_template,
+            metric_name,
+            response_schema,
         )
         metric = CustomMetric(name=metric_name, metric_function=metric_function)
     else:
         print("--- Text-only data detected. Using standard PointwiseMetric. ---")
         metric = PointwiseMetric(
-            metric=metric_name, metric_prompt_template=metric_template,
+            metric=metric_name,
+            metric_prompt_template=metric_template,
         )
 
     autorater_config = AutoraterConfig(sampling_count=sampling_count)
     eval_task = EvalTask(
-        dataset=eval_dataset, metrics=[metric], autorater_config=autorater_config,
+        dataset=eval_dataset,
+        metrics=[metric],
+        autorater_config=autorater_config,
     )
     result = eval_task.evaluate()
 
@@ -256,18 +275,25 @@ def evaluate_pointwise_batch(
         }
         client = get_genai_client()
         metric_function = lambda instance: custom_metric_fn(
-            instance, client, metric_template, metric_name, response_schema,
+            instance,
+            client,
+            metric_template,
+            metric_name,
+            response_schema,
         )
         metric = CustomMetric(name=metric_name, metric_function=metric_function)
     else:
         print("--- Text-only data detected. Using standard PointwiseMetric. ---")
         metric = PointwiseMetric(
-            metric=metric_name, metric_prompt_template=metric_template,
+            metric=metric_name,
+            metric_prompt_template=metric_template,
         )
 
     autorater_config = AutoraterConfig(sampling_count=sampling_count)
     eval_task = EvalTask(
-        dataset=eval_dataset, metrics=[metric], autorater_config=autorater_config,
+        dataset=eval_dataset,
+        metrics=[metric],
+        autorater_config=autorater_config,
     )
 
     result = eval_task.evaluate()
@@ -310,20 +336,28 @@ def evaluate_pairwise_single(
         }
         client = get_genai_client()
         metric_function = lambda instance: custom_metric_fn(
-            instance, client, metric_template, metric_name, response_schema,
+            instance,
+            client,
+            metric_template,
+            metric_name,
+            response_schema,
         )
         metric = CustomMetric(name=metric_name, metric_function=metric_function)
     else:
         print("--- Text-only data detected. Using standard PairwiseMetric. ---")
         metric = PairwiseMetric(
-            metric=metric_name, metric_prompt_template=metric_template,
+            metric=metric_name,
+            metric_prompt_template=metric_template,
         )
 
     autorater_config = AutoraterConfig(
-        sampling_count=sampling_count, flip_enabled=flip_enabled,
+        sampling_count=sampling_count,
+        flip_enabled=flip_enabled,
     )
     eval_task = EvalTask(
-        dataset=eval_dataset, metrics=[metric], autorater_config=autorater_config,
+        dataset=eval_dataset,
+        metrics=[metric],
+        autorater_config=autorater_config,
     )
     result = eval_task.evaluate()
 
@@ -368,20 +402,28 @@ def evaluate_pairwise_batch(
         }
         client = get_genai_client()
         metric_function = lambda instance: custom_metric_fn(
-            instance, client, metric_template, metric_name, response_schema,
+            instance,
+            client,
+            metric_template,
+            metric_name,
+            response_schema,
         )
         metric = CustomMetric(name=metric_name, metric_function=metric_function)
     else:
         print("--- Text-only data detected. Using standard PairwiseMetric. ---")
         metric = PairwiseMetric(
-            metric=metric_name, metric_prompt_template=metric_template,
+            metric=metric_name,
+            metric_prompt_template=metric_template,
         )
 
     autorater_config = AutoraterConfig(
-        sampling_count=sampling_count, flip_enabled=flip_enabled,
+        sampling_count=sampling_count,
+        flip_enabled=flip_enabled,
     )
     eval_task = EvalTask(
-        dataset=eval_dataset, metrics=[metric], autorater_config=autorater_config,
+        dataset=eval_dataset,
+        metrics=[metric],
+        autorater_config=autorater_config,
     )
 
     result = eval_task.evaluate()
@@ -423,7 +465,8 @@ def main():
     print("#" * 80)
     pointwise_text_template = (
         veo_prompt_eval_templates.VEO_PROMPT_EFFECTIVENESS_TEMPLATE.replace(
-            "{original_prompt}", "{prompt}",
+            "{original_prompt}",
+            "{prompt}",
         ).replace("{augmented_prompt}", "This is the same as the original: {prompt}")
     )
     score, explanation = evaluate_pointwise_single(

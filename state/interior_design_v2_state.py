@@ -1,5 +1,4 @@
-"""State for the Interior Design V2 page.
-"""
+"""State for the Interior Design V2 page."""
 
 from dataclasses import field
 

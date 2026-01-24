@@ -27,7 +27,9 @@ from .extract_frame import extract_last_frames, save_frames_to_temp
 
 # Initialize clients
 client = genai.Client(
-    vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION,
+    vertexai=True,
+    project=config.PROJECT_ID,
+    location=config.GEMINI_LOCATION,
 )
 
 edit_model = config.IMAGEN_MODEL_NAME
@@ -58,7 +60,9 @@ def _get_description_for_image(image_path: str) -> str:
         ),
     ]
     profile_response = client.models.generate_content(
-        model=model_name, contents=profile_prompt_parts, config=profile_config,
+        model=model_name,
+        contents=profile_prompt_parts,
+        config=profile_config,
     )
     analysis = SceneAnalysis.model_validate_json(profile_response.text)
 
@@ -72,7 +76,9 @@ def _get_description_for_image(image_path: str) -> str:
     {analysis.model_dump_json(indent=2)}
     """
     description_response = client.models.generate_content(
-        model=model_name, contents=[description_prompt], config=description_config,
+        model=model_name,
+        contents=[description_prompt],
+        config=description_config,
     )
     return description_response.text.strip()
 
@@ -124,7 +130,9 @@ def _select_best_scene_frame(scene_descriptions: list[str], user_prompt: str) ->
 
 
 def _generate_final_scene_prompt(
-    character_description: str, scene_description: str, user_prompt: str,
+    character_description: str,
+    scene_description: str,
+    user_prompt: str,
 ) -> GeneratedPrompts:
     """Generates a detailed prompt by combining a character description,
     a scene context, and a new user command.
@@ -157,7 +165,9 @@ def _generate_final_scene_prompt(
     """
 
     response = client.models.generate_content(
-        model=model_name, contents=[meta_prompt], config=config,
+        model=model_name,
+        contents=[meta_prompt],
+        config=config,
     )
     return GeneratedPrompts.model_validate_json(response.text)
 
@@ -166,7 +176,9 @@ def _generate_final_scene_prompt(
 
 
 def generate_scene_from_video(
-    video_path: str, context_image_path: str, user_prompt: str,
+    video_path: str,
+    context_image_path: str,
+    user_prompt: str,
 ) -> tuple[str, str, str]:
     """Analyzes video frames, selects the best one for context, and prepares it
     for the next step (e.g., outpainting) without generating a new image.
@@ -198,7 +210,8 @@ def generate_scene_from_video(
     # STEP 3: Use AI to select the single best frame that provides context for the next action.
     print("AI is selecting the best frame for scene context...")
     best_frame_index = _select_best_scene_frame(
-        scene_descriptions=scene_descriptions, user_prompt=user_prompt,
+        scene_descriptions=scene_descriptions,
+        user_prompt=user_prompt,
     )
     best_frame_path = last_frame_paths[best_frame_index]
     best_scene_description = scene_descriptions[best_frame_index]

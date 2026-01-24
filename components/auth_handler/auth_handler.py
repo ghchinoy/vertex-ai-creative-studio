@@ -27,8 +27,7 @@ def auth_handler(
     cached_photo_url: str = "",
     key: str | None = None,
 ):
-    """Handles Firebase Authentication.
-    """
+    """Handles Firebase Authentication."""
     return me.insert_web_component(
         key=key,
         name="auth-handler",

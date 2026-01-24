@@ -64,7 +64,9 @@ def run_tryon_cached(person_b64, name, b64):
         },
     ]
     response = client.predict(
-        endpoint=model_endpoint, instances=instances, parameters={},
+        endpoint=model_endpoint,
+        instances=instances,
+        parameters={},
     )
     elapsed = time.time() - start
     output_img = prediction_to_pil_image(response.predictions[0])
@@ -132,7 +134,8 @@ if uploaded_person:
                         results.append(f.result())
 
             ordered_results = sorted(
-                results, key=lambda x: PRODUCT_IMAGE_FILES.index(x[0]),
+                results,
+                key=lambda x: PRODUCT_IMAGE_FILES.index(x[0]),
             )
             cols = st.columns(len(ordered_results))
             for i, (name, out_img, elapsed) in enumerate(ordered_results):

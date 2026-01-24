@@ -1,5 +1,4 @@
-"""Component for the Design Studio.
-"""
+"""Component for the Design Studio."""
 
 from collections.abc import Callable
 
@@ -21,8 +20,7 @@ def design_studio(
     on_clear_design: Callable,
     on_design_click: Callable,
 ):
-    """Component for the Design Studio.
-    """
+    """Component for the Design Studio."""
     with me.box(
         style=me.Style(display="flex", flex_direction="column", gap=16, width=300),
     ):
@@ -45,7 +43,9 @@ def design_studio(
                 button_label="Add from Library",
             )
         if design_image_display_url:
-            with me.box(style=me.Style(width="100%", height=200, margin=me.Margin(top=8))):
+            with me.box(
+                style=me.Style(width="100%", height=200, margin=me.Margin(top=8))
+            ):
                 media_tile(
                     media_type="image",
                     https_url=design_image_display_url,

@@ -171,7 +171,10 @@ def adapt_countdown_script(
 
 
 def generate_candidate_images_locally(
-    client: genai.Client, prompt: str, num_candidates: int, output_prefix: str,
+    client: genai.Client,
+    prompt: str,
+    num_candidates: int,
+    output_prefix: str,
 ) -> list[str]:
     """Generates multiple candidate images using Imagen and saves them to local paths.
 
@@ -208,7 +211,9 @@ def generate_candidate_images_locally(
 
 
 def select_best_image_locally(
-    client: genai.Client, prompt: str, candidate_paths: list[str],
+    client: genai.Client,
+    prompt: str,
+    candidate_paths: list[str],
 ) -> str:
     """Uses a multimodal model to select the best image from a list of local file paths.
 
@@ -234,7 +239,8 @@ def select_best_image_locally(
         model=config.SELECTOR_MODEL,
         contents=contents,
         config=types.GenerateContentConfig(
-            response_mime_type="application/json", response_schema=ImageChoiceResponse,
+            response_mime_type="application/json",
+            response_schema=ImageChoiceResponse,
         ),
     )
     choice_data = ImageChoiceResponse.model_validate_json(response.text)
@@ -324,7 +330,9 @@ def generate_candidate_videos_locally(
 
 
 def select_best_video_locally(
-    client: genai.Client, prompt: str, candidate_paths: list[str],
+    client: genai.Client,
+    prompt: str,
+    candidate_paths: list[str],
 ) -> str:
     """Uses a multimodal model to select the best video from a list of local file paths.
 
@@ -350,7 +358,8 @@ def select_best_video_locally(
         model=config.SELECTOR_MODEL,
         contents=contents,
         config=types.GenerateContentConfig(
-            response_mime_type="application/json", response_schema=VideoChoiceResponse,
+            response_mime_type="application/json",
+            response_schema=VideoChoiceResponse,
         ),
     )
     choice_data = VideoChoiceResponse.model_validate_json(response.text)
@@ -362,7 +371,9 @@ def select_best_video_locally(
 
 
 def check_videos_for_digit(
-    client: genai.Client, digit: int, candidate_paths: list[str],
+    client: genai.Client,
+    digit: int,
+    candidate_paths: list[str],
 ) -> DigitCheckResponse:
     """Uses a multimodal model to check if a specific digit is visible in two videos.
 
@@ -396,7 +407,8 @@ def check_videos_for_digit(
         model=config.SELECTOR_MODEL,  # Using the same powerful model for this check
         contents=contents,
         config=types.GenerateContentConfig(
-            response_mime_type="application/json", response_schema=DigitCheckResponse,
+            response_mime_type="application/json",
+            response_schema=DigitCheckResponse,
         ),
     )
     logger.info("  - Digit check response received.")
@@ -405,7 +417,9 @@ def check_videos_for_digit(
 
 # --- Main Service Function ---
 def generate_video_from_prompts_service(
-    company_name: str, countdown_range: tuple[int, int], example_script_path: str,
+    company_name: str,
+    countdown_range: tuple[int, int],
+    example_script_path: str,
 ) -> None:
     """Orchestrates the generation of a branded countdown video based on AI-adapted prompts.
 
@@ -425,7 +439,10 @@ def generate_video_from_prompts_service(
 
     # 1. Generate the structured script by adapting from the example
     script_response = adapt_countdown_script(
-        client, company_name, countdown_range, example_script_path,
+        client,
+        company_name,
+        countdown_range,
+        example_script_path,
     )
 
     # Save the generated script to a file
@@ -459,10 +476,15 @@ def generate_video_from_prompts_service(
 
         if i == 0 and scene_data.image_prompt:
             candidate_image_paths = generate_candidate_images_locally(
-                client, scene_data.image_prompt, 4, scene_output_prefix,
+                client,
+                scene_data.image_prompt,
+                4,
+                scene_output_prefix,
             )
             input_image_path = select_best_image_locally(
-                client, scene_data.image_prompt, candidate_image_paths,
+                client,
+                scene_data.image_prompt,
+                candidate_image_paths,
             )
 
             # Cleanup unselected images
@@ -513,7 +535,9 @@ def generate_video_from_prompts_service(
             # Check if the digit is present in the generated videos
             expected_digit = countdown_start - i
             digit_check_result = check_videos_for_digit(
-                client, expected_digit, candidate_video_paths,
+                client,
+                expected_digit,
+                candidate_video_paths,
             )
 
             video_0_ok = digit_check_result.video_0_check.is_visible
@@ -524,7 +548,9 @@ def generate_video_from_prompts_service(
                     "    - Both videos contain the digit. Selecting the best one.",
                 )
                 chosen_video_path = select_best_video_locally(
-                    client, scene_data.video_prompt, candidate_video_paths,
+                    client,
+                    scene_data.video_prompt,
+                    candidate_video_paths,
                 )
                 break
             if video_0_ok:
@@ -543,7 +569,9 @@ def generate_video_from_prompts_service(
             )
             # Fallback: if no valid video was found after retries, still select the "best" from the last attempt
             chosen_video_path = select_best_video_locally(
-                client, scene_data.video_prompt, candidate_video_paths,
+                client,
+                scene_data.video_prompt,
+                candidate_video_paths,
             )
 
         # Cleanup unselected videos for the current scene
@@ -566,7 +594,10 @@ def generate_video_from_prompts_service(
         base_output_dir / f"{company_name.replace(' ', '_')}_countdown.mp4",
     )
     create_final_video(
-        chosen_video_paths, final_video_path, speed_factor=4, fade_duration=1,
+        chosen_video_paths,
+        final_video_path,
+        speed_factor=4,
+        fade_duration=1,
     )
 
     logger.info("\n--- All steps completed successfully! ---")
@@ -583,7 +614,8 @@ if __name__ == "__main__":
     # Constants
     _COUNTDOWN_END_NUMBER = 1
     _EXAMPLE_SCRIPT_PATH = os.path.join(
-        config.ENGINEERED_PROMPTS_OUTPUT_DIR, "Google I⧸O '25 Keynote_analysis.txt",
+        config.ENGINEERED_PROMPTS_OUTPUT_DIR,
+        "Google I⧸O '25 Keynote_analysis.txt",
     )
 
     if not os.path.exists(_EXAMPLE_SCRIPT_PATH):

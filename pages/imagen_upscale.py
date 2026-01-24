@@ -67,7 +67,10 @@ class PageState:
 def on_upload(e: me.UploadEvent):
     state = me.state(PageState)
     gcs_uri = store_to_gcs(
-        "upscale_inputs", e.file.name, e.file.mime_type, e.file.getvalue(),
+        "upscale_inputs",
+        e.file.name,
+        e.file.mime_type,
+        e.file.getvalue(),
     )
     state.input_image_gcs = gcs_uri
     state.input_image_url = create_display_url(gcs_uri)
@@ -113,7 +116,8 @@ def on_upscale(e: me.ClickEvent):
             input_resolution=state.input_resolution,
         ):
             output_gcs, original_res, upscaled_res = upscale_image(
-                state.input_image_gcs, state.upscale_factor,
+                state.input_image_gcs,
+                state.upscale_factor,
             )
         generation_time = time.time() - start_time
 
@@ -189,7 +193,10 @@ def page():
                 # Input Column
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="column", gap=16, flex=1,
+                        display="flex",
+                        flex_direction="column",
+                        gap=16,
+                        flex=1,
                     ),
                 ):
                     me.text("Input Image", type="headline-6")
@@ -205,7 +212,8 @@ def page():
                             me.icon(
                                 "image",
                                 style=me.Style(
-                                    font_size=48, color=me.theme_var("outline"),
+                                    font_size=48,
+                                    color=me.theme_var("outline"),
                                 ),
                             )
                             me.text("No image selected")
@@ -269,7 +277,10 @@ def page():
                 # Output Column
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="column", gap=16, flex=1,
+                        display="flex",
+                        flex_direction="column",
+                        gap=16,
+                        flex=1,
                     ),
                 ):
                     me.text("Upscaled Image", type="headline-6")
@@ -286,7 +297,8 @@ def page():
                             me.icon(
                                 "image",
                                 style=me.Style(
-                                    font_size=48, color=me.theme_var("outline"),
+                                    font_size=48,
+                                    color=me.theme_var("outline"),
                                 ),
                             )
                             me.text("Output will appear here")

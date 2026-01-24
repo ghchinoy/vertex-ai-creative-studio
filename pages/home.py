@@ -110,11 +110,13 @@ def home_page_content(app_state: me.state):  # pylint: disable=unused-argument
                     icon = page_data.get("icon", "broken_image")
                     display_name = page_data.get("display", "Unnamed Page")
                     description = page_data.get(
-                        "description", "Explore this capability.",
+                        "description",
+                        "Explore this capability.",
                     )
                     video_url = page_data.get("video_url", "")
                     video_object_position = page_data.get(
-                        "video_object_position", "center",
+                        "video_object_position",
+                        "center",
                     )
 
                     interactive_tile(

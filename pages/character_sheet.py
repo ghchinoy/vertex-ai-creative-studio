@@ -48,20 +48,30 @@ def character_sheet_content():
 
     with me.box(
         style=me.Style(
-            display="flex", flex_direction="column", gap=24, padding=me.Padding.all(24),
+            display="flex",
+            flex_direction="column",
+            gap=24,
+            padding=me.Padding.all(24),
         ),
     ):
         # --- Input Section ---
         with me.box(
             style=me.Style(
-                display="flex", flex_direction="row", gap=24, flex_wrap="wrap",
+                display="flex",
+                flex_direction="row",
+                gap=24,
+                flex_wrap="wrap",
             ),
         ):
             # Left: Original Image Upload
             with me.box(style=me.Style(flex_basis="300px", flex_grow=1)):
                 me.text("1. Upload Original Character", type="headline-6")
                 if state.original_image_display_url:
-                    with me.box(style=me.Style(width="100%", height=300, margin=me.Margin(bottom=16))):
+                    with me.box(
+                        style=me.Style(
+                            width="100%", height=300, margin=me.Margin(bottom=16)
+                        )
+                    ):
                         media_tile(
                             media_type="image",
                             https_url=state.original_image_display_url,
@@ -157,7 +167,10 @@ def on_upload_original(e: me.UploadEvent):
     state = me.state(PageState)
     file = e.files[0]
     gcs_uri = store_to_gcs(
-        "character_sheet_uploads", file.name, file.mime_type, file.getvalue(),
+        "character_sheet_uploads",
+        file.name,
+        file.mime_type,
+        file.getvalue(),
     )
     state.original_image_gcs_uri = gcs_uri
     state.original_image_display_url = create_display_url(gcs_uri)

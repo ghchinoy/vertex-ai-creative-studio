@@ -56,18 +56,23 @@ def sidenav(current_page: str):
     app_state = me.state(AppState)
     # print(f"received current page: {current_page}")
 
-    with me.sidenav(
-        opened=True,
-        style=me.Style(
-            width=SIDENAV_MAX_WIDTH if app_state.sidenav_open else SIDENAV_MIN_WIDTH,
-            background=me.theme_var("secondary-container"),
+    with (
+        me.sidenav(
+            opened=True,
+            style=me.Style(
+                width=SIDENAV_MAX_WIDTH
+                if app_state.sidenav_open
+                else SIDENAV_MIN_WIDTH,
+                background=me.theme_var("secondary-container"),
+            ),
         ),
-    ), me.box(
-        style=me.Style(
-            margin=me.Margin(top=16, left=16, right=16, bottom=16),
-            display="flex",
-            flex_direction="column",
-            gap=5,
+        me.box(
+            style=me.Style(
+                margin=me.Margin(top=16, left=16, right=16, bottom=16),
+                display="flex",
+                flex_direction="column",
+                gap=5,
+            ),
         ),
     ):
         with me.box(
@@ -78,17 +83,24 @@ def sidenav(current_page: str):
                 align_items="center",
             ),
         ):
-            with me.content_button(
-                type="icon",
-                on_click=on_sidenav_menu_click,
-            ), me.box(), me.tooltip(message="Expand menu"):
+            with (
+                me.content_button(
+                    type="icon",
+                    on_click=on_sidenav_menu_click,
+                ),
+                me.box(),
+                me.tooltip(message="Expand menu"),
+            ):
                 me.icon(icon="menu")
             if app_state.sidenav_open:
                 me.text("STUDIO", style=_FANCY_TEXT_GRADIENT)
         me.box(style=me.Style(height=16))
         for idx, page in enumerate(page_json):
             menu_item(
-                idx, page["icon"], page["display"], not app_state.sidenav_open,
+                idx,
+                page["icon"],
+                page["display"],
+                not app_state.sidenav_open,
             )
         # settings & theme toggle
         with me.box(style=MENU_BOTTOM):
@@ -98,7 +110,7 @@ def sidenav(current_page: str):
                 "Theme",
                 not app_state.sidenav_open,
             )
-                # menu_item(10, "settings", "Settings", not app_state.sidenav_open)
+            # menu_item(10, "settings", "Settings", not app_state.sidenav_open)
 
 
 def menu_item(
@@ -110,32 +122,39 @@ def menu_item(
 ):
     """Render menu item"""
     if minimized:  # minimized
-        with me.box(
-            style=me.Style(
-                display="flex",
-                flex_direction="row",
-                gap=5,
-                align_items="center",
+        with (
+            me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    gap=5,
+                    align_items="center",
+                ),
             ),
-        ), me.content_button(
-            key=str(key),
-            on_click=navigate_to,
-            style=content_style,
-            type="icon",
-        ), me.tooltip(message=text):
+            me.content_button(
+                key=str(key),
+                on_click=navigate_to,
+                style=content_style,
+                type="icon",
+            ),
+            me.tooltip(message=text),
+        ):
             me.icon(icon=icon)
 
     else:  # expanded
-        with me.content_button(
-            key=str(key),
-            on_click=navigate_to,
-            style=content_style,
-        ), me.box(
-            style=me.Style(
-                display="flex",
-                flex_direction="row",
-                gap=5,
-                align_items="center",
+        with (
+            me.content_button(
+                key=str(key),
+                on_click=navigate_to,
+                style=content_style,
+            ),
+            me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    gap=5,
+                    align_items="center",
+                ),
             ),
         ):
             me.icon(icon=icon)
@@ -157,18 +176,21 @@ def theme_toggle_icon(key: int, icon: str, text: str, min: bool = True):
     """Theme toggle icon"""
     # THEME_TOGGLE_STYLE = me.Style(position="absolute", bottom=50, align_content="left")
     if min:  # minimized
-        with me.box(
-            style=me.Style(
-                display="flex",
-                flex_direction="row",
-                gap=5,
-                align_items="center",
+        with (
+            me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    gap=5,
+                    align_items="center",
+                ),
             ),
-        ), me.content_button(
-            key=str(key),
-            on_click=toggle_theme,
-            # style=THEME_TOGGLE_STYLE,
-            type="icon",
+            me.content_button(
+                key=str(key),
+                on_click=toggle_theme,
+                # style=THEME_TOGGLE_STYLE,
+                type="icon",
+            ),
         ):
             with me.tooltip(message=text):
                 me.icon(

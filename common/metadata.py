@@ -49,9 +49,7 @@ class MediaItem:
     # Common fields across media types
     prompt: str | None = None  # The final prompt used for generation
     original_prompt: str | None = None  # User's initial prompt if rewriting occurred
-    rewritten_prompt: str | None = (
-        None  # The prompt after any rewriter (Gemini, etc.)
-    )
+    rewritten_prompt: str | None = None  # The prompt after any rewriter (Gemini, etc.)
     model: str | None = (
         None  # Specific model ID used (e.g., "imagen-3.0-fast", "veo-2.0")
     )
@@ -83,9 +81,7 @@ class MediaItem:
     last_reference_image: str | None = None
     negative_prompt: str | None = None
     enhanced_prompt_used: bool = False
-    comment: str | None = (
-        None  # General comment field, e.g., for video generation type
-    )
+    comment: str | None = None  # General comment field, e.g., for video generation type
 
     # Image specific
     # aspect is shared with Video
@@ -326,7 +322,8 @@ def _create_media_item_from_dict(doc_id: str, raw_item_data: dict) -> MediaItem:
         mode=raw_item_data.get("mode"),
         generation_time=gen_time,
         status=raw_item_data.get(
-            "status", "complete",
+            "status",
+            "complete",
         ),  # Default to 'complete' for legacy items
         error_message=raw_item_data.get("error_message"),
         gcsuri=gcsuri,
@@ -435,7 +432,8 @@ def get_latest_videos(limit: int = 10):
 def get_total_media_count():
     """Get count of all media in firestore"""
     media_ref = db.collection(config.GENMEDIA_COLLECTION_NAME).order_by(
-        "timestamp", direction=firestore.Query.DESCENDING,
+        "timestamp",
+        direction=firestore.Query.DESCENDING,
     )
     count = len([doc.to_dict() for doc in media_ref.stream()])
     return count
@@ -520,7 +518,13 @@ def get_media_for_page(
 
             # Apply type filters
             passes_type_filter = False
-            if not type_filters or "all" in type_filters or ("videos" in type_filters and mime_type.startswith("video/")) or ("images" in type_filters and mime_type.startswith("image/")) or ("music" in type_filters and mime_type.startswith("audio/")):
+            if (
+                not type_filters
+                or "all" in type_filters
+                or ("videos" in type_filters and mime_type.startswith("video/"))
+                or ("images" in type_filters and mime_type.startswith("image/"))
+                or ("music" in type_filters and mime_type.startswith("audio/"))
+            ):
                 passes_type_filter = True
 
             if not passes_type_filter:
@@ -528,7 +532,11 @@ def get_media_for_page(
 
             # Apply error filter
             passes_error_filter = False
-            if error_filter == "all" or (error_filter == "no_errors" and not error_message_present) or (error_filter == "only_errors" and error_message_present):
+            if (
+                error_filter == "all"
+                or (error_filter == "no_errors" and not error_message_present)
+                or (error_filter == "only_errors" and error_message_present)
+            ):
                 passes_error_filter = True
 
             if not passes_error_filter:
@@ -580,15 +588,21 @@ def get_media_for_page_optimized(
         # Apply type filters using mime_type range filters for maximum compatibility
         if "videos" in type_filters or "video" in type_filters:
             query = query.where("mime_type", ">=", "video/").where(
-                "mime_type", "<", "video0",
+                "mime_type",
+                "<",
+                "video0",
             )
         elif "images" in type_filters or "image" in type_filters:
             query = query.where("mime_type", ">=", "image/").where(
-                "mime_type", "<", "image0",
+                "mime_type",
+                "<",
+                "image0",
             )
         elif "music" in type_filters or "audio" in type_filters:
             query = query.where("mime_type", ">=", "audio/").where(
-                "mime_type", "<", "audio0",
+                "mime_type",
+                "<",
+                "audio0",
             )
 
         # Always sort by timestamp
@@ -709,7 +723,8 @@ def get_media_for_page_optimized(
                     else None
                 ),
                 source_character_images=raw_item_data.get(
-                    "source_character_images", [],
+                    "source_character_images",
+                    [],
                 ),
                 character_description=(
                     str(raw_item_data.get("character_description"))
@@ -747,12 +762,16 @@ def get_media_for_page_optimized(
         return media_items, last_doc
 
     except Exception as e:
-        logger.error(f"Error fetching media from Firestore (optimized): {e}", exc_info=True)
+        logger.error(
+            f"Error fetching media from Firestore (optimized): {e}", exc_info=True
+        )
         return [], None
 
 
 def get_media_for_chooser(
-    media_type: str, page_size: int, start_after=None,
+    media_type: str,
+    page_size: int,
+    start_after=None,
 ) -> tuple[list[MediaItem], firestore.DocumentSnapshot | None]:
     """Fetches media items for the chooser, using a hybrid query strategy."""
     # TODO: This function uses two queries for backward compatibility (one for `media_type`

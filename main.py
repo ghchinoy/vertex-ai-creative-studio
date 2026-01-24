@@ -134,7 +134,9 @@ async def login(request: LoginRequest):
                 }
 
                 # Set first_signed_in if it doesn't exist (new or legacy user)
-                if not user_doc.exists or "first_signed_in" not in (user_doc.to_dict() or {}):
+                if not user_doc.exists or "first_signed_in" not in (
+                    user_doc.to_dict() or {}
+                ):
                     update_data["first_signed_in"] = now
 
                 if request.photo_url:
@@ -154,7 +156,8 @@ async def login(request: LoginRequest):
         # Create a session cookie
         expires_in = datetime.timedelta(days=5)
         session_cookie = auth.create_session_cookie(
-            request.token, expires_in=expires_in,
+            request.token,
+            expires_in=expires_in,
         )
 
         user_role = get_user_role(email)
@@ -271,7 +274,8 @@ async def set_request_context(request: Request, call_next):
     if session_cookie:
         try:
             decoded_claims = auth.verify_session_cookie(
-                session_cookie, check_revoked=True,
+                session_cookie,
+                check_revoked=True,
             )
             user_email = decoded_claims.get("email")
         except Exception:
@@ -339,7 +343,10 @@ async def set_request_context(request: Request, call_next):
 
     response = await call_next(request)
     response.set_cookie(
-        key="session_id", value=session_id, httponly=True, samesite="Lax",
+        key="session_id",
+        value=session_id,
+        httponly=True,
+        samesite="Lax",
     )
     return response
 

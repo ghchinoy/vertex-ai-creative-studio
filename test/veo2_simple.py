@@ -138,12 +138,14 @@ def main():
                 model=video_model,
                 prompt=interpolate_prompt,
                 image=types.Image(
-                    gcs_uri=INTERPOLATE_FIRST_FRAME_GCS_URI, mime_type="image/png",
+                    gcs_uri=INTERPOLATE_FIRST_FRAME_GCS_URI,
+                    mime_type="image/png",
                 ),
                 config=types.GenerateVideosConfig(
                     aspect_ratio="9:16",
                     last_frame=types.Image(
-                        gcs_uri=INTERPOLATE_LAST_FRAME_GCS_URI, mime_type="image/png",
+                        gcs_uri=INTERPOLATE_LAST_FRAME_GCS_URI,
+                        mime_type="image/png",
                     ),
                     number_of_videos=1,
                     duration_seconds=7,

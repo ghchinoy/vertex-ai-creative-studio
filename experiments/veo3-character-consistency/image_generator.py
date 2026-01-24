@@ -26,7 +26,9 @@ import config
 
 # Initialize clients
 client = genai.Client(
-    vertexai=True, project=config.PROJECT_ID, location=config.GEMINI_LOCATION,
+    vertexai=True,
+    project=config.PROJECT_ID,
+    location=config.GEMINI_LOCATION,
 )
 
 edit_model = config.IMAGEN_MODEL_NAME
@@ -53,7 +55,9 @@ def _get_description_for_image(image_path: str) -> str:
         ),
     ]
     profile_response = client.models.generate_content(
-        model=model_name, contents=profile_prompt_parts, config=profile_config,
+        model=model_name,
+        contents=profile_prompt_parts,
+        config=profile_config,
     )
     profile = FacialCompositeProfile.model_validate_json(profile_response.text)
 
@@ -66,13 +70,16 @@ def _get_description_for_image(image_path: str) -> str:
     {profile.model_dump_json(indent=2)}
     """
     description_response = client.models.generate_content(
-        model=model_name, contents=[description_prompt], config=description_config,
+        model=model_name,
+        contents=[description_prompt],
+        config=description_config,
     )
     return description_response.text.strip()
 
 
 def _generate_final_scene_prompt(
-    base_description: str, user_prompt: str,
+    base_description: str,
+    user_prompt: str,
 ) -> GeneratedPrompts:
     """Generates a detailed, photorealistic prompt to place a described person
     in a novel scene. It combines the character's description with the user's
@@ -103,13 +110,16 @@ def _generate_final_scene_prompt(
     """
 
     response = client.models.generate_content(
-        model=model_name, contents=[meta_prompt], config=config,
+        model=model_name,
+        contents=[meta_prompt],
+        config=config,
     )
     return GeneratedPrompts.model_validate_json(response.text)
 
 
 def generate_images_and_select_best(
-    image_paths: list[str], prompt: str,
+    image_paths: list[str],
+    prompt: str,
 ) -> tuple[str, str, list[str]]:
     """The core function of the image generation step. It takes the reference
     images and a scenario, generates a new set of images, selects the best one
@@ -170,7 +180,8 @@ def generate_images_and_select_best(
 
     # Outpaint the best image to create the final scene
     outpainted_image_path = outpaint_image(
-        best_image_selection.best_image_path, final_prompt,
+        best_image_selection.best_image_path,
+        final_prompt,
     )
 
     return output_dir, outpainted_image_path, generated_image_paths

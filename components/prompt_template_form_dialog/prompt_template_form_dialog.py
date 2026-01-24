@@ -192,7 +192,10 @@ def prompt_template_form_dialog(
                 )
                 with me.box(
                     style=me.Style(
-                        display="flex", flex_direction="row", gap=8, flex_wrap="wrap",
+                        display="flex",
+                        flex_direction="row",
+                        gap=8,
+                        flex_wrap="wrap",
                     ),
                 ):
                     for ref_uri in template["references"]:

@@ -1,5 +1,4 @@
-"""Component for generating and displaying the 3D view.
-"""
+"""Component for generating and displaying the 3D view."""
 
 from collections.abc import Callable
 
@@ -29,8 +28,7 @@ def generated_3d_view(
     is_generating: bool,
     on_generate: Callable,
 ):
-    """Component for generating and displaying the 3D view.
-    """
+    """Component for generating and displaying the 3D view."""
     with me.box(
         style=me.Style(
             display="flex",

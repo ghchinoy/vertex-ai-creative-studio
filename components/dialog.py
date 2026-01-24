@@ -13,13 +13,14 @@
 # limitations under the License.
 """Dialog mesop component"""
 
-
 import mesop as me
 
 
 @me.content_component
 def dialog(
-    is_open: bool, dialog_style: me.Style | None = None, key: str | None = None,
+    is_open: bool,
+    dialog_style: me.Style | None = None,
+    key: str | None = None,
 ):
     """Render a dialog component.
 
@@ -88,30 +89,34 @@ def dialog(
         else defaults["max_width"],
     )
 
-    with me.box(
-        key=key,
-        style=me.Style(
-            background="rgba(0,0,0,0.4)",
-            display="block" if is_open else "none",
-            height="100%",
-            left=0,
-            top=0,
-            overflow_x="hidden",
-            overflow_y="auto",
-            position="fixed",
-            width="100%",
-            z_index=1000,
+    with (
+        me.box(
+            key=key,
+            style=me.Style(
+                background="rgba(0,0,0,0.4)",
+                display="block" if is_open else "none",
+                height="100%",
+                left=0,
+                top=0,
+                overflow_x="hidden",
+                overflow_y="auto",
+                position="fixed",
+                width="100%",
+                z_index=1000,
+            ),
         ),
-    ), me.box(
-        style=me.Style(
-            display="flex",
-            align_items="center",
-            justify_content="center",
-            height="100%",
-            width="100%",
-            padding=me.Padding.all(20),
+        me.box(
+            style=me.Style(
+                display="flex",
+                align_items="center",
+                justify_content="center",
+                height="100%",
+                width="100%",
+                padding=me.Padding.all(20),
+            ),
         ),
-    ), me.box(style=final_style):
+        me.box(style=final_style),
+    ):
         me.slot()
 
 
@@ -120,7 +125,10 @@ def dialog_actions():
     """Helper component for rendering action buttons so they are right aligned."""
     with me.box(
         style=me.Style(
-            display="flex", justify_content="flex-end", margin=me.Margin(top=24), gap=8,
+            display="flex",
+            justify_content="flex-end",
+            margin=me.Margin(top=24),
+            gap=8,
         ),
     ):
         me.slot()

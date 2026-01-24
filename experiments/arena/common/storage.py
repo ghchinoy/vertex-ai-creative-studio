@@ -27,7 +27,11 @@ aiplatform.init(project=cfg.PROJECT_ID, location=cfg.LOCATION)
 
 
 def store_to_gcs(
-    folder: str, file_name: str, mime_type: str, contents: str, decode: bool = False,
+    folder: str,
+    file_name: str,
+    mime_type: str,
+    contents: str,
+    decode: bool = False,
 ):
     """Store contents to GCS"""
     client = storage.Client(project=cfg.PROJECT_ID)

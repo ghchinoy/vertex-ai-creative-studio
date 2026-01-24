@@ -1,5 +1,4 @@
-"""Component for displaying a single video item in the storyboard.
-"""
+"""Component for displaying a single video item in the storyboard."""
 
 from collections.abc import Callable
 
@@ -15,8 +14,7 @@ def storyboard_video_tile(
     on_click: Callable,
     key: str,
 ):
-    """A tile for displaying a storyboard video item with a text overlay.
-    """
+    """A tile for displaying a storyboard video item with a text overlay."""
     with me.box(
         key=key,
         on_click=on_click,

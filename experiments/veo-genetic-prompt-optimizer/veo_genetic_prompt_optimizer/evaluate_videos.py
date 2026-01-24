@@ -39,7 +39,9 @@ def get_genai_client() -> genai.Client:
 
 
 def _generate_content_with_retry(
-    client: genai.Client, *args, **kwargs,
+    client: genai.Client,
+    *args,
+    **kwargs,
 ) -> genai_types.GenerateContentResponse:
     """Wrapper for generate_content with exponential backoff."""
     max_retries = 5
@@ -76,7 +78,8 @@ def evaluate_single_video(
     try:
         with open(video_path, "rb") as f:
             video_part = genai_types.Part.from_bytes(
-                data=f.read(), mime_type="video/mp4",
+                data=f.read(),
+                mime_type="video/mp4",
             )
     except FileNotFoundError as e:
         return {"error": str(e), "score": 0, "reasoning": "File not found"}
@@ -86,7 +89,8 @@ def evaluate_single_video(
         try:
             with open(image_path, "rb") as f:
                 image_part = genai_types.Part.from_bytes(
-                    data=f.read(), mime_type="image/jpeg",
+                    data=f.read(),
+                    mime_type="image/jpeg",
                 )
         except FileNotFoundError:
             print(f"Warning: Image file {image_path} not found for evaluation.")
@@ -119,7 +123,10 @@ def evaluate_single_video(
 
     try:
         response = _generate_content_with_retry(
-            client, model=GEMINI_MODEL_ID, contents=prompt_content, config=api_config,
+            client,
+            model=GEMINI_MODEL_ID,
+            contents=prompt_content,
+            config=api_config,
         )
         return json.loads(response.text)
     except Exception as e:
@@ -143,11 +150,13 @@ def compare_two_videos(
     try:
         with open(video_a_path, "rb") as f:
             video_a_part = genai_types.Part.from_bytes(
-                data=f.read(), mime_type="video/mp4",
+                data=f.read(),
+                mime_type="video/mp4",
             )
         with open(video_b_path, "rb") as f:
             video_b_part = genai_types.Part.from_bytes(
-                data=f.read(), mime_type="video/mp4",
+                data=f.read(),
+                mime_type="video/mp4",
             )
     except FileNotFoundError as e:
         return {"error": str(e), "better_video": "ERROR", "reasoning": "File not found"}
@@ -157,7 +166,8 @@ def compare_two_videos(
         try:
             with open(image_path, "rb") as f:
                 image_part = genai_types.Part.from_bytes(
-                    data=f.read(), mime_type="image/jpeg",
+                    data=f.read(),
+                    mime_type="image/jpeg",
                 )
         except FileNotFoundError:
             print(f"Warning: Image file {image_path} not found for evaluation.")
@@ -199,7 +209,10 @@ def compare_two_videos(
 
     try:
         response = _generate_content_with_retry(
-            client, model=GEMINI_MODEL_ID, contents=prompt_content, config=api_config,
+            client,
+            model=GEMINI_MODEL_ID,
+            contents=prompt_content,
+            config=api_config,
         )
         response_data = json.loads(response.text)
 
@@ -232,8 +245,7 @@ def process_video_pair(
     flip_enabled: bool,
     image_path: str | None = None,
 ) -> dict[str, Any]:
-    """Manages multiple evaluation runs for a single pair of videos.
-    """
+    """Manages multiple evaluation runs for a single pair of videos."""
     if not os.path.exists(video_a_path) or not os.path.exists(video_b_path):
         return {"status": "skipped", "reason": "One or both video files not found."}
 
@@ -392,7 +404,8 @@ def main():
                 )
 
     print_summary(
-        sorted(pairwise_results, key=lambda x: x["video_a"]), time.time() - start_time,
+        sorted(pairwise_results, key=lambda x: x["video_a"]),
+        time.time() - start_time,
     )
 
 

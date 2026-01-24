@@ -24,12 +24,12 @@ def video_infinite_scroll_library(
     has_more_items: bool,
     on_load_more: typing.Callable[[me.WebEvent], None],
     on_image_selected: typing.Callable[
-        [me.WebEvent], None,
+        [me.WebEvent],
+        None,
     ],  # Keep same name for compatibility
     key: str | None = None,
 ):
-    """A web component for displaying a library of videos with infinite scroll.
-    """
+    """A web component for displaying a library of videos with infinite scroll."""
     return me.insert_web_component(
         key=key,
         name="video-infinite-scroll-library",

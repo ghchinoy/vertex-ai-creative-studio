@@ -92,43 +92,47 @@ def snackbar(
     """
     print(f"visible {is_visible}, label {label}, action {action_label}")
 
-    with me.box(
-        style=me.Style(
-            display="block" if is_visible else "none",
-            height="100%",
-            overflow_x="auto",
-            overflow_y="auto",
-            position="relative",
-            pointer_events="none",
-            width="100%",
-            z_index=1000,
-        ),
-    ), me.box(
-        style=me.Style(
-            align_items=vertical_position,
-            height="100%",
-            display="flex",
-            justify_content=horizontal_position,
-        ),
-    ), me.box(
-        style=me.Style(
-            align_items="center",
-            background=me.theme_var("on-surface-variant"),
-            border_radius=5,
-            box_shadow=(
-                "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+    with (
+        me.box(
+            style=me.Style(
+                display="block" if is_visible else "none",
+                height="100%",
+                overflow_x="auto",
+                overflow_y="auto",
+                position="relative",
+                pointer_events="none",
+                width="100%",
+                z_index=1000,
             ),
-            display="flex",
-            font_size=14,
-            justify_content="space-between",
-            margin=me.Margin.all(10),
-            padding=(
-                me.Padding(top=5, bottom=5, right=5, left=15)
-                if action_label
-                else me.Padding.all(15)
+        ),
+        me.box(
+            style=me.Style(
+                align_items=vertical_position,
+                height="100%",
+                display="flex",
+                justify_content=horizontal_position,
             ),
-            pointer_events="auto",
-            width=300,
+        ),
+        me.box(
+            style=me.Style(
+                align_items="center",
+                background=me.theme_var("on-surface-variant"),
+                border_radius=5,
+                box_shadow=(
+                    "0 3px 1px -2px #0003, 0 2px 2px #00000024, 0 1px 5px #0000001f"
+                ),
+                display="flex",
+                font_size=14,
+                justify_content="space-between",
+                margin=me.Margin.all(10),
+                padding=(
+                    me.Padding(top=5, bottom=5, right=5, left=15)
+                    if action_label
+                    else me.Padding.all(15)
+                ),
+                pointer_events="auto",
+                width=300,
+            ),
         ),
     ):
         me.text(

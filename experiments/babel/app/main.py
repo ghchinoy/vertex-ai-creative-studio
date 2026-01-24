@@ -85,7 +85,8 @@ def on_click_page_choice(e: me.ClickEvent):
     state = me.state(AppState)
     print(f"Clicked on: {e.key}")
     page = next(
-        (item for item in content_pages if item["name"] == e.key), state.current_page,
+        (item for item in content_pages if item["name"] == e.key),
+        state.current_page,
     )
     print(f"Found: {page}")
     print(f"current page: {page['name']}")
@@ -198,27 +199,35 @@ def babel():
                 # content area
 
         # side menu
-        with me.sidenav(
-            opened=True,
-            style=me.Style(
-                width=SIDENAV_MAX_WIDTH if state.sidenav_open else SIDENAV_MIN_WIDTH,
-                margin=me.Margin(top=60),
-                padding=me.Padding(top=10, left=5, right=5, bottom=0),
-                background=me.theme_var("surface-container-lowest"),
-                border_radius="0 30px 0 0",
-            ),
-        ), me.box(style=me.Style(display="flex", flex_direction="column")):
-            # Home: Journey Voices
-            with me.content_button(
-                style=me.Style(align_content="start"),
-                on_click=on_click_page_choice,
-                key="home",
-            ), me.box(
+        with (
+            me.sidenav(
+                opened=True,
                 style=me.Style(
-                    display="flex",
-                    flex_direction="row",
-                    gap=5,
-                    align_items="center",
+                    width=SIDENAV_MAX_WIDTH
+                    if state.sidenav_open
+                    else SIDENAV_MIN_WIDTH,
+                    margin=me.Margin(top=60),
+                    padding=me.Padding(top=10, left=5, right=5, bottom=0),
+                    background=me.theme_var("surface-container-lowest"),
+                    border_radius="0 30px 0 0",
+                ),
+            ),
+            me.box(style=me.Style(display="flex", flex_direction="column")),
+        ):
+            # Home: Journey Voices
+            with (
+                me.content_button(
+                    style=me.Style(align_content="start"),
+                    on_click=on_click_page_choice,
+                    key="home",
+                ),
+                me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        gap=5,
+                        align_items="center",
+                    ),
                 ),
             ):
                 me.icon(
@@ -229,16 +238,19 @@ def babel():
                         "Chirp 3: HD",
                     )
 
-            with me.content_button(
-                style=me.Style(align_content="start"),
-                on_click=on_click_page_choice,
-                key="welcome",
-            ), me.box(
-                style=me.Style(
-                    display="flex",
-                    flex_direction="row",
-                    gap=5,
-                    align_items="center",
+            with (
+                me.content_button(
+                    style=me.Style(align_content="start"),
+                    on_click=on_click_page_choice,
+                    key="welcome",
+                ),
+                me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        gap=5,
+                        align_items="center",
+                    ),
                 ),
             ):
                 me.icon(
@@ -249,16 +261,19 @@ def babel():
                         "Welcome",
                     )
 
-            with me.content_button(
-                style=me.Style(align_content="start"),
-                on_click=on_click_page_choice,
-                key="world_tour",
-            ), me.box(
-                style=me.Style(
-                    display="flex",
-                    flex_direction="row",
-                    gap=5,
-                    align_items="center",
+            with (
+                me.content_button(
+                    style=me.Style(align_content="start"),
+                    on_click=on_click_page_choice,
+                    key="world_tour",
+                ),
+                me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        gap=5,
+                        align_items="center",
+                    ),
                 ),
             ):
                 me.icon(
@@ -277,16 +292,19 @@ def babel():
                 ),
             ):
                 # About
-                with me.content_button(
-                    style=me.Style(align_content="start"),
-                    on_click=on_click_page_choice,
-                    key="about",
-                ), me.box(
-                    style=me.Style(
-                        display="flex",
-                        flex_direction="row",
-                        gap=5,
-                        align_items="center",
+                with (
+                    me.content_button(
+                        style=me.Style(align_content="start"),
+                        on_click=on_click_page_choice,
+                        key="about",
+                    ),
+                    me.box(
+                        style=me.Style(
+                            display="flex",
+                            flex_direction="row",
+                            gap=5,
+                            align_items="center",
+                        ),
                     ),
                 ):
                     me.icon(
@@ -298,16 +316,19 @@ def babel():
                         )
 
                 # Settings
-                with me.content_button(
-                    style=me.Style(align_content="start"),
-                    on_click=on_click_page_choice,
-                    key="settings",
-                ), me.box(
-                    style=me.Style(
-                        display="flex",
-                        flex_direction="row",
-                        gap=5,
-                        align_items="center",
+                with (
+                    me.content_button(
+                        style=me.Style(align_content="start"),
+                        on_click=on_click_page_choice,
+                        key="settings",
+                    ),
+                    me.box(
+                        style=me.Style(
+                            display="flex",
+                            flex_direction="row",
+                            gap=5,
+                            align_items="center",
+                        ),
                     ),
                 ):
                     me.icon(

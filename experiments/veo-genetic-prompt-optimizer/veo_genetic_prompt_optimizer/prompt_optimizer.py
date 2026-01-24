@@ -1,5 +1,4 @@
-"""Main script for the evolutionary optimization of VEO metaprompts.
-"""
+"""Main script for the evolutionary optimization of VEO metaprompts."""
 
 import json
 import os
@@ -44,7 +43,9 @@ def get_genai_client() -> genai.Client:
 
 
 def _generate_content_with_retry(
-    client: genai.Client, *args, **kwargs,
+    client: genai.Client,
+    *args,
+    **kwargs,
 ) -> genai.types.GenerateContentResponse:
     """Wrapper for generate_content with exponential backoff."""
     max_retries = 5
@@ -87,7 +88,9 @@ def generate_with_gemini(
                 image_data = image_file.read()
                 parts.append(genai.types.Part.from_text(text="Image to animate:"))
                 parts.append(
-                    genai.types.Part.from_bytes(data=image_data, mime_type="image/jpeg"),
+                    genai.types.Part.from_bytes(
+                        data=image_data, mime_type="image/jpeg"
+                    ),
                 )
         except FileNotFoundError:
             print(f"  - Image file not found: {image_path}")
@@ -100,16 +103,20 @@ def generate_with_gemini(
         "max_output_tokens": 65535,
         "safety_settings": [
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_HATE_SPEECH", threshold="OFF",
+                category="HARM_CATEGORY_HATE_SPEECH",
+                threshold="OFF",
             ),
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="OFF",
+                category="HARM_CATEGORY_DANGEROUS_CONTENT",
+                threshold="OFF",
             ),
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="OFF",
+                category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                threshold="OFF",
             ),
             genai.types.SafetySetting(
-                category="HARM_CATEGORY_HARASSMENT", threshold="OFF",
+                category="HARM_CATEGORY_HARASSMENT",
+                threshold="OFF",
             ),
         ],
         "thinking_config": genai.types.ThinkingConfig(thinking_budget=-1),
@@ -121,7 +128,10 @@ def generate_with_gemini(
     config = genai.types.GenerateContentConfig(**config_dict)
     try:
         response = _generate_content_with_retry(
-            client, model=GEMINI_MODEL_ID, contents=contents, config=config,
+            client,
+            model=GEMINI_MODEL_ID,
+            contents=contents,
+            config=config,
         )
         return response.text
     except Exception as e:
@@ -130,7 +140,9 @@ def generate_with_gemini(
 
 
 def generate_initial_population(
-    client: genai.Client, base_metaprompt: str, size: int,
+    client: genai.Client,
+    base_metaprompt: str,
+    size: int,
 ) -> list[dict[str, Any]]:
     """Generates the initial population of metaprompts as dictionaries with provenance."""
     print("--- Generating Initial Metaprompt Population ---")
@@ -154,7 +166,9 @@ def generate_initial_population(
         "maxItems": size - 1,
     }
     response_text = generate_with_gemini(
-        client, variation_prompt, response_schema=array_schema,
+        client,
+        variation_prompt,
+        response_schema=array_schema,
     )
 
     variations = []
@@ -241,7 +255,9 @@ def get_metaprompt_fitness(
 
         full_prompt = f"{candidate_metaprompt}\n\nOriginal Prompt: {original_prompt}\n\nYour output should be solely the augmented prompt text, nothing else."
         augmented_prompt = generate_with_gemini(
-            client, full_prompt, image_path=image_path,
+            client,
+            full_prompt,
+            image_path=image_path,
         )
 
         if augmented_prompt:
@@ -316,7 +332,9 @@ def get_metaprompt_fitness(
 
 
 def _get_selection_from_gemini(
-    client: genai.Client, candidates: list[dict[str, Any]], top_k: int,
+    client: genai.Client,
+    candidates: list[dict[str, Any]],
+    top_k: int,
 ) -> dict[str, Any]:
     """Uses Gemini to rank and select top metaprompts from a list of candidates with tied scores."""
     print(f"  - Scores are tied. Using Gemini as a judge to select top {top_k}...")
@@ -392,7 +410,9 @@ def _get_selection_from_gemini(
     """
 
     response_text = generate_with_gemini(
-        client, judge_prompt, response_schema=selection_schema,
+        client,
+        judge_prompt,
+        response_schema=selection_schema,
     )
     try:
         return json.loads(response_text)
@@ -418,7 +438,9 @@ def _get_selection_from_gemini(
 
 
 def select_parents(
-    client: genai.Client, fitness_results: list[dict[str, Any]], top_k: int,
+    client: genai.Client,
+    fitness_results: list[dict[str, Any]],
+    top_k: int,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Selects the top k parents from the fitness results, using a combined score
     and Gemini as a judge for ties.
@@ -528,7 +550,9 @@ def main():
         return
 
     population = generate_initial_population(
-        client, metaprompt_file.original_metaprompt, POPULATION_SIZE,
+        client,
+        metaprompt_file.original_metaprompt,
+        POPULATION_SIZE,
     )
     all_generations_results = []
 
@@ -566,7 +590,9 @@ def main():
             break
 
         parents, best_parent = select_parents(
-            client, evaluated_candidates, TOP_K_SELECTION,
+            client,
+            evaluated_candidates,
+            TOP_K_SELECTION,
         )
 
         if not parents:
@@ -700,7 +726,8 @@ def main():
                                 video_eval_result = future.result()
                                 if video_eval_result["status"] == "success":
                                     for individual_res in video_eval_result.get(
-                                        "individual_results", [],
+                                        "individual_results",
+                                        [],
                                     ):
                                         all_video_explanations.append(
                                             f"Prompt: '{pair['prompt']}' - Video Comparison ({individual_res.get('better_video', 'N/A')} chosen): {individual_res.get('reasoning', 'No reason')}",
@@ -832,7 +859,8 @@ def main():
             else:
                 parent_to_mutate = parents[0]
                 mutated = generate_with_gemini(
-                    client, f"Slightly vary this: {parent_to_mutate['metaprompt']}",
+                    client,
+                    f"Slightly vary this: {parent_to_mutate['metaprompt']}",
                 )
                 new_population.append(
                     {

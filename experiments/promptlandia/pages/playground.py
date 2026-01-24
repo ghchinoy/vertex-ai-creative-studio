@@ -114,14 +114,18 @@ def playground_page_content(app_state: me.state):
         # Toolbar Header
         with me.box(style=_STYLE_CONFIG_HEADER):
             icon_button(
-                icon="code", tooltip="Code", label="CODE", on_click=on_click_show_code,
+                icon="code",
+                tooltip="Code",
+                label="CODE",
+                on_click=on_click_show_code,
             )
 
         # Main Content
         with me.box(style=_STYLE_MAIN_COLUMN):
             # Prompt Tab
             with tab_box(  # pylint: disable=not-context-manager
-                header="Prompt", key="prompt_tab",
+                header="Prompt",
+                key="prompt_tab",
             ):
                 me.textarea(
                     label="Write your prompt here, insert media and then click Submit",
@@ -159,10 +163,12 @@ def playground_page_content(app_state: me.state):
                 me.select(
                     options=[
                         me.SelectOption(
-                            label="us-central1 (Iowa)", value="us-central1",
+                            label="us-central1 (Iowa)",
+                            value="us-central1",
                         ),
                         me.SelectOption(
-                            label="us-east4 (North Virginia)", value="us-east4",
+                            label="us-east4 (North Virginia)",
+                            value="us-east4",
                         ),
                     ],
                     label="Region",
@@ -213,10 +219,13 @@ def playground_page_content(app_state: me.state):
                         # Workaround: update key to clear input.
                         key=f"input-sequence-{state.clear_sequence_count}",
                     )
-                with me.content_button(
-                    style=me.Style(margin=me.Margin(left=10)),
-                    on_click=on_click_add_stop_sequence,
-                ), me.tooltip(message="Add stop Sequence"):
+                with (
+                    me.content_button(
+                        style=me.Style(margin=me.Margin(left=10)),
+                        on_click=on_click_add_stop_sequence,
+                    ),
+                    me.tooltip(message="Add stop Sequence"),
+                ):
                     me.icon(icon="add_circle")
 
             # Stop sequence "chips"
@@ -240,7 +249,8 @@ def icon_button(*, icon: str, label: str, tooltip: str, on_click: Callable):
         with me.box(style=me.Style(display="flex")):
             me.icon(icon=icon)
             me.text(
-                label, style=me.Style(line_height="24px", margin=me.Margin(left=5)),
+                label,
+                style=me.Style(line_height="24px", margin=me.Margin(left=5)),
             )
 
 
@@ -251,18 +261,23 @@ def tab_box(*, header: str, key: str):
     tab_open = getattr(state, key)
     with me.box(style=me.Style(width="100%", margin=me.Margin(bottom=20))):
         # Tab Header
-        with me.box(
-            key=key,
-            on_click=on_click_tab_header,
-            style=me.Style(padding=_DEFAULT_PADDING, border=_DEFAULT_BORDER),
-        ), me.box(style=me.Style(display="flex")):
+        with (
+            me.box(
+                key=key,
+                on_click=on_click_tab_header,
+                style=me.Style(padding=_DEFAULT_PADDING, border=_DEFAULT_BORDER),
+            ),
+            me.box(style=me.Style(display="flex")),
+        ):
             me.icon(
                 icon="keyboard_arrow_down" if tab_open else "keyboard_arrow_right",
             )
             me.text(
                 header,
                 style=me.Style(
-                    line_height="24px", margin=me.Margin(left=5), font_weight="bold",
+                    line_height="24px",
+                    margin=me.Margin(left=5),
+                    font_weight="bold",
                 ),
             )
         # Tab Content

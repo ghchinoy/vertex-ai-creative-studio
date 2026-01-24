@@ -54,7 +54,13 @@ def compose_videogen_request(
 def text_to_video(prompt, seed, aspect_ratio, sample_count, output_gcs, enable_pr):
     """Text to Video"""
     req = compose_videogen_request(
-        prompt, None, output_gcs, seed, aspect_ratio, sample_count, enable_pr,
+        prompt,
+        None,
+        output_gcs,
+        seed,
+        aspect_ratio,
+        sample_count,
+        enable_pr,
     )
     resp = send_request_to_google_api(prediction_endpoint, req)
     print(resp)
@@ -62,11 +68,23 @@ def text_to_video(prompt, seed, aspect_ratio, sample_count, output_gcs, enable_p
 
 
 def image_to_video(
-    prompt, image_gcs, seed, aspect_ratio, sample_count, output_gcs, enable_pr,
+    prompt,
+    image_gcs,
+    seed,
+    aspect_ratio,
+    sample_count,
+    output_gcs,
+    enable_pr,
 ):
     """Image to Video"""
     req = compose_videogen_request(
-        prompt, image_gcs, output_gcs, seed, aspect_ratio, sample_count, enable_pr,
+        prompt,
+        image_gcs,
+        output_gcs,
+        seed,
+        aspect_ratio,
+        sample_count,
+        enable_pr,
     )
     resp = send_request_to_google_api(prediction_endpoint, req)
     print(resp)
@@ -76,7 +94,13 @@ def image_to_video(
 def t2v(prompt, seed, aspect_ratio, sample_count, output_gcs, enable_pr):
     """Text to Video, using the AI Platform service Prediction client"""
     req = compose_videogen_request(
-        prompt, None, output_gcs, seed, aspect_ratio, sample_count, enable_pr,
+        prompt,
+        None,
+        output_gcs,
+        seed,
+        aspect_ratio,
+        sample_count,
+        enable_pr,
     )
     resp = predict_veo_model(req)
     print(resp)
@@ -222,7 +246,13 @@ start_time = time.time()  # Record the starting time
 
 # HTTP API
 op = image_to_video(
-    prompt, source_gcs, seed, aspect_ratio, sample_count, output_gcs, rewrite_prompt,
+    prompt,
+    source_gcs,
+    seed,
+    aspect_ratio,
+    sample_count,
+    output_gcs,
+    rewrite_prompt,
 )
 show_video(op)
 

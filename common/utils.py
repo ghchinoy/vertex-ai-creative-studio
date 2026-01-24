@@ -89,7 +89,8 @@ def extract_username(email_string: str | None) -> str:
     """
     if email_string:
         match = re.search(
-            r":([^@]+)@", email_string,
+            r":([^@]+)@",
+            email_string,
         )  # Matches anything between ":" and "@"
         if match:
             return match.group(1)
@@ -171,8 +172,7 @@ def _get_gcs_public_https_url(gcs_uri: str | None) -> str:
 
 
 def https_url_to_gcs_uri(url: str | None) -> str:
-    """Converts a public GCS HTTPS URL (including signed URLs) back to a gs:// URI.
-    """
+    """Converts a public GCS HTTPS URL (including signed URLs) back to a gs:// URI."""
     if not url:
         return ""
     if url.startswith("gs://"):

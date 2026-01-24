@@ -48,25 +48,29 @@ def prompt_page_content(app_state: me.state):
     """
     state = me.state(PageState)
 
-    with me.box(
-        style=me.Style(
-            display="flex",
-            flex_direction="column",
-            height="100%",
+    with (
+        me.box(
+            style=me.Style(
+                display="flex",
+                flex_direction="column",
+                height="100%",
+            ),
         ),
-    ), me.box(
-        style=me.Style(
-            background=me.theme_var("background"),
-            height="100%",
-            overflow_y="scroll",
-            margin=me.Margin(bottom=20),
+        me.box(
+            style=me.Style(
+                background=me.theme_var("background"),
+                height="100%",
+                overflow_y="scroll",
+                margin=me.Margin(bottom=20),
+            ),
         ),
-    ), me.box(
-        style=me.Style(
-            background=me.theme_var("background"),
-            padding=me.Padding(top=24, left=24, right=24, bottom=24),
-            display="flex",
-            flex_direction="column",
+        me.box(
+            style=me.Style(
+                background=me.theme_var("background"),
+                padding=me.Padding(top=24, left=24, right=24, bottom=24),
+                display="flex",
+                flex_direction="column",
+            ),
         ),
     ):
         header("Prompt", "question_answer")

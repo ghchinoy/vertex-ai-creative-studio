@@ -119,12 +119,15 @@ def _generate_images_button():
     """Renders the main generate button and its loading state."""
     state = me.state(PageState)
     if state.is_generating:
-        with me.content_button(type="raised", disabled=True), me.box(
-            style=me.Style(
-                display="flex",
-                flex_direction="row",
-                align_items="center",
-                gap=8,
+        with (
+            me.content_button(type="raised", disabled=True),
+            me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    align_items="center",
+                    gap=8,
+                ),
             ),
         ):
             me.progress_spinner(diameter=20, stroke_width=3)
@@ -216,7 +219,6 @@ class PageState:
     initial_load_complete: bool = False
 
 
-
 NUM_IMAGES_PROMPTS = {
     2: "Give me 2 options.",
     3: "Give me 3 options.",
@@ -247,7 +249,8 @@ def on_media_select(e: LibrarySelectionChangeEvent):
     # Check if there's space for a new image
     if len(state.uploaded_image_gcs_uris) >= max_input_images:
         yield from show_snackbar(
-            state, f"You can add a maximum of {max_input_images} images.",
+            state,
+            f"You can add a maximum of {max_input_images} images.",
         )
         return
 
@@ -288,12 +291,15 @@ def _critique_questions_button():
     state = me.state(PageState)
     with me.box(style=me.Style(margin=me.Margin(top=16))):
         if state.is_generating_questions:
-            with me.content_button(type="stroked", disabled=True), me.box(
-                style=me.Style(
-                    display="flex",
-                    flex_direction="row",
-                    align_items="center",
-                    gap=8,
+            with (
+                me.content_button(type="stroked", disabled=True),
+                me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        align_items="center",
+                        gap=8,
+                    ),
                 ),
             ):
                 me.progress_spinner(diameter=20, stroke_width=3)
@@ -422,33 +428,39 @@ def _suggest_transformations_ui():
 
     # Suggested transformations
     if state.suggested_transformations:
-        with me.box(
-            style=me.Style(
-                display="flex",
-                flex_direction="row",
-                gap=16,
-                margin=me.Margin(top=16),
+        with (
+            me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="row",
+                    gap=16,
+                    margin=me.Margin(top=16),
+                ),
             ),
-        ), me.box(
-            style=me.Style(
-                display="flex",
-                flex_direction="column",
-                align_items="flex-start",
-                gap=8,
+            me.box(
+                style=me.Style(
+                    display="flex",
+                    flex_direction="column",
+                    align_items="flex-start",
+                    gap=8,
+                ),
             ),
         ):
             for transformation in state.suggested_transformations:
-                with me.content_button(
-                    on_click=on_transformation_click,
-                    key=json.dumps(transformation),
-                    type="stroked",
-                    style=CHIP_STYLE,
-                ), me.box(
-                    style=me.Style(
-                        display="flex",
-                        flex_direction="row",
-                        align_items="center",
-                        gap=8,
+                with (
+                    me.content_button(
+                        on_click=on_transformation_click,
+                        key=json.dumps(transformation),
+                        type="stroked",
+                        style=CHIP_STYLE,
+                    ),
+                    me.box(
+                        style=me.Style(
+                            display="flex",
+                            flex_direction="row",
+                            align_items="center",
+                            gap=8,
+                        ),
                     ),
                 ):
                     svg_icon(icon_name="image_edit_auto")
@@ -652,7 +664,9 @@ def gemini_image_gen_page_content():
                                 if state.is_evaluating:
                                     with me.box(
                                         style=me.Style(
-                                            display="flex", align_items="center", gap=8,
+                                            display="flex",
+                                            align_items="center",
+                                            gap=8,
                                         ),
                                     ):
                                         me.progress_spinner(diameter=20)
@@ -675,7 +689,8 @@ def gemini_image_gen_page_content():
                                     )
 
                                     with me.expansion_panel(
-                                        title=f"Critique Score: {score}", icon="rule",
+                                        title=f"Critique Score: {score}",
+                                        icon="rule",
                                     ):
                                         for item in details:
                                             with me.box(
@@ -712,7 +727,9 @@ def gemini_image_gen_page_content():
 
                             with me.box(
                                 style=me.Style(
-                                    display="flex", flex_direction="column", gap=16,
+                                    display="flex",
+                                    flex_direction="column",
+                                    gap=16,
                                 ),
                             ):
                                 # Main image
@@ -738,7 +755,8 @@ def gemini_image_gen_page_content():
                                 # Evaluation display
                                 with me.box(
                                     style=me.Style(
-                                        width="100%", margin=me.Margin(top=16),
+                                        width="100%",
+                                        margin=me.Margin(top=16),
                                     ),
                                 ):
                                     if state.is_evaluating:
@@ -879,7 +897,8 @@ def on_upload(e: me.UploadEvent):
 
     if not files_to_upload:
         yield from show_snackbar(
-            state, f"You can upload a maximum of {max_input_images} images.",
+            state,
+            f"You can upload a maximum of {max_input_images} images.",
         )
         return
 
@@ -1034,7 +1053,8 @@ def on_generate_questions_click(e: me.ClickEvent):
 
     try:
         questions = generate_critique_questions(
-            prompt=state.prompt, image_descriptions=state.image_descriptions,
+            prompt=state.prompt,
+            image_descriptions=state.image_descriptions,
         )
         state.critique_questions = questions
     except Exception as ex:
@@ -1084,7 +1104,8 @@ def on_suggest_transformations_click(e: me.ClickEvent):
 
     if not state.generated_image_urls:
         yield from show_snackbar(
-            state, "No image available to suggest transformations for.",
+            state,
+            "No image available to suggest transformations for.",
         )
         return
 
@@ -1150,7 +1171,8 @@ def on_image_action_click(e: me.ClickEvent):
 
     # The action now uses the combined list of images
     yield from _generate_and_save(
-        base_prompt=template["prompt"], input_gcs_uris=input_gcs_uris,
+        base_prompt=template["prompt"],
+        input_gcs_uris=input_gcs_uris,
     )
 
 
@@ -1288,7 +1310,8 @@ def _generate_and_save(base_prompt: str, input_gcs_uris: list[str]):
                 for uri in gcs_uris:
                     try:
                         evaluation_result = evaluate_image_with_questions(
-                            image_uri=uri, questions=state.critique_questions,
+                            image_uri=uri,
+                            questions=state.critique_questions,
                         )
 
                         # Process results
@@ -1368,7 +1391,8 @@ def on_load(e: me.LoadEvent):
     # Load templates once on initial load.
     if not state.prompt_templates:
         templates = prompt_template_service.load_templates(
-            config_path="config/image_prompt_templates.json", template_type="image",
+            config_path="config/image_prompt_templates.json",
+            template_type="image",
         )
         state.prompt_templates = [t.model_dump() for t in templates]
         print(f"Loaded {len(state.prompt_templates)} image prompt templates.")

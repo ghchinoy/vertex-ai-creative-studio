@@ -173,7 +173,10 @@ def _r2v_uploader(
 
 @me.component
 def _uploader_placeholder(
-    on_upload, on_library_select, key_prefix: str, disabled: bool,
+    on_upload,
+    on_library_select,
+    key_prefix: str,
+    disabled: bool,
 ):
     """A placeholder box with uploader and library chooser buttons."""
     with me.box(

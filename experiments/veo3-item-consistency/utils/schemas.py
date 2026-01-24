@@ -295,7 +295,8 @@ class SceneAnalysis(BaseModel):
         description="Forensic profile of the human character in the image, if present.",
     )
     machine: MachineProfile | None = Field(
-        None, description="Technical profile of the machine in the image, if present.",
+        None,
+        description="Technical profile of the machine in the image, if present.",
     )
 
 

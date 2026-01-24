@@ -61,6 +61,7 @@ def media_tile(
     pills_json: str = "[]",
     controls: bool = False,
     selected: bool = False,
+    object_fit: str = "cover",
     on_click: typing.Callable[[me.WebEvent], None] | None = None,
     key: str | None = None,
 ):
@@ -84,6 +85,7 @@ def media_tile(
             "pillsJson": pills_json,
             "controls": controls,
             "selected": selected,
+            "objectFit": object_fit,
         },
         events={
             "clickEvent": on_click,

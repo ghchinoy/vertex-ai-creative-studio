@@ -46,11 +46,13 @@ class Default:
     PROJECT_ID: str = os.environ.get("PROJECT_ID")
     LOCATION: str = os.environ.get("LOCATION", "us-central1")
     GENMEDIA_BUCKET: str = os.environ.get(
-        "GENMEDIA_BUCKET", f"{PROJECT_ID}-fabulae/babel",
+        "GENMEDIA_BUCKET",
+        f"{PROJECT_ID}-fabulae/babel",
     )  # without the "gs://"
     MODEL_ID: str = os.environ.get("MODEL_ID", "gemini-1.5-flash")
     BABEL_ENDPOINT: str = os.environ.get(
-        "BABEL_ENDPOINT", "http://localhost:8080",
+        "BABEL_ENDPOINT",
+        "http://localhost:8080",
     )  # defaults to # "http://localhost:8080"
     STATIC_PUBLIC_BUCKET: str = "github-repo/audio_ai/audio_generation/chirp3_hd_babel"
 

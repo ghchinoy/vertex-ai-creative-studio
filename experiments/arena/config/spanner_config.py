@@ -42,7 +42,8 @@ class ArenaModelEvaluation:
         if not isinstance(self.model_name, str) or not self.model_name:
             raise ValueError("model_name must be a non-empty string.")
         if self.time_of_rating is not None and not isinstance(
-            self.time_of_rating, datetime,
+            self.time_of_rating,
+            datetime,
         ):
             raise ValueError("time_of_rating must be a datetime object.")
         if not isinstance(self.rating, (float, int)):
@@ -62,7 +63,10 @@ class ArenaStudyTracker:
     _instance = None
 
     def __new__(
-        cls, project_id: str, spanner_instance_id: str, spanner_database_id: str,
+        cls,
+        project_id: str,
+        spanner_instance_id: str,
+        spanner_database_id: str,
     ):
         if cls._instance is None:
             cls._instance = super(ArenaStudyTracker, cls).__new__(cls)
@@ -173,7 +177,10 @@ class ArenaStudySchema:
     """Arena Study Schema"""
 
     def __init__(
-        self, project_id: str, spanner_instance_id: str, spanner_database_id: str,
+        self,
+        project_id: str,
+        spanner_instance_id: str,
+        spanner_database_id: str,
     ):
         self.project_id = project_id
         self.spanner_instance_id = spanner_instance_id

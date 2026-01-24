@@ -34,14 +34,14 @@ EXTENDED_VIDEO_FILE_PATH = config.EXTENDED_VIDEO_FILE_PATH
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
 
 def run_full_workflow(image_location: str, scenario: str):
-    """Runs the full image and video generation workflow based on configured variables.
-    """
+    """Runs the full image and video generation workflow based on configured variables."""
     try:
         logger.info(f"Starting workflow for scenario: '{scenario}'")
         logger.info(f"Using images from: {image_location}")
@@ -70,7 +70,8 @@ def run_full_workflow(image_location: str, scenario: str):
         # 1. Generate images and select the best one
         logger.info("Step 1: Generating images and selecting the best candidate...")
         output_path, best_image_path, _ = generate_images_and_select_best(
-            image_files, scenario,
+            image_files,
+            scenario,
         )
         logger.info(f"Best image selected: {best_image_path}")
         logger.info(f"Generated assets stored in: {output_path}")
@@ -92,7 +93,10 @@ def run_full_workflow(image_location: str, scenario: str):
 
 
 def run_extend_video_workflow(
-    video_path: str, context_image_path: str, scenario: str, output_video_path: str,
+    video_path: str,
+    context_image_path: str,
+    scenario: str,
+    output_video_path: str,
 ):
     """Runs the full workflow to extend a video with a new scene, using a
     context image for character consistency.

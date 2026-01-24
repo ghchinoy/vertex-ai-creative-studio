@@ -47,13 +47,16 @@ class Default:
     IMAGE_COLLECTION_NAME = os.environ.get("IMAGE_COLLECTION_NAME")
     STUDY_COLLECTION_NAME: str = os.environ.get("STUDY_COLLECTION_NAME", "arena_study")
     IMAGE_RATINGS_COLLECTION_NAME: str = os.environ.get(
-        "IMAGE_RATINGS_COLLECTION_NAME", "arena_elo",
+        "IMAGE_RATINGS_COLLECTION_NAME",
+        "arena_elo",
     )
     STABLE_DIFFUSION_DB_PROMPTS: str = os.environ.get(
-        "STABLE_DIFFUSION_DB_PROMPTS", "prompts/stable_diffusion_prompts.json",
+        "STABLE_DIFFUSION_DB_PROMPTS",
+        "prompts/stable_diffusion_prompts.json",
     )
     DEFAULT_PROMPTS: str = os.environ.get(
-        "DEFAULT_PROMPTS", "prompts/imagen_prompts.json",
+        "DEFAULT_PROMPTS",
+        "prompts/imagen_prompts.json",
     )
     DEFAULT_STUDY_NAME: str = os.environ.get("DEFAULT_STUDY_NAME", "live")
     ELO_K_FACTOR: int = int(os.environ.get("ELO_K_FACTOR", 32))

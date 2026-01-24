@@ -265,7 +265,8 @@ def motion_portraits_content(app_state: me.state):
                         appearance="outline",
                         options=[
                             me.SelectOption(
-                                label=model.display_name, value=model.version_id,
+                                label=model.display_name,
+                                value=model.version_id,
                             )
                             for model in VEO_MODELS
                         ],
@@ -365,17 +366,20 @@ def motion_portraits_content(app_state: me.state):
                             )
                             text_color = me.theme_var("sys-color-on-surface")
 
-                        with me.content_button(
-                            key=f"mod_btn_{style.id}",
-                            on_click=on_modifier_click,
-                            disabled=is_disabled,
-                            style=button_style,
-                        ), me.box(
-                            style=me.Style(
-                                display="flex",
-                                flex_direction="row",
-                                align_items="center",
-                                gap=6,
+                        with (
+                            me.content_button(
+                                key=f"mod_btn_{style.id}",
+                                on_click=on_modifier_click,
+                                disabled=is_disabled,
+                                style=button_style,
+                            ),
+                            me.box(
+                                style=me.Style(
+                                    display="flex",
+                                    flex_direction="row",
+                                    align_items="center",
+                                    gap=6,
+                                ),
                             ),
                         ):
                             if is_selected:
@@ -389,17 +393,20 @@ def motion_portraits_content(app_state: me.state):
                 display="flex",
             ),
         ):
-            with me.content_button(
-                on_click=on_click_motion_portraits,
-                type="flat",
-                key="generate_motion_portrait_button",
-                disabled=state.is_loading or not state.reference_image_display_url,
-            ), me.box(
-                style=me.Style(
-                    display="flex",
-                    flex_direction="row",
-                    align_items="center",
-                    gap=2,
+            with (
+                me.content_button(
+                    on_click=on_click_motion_portraits,
+                    type="flat",
+                    key="generate_motion_portrait_button",
+                    disabled=state.is_loading or not state.reference_image_display_url,
+                ),
+                me.box(
+                    style=me.Style(
+                        display="flex",
+                        flex_direction="row",
+                        align_items="center",
+                        gap=2,
+                    ),
                 ),
             ):
                 if state.is_loading:
@@ -751,7 +758,10 @@ def on_click_upload(e: me.UploadEvent):
     state.reference_image_mime_type = e.file.mime_type
     contents = e.file.getvalue()
     destination_blob_name = store_to_gcs(
-        "uploads", e.file.name, e.file.mime_type, contents,
+        "uploads",
+        e.file.name,
+        e.file.mime_type,
+        contents,
     )
     state.reference_image_gcs = destination_blob_name
     # url
@@ -928,7 +938,9 @@ Do not describe the frame. There should be no lip movement like speaking, but th
     reraise=True,
 )
 def generate_scene_direction(
-    prompt: str, reference_image_gcs: str, image_mime_type: str,
+    prompt: str,
+    reference_image_gcs: str,
+    image_mime_type: str,
 ) -> str:
     """Generate scene direction with Gemini."""
     print(
