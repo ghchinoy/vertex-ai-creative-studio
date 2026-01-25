@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy the rest of the application code into the container
 COPY . .
 
+# Enable unbuffered logging
+ENV PYTHONUNBUFFERED=1
+
 # Install any needed packages specified in pyproject.toml (via uv)
 RUN pip install uv
 RUN uv sync

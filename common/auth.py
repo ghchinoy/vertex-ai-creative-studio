@@ -21,14 +21,12 @@ from config.firebase_config import FirebaseClient
 
 
 @lru_cache(maxsize=1024)
-def is_user_authorized(email: str) -> bool:
-    """Check if a user is authorized based on their domain or Firestore allowlist.
-
-    Logs unauthorized attempts for audit purposes.
+def _check_user_auth_cached(email: str) -> tuple[bool, str]:
+    """Internal cached check for user authorization.
+    Returns (is_authorized, reason)
     """
     if not email or email == "anonymous@google.com":
-        print("DEBUG: Authorization failed - No email or anonymous user")
-        return False
+        return False, "Anonymous user"
 
     # 1. Check Firestore "users" collection (Primary source of truth)
     db_client = FirebaseClient()
@@ -38,39 +36,56 @@ def is_user_authorized(email: str) -> bool:
         user_ref = db.collection("users").document(email)
         user_doc = user_ref.get()
         if user_doc.exists:
-            print(f"DEBUG: User {email} authorized via Firestore (DB: {database_id})")
-            return True
+            return True, f"Authorized via Firestore (DB: {database_id})"
     except Exception as e:  # noqa: BLE001
-        print(f"AuthZ error checking Firestore (DB: {database_id}) for {email}: {e}")
+        print(
+            f"AuthZ error checking Firestore (DB: {database_id}) for {email}: {e}",
+            flush=True,
+        )
 
     # 2. Check Domain Allowlist Fallback
     allowlist_str = DefaultConfig().DOMAIN_ALLOWLIST
-    is_domain_authorized = False
     if allowlist_str:
         allowed_domains = [d.strip().lower() for d in allowlist_str.split(",")]
         user_domain = email.split("@")[-1].lower()
         if user_domain in allowed_domains:
-            is_domain_authorized = True
-            print(f"DEBUG: User {email} authorized via domain allowlist")
+            return True, "Authorized via domain allowlist"
 
-    if is_domain_authorized:
+    return False, "Domain and Firestore check failed"
+
+
+def is_user_authorized(email: str) -> bool:
+    """Check if a user is authorized based on their domain or Firestore allowlist.
+
+    Logs unauthorized attempts for audit purposes.
+    """
+    is_authorized, reason = _check_user_auth_cached(email)
+
+    db_client = FirebaseClient()
+    database_id = getattr(db_client, "database_id", "default")
+
+    if is_authorized:
+        print(f"DEBUG: User {email} authorized: {reason}", flush=True)
         return True
 
-    # 3. Log Unauthorized Attempt
-    print(f"DEBUG: User {email} NOT authorized (DB: {database_id})")
+    # Log Unauthorized Attempt
+    print(
+        f"DEBUG: User {email} NOT authorized (DB: {database_id}). Reason: {reason}",
+        flush=True,
+    )
     try:
         db = db_client.get_client()
         db.collection("unauthorized_access_logs").add(
             {
                 "email": email,
                 "timestamp": datetime.now(UTC),
-                "reason": "Domain and Firestore check failed",
-                "domain_allowlist_configured": bool(allowlist_str),
+                "reason": reason,
+                "domain_allowlist_configured": bool(DefaultConfig().DOMAIN_ALLOWLIST),
                 "database_id": database_id,
             },
         )
     except Exception as e:  # noqa: BLE001
-        print(f"Error logging unauthorized attempt for {email}: {e}")
+        print(f"Error logging unauthorized attempt for {email}: {e}", flush=True)
 
     return False
 
@@ -87,7 +102,7 @@ def get_user_avatar(email: str) -> str | None:
         if user_doc.exists:
             return user_doc.to_dict().get("gcs_avatar_uri")
     except Exception as e:  # noqa: BLE001
-        print(f"Error fetching avatar for {email} (DB: {database_id}): {e}")
+        print(f"Error fetching avatar for {email} (DB: {database_id}): {e}", flush=True)
     return None
 
 
@@ -113,5 +128,5 @@ def get_user_role(email: str) -> str:
             flush=True,
         )
     except Exception as e:  # noqa: BLE001
-        print(f"Error fetching role for {email} (DB: {database_id}): {e}")
+        print(f"Error fetching role for {email} (DB: {database_id}): {e}", flush=True)
     return "creator"
