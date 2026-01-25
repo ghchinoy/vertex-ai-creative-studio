@@ -23,7 +23,8 @@ from config.firebase_config import FirebaseClient
 @lru_cache(maxsize=1024)
 def _check_user_auth_cached(email: str) -> tuple[bool, str]:
     """Internal cached check for user authorization.
-    Returns (is_authorized, reason)
+
+    Returns (is_authorized, reason).
     """
     if not email or email == "anonymous@google.com":
         return False, "Anonymous user"
