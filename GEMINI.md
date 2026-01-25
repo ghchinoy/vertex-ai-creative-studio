@@ -121,3 +121,58 @@ When new code, features, or experiments are added, it's crucial to update the re
 3.  **Synthesize New Content:** Extract key information from the new feature's source code or its own README to create a concise and accurate description.
 4.  **Propose Changes:** Present the proposed documentation changes to the user for review and approval before applying them. Use markdown blocks to clearly show the additions or modifications.
 5.  **Apply Changes:** Use the `replace` or `write_file` tool to apply the approved changes.
+
+---
+
+## Issue Tracking
+
+This project uses **bd (beads)** for issue tracking.
+A dedicated **`beads-sync`** branch is used to persist issue metadata independently from the source code. This is particularly useful for forks where direct write access to the upstream `main` branch is not available.
+
+### Sync Workflow
+
+When you run `bd sync`, the following happens:
+1. Your current work is stashed.
+2. `bd` switches to the `beads-sync` branch.
+3. It pulls/rebases changes from `origin/beads-sync`.
+4. It commits your latest issue updates (`.beads/*.jsonl`).
+5. It pushes back to `origin/beads-sync`.
+6. It switches you back to your working branch and restores your stash.
+
+Run `bd prime` for full workflow context.
+
+**Quick reference:**
+- `bd ready` - Find unblocked work
+- `bd create "Title" --type task --priority 2` - Create issue
+- `bd close <id>` - Complete work
+- `bd sync` - Sync issues to the `beads-sync` branch
+
+For full workflow details: `bd prime`
+
+---
+
+## Landing the Plane (Session Completion)
+
+**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
+
+**MANDATORY WORKFLOW:**
+
+1. **File issues for remaining work** - Create issues for anything that needs follow-up
+2. **Run quality gates** (if code changed) - Tests, linters, builds
+3. **Update issue status** - Close finished work, update in-progress items
+4. **PUSH TO REMOTE** - This is MANDATORY:
+   ```bash
+   git pull --rebase
+   bd sync
+   git push
+   git status  # MUST show "up to date with origin"
+   ```
+5. **Clean up** - Clear stashes, prune remote branches
+6. **Verify** - All changes committed AND pushed
+7. **Hand off** - Provide context for next session
+
+**CRITICAL RULES:**
+- Work is NOT complete until `git push` succeeds
+- NEVER stop before pushing - that leaves work stranded locally
+- NEVER say "ready to push when you are" - YOU must push
+- If push fails, resolve and retry until it succeeds

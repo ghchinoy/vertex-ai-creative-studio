@@ -80,15 +80,24 @@ app.include_router(router)
 
 @app.post("/api/auth/login")
 async def login(request: LoginRequest):
-    """Verifies Firebase ID token and sets a session cookie."""
+    """Verify Firebase ID token and set a session cookie."""
     if not request.token:
+        print("DEBUG: login endpoint called without token")
         response = JSONResponse(content={"status": "logged_out"})
         response.delete_cookie("session_token")
         return response
 
+    db_client = FirebaseClient()
+    database_id = getattr(db_client, "database_id", "default")
+
     try:
         # Verify the ID token
-        decoded_token = auth.verify_id_token(request.token)
+        try:
+            decoded_token = auth.verify_id_token(request.token)
+        except Exception as token_err:  # noqa: BLE001
+            print(f"DEBUG: Token verification failed: {token_err}")
+            raise HTTPException(status_code=401, detail=f"Invalid token: {token_err}") from token_err
+
         email = decoded_token.get("email")
 
         # 1. Check if the user is authorized BEFORE creating/updating the record.
@@ -96,11 +105,11 @@ async def login(request: LoginRequest):
         if email and is_user_authorized(email):
             # 2. Only update user record if authorized.
             try:
-                db = FirebaseClient().get_client()
+                db = db_client.get_client()
                 user_ref = db.collection("users").document(email)
                 user_doc = user_ref.get()
 
-                now = datetime.datetime.utcnow()
+                now = datetime.datetime.now(datetime.UTC)
                 update_data = {
                     "email": email,
                     "last_signed_in": now,
@@ -124,21 +133,27 @@ async def login(request: LoginRequest):
 
                 # Use set with merge=True so we don't overwrite other fields like 'role'
                 user_ref.set(update_data, merge=True)
-            except Exception as e:
-                print(f"Error updating user record: {e}")
+                print(f"DEBUG: Updated user record for {email} (DB: {database_id})")
+            except Exception as e:  # noqa: BLE001
+                print(f"Error updating user record for {email} (DB: {database_id}): {e}")
         else:
-            print(f"Unauthorized login attempt blocked for: {email}")
+            print(f"Unauthorized login attempt blocked for: {email} (DB: {database_id})")
+            raise HTTPException(status_code=403, detail="User not authorized")
 
         # Create a session cookie
         expires_in = datetime.timedelta(days=5)
-        session_cookie = auth.create_session_cookie(
-            request.token,
-            expires_in=expires_in,
-        )
+        try:
+            session_cookie = auth.create_session_cookie(
+                request.token,
+                expires_in=expires_in,
+            )
+        except Exception as cookie_err:  # noqa: BLE001
+            print(f"DEBUG: Failed to create session cookie: {cookie_err}")
+            raise HTTPException(status_code=500, detail="Failed to create session") from cookie_err
 
         user_role = get_user_role(email)
         print(
-            f"DEBUG: login endpoint returning role '{user_role}' for '{email}'",
+            f"DEBUG: login endpoint returning role '{user_role}' for '{email}' (DB: {database_id})",
             flush=True,
         )
 
@@ -154,9 +169,11 @@ async def login(request: LoginRequest):
             samesite="Lax",
         )
         return response
-    except Exception as e:
-        print(f"Auth error: {e}")
-        raise HTTPException(status_code=401, detail="Invalid token")
+    except HTTPException:
+        raise
+    except Exception as e:  # noqa: BLE001
+        print(f"Auth error in login: {e}")
+        raise HTTPException(status_code=401, detail="Authentication failed") from e
 
 
 @app.get("/favicon.ico", include_in_schema=False)
