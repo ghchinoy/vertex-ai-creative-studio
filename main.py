@@ -94,9 +94,11 @@ async def login(request: LoginRequest):
         # Verify the ID token
         try:
             decoded_token = auth.verify_id_token(request.token)
-        except Exception as token_err:  # noqa: BLE001
+        except Exception as token_err:
             print(f"DEBUG: Token verification failed: {token_err}", flush=True)
-            raise HTTPException(status_code=401, detail=f"Invalid token: {token_err}") from token_err
+            raise HTTPException(
+                status_code=401, detail=f"Invalid token: {token_err}",
+            ) from token_err
 
         email = decoded_token.get("email")
 
@@ -133,11 +135,20 @@ async def login(request: LoginRequest):
 
                 # Use set with merge=True so we don't overwrite other fields like 'role'
                 user_ref.set(update_data, merge=True)
-                print(f"DEBUG: Updated user record for {email} (DB: {database_id})", flush=True)
+                print(
+                    f"DEBUG: Updated user record for {email} (DB: {database_id})",
+                    flush=True,
+                )
             except Exception as e:  # noqa: BLE001
-                print(f"Error updating user record for {email} (DB: {database_id}): {e}", flush=True)
+                print(
+                    f"Error updating user record for {email} (DB: {database_id}): {e}",
+                    flush=True,
+                )
         else:
-            print(f"Unauthorized login attempt blocked for: {email} (DB: {database_id})", flush=True)
+            print(
+                f"Unauthorized login attempt blocked for: {email} (DB: {database_id})",
+                flush=True,
+            )
             raise HTTPException(status_code=403, detail="User not authorized")
 
         # Create a session cookie
@@ -147,9 +158,11 @@ async def login(request: LoginRequest):
                 request.token,
                 expires_in=expires_in,
             )
-        except Exception as cookie_err:  # noqa: BLE001
+        except Exception as cookie_err:
             print(f"DEBUG: Failed to create session cookie: {cookie_err}", flush=True)
-            raise HTTPException(status_code=500, detail="Failed to create session") from cookie_err
+            raise HTTPException(
+                status_code=500, detail="Failed to create session",
+            ) from cookie_err
 
         user_role = get_user_role(email)
         print(
@@ -171,7 +184,7 @@ async def login(request: LoginRequest):
         return response
     except HTTPException:
         raise
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"Auth error in login: {e}", flush=True)
         raise HTTPException(status_code=401, detail="Authentication failed") from e
 

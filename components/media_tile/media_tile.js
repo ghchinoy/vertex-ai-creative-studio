@@ -177,6 +177,10 @@ class MediaTile extends LitElement {
   async _resolveUrl(url) {
         if (!url) return "";
         if (url.startsWith("gs://")) {
+            // Special handling for public buckets to avoid CORS issues with Firebase SDK
+            if (url.startsWith("gs://cloud-samples-data/")) {
+                return url.replace("gs://", "https://storage.googleapis.com/");
+            }
             try {
                 let app;
                 try {
