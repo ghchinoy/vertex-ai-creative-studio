@@ -25,7 +25,7 @@ from common.analytics import get_logger
 from common.error_handling import GenerationError
 from config.default import Default
 from config.veo_models import get_veo_model_config
-from models.requests import VideoGenerationRequest
+from models.requests import APIReferenceImage, VideoGenerationRequest
 
 config = Default()
 
