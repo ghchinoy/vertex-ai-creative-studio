@@ -4,6 +4,12 @@
 
 *   **Fix:** `install-online.sh` and `install.sh` now ad-hoc codesign (and clear the quarantine attribute on) macOS binaries after install. Previously, downloaded and locally-built darwin binaries could be silently killed by Gatekeeper (`SIGKILL`, exit 137) on launch with no error output, causing MCP clients to report failed/unresponsive server starts.
 
+## 2026-08-09 (v3.10.0)
+
+*   **Feat:** `mcp-nanobanana-go` now saves generated images to Google Cloud Storage via a new optional `gcs_bucket_uri` tool argument, with fallback to the `GENMEDIA_BUCKET` environment variable, and returns V4 signed HTTPS URLs for the uploaded objects. Signed URL lifetime is configurable via the new `NANOBANANA_SIGNED_URL_EXPIRY_HOURS` environment variable (default: 24 hours). (Thanks @danielamigos, #1592.)
+*   **Fix:** `mcp-nanobanana-go` no longer silently drops generated image bytes when no output directory is configured.
+*   **Chore:** Bumped versions for all MCP servers to `3.10.0` to synchronize the release (`mcp-chirp3-go` resynced from `3.9.0`).
+
 ## 2026-07-10 (v3.9.1)
 
 *   **Feat:** Added support for `gemini-3.1-flash-lite-image` ("Nano Banana 2 Lite") with 1K resolution aspect ratios in `mcp-nanobanana-go` and `mcp-gemini-go`.
