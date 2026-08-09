@@ -145,3 +145,15 @@ variable "gemini_tts_location" {
   description = "Location for the Gemini TTS model"
   default     = "global"
 }
+
+variable "cloud_run_cpu" {
+  description = "CPU limit for the Creative Studio Cloud Run service container."
+  type        = string
+  default     = "2000m"
+}
+
+variable "cloud_run_memory" {
+  description = "Memory limit for the Creative Studio Cloud Run service container. Raised above the previous 1024Mi to give headroom for in-process video thumbnail decode, which was observed peaking ~1133 MiB and OOM-killing the instance."
+  type        = string
+  default     = "4Gi"
+}

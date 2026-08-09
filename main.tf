@@ -213,8 +213,8 @@ resource "google_cloud_run_v2_service" "creative_studio" {
       image = var.initial_container_image
       resources {
         limits = {
-          cpu    = "1000m"
-          memory = "1024Mi"
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
         }
       }
       dynamic "env" {
