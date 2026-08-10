@@ -1,0 +1,46 @@
+# Conventional Commits lint for the genmedia MCP servers ONLY.
+#
+# release-please derives the SemVer bump from Conventional Commit messages. On a
+# squash-merge repo, the PR title becomes the commit subject, so this check keeps
+# the *PR title* conventional for PRs that touch the MCP tree.
+#
+# Scope / isolation: the `paths` filter restricts this check to PRs that modify
+# `experiments/mcp-genmedia/mcp-genmedia-go/**`. Core-app-only PRs never run it,
+# so it imposes nothing on core contributors.
+
+name: MCP PR Title (Conventional Commits)
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+    paths:
+      - "experiments/mcp-genmedia/mcp-genmedia-go/**"
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint-mcp-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title is a Conventional Commit
+        uses: amannn/action-semantic-pull-request@0723387faaf9b38adef4775cd42cfd5155ed6017 # v5.5.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            deps
+            chore
+            docs
+            refactor
+            test
+            build
+            ci
+            style
+            revert

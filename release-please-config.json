@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "separate-pull-requests": true,
+  "include-component-in-tag": true,
+  "include-v-in-tag": true,
+  "tag-separator": "-",
+  "packages": {
+    "experiments/mcp-genmedia/mcp-genmedia-go": {
+      "component": "mcp",
+      "release-type": "simple",
+      "package-name": "genmedia-mcp-servers",
+      "changelog-path": "CHANGELOG.md",
+      "version-file": "VERSION"
+    }
+  }
+}

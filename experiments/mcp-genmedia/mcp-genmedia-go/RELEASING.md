@@ -30,12 +30,70 @@ For releases the **git tag is the source of truth** — no file edit is required
 release time. The `VERSION` file keeps local and CI builds honest, and it is the
 file a future automation step (see below) will bump.
 
-## Cutting a release
+## Cutting a release (automated — release-please)
 
-1. Update `VERSION` to the new semver (this is the human-editable single source).
-2. Commit the `VERSION` bump (and `CHANGELOG.md`) to `main`.
-3. Tag the release, e.g. `git tag v<version> && git push origin v<version>`.
-4. goreleaser builds the artifacts, injecting the tag as the version.
+Releases of the MCP servers are automated with
+[release-please](https://github.com/googleapis/release-please), scoped to **this
+tree only** (`experiments/mcp-genmedia/mcp-genmedia-go`). It never touches the
+core app's version (root `pyproject.toml`, `config/default.py`) — see
+[MCP-only isolation](#mcp-only-isolation-important) below.
+
+The normal flow is:
+
+1. **Land Conventional-Commit PRs.** Write MCP changes as Conventional Commits
+   (`feat:` → minor, `fix:`/`perf:` → patch, `feat!:` or a `BREAKING CHANGE:`
+   footer → major). On squash-merge the **PR title** becomes the commit subject,
+   so the PR title must be conventional — the `MCP PR Title (Conventional
+   Commits)` check enforces this for PRs that touch this tree.
+2. **release-please maintains a standing "release PR."** On every push to `main`
+   that touches this tree, the `release-please (MCP genmedia)` workflow opens or
+   updates a release PR that bumps `VERSION` and prepends the derived entries to
+   `CHANGELOG.md`. It only considers commits under this path.
+3. **Merge the release PR** when you want to cut the release (the human gate).
+   On merge, release-please creates the tag **`mcp-v<version>`** and a GitHub
+   Release with the changelog notes.
+4. **goreleaser publishes the binaries.** The `mcp-v*` tag triggers
+   `.github/workflows/mcp-release.yml`, which strips the `mcp-` prefix and runs
+   goreleaser, injecting `-X main.version={{.Version}}` from the tag.
+
+### Tag format and the goreleaser handoff
+
+release-please emits `mcp-v<version>` (component `mcp` + `-v` + version). This is
+deliberate:
+
+* It **matches the existing `mcp-release.yml` trigger** (`tags: ['mcp-v*']`) so
+  goreleaser still fires unchanged.
+* It is **MCP-specific** and does not collide with a bare, repo-wide `vX.Y.Z`
+  that would imply a *core-app* release.
+
+> **Token note.** A tag pushed by release-please with the default `GITHUB_TOKEN`
+> will **not** trigger the goreleaser workflow (GitHub's workflow-recursion
+> guard). To chain automatically, add a repo/org secret `RELEASE_PLEASE_TOKEN`
+> (a PAT or GitHub App token with `contents: write` + `pull-requests: write`).
+> Without it, the release PR, tag, and Release are still created, but a
+> maintainer must publish the binaries manually (re-push the `mcp-v*` tag or run
+> goreleaser).
+
+### MCP-only isolation (important)
+
+This pipeline is **isolated to the MCP servers**. Isolation holds on two
+independent layers:
+
+1. `release-please-config.json` declares a **single package** rooted at
+   `experiments/mcp-genmedia/mcp-genmedia-go`; release-please only inspects
+   commits touching that path and only ever edits that path's `VERSION` +
+   `CHANGELOG.md`.
+2. The workflow's push trigger is **path-filtered** to the MCP tree, so a push
+   that changes only core-app files never even starts release-please.
+
+The core app versions separately via root `pyproject.toml` and
+`config/default.py`; release-please does not read, propose, or edit them.
+
+### Manual fallback
+
+If you ever need to cut a release by hand: bump `VERSION`, update `CHANGELOG.md`,
+commit to `main`, then `git tag mcp-v<version> && git push origin mcp-v<version>`
+— the `mcp-v*` tag drives goreleaser exactly as above.
 
 ## Local builds
 
@@ -53,11 +111,14 @@ startup log line, e.g.:
 Starting mcp-veo-go MCP Server (Version: 3.10.0, Transport: stdio)
 ```
 
-## Future: release-please (step b)
+## Automation history
 
-This VERSION-file + ldflags plumbing is step (a) of the automation plan. It is
-intentionally compatible with a later
-[release-please](https://github.com/googleapis/release-please) adoption:
-release-please will automate bumping the `VERSION` file and maintaining
-`CHANGELOG.md` from Conventional Commit messages, then the tag it creates drives
-goreleaser exactly as described above.
+* **Step (a)** — single `VERSION` file + build-time ldflags injection (replaced
+  the seven hand-edited `const version` declarations).
+* **Step (b)** — release-please adoption (this document's automated flow):
+  release-please bumps the `VERSION` file and maintains `CHANGELOG.md` from
+  Conventional Commit messages, then the `mcp-v*` tag it creates drives
+  goreleaser exactly as described above. Config lives in
+  `release-please-config.json` and `.release-please-manifest.json` at the repo
+  root (root is release-please's required location for these two files; they are
+  configuration only and do not version the core app).

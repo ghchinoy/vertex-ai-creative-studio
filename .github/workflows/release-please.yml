@@ -1,0 +1,56 @@
+# release-please for the genmedia MCP servers ONLY (monorepo-isolated).
+#
+# Scope / isolation:
+#   * This workflow manages ONLY the `experiments/mcp-genmedia/mcp-genmedia-go`
+#     component. Isolation is enforced in two independent layers:
+#       1. The push trigger is path-filtered to the MCP tree (+ the two
+#          release-please config files), so pushes that touch only the core app
+#          never start this workflow.
+#       2. release-please-config.json declares a single package rooted at the MCP
+#          path, so release-please only considers commits touching that path and
+#          only ever proposes edits to that path's VERSION + CHANGELOG.
+#   * It never reads, proposes, or edits the core app's version files
+#     (root pyproject.toml, config/default.py).
+#
+# Handoff to goreleaser:
+#   Merging the release PR makes release-please create the tag `mcp-v<X.Y.Z>` and
+#   a GitHub Release. That `mcp-v*` tag is what the existing MCP Servers Release
+#   workflow (.github/workflows/mcp-release.yml) triggers on to run goreleaser,
+#   which injects `-X main.version` from the tag. See RELEASING.md.
+#
+#   IMPORTANT: a tag pushed with the default GITHUB_TOKEN does NOT trigger
+#   another workflow (GitHub's recursion guard). For the mcp-v* tag to chain
+#   into goreleaser, provide a repo/org secret RELEASE_PLEASE_TOKEN (a PAT or a
+#   GitHub App token with `contents: write` + `pull-requests: write`). Without
+#   it, release-please still opens the release PR and creates the tag + Release,
+#   but a maintainer must run goreleaser (or re-push the tag) to publish binaries.
+
+name: release-please (MCP genmedia)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "experiments/mcp-genmedia/mcp-genmedia-go/**"
+      - "release-please-config.json"
+      - ".release-please-manifest.json"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run release-please
+        uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
+        with:
+          # Prefer a PAT / App token so the created mcp-v* tag triggers the
+          # goreleaser workflow; fall back to GITHUB_TOKEN (PR + tag still made,
+          # but the goreleaser handoff must be done manually until the PAT exists).
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: main
