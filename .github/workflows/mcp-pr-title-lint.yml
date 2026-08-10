@@ -11,7 +11,10 @@
 name: MCP PR Title (Conventional Commits)
 
 on:
-  pull_request_target:
+  # Use pull_request (not pull_request_target): this check only reads the PR
+  # title, so a read-only token is sufficient and we avoid the dangerous-trigger
+  # security exposure of running with write scope on untrusted fork code.
+  pull_request:
     types:
       - opened
       - edited
