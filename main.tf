@@ -24,20 +24,28 @@ terraform {
     }
   }
 }
-provider "google" {
-  project = var.project_id
-  region  = var.region
-  default_labels = {
-    app = "genmedia-studio"
+locals {
+  # Applied to every resource that supports labels (via provider default_labels)
+  # for cost allocation, filtering, and billing reports.
+  common_labels = {
+    app         = "genmedia-studio"
+    environment = var.environment
+    team        = var.team
+    owner       = var.owner
+    cost_center = var.cost_center
   }
 }
 
+provider "google" {
+  project        = var.project_id
+  region         = var.region
+  default_labels = local.common_labels
+}
+
 provider "google-beta" {
-  project = var.project_id
-  region  = var.region
-  default_labels = {
-    app = "genmedia-studio"
-  }
+  project        = var.project_id
+  region         = var.region
+  default_labels = local.common_labels
 }
 
 data "google_project" "project" {
@@ -98,6 +106,16 @@ resource "google_cloud_run_service_iam_member" "iap_cloudrun_access" {
   member   = google_project_service_identity.iap_sa.member
 }
 
+# Reserved (static) global IP for the external load balancer. Managed by
+# Terraform so the address is stable across load balancer recreation. When
+# var.reserved_ip_address is set, that pre-existing address is used instead.
+resource "google_compute_global_address" "lb_ipv4" {
+  count      = var.use_lb && var.reserved_ip_address == null ? 1 : 0
+  name       = "creativestudio-lb-ip"
+  ip_version = "IPV4"
+  depends_on = [null_resource.sleep]
+}
+
 module "lb-http" {
   count                           = var.use_lb ? 1 : 0
   source                          = "terraform-google-modules/lb-http/google//modules/serverless_negs"
@@ -108,6 +126,8 @@ module "lb-http" {
   ssl                             = var.use_lb
   managed_ssl_certificate_domains = [var.domain]
   https_redirect                  = var.use_lb
+  address                         = coalesce(var.reserved_ip_address, one(google_compute_global_address.lb_ipv4[*].address))
+  create_address                  = false
   backends = {
     default = {
       description = "Creative Studio backend"
@@ -208,6 +228,8 @@ resource "google_cloud_run_v2_service" "creative_studio" {
   launch_stage         = var.use_lb ? "GA" : "BETA"
 
   template {
+    timeout                          = var.cloud_run_timeout
+    max_instance_request_concurrency = var.cloud_run_max_concurrency
     containers {
       name  = "creative-studio"
       image = var.initial_container_image
@@ -269,6 +291,17 @@ resource "google_storage_bucket" "assets" {
     method          = ["GET"]
     response_header = ["Content-Type"]
     max_age_seconds = 3600
+  }
+  dynamic "lifecycle_rule" {
+    for_each = var.asset_lifecycle_age_days > 0 ? [1] : []
+    content {
+      condition {
+        age = var.asset_lifecycle_age_days
+      }
+      action {
+        type = "Delete"
+      }
+    }
   }
 }
 

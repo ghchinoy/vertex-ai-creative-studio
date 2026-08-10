@@ -157,3 +157,52 @@ variable "cloud_run_memory" {
   type        = string
   default     = "4Gi"
 }
+
+variable "cloud_run_timeout" {
+  description = "Maximum request timeout for the Creative Studio Cloud Run service. Long-running media generation (e.g. Veo) can exceed the default 5 minutes, so this defaults to 30 minutes."
+  type        = string
+  default     = "1800s"
+}
+
+variable "cloud_run_max_concurrency" {
+  description = "Maximum number of concurrent requests handled by a single Cloud Run instance. Kept low because media generation is CPU/memory intensive per request."
+  type        = number
+  default     = 4
+}
+
+variable "asset_lifecycle_age_days" {
+  description = "Age in days after which objects in the assets bucket are deleted by a lifecycle rule. Set to 0 to disable the lifecycle rule."
+  type        = number
+  default     = 90
+}
+
+variable "reserved_ip_address" {
+  description = "Reserved (static) global IP address for the load balancer. When null, a static IP is created and managed by Terraform (google_compute_global_address) so it survives load balancer recreation."
+  type        = string
+  nullable    = true
+  default     = null
+}
+
+variable "environment" {
+  description = "Deployment environment label used for cost allocation and filtering (e.g. dev, staging, prod)."
+  type        = string
+  default     = "prod"
+}
+
+variable "team" {
+  description = "Owning team label used for cost allocation."
+  type        = string
+  default     = "creative-studio"
+}
+
+variable "owner" {
+  description = "Owner label used for cost allocation. Must be a valid GCP label value (lowercase letters, numbers, dashes, underscores)."
+  type        = string
+  default     = "creative-studio"
+}
+
+variable "cost_center" {
+  description = "Cost center label used for cost allocation and billing reports."
+  type        = string
+  default     = "creative-studio"
+}
