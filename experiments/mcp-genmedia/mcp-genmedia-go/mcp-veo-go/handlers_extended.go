@@ -85,6 +85,11 @@ func veoFirstLastToVideoHandler(client *genai.Client, ctx context.Context, reque
 		}
 	}
 
+	seed, err := common.ParseOptionalNonNegativeInt32(request.GetArguments(), "seed")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
 	span.SetAttributes(
 		attribute.String("first_image_uri", firstImageURI),
 		attribute.String("last_image_uri", lastImageURI),
@@ -92,6 +97,9 @@ func veoFirstLastToVideoHandler(client *genai.Client, ctx context.Context, reque
 		attribute.String("model", modelName),
 		attribute.String("person_generation", personGeneration),
 	)
+	if seed != nil {
+		span.SetAttributes(attribute.Int("seed", int(*seed)))
+	}
 
 	mcpServer := server.ServerFromContext(ctx)
 	var progressToken mcp.ProgressToken
@@ -118,6 +126,7 @@ func veoFirstLastToVideoHandler(client *genai.Client, ctx context.Context, reque
 		OutputGCSURI:     gcsBucket,
 		DurationSeconds:  &durationSecs,
 		PersonGeneration: personGeneration,
+		Seed:             seed,
 		LastFrame: &genai.Image{
 			GCSURI:   lastImageURI,
 			MIMEType: lastMimeType,
@@ -212,12 +221,20 @@ func veoReferenceToVideoHandler(client *genai.Client, ctx context.Context, reque
 		return mcp.NewToolResultError(fmt.Sprintf("Model %s does not support reference image to video generation.", modelName)), nil
 	}
 
+	seed, err := common.ParseOptionalNonNegativeInt32(request.GetArguments(), "seed")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
 	span.SetAttributes(
 		attribute.String("prompt", prompt),
 		attribute.String("model", modelName),
 		attribute.Int("num_reference_images", len(referenceImages)),
 		attribute.String("person_generation", personGeneration),
 	)
+	if seed != nil {
+		span.SetAttributes(attribute.Int("seed", int(*seed)))
+	}
 
 	mcpServer := server.ServerFromContext(ctx)
 	var progressToken mcp.ProgressToken
@@ -240,6 +257,7 @@ func veoReferenceToVideoHandler(client *genai.Client, ctx context.Context, reque
 		DurationSeconds:  &durationSecs,
 		ReferenceImages:  referenceImages,
 		PersonGeneration: personGeneration,
+		Seed:             seed,
 	}
 
 	if generateAudio {
@@ -287,6 +305,11 @@ func veoExtendVideoHandler(client *genai.Client, ctx context.Context, request mc
 		return mcp.NewToolResultError(fmt.Sprintf("Model %s does not support video extension.", modelName)), nil
 	}
 
+	seed, err := common.ParseOptionalNonNegativeInt32(request.GetArguments(), "seed")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
 	span.SetAttributes(
 		attribute.String("video_uri", videoURI),
 		attribute.String("mime_type", mimeType),
@@ -300,6 +323,9 @@ func veoExtendVideoHandler(client *genai.Client, ctx context.Context, request mc
 		attribute.Bool("generate_audio", generateAudio),
 		attribute.String("person_generation", personGeneration),
 	)
+	if seed != nil {
+		span.SetAttributes(attribute.Int("seed", int(*seed)))
+	}
 
 	mcpServer := server.ServerFromContext(ctx)
 	var progressToken mcp.ProgressToken
@@ -326,6 +352,7 @@ func veoExtendVideoHandler(client *genai.Client, ctx context.Context, request mc
 		OutputGCSURI:     gcsBucket,
 		DurationSeconds:  &durationSecs,
 		PersonGeneration: personGeneration,
+		Seed:             seed,
 	}
 
 	if generateAudio {

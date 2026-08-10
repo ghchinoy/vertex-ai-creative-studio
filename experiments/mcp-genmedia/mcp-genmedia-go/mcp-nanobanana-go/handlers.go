@@ -61,6 +61,11 @@ func nanobananaGenerateContentHandler(client *genai.Client, ctx context.Context,
 		}
 	}
 
+	seed, err := common.ParseOptionalNonNegativeInt32(request.GetArguments(), "seed")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
 	outputDir := ""
 	if dir, ok := request.GetArguments()["output_directory"].(string); ok && strings.TrimSpace(dir) != "" {
 		outputDir = strings.TrimSpace(dir)
@@ -102,6 +107,9 @@ func nanobananaGenerateContentHandler(client *genai.Client, ctx context.Context,
 		attribute.String("output_directory", outputDir),
 		attribute.String("gcs_bucket_uri", gcsBucketURI),
 	)
+	if seed != nil {
+		span.SetAttributes(attribute.Int("seed", int(*seed)))
+	}
 
 	// --- API Call ---
 	log.Printf("Calling GenerateContent with Model: %s, Prompt: \"%s\"", model, prompt)
@@ -112,6 +120,7 @@ func nanobananaGenerateContentHandler(client *genai.Client, ctx context.Context,
 		ImageConfig: &genai.ImageConfig{
 			AspectRatio: aspectRatio,
 		},
+		Seed: seed,
 	}
 	contents := &genai.Content{Parts: parts, Role: "USER"}
 
