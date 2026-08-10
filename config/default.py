@@ -70,6 +70,11 @@ class Default:
     # Gemini
     PROJECT_ID: str = os.environ.get("PROJECT_ID")
     LOCATION: str = os.environ.get("LOCATION", "us-central1")
+    # Centralized Vertex AI API version for all google-genai client inits.
+    # Defaults to "v1beta1" (the google-genai SDK default for Vertex AI) so the
+    # effective behavior is unchanged; override via VERTEX_API_VERSION to switch
+    # the API surface in one place.
+    VERTEX_API_VERSION: str = os.environ.get("VERTEX_API_VERSION", "v1beta1")
     # Gemini 3.x models are not served from single regions such as us-central1 —
     # only from the global endpoint (and the us/eu multi-regions). LOCATION stays
     # regional because Veo/Imagen/Lyria/VTO and the Cloud Tasks queue need it.

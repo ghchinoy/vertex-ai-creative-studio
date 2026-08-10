@@ -66,6 +66,7 @@ class ImagenModelSetup:
             vertexai=config.INIT_VERTEX,
             project=project_id,
             location=location,
+            http_options={"api_version": config.VERTEX_API_VERSION},
         )
         return client
 

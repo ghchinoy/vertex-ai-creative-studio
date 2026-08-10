@@ -58,7 +58,12 @@ def upscale_image(input_gcs_uri: str, upscale_factor: str) -> Tuple[str, str, st
     Returns:
         Tuple of (output_gcs_uri, original_resolution, upscaled_resolution)
     """
-    client = genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
+    client = genai.Client(
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
+        http_options={"api_version": cfg.VERTEX_API_VERSION},
+    )
 
     # Get original resolution
     original_resolution = get_image_resolution(input_gcs_uri)

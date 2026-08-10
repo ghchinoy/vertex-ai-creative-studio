@@ -45,6 +45,7 @@ def get_veo_client(model_name: str) -> genai.Client:
             vertexai=True,
             project=config.VEO_PROJECT_ID,
             location=location,
+            http_options={"api_version": config.VERTEX_API_VERSION},
         )
     return _clients[location]
 

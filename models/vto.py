@@ -27,7 +27,12 @@ cfg = Default()
 
 def init_client() -> genai.Client:
     """Initializes the GenAI client."""
-    return genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
+    return genai.Client(
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
+        http_options={"api_version": cfg.VERTEX_API_VERSION},
+    )
 
 
 def generate_vto_image(

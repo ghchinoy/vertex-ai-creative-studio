@@ -268,7 +268,12 @@ def generate_character_video(
 
 def _generate_imagen_candidates(reference_image_bytes_list, all_descriptions, final_prompt, negative_prompt):
     """Generates candidate images with Imagen."""
-    client = genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
+    client = genai.Client(
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
+        http_options={"api_version": cfg.VERTEX_API_VERSION},
+    )
     edit_model = cfg.CHARACTER_CONSISTENCY_IMAGEN_MODEL
     reference_images_for_generation = []
     for i, image_bytes in enumerate(reference_image_bytes_list[:4]):
@@ -316,10 +321,16 @@ def _generate_video_from_image(
 ) -> tuple[bytes, str]:
     """Generates a video from an image."""
     gemini_client = genai.Client(
-        vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
+        http_options={"api_version": cfg.VERTEX_API_VERSION},
     )
     veo_client = genai.Client(
-        vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
+        http_options={"api_version": cfg.VERTEX_API_VERSION},
     )
 
     pil_image = PIL_Image.open(io.BytesIO(image_bytes))
@@ -376,7 +387,12 @@ def _outpaint_image(image_bytes: bytes, prompt: str) -> bytes:
     """
     Performs outpainting on an image to a 16:9 aspect ratio.
     """
-    client = genai.Client(vertexai=True, project=cfg.PROJECT_ID, location=cfg.LOCATION)
+    client = genai.Client(
+        vertexai=True,
+        project=cfg.PROJECT_ID,
+        location=cfg.LOCATION,
+        http_options={"api_version": cfg.VERTEX_API_VERSION},
+    )
     edit_model = cfg.CHARACTER_CONSISTENCY_IMAGEN_MODEL
 
     initial_image = PIL_Image.open(io.BytesIO(image_bytes))
