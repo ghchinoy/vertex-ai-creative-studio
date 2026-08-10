@@ -56,12 +56,17 @@ var (
 
 const (
 	serviceName         = "mcp-lyria-go"
-	version     = "3.10.0" // Synchronize release version
 	defaultPublisher    = "google"
 	defaultLyriaModelID = "lyria-3-clip-preview"
 	defaultSampleCount  = 1
 	audioMIMEType       = "audio/wav" // Define MIME type for audio
 )
+
+// version is overridden at build time via -ldflags "-X main.version=...".
+// The single source of truth for the version is the VERSION file at the root
+// of the mcp-genmedia-go tree (injected by the Makefile locally and by the git
+// tag through goreleaser for releases). Defaults to "dev" for un-injected builds.
+var version = "dev"
 
 // init handles command-line flags and initial logging setup.
 func init() {

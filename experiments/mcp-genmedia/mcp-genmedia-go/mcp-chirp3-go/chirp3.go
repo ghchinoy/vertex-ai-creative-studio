@@ -34,7 +34,10 @@ var (
 	availableVoices []*texttospeechpb.Voice
 	transport       string
 	port            int
-	version         = "3.10.0" // Synchronize release version
+	// version is overridden at build time via -ldflags "-X main.version=...".
+	// Single source of truth is the VERSION file at the root of the
+	// mcp-genmedia-go tree. Defaults to "dev" for un-injected builds.
+	version = "dev"
 )
 
 const (

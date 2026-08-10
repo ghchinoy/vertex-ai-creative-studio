@@ -49,8 +49,13 @@ var (
 
 const (
 	serviceName = "mcp-imagen-go"
-	version     = "3.10.0" // Synchronize release version
 )
+
+// version is overridden at build time via -ldflags "-X main.version=...".
+// The single source of truth for the version is the VERSION file at the root
+// of the mcp-genmedia-go tree (injected by the Makefile locally and by the git
+// tag through goreleaser for releases). Defaults to "dev" for un-injected builds.
+var version = "dev"
 
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
