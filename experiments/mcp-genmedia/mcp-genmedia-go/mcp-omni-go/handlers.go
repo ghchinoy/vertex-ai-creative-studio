@@ -20,13 +20,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/mark3labs/mcp-go/mcp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -34,38 +33,83 @@ import (
 	common "github.com/GoogleCloudPlatform/vertex-ai-creative-studio/experiments/mcp-genmedia/mcp-genmedia-go/mcp-common"
 )
 
-// omniVideoGenerationHandler generates video via the shared common.GenerateOmniVideo
-// entry point and persists the returned MP4 bytes locally and/or to GCS (with a
-// best-effort V4 signed URL), reusing the suite's proven output conventions.
+// maxOmniImages is the per-prompt image input limit (findings §1).
+const maxOmniImages = 10
+
+// omniVideoGenerationHandler generates one or more videos via the shared
+// common.GenerateOmniVideo entry point and persists the returned MP4 bytes
+// locally and/or to GCS (with best-effort V4 signed URLs), reusing the suite's
+// shared common.PersistMediaOutputs helper.
 func omniVideoGenerationHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	tr := otel.Tracer(serviceName)
 	ctx, span := tr.Start(ctx, "omni_video_generation")
 	defer span.End()
 
+	args := request.GetArguments()
+
 	// --- Parameter Parsing ---
-	prompt, ok := request.GetArguments()["prompt"].(string)
+	prompt, ok := args["prompt"].(string)
 	if !ok || strings.TrimSpace(prompt) == "" {
 		return mcp.NewToolResultError("prompt must be a non-empty string and is required"), nil
 	}
 	prompt = strings.TrimSpace(prompt)
 
 	outputDir := ""
-	if dir, ok := request.GetArguments()["output_directory"].(string); ok && strings.TrimSpace(dir) != "" {
+	if dir, ok := args["output_directory"].(string); ok && strings.TrimSpace(dir) != "" {
 		outputDir = strings.TrimSpace(dir)
 	}
 
 	// gcsBucketURI: explicit "gcs_bucket_uri" takes precedence, otherwise fall
 	// back to the server-wide GENMEDIA_BUCKET default (mirrors the other tools).
 	gcsBucketURI := ""
-	if u, ok := request.GetArguments()["gcs_bucket_uri"].(string); ok && strings.TrimSpace(u) != "" {
+	if u, ok := args["gcs_bucket_uri"].(string); ok && strings.TrimSpace(u) != "" {
 		gcsBucketURI = strings.TrimSpace(u)
 	} else if appConfig != nil && appConfig.GenmediaBucket != "" {
 		gcsBucketURI = appConfig.GenmediaBucket + "/omni_outputs/"
 	}
 
+	// Model resolution (honors an optional "model" arg / alias).
+	modelArg, _ := args["model"].(string)
 	model := common.DefaultOmniModel
-	if resolved, found := common.ResolveOmniModel("", appConfig.AllowUnsafeModels); found {
+	if resolved, found := common.ResolveOmniModel(modelArg, appConfig.AllowUnsafeModels); found {
 		model = resolved.CanonicalName
+	} else if strings.TrimSpace(modelArg) != "" {
+		return mcp.NewToolResultError(fmt.Sprintf("unsupported model %q (set ALLOW_UNSAFE_MODELS=true to bypass)", modelArg)), nil
+	}
+
+	// Image / video inputs (local paths -> inline bytes; gs:// -> URI).
+	images, err := parseMediaRefs(args["images"], "image")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	if len(images) > maxOmniImages {
+		return mcp.NewToolResultError(fmt.Sprintf("too many images: %d provided, the model accepts at most %d", len(images), maxOmniImages)), nil
+	}
+	videos, err := parseMediaRefs(args["videos"], "video")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	// sample_count (default 1, clamped to the model max by the shared helper).
+	sampleCount := 1
+	if raw, present := args["sample_count"]; present {
+		n, convErr := toInt(raw)
+		if convErr != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("sample_count must be an integer: %v", convErr)), nil
+		}
+		if n >= 1 {
+			sampleCount = n
+		}
+	}
+
+	// temperature / top_p (optional; validated client-side, then sent in generation_config).
+	temperature, err := parseOptionalFloatInRange(args, "temperature", 0.0, 2.0)
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	topP, err := parseOptionalFloatInRange(args, "top_p", 0.0, 1.0)
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	span.SetAttributes(
@@ -73,13 +117,24 @@ func omniVideoGenerationHandler(ctx context.Context, request mcp.CallToolRequest
 		attribute.String("model", model),
 		attribute.String("output_directory", outputDir),
 		attribute.String("gcs_bucket_uri", gcsBucketURI),
+		attribute.Int("images", len(images)),
+		attribute.Int("videos", len(videos)),
+		attribute.Int("sample_count", sampleCount),
 	)
 
 	// --- Shared Omni call ---
-	log.Printf("Calling GenerateOmniVideo with Model: %s, Prompt: %q", model, prompt)
+	log.Printf("Calling GenerateOmniVideo Model=%s sample_count=%d images=%d videos=%d", model, sampleCount, len(images), len(videos))
 	startTime := time.Now()
 
-	result, err := common.GenerateOmniVideo(ctx, appConfig, common.OmniParams{Prompt: prompt, Model: model})
+	result, err := common.GenerateOmniVideo(ctx, appConfig, common.OmniParams{
+		Prompt:      prompt,
+		Model:       model,
+		Images:      images,
+		Videos:      videos,
+		SampleCount: sampleCount,
+		Temperature: temperature,
+		TopP:        topP,
+	})
 
 	apiCallDuration := time.Since(startTime)
 	log.Printf("GenerateOmniVideo call took: %v", apiCallDuration)
@@ -99,11 +154,13 @@ func omniVideoGenerationHandler(ctx context.Context, request mcp.CallToolRequest
 	if strings.TrimSpace(result.Text) != "" {
 		responseText.WriteString(result.Text)
 	}
+	// Surface any thought/summary reasoning as a NOTE (not as a media output).
 	if result.ThoughtSteps > 0 {
-		fmt.Fprintf(&responseText, "\n\n(model reasoning: %d step(s))", result.ThoughtSteps)
+		fmt.Fprintf(&responseText, "\n\n[Note: model returned %d reasoning (thought) step(s).]", result.ThoughtSteps)
 	}
 
 	gentime := time.Now().Format("20060102150405")
+	expiry := common.SignedURLExpiryFromEnv("OMNI_SIGNED_URL_EXPIRY_HOURS")
 	var savedFiles []string
 
 	for n, videoBytes := range result.Videos {
@@ -111,52 +168,37 @@ func omniVideoGenerationHandler(ctx context.Context, request mcp.CallToolRequest
 		if n < len(result.VideoMimeTypes) && result.VideoMimeTypes[n] != "" {
 			mimeType = result.VideoMimeTypes[n]
 		}
-		saved := false
 
-		if outputDir != "" {
-			if err := os.MkdirAll(outputDir, 0755); err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("failed to create output directory: %v", err)), nil
-			}
-			fileName := fmt.Sprintf("omni_%s_%d.mp4", gentime, n)
-			filePath := filepath.Join(outputDir, fileName)
-			if err := os.WriteFile(filePath, videoBytes, 0644); err != nil {
-				return mcp.NewToolResultError(fmt.Sprintf("failed to write video file: %v", err)), nil
-			}
-			savedFiles = append(savedFiles, filePath)
-			saved = true
+		persisted, err := common.PersistMediaOutputs(ctx, common.MediaArtifact{
+			Data:     videoBytes,
+			MimeType: mimeType,
+			FileName: fmt.Sprintf("omni_%s_%d.mp4", gentime, n),
+		}, outputDir, gcsBucketURI, expiry)
+		if err != nil {
+			return mcp.NewToolResultError(fmt.Sprintf("failed to save generated video: %v", err)), nil
 		}
 
-		if gcsBucketURI != "" {
-			bucketName, objectPrefix := parseGCSBucketAndPrefix(gcsBucketURI)
-			objectName := fmt.Sprintf("%somni_%s_%d.mp4", objectPrefix, gentime, n)
-			if err := common.UploadToGCS(ctx, bucketName, objectName, mimeType, videoBytes); err != nil {
-				log.Printf("failed to upload video to gs://%s/%s: %v", bucketName, objectName, err)
-				fmt.Fprintf(&responseText, "\n\n[Warning: failed to upload generated video to GCS: %v]", err)
-			} else {
-				gcsURI := fmt.Sprintf("gs://%s/%s", bucketName, objectName)
-				savedFiles = append(savedFiles, gcsURI)
-				saved = true
-
-				// Best-effort V4 signed HTTPS URL so clients can fetch the video
-				// without the bucket being public. Non-fatal on failure.
-				if expiry := signedURLExpiry(); expiry > 0 {
-					if signedURL, sErr := generateSignedURL(ctx, bucketName, objectName, expiry); sErr != nil {
-						log.Printf("failed to generate signed URL for %s: %v", gcsURI, sErr)
-					} else {
-						fmt.Fprintf(&responseText, "\n\nSigned URL for %s (valid %s):\n%s", objectName, expiry, signedURL)
-					}
-				}
-			}
+		if persisted.LocalPath != "" {
+			savedFiles = append(savedFiles, persisted.LocalPath)
 		}
-
-		if !saved {
+		if persisted.GCSError != nil {
+			log.Printf("failed to upload video to GCS: %v", persisted.GCSError)
+			fmt.Fprintf(&responseText, "\n\n[Warning: failed to upload generated video to GCS: %v]", persisted.GCSError)
+		}
+		if persisted.GCSURI != "" {
+			savedFiles = append(savedFiles, persisted.GCSURI)
+		}
+		if persisted.SignedURL != "" {
+			fmt.Fprintf(&responseText, "\n\nSigned URL for %s (valid %s):\n%s", persisted.GCSObject, expiry, persisted.SignedURL)
+		}
+		if persisted.LocalPath == "" && persisted.GCSURI == "" {
 			log.Println("Received video data but no output_directory or gcs_bucket_uri was specified/valid. Video not saved.")
 		}
 	}
 
 	finalMessage := responseText.String()
 	if len(savedFiles) > 0 {
-		finalMessage += fmt.Sprintf("\n\nGenerated and saved %d video(s): %s", len(savedFiles), strings.Join(savedFiles, ", "))
+		finalMessage += fmt.Sprintf("\n\nGenerated and saved %d video(s): %s", len(result.Videos), strings.Join(savedFiles, ", "))
 	} else {
 		finalMessage += fmt.Sprintf("\n\nGenerated %d video(s) but none were saved (set output_directory or gcs_bucket_uri).", len(result.Videos))
 	}
@@ -164,59 +206,107 @@ func omniVideoGenerationHandler(ctx context.Context, request mcp.CallToolRequest
 	return &mcp.CallToolResult{Content: []mcp.Content{mcp.TextContent{Type: "text", Text: strings.TrimSpace(finalMessage)}}}, nil
 }
 
-// signedURLExpiry returns the validity duration for generated V4 signed URLs.
-// Controlled by OMNI_SIGNED_URL_EXPIRY_HOURS. Defaults to 24 hours. Values are
-// clamped to 168 hours (the V4 maximum). Set to "0" to disable signed URLs.
-func signedURLExpiry() time.Duration {
-	const def = 24 * time.Hour
-	v := strings.TrimSpace(os.Getenv("OMNI_SIGNED_URL_EXPIRY_HOURS"))
-	if v == "" {
-		return def
+// parseMediaRefs converts a tool argument (expected to be an array of strings,
+// each a local file path or a gs:// URI) into common.OmniMediaRef values. Local
+// paths are read into memory; gs:// URIs are passed through by reference. kind is
+// "image" or "video" and is used only for error messages and MIME inference.
+func parseMediaRefs(arg any, kind string) ([]common.OmniMediaRef, error) {
+	if arg == nil {
+		return nil, nil
 	}
-	h, err := strconv.Atoi(v)
-	if err != nil || h < 0 {
-		log.Printf("invalid OMNI_SIGNED_URL_EXPIRY_HOURS=%q, using default of 24", v)
-		return def
+	list, ok := arg.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("%ss must be an array of strings", kind)
 	}
-	if h == 0 {
-		return 0
-	}
-	if h > 168 {
-		log.Printf("OMNI_SIGNED_URL_EXPIRY_HOURS=%d exceeds the V4 maximum of 168 (7 days); clamping to 168", h)
-		h = 168
-	}
-	return time.Duration(h) * time.Hour
-}
 
-// generateSignedURL creates a V4 GET signed URL for a GCS object. The signing key
-// is detected automatically from the ambient credentials.
-func generateSignedURL(ctx context.Context, bucketName, objectName string, expiry time.Duration) (string, error) {
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return "", fmt.Errorf("storage.NewClient: %w", err)
-	}
-	defer func() { _ = client.Close() }()
-
-	return client.Bucket(bucketName).SignedURL(objectName, &storage.SignedURLOptions{
-		Scheme:  storage.SigningSchemeV4,
-		Method:  "GET",
-		Expires: time.Now().Add(expiry),
-	})
-}
-
-// parseGCSBucketAndPrefix splits a "bucket/optional/prefix/" string (with or
-// without a leading gs:// scheme) into a bucket name and an object name prefix
-// that is guaranteed to be empty or end with a "/".
-func parseGCSBucketAndPrefix(uri string) (bucket, prefix string) {
-	uri = strings.TrimPrefix(uri, "gs://")
-	uri = strings.TrimPrefix(uri, "/")
-	parts := strings.SplitN(uri, "/", 2)
-	bucket = parts[0]
-	if len(parts) > 1 && parts[1] != "" {
-		prefix = parts[1]
-		if !strings.HasSuffix(prefix, "/") {
-			prefix += "/"
+	refs := make([]common.OmniMediaRef, 0, len(list))
+	for _, item := range list {
+		path, ok := item.(string)
+		if !ok || strings.TrimSpace(path) == "" {
+			return nil, fmt.Errorf("each %s entry must be a non-empty string (local path or gs:// URI)", kind)
 		}
+		path = strings.TrimSpace(path)
+		mimeType := inferMediaMimeType(path)
+
+		if strings.HasPrefix(path, "gs://") {
+			refs = append(refs, common.OmniMediaRef{URI: path, MimeType: mimeType})
+			continue
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read %s file %q: %w", kind, path, err)
+		}
+		refs = append(refs, common.OmniMediaRef{Data: data, MimeType: mimeType})
 	}
-	return bucket, prefix
+	return refs, nil
+}
+
+// inferMediaMimeType infers an image/video MIME type from a file extension.
+func inferMediaMimeType(path string) string {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".png":
+		return "image/png"
+	case ".webp":
+		return "image/webp"
+	case ".gif":
+		return "image/gif"
+	case ".heic":
+		return "image/heic"
+	case ".heif":
+		return "image/heif"
+	case ".mp4":
+		return "video/mp4"
+	case ".mov":
+		return "video/quicktime"
+	case ".webm":
+		return "video/webm"
+	case ".mpeg", ".mpg":
+		return "video/mpeg"
+	case ".flv":
+		return "video/x-flv"
+	case ".wmv":
+		return "video/wmv"
+	case ".3gp", ".3gpp":
+		return "video/3gpp"
+	default:
+		return "application/octet-stream"
+	}
+}
+
+// toInt coerces a JSON-decoded numeric tool argument to an int. MCP arguments
+// arrive as float64 for JSON numbers; a string of digits is also accepted.
+func toInt(v any) (int, error) {
+	switch n := v.(type) {
+	case float64:
+		if n != math.Trunc(n) {
+			return 0, fmt.Errorf("expected an integer, got %v", n)
+		}
+		return int(n), nil
+	case int:
+		return n, nil
+	case int64:
+		return int(n), nil
+	default:
+		return 0, fmt.Errorf("expected a number, got %T", v)
+	}
+}
+
+// parseOptionalFloatInRange reads an optional float tool argument and validates
+// it lies within [min, max]. Returns nil when the argument is absent.
+func parseOptionalFloatInRange(args map[string]interface{}, key string, min, max float64) (*float32, error) {
+	raw, present := args[key]
+	if !present || raw == nil {
+		return nil, nil
+	}
+	f, ok := raw.(float64)
+	if !ok {
+		return nil, fmt.Errorf("%s must be a number", key)
+	}
+	if f < min || f > max {
+		return nil, fmt.Errorf("%s must be in the range [%.1f, %.1f], got %v", key, min, max, f)
+	}
+	v := float32(f)
+	return &v, nil
 }

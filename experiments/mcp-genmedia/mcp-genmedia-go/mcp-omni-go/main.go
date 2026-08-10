@@ -75,8 +75,18 @@ func main() {
 	s := server.NewMCPServer("Gemini Omni", version, server.WithResourceCapabilities(true, false))
 
 	tool := mcp.NewTool("omni_video_generation",
-		mcp.WithDescription("Generates video (with optional embedded audio) from a text prompt using Google's Gemini Omni model via the Vertex Interactions API. Returns MP4(s) saved locally and/or to GCS."),
+		mcp.WithDescription("Generates video (with optional embedded audio) from a text prompt, optionally conditioned on input images and/or videos, using Google's Gemini Omni model via the Vertex Interactions API. Returns MP4(s) saved locally and/or to GCS."),
 		mcp.WithString("prompt", mcp.Required(), mcp.Description("The text prompt describing the video to generate.")),
+		mcp.WithString("model", mcp.Description(common.BuildOmniModelDescription())),
+		mcp.WithArray("images",
+			mcp.Items(map[string]any{"type": "string"}),
+			mcp.Description("Optional. Up to 10 input images to condition generation on. Each entry is a local file path or a gs:// URI (image/png, image/jpeg, image/webp).")),
+		mcp.WithArray("videos",
+			mcp.Items(map[string]any{"type": "string"}),
+			mcp.Description("Optional. Input videos to reference or edit. Each entry is a local file path or a gs:// URI (e.g. video/mp4, video/webm, video/quicktime).")),
+		mcp.WithNumber("sample_count", mcp.Description("Optional. Number of videos to generate (1-3, default 1). Clamped to the model maximum of 3.")),
+		mcp.WithNumber("temperature", mcp.Description("Optional. Sampling temperature, 0.0-2.0 (higher = more varied). Sent in generation_config.")),
+		mcp.WithNumber("top_p", mcp.Description("Optional. Nucleus sampling probability mass, 0.0-1.0. Sent in generation_config.")),
 		mcp.WithString("output_directory", mcp.Description("Optional. Local directory to save the generated video(s) to.")),
 		mcp.WithString("gcs_bucket_uri", mcp.Description("Optional. GCS URI prefix to store generated video(s) (e.g., your-bucket/outputs/). Falls back to GENMEDIA_BUCKET+/omni_outputs/ if set.")),
 	)

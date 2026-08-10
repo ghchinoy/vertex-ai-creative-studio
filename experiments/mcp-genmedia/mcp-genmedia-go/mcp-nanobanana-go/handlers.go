@@ -22,11 +22,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/mark3labs/mcp-go/mcp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -146,6 +144,7 @@ func nanobananaGenerateContentHandler(client *genai.Client, ctx context.Context,
 		}
 	}
 	gentime := time.Now().Format("20060102150405")
+	expiry := common.SignedURLExpiryFromEnv("NANOBANANA_SIGNED_URL_EXPIRY_HOURS")
 
 	for _, candidate := range resp.Candidates {
 		for n, part := range candidate.Content.Parts {
@@ -154,46 +153,34 @@ func nanobananaGenerateContentHandler(client *genai.Client, ctx context.Context,
 			}
 			if part.InlineData != nil {
 				log.Printf("part %d mime-type: %s", n, part.InlineData.MIMEType)
-				saved := false
 
-				if outputDir != "" {
-					if err := os.MkdirAll(outputDir, 0755); err != nil {
-						return mcp.NewToolResultError(fmt.Sprintf("failed to create output directory: %v", err)), nil
-					}
-					fileName := fmt.Sprintf("gemini_%s_%d%s", gentime, n, extForMimeType(part.InlineData.MIMEType))
-					filePath := filepath.Join(outputDir, fileName)
-					if err := os.WriteFile(filePath, part.InlineData.Data, 0644); err != nil {
-						return mcp.NewToolResultError(fmt.Sprintf("failed to write image file: %v", err)), nil
-					}
-					savedFiles = append(savedFiles, filePath)
-					saved = true
+				fileName := fmt.Sprintf("gemini_%s_%d%s", gentime, n, extForMimeType(part.InlineData.MIMEType))
+				persisted, err := common.PersistMediaOutputs(ctx, common.MediaArtifact{
+					Data:     part.InlineData.Data,
+					MimeType: part.InlineData.MIMEType,
+					FileName: fileName,
+				}, outputDir, gcsBucketURI, expiry)
+				if err != nil {
+					return mcp.NewToolResultError(fmt.Sprintf("failed to save generated image: %v", err)), nil
 				}
 
-				if gcsBucketURI != "" {
-					bucketName, objectPrefix := parseGCSBucketAndPrefix(gcsBucketURI)
-					objectName := fmt.Sprintf("%sgemini_%s_%d%s", objectPrefix, gentime, n, extForMimeType(part.InlineData.MIMEType))
-					if err := common.UploadToGCS(ctx, bucketName, objectName, part.InlineData.MIMEType, part.InlineData.Data); err != nil {
-						log.Printf("failed to upload image to gs://%s/%s: %v", bucketName, objectName, err)
-						fmt.Fprintf(&responseText, "\n\n[Warning: failed to upload generated image to GCS: %v]", err)
-					} else {
-						gcsURI := fmt.Sprintf("gs://%s/%s", bucketName, objectName)
-						savedFiles = append(savedFiles, gcsURI)
-						saved = true
-
-						// Best-effort: also return a V4 signed HTTPS URL so clients
-						// (e.g. Claude) can fetch/display the image without the
-						// bucket being public. Non-fatal on failure.
-						if expiry := signedURLExpiry(); expiry > 0 {
-							if signedURL, sErr := generateSignedURL(ctx, bucketName, objectName, expiry); sErr != nil {
-								log.Printf("failed to generate signed URL for %s: %v", gcsURI, sErr)
-							} else {
-								fmt.Fprintf(&responseText, "\n\nSigned URL for %s (valid %s):\n%s", objectName, expiry, signedURL)
-							}
-						}
-					}
+				if persisted.LocalPath != "" {
+					savedFiles = append(savedFiles, persisted.LocalPath)
+				}
+				if persisted.GCSError != nil {
+					log.Printf("failed to upload image to GCS: %v", persisted.GCSError)
+					fmt.Fprintf(&responseText, "\n\n[Warning: failed to upload generated image to GCS: %v]", persisted.GCSError)
+				}
+				if persisted.GCSURI != "" {
+					savedFiles = append(savedFiles, persisted.GCSURI)
+				}
+				// Best-effort V4 signed HTTPS URL so clients (e.g. Claude) can
+				// fetch/display the image without the bucket being public.
+				if persisted.SignedURL != "" {
+					fmt.Fprintf(&responseText, "\n\nSigned URL for %s (valid %s):\n%s", persisted.GCSObject, expiry, persisted.SignedURL)
 				}
 
-				if !saved {
+				if persisted.LocalPath == "" && persisted.GCSURI == "" {
 					log.Println("Received image data but no output_directory or gcs_bucket_uri was specified/valid. Image not saved.")
 				}
 			}
@@ -237,65 +224,6 @@ func inferMimeType(path string) string {
 		// A more robust solution might involve reading file headers.
 		return "image/png"
 	}
-}
-
-// signedURLExpiry returns the validity duration for generated V4 signed URLs.
-// Controlled by the NANOBANANA_SIGNED_URL_EXPIRY_HOURS env var. Defaults to
-// 24 hours. Values are clamped to 168 hours (7 days, the V4 maximum). Set to
-// "0" to disable signed URL generation entirely.
-func signedURLExpiry() time.Duration {
-	const def = 24 * time.Hour
-	v := strings.TrimSpace(os.Getenv("NANOBANANA_SIGNED_URL_EXPIRY_HOURS"))
-	if v == "" {
-		return def
-	}
-	h, err := strconv.Atoi(v)
-	if err != nil || h < 0 {
-		log.Printf("invalid NANOBANANA_SIGNED_URL_EXPIRY_HOURS=%q, using default of 24", v)
-		return def
-	}
-	if h == 0 {
-		return 0
-	}
-	if h > 168 {
-		log.Printf("NANOBANANA_SIGNED_URL_EXPIRY_HOURS=%d exceeds the V4 maximum of 168 (7 days); clamping to 168", h)
-		h = 168
-	}
-	return time.Duration(h) * time.Hour
-}
-
-// generateSignedURL creates a V4 GET signed URL for a GCS object. The signing
-// key is detected automatically from the ambient credentials (e.g. the
-// service-account JSON key referenced by GOOGLE_APPLICATION_CREDENTIALS).
-func generateSignedURL(ctx context.Context, bucketName, objectName string, expiry time.Duration) (string, error) {
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return "", fmt.Errorf("storage.NewClient: %w", err)
-	}
-	defer func() { _ = client.Close() }()
-
-	return client.Bucket(bucketName).SignedURL(objectName, &storage.SignedURLOptions{
-		Scheme:  storage.SigningSchemeV4,
-		Method:  "GET",
-		Expires: time.Now().Add(expiry),
-	})
-}
-
-// parseGCSBucketAndPrefix splits a "bucket/optional/prefix/" string (with or
-// without a leading gs:// scheme) into a bucket name and an object name
-// prefix that is guaranteed to be empty or end with a "/".
-func parseGCSBucketAndPrefix(uri string) (bucket, prefix string) {
-	uri = strings.TrimPrefix(uri, "gs://")
-	uri = strings.TrimPrefix(uri, "/")
-	parts := strings.SplitN(uri, "/", 2)
-	bucket = parts[0]
-	if len(parts) > 1 && parts[1] != "" {
-		prefix = parts[1]
-		if !strings.HasSuffix(prefix, "/") {
-			prefix += "/"
-		}
-	}
-	return bucket, prefix
 }
 
 // extForMimeType returns a reasonable file extension for a given image MIME type.

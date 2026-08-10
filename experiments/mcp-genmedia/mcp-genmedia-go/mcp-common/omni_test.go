@@ -15,9 +15,14 @@
 package common
 
 import (
+	"context"
 	"encoding/base64"
+	"errors"
 	"testing"
 )
+
+// errFakeTransport is a sentinel error used by the fake Interactions client.
+var errFakeTransport = errors.New("fake transport error")
 
 // sampleMP4 is a tiny byte sequence with a valid MP4 "ftyp" box, used to verify
 // the steps[] -> decoded bytes mapping without a live call.
@@ -105,7 +110,10 @@ func TestMapOmniResponseNoVideo(t *testing.T) {
 }
 
 func TestBuildOmniRequest(t *testing.T) {
-	req := buildOmniRequest("gemini-omni-flash-preview", OmniParams{Prompt: "a red balloon"})
+	req, err := buildOmniRequest("gemini-omni-flash-preview", OmniParams{Prompt: "a red balloon"})
+	if err != nil {
+		t.Fatalf("buildOmniRequest returned error: %v", err)
+	}
 	if req.Model != "gemini-omni-flash-preview" {
 		t.Errorf("Model = %q", req.Model)
 	}
@@ -117,6 +125,134 @@ func TestBuildOmniRequest(t *testing.T) {
 	}
 	if len(req.Input[0].Content) != 1 || req.Input[0].Content[0].Text != "a red balloon" {
 		t.Errorf("Input content unexpected: %+v", req.Input[0].Content)
+	}
+	if req.GenerationConfig != nil {
+		t.Errorf("GenerationConfig should be nil when no sampling params set, got %+v", req.GenerationConfig)
+	}
+}
+
+func TestBuildOmniRequestWithInputsAndSampling(t *testing.T) {
+	temp := float32(0.7)
+	topP := float32(0.9)
+	req, err := buildOmniRequest("gemini-omni-flash-preview", OmniParams{
+		Prompt:      "animate this",
+		Images:      []OmniMediaRef{{Data: []byte("PNGDATA"), MimeType: "image/png"}},
+		Videos:      []OmniMediaRef{{URI: "gs://bucket/clip.mp4", MimeType: "video/mp4"}},
+		Temperature: &temp,
+		TopP:        &topP,
+	})
+	if err != nil {
+		t.Fatalf("buildOmniRequest returned error: %v", err)
+	}
+	content := req.Input[0].Content
+	// text + image + video = 3 parts, in that order.
+	if len(content) != 3 {
+		t.Fatalf("len(content) = %d, want 3: %+v", len(content), content)
+	}
+	if content[0].Type != "text" || content[0].Text != "animate this" {
+		t.Errorf("part[0] = %+v, want text 'animate this'", content[0])
+	}
+	if content[1].Type != "image" || content[1].MimeType != "image/png" {
+		t.Errorf("part[1] = %+v, want image/png", content[1])
+	}
+	if got := base64.StdEncoding.EncodeToString([]byte("PNGDATA")); content[1].Data != got {
+		t.Errorf("image data = %q, want base64 %q", content[1].Data, got)
+	}
+	if content[1].URI != "" {
+		t.Errorf("inline image should not set URI, got %q", content[1].URI)
+	}
+	if content[2].Type != "video" || content[2].URI != "gs://bucket/clip.mp4" || content[2].Data != "" {
+		t.Errorf("part[2] = %+v, want video by URI", content[2])
+	}
+	if req.GenerationConfig == nil || req.GenerationConfig.Temperature == nil || *req.GenerationConfig.Temperature != 0.7 {
+		t.Errorf("GenerationConfig.Temperature not set correctly: %+v", req.GenerationConfig)
+	}
+	if req.GenerationConfig.TopP == nil || *req.GenerationConfig.TopP != 0.9 {
+		t.Errorf("GenerationConfig.TopP not set correctly: %+v", req.GenerationConfig)
+	}
+}
+
+func TestMediaRefsToPartsErrors(t *testing.T) {
+	if _, err := mediaRefsToParts("image", []OmniMediaRef{{MimeType: "image/png"}}); err == nil {
+		t.Errorf("expected error for a ref with neither Data nor URI")
+	}
+	if _, err := mediaRefsToParts("image", []OmniMediaRef{{Data: []byte("x"), URI: "gs://b/o", MimeType: "image/png"}}); err == nil {
+		t.Errorf("expected error for a ref with both Data and URI")
+	}
+}
+
+func TestClampSampleCount(t *testing.T) {
+	cases := []struct{ in, want int }{
+		{-3, 1}, {0, 1}, {1, 1}, {2, 2}, {3, 3}, {4, 3}, {100, 3},
+	}
+	for _, c := range cases {
+		if got := clampSampleCount(c.in); got != c.want {
+			t.Errorf("clampSampleCount(%d) = %d, want %d", c.in, got, c.want)
+		}
+	}
+}
+
+// fakeInteractionsClient returns a fixed response (or error) for each Create,
+// recording how many times it was called — enough to exercise the multi-sample
+// aggregation in generateOmniVideoWithClient without ADC or a live call.
+type fakeInteractionsClient struct {
+	calls int
+	resp  *InteractionResponse
+	err   error
+}
+
+func (f *fakeInteractionsClient) Create(_ context.Context, _ *InteractionRequest) (*InteractionResponse, error) {
+	f.calls++
+	if f.err != nil {
+		return nil, f.err
+	}
+	return f.resp, nil
+}
+
+func TestGenerateOmniVideoWithClientMultiSample(t *testing.T) {
+	b64 := base64.StdEncoding.EncodeToString(sampleMP4)
+	resp, err := decodeInteractionResponse([]byte(omniResponseJSON(b64)))
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	fake := &fakeInteractionsClient{resp: resp}
+
+	result, err := generateOmniVideoWithClient(context.Background(), fake, OmniParams{Prompt: "x", SampleCount: 3})
+	if err != nil {
+		t.Fatalf("generateOmniVideoWithClient: %v", err)
+	}
+	if fake.calls != 3 {
+		t.Errorf("Create called %d times, want 3", fake.calls)
+	}
+	if len(result.Videos) != 3 {
+		t.Errorf("len(Videos) = %d, want 3 (one per sample)", len(result.Videos))
+	}
+	if result.ThoughtSteps != 3 {
+		t.Errorf("ThoughtSteps = %d, want 3", result.ThoughtSteps)
+	}
+	for i, v := range result.Videos {
+		if !hasFtypBox(v) {
+			t.Errorf("video %d missing ftyp box", i)
+		}
+	}
+}
+
+func TestGenerateOmniVideoWithClientClampsAndErrors(t *testing.T) {
+	// A sample count above the max is clamped to MaxOmniSampleCount calls.
+	b64 := base64.StdEncoding.EncodeToString(sampleMP4)
+	resp, _ := decodeInteractionResponse([]byte(omniResponseJSON(b64)))
+	fake := &fakeInteractionsClient{resp: resp}
+	if _, err := generateOmniVideoWithClient(context.Background(), fake, OmniParams{Prompt: "x", SampleCount: 99}); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if fake.calls != MaxOmniSampleCount {
+		t.Errorf("Create called %d times, want %d (clamped)", fake.calls, MaxOmniSampleCount)
+	}
+
+	// A transport error is surfaced with sample context.
+	failing := &fakeInteractionsClient{err: errFakeTransport}
+	if _, err := generateOmniVideoWithClient(context.Background(), failing, OmniParams{Prompt: "x", SampleCount: 2}); err == nil {
+		t.Errorf("expected error from failing client, got nil")
 	}
 }
 

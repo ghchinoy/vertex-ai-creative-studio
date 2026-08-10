@@ -26,20 +26,49 @@ import (
 // omniVideoMimePrefix is the MIME prefix identifying a video output part.
 const omniVideoMimePrefix = "video/"
 
-// OmniParams are the inputs to a Gemini Omni video generation call. This phase
-// exposes only the text prompt and model; image/video inputs and sampling controls
-// are added in a later phase (design §5.1).
+// MaxOmniSampleCount is the maximum number of videos the Omni model produces per
+// prompt (findings §1). sample_count is clamped to this ceiling.
+const MaxOmniSampleCount = 3
+
+// OmniMediaRef is a single image or video input to an Omni generation. It is
+// either inline bytes (Data, base64-encoded onto the wire) or a gs:// URI
+// (URI) — exactly one should be set. MimeType is required for both.
+type OmniMediaRef struct {
+	// Data holds raw media bytes for an inline input part. Mutually exclusive with URI.
+	Data []byte
+	// URI is a gs:// URI for a media input part. Mutually exclusive with Data.
+	URI string
+	// MimeType is the media MIME type (e.g. "image/png", "video/mp4").
+	MimeType string
+}
+
+// OmniParams are the inputs to a Gemini Omni video generation call (design §5.1).
 type OmniParams struct {
 	// Prompt is the text prompt (required).
 	Prompt string
 	// Model is the resolved canonical model ID. If empty, the default Omni model
 	// is used (see ResolveOmniModel).
 	Model string
+	// Images are optional image inputs (image-conditioned generation).
+	Images []OmniMediaRef
+	// Videos are optional video inputs (reference / editing).
+	Videos []OmniMediaRef
+	// SampleCount is the number of videos to generate (1..MaxOmniSampleCount).
+	// Values < 1 are treated as 1; values above the max are clamped. Because the
+	// endpoint rejects generation_config.candidate_count, multiple samples are
+	// produced by issuing that many sequential interactions.
+	SampleCount int
+	// Temperature is the optional sampling temperature (0.0-2.0). Sent in
+	// generation_config only when non-nil (Q1: empirically accepted).
+	Temperature *float32
+	// TopP is the optional nucleus-sampling top_p (0.0-1.0). Sent in
+	// generation_config only when non-nil (Q1: empirically accepted).
+	TopP *float32
 }
 
 // OmniResult is the mapped output of a Gemini Omni video generation call.
 type OmniResult struct {
-	// Videos holds the decoded MP4 bytes for each returned video part (up to 3).
+	// Videos holds the decoded MP4 bytes for each returned video part.
 	Videos [][]byte
 	// VideoMimeTypes holds the MIME type for each entry in Videos (index-aligned).
 	VideoMimeTypes []string
@@ -53,51 +82,142 @@ type OmniResult struct {
 	Status string
 }
 
-// GenerateOmniVideo is the single shared entry point both mcp-omni-go and (later)
+// GenerateOmniVideo is the single shared entry point both mcp-omni-go and
 // mcp-gemini-go call, so the request/response contract can never drift. It builds
-// the Omni envelope (lowercase response_modalities), calls the Interactions client,
-// and maps steps[] -> decoded MP4 bytes + text (design §7.2).
+// the Omni envelope (lowercase response_modalities, image/video input parts,
+// optional generation_config), calls the Interactions client sample_count times,
+// and aggregates the decoded MP4 bytes + text (design §7.2).
 func GenerateOmniVideo(ctx context.Context, cfg *Config, p OmniParams) (*OmniResult, error) {
 	if strings.TrimSpace(p.Prompt) == "" {
 		return nil, fmt.Errorf("omni: prompt must be a non-empty string")
-	}
-
-	model := p.Model
-	if strings.TrimSpace(model) == "" {
-		model = DefaultOmniModel
 	}
 
 	client, err := NewInteractionsClient(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
+	return generateOmniVideoWithClient(ctx, client, p)
+}
 
-	req := buildOmniRequest(model, p)
+// generateOmniVideoWithClient runs the generation against a provided
+// InteractionsClient. It is separated from GenerateOmniVideo so the multi-sample
+// aggregation is unit-testable with a fake client (no ADC required).
+func generateOmniVideoWithClient(ctx context.Context, client InteractionsClient, p OmniParams) (*OmniResult, error) {
+	model := p.Model
+	if strings.TrimSpace(model) == "" {
+		model = DefaultOmniModel
+	}
 
-	resp, err := client.Create(ctx, req)
+	samples := clampSampleCount(p.SampleCount)
+	req, err := buildOmniRequest(model, p)
 	if err != nil {
 		return nil, err
 	}
 
-	return mapOmniResponse(resp)
+	agg := &OmniResult{}
+	for i := 0; i < samples; i++ {
+		resp, err := client.Create(ctx, req)
+		if err != nil {
+			return nil, fmt.Errorf("omni: sample %d/%d failed: %w", i+1, samples, err)
+		}
+		r, err := mapOmniResponse(resp)
+		if err != nil {
+			return nil, fmt.Errorf("omni: sample %d/%d: %w", i+1, samples, err)
+		}
+		agg.Videos = append(agg.Videos, r.Videos...)
+		agg.VideoMimeTypes = append(agg.VideoMimeTypes, r.VideoMimeTypes...)
+		agg.ThoughtSteps += r.ThoughtSteps
+		if r.Text != "" {
+			if agg.Text != "" {
+				agg.Text += "\n"
+			}
+			agg.Text += r.Text
+		}
+		// Carry the last sample's status/sherlog link (representative of the batch).
+		agg.Status = r.Status
+		if r.SherlogLink != "" {
+			agg.SherlogLink = r.SherlogLink
+		}
+	}
+
+	if len(agg.Videos) == 0 {
+		return agg, fmt.Errorf("omni: no video output found in interaction response(s) (status=%q)", agg.Status)
+	}
+	return agg, nil
+}
+
+// clampSampleCount normalizes a requested sample count into [1, MaxOmniSampleCount].
+func clampSampleCount(n int) int {
+	if n < 1 {
+		return 1
+	}
+	if n > MaxOmniSampleCount {
+		return MaxOmniSampleCount
+	}
+	return n
 }
 
 // buildOmniRequest constructs the Omni interaction envelope. response_modalities
-// is lowercase ["text","video"] per the live wire (findings §3).
-func buildOmniRequest(model string, p OmniParams) *InteractionRequest {
-	return &InteractionRequest{
+// is lowercase ["text","video"] per the live wire (findings §3). Image/video
+// inputs become additional content parts; sampling controls become a
+// generation_config (only when set).
+func buildOmniRequest(model string, p OmniParams) (*InteractionRequest, error) {
+	content := []Part{{Type: "text", Text: p.Prompt}}
+
+	imageParts, err := mediaRefsToParts("image", p.Images)
+	if err != nil {
+		return nil, err
+	}
+	content = append(content, imageParts...)
+
+	videoParts, err := mediaRefsToParts("video", p.Videos)
+	if err != nil {
+		return nil, err
+	}
+	content = append(content, videoParts...)
+
+	req := &InteractionRequest{
 		Model:              model,
 		ResponseModalities: []string{"text", "video"},
 		Input: []InputItem{
-			{
-				Type: "user_input",
-				Content: []Part{
-					{Type: "text", Text: p.Prompt},
-				},
-			},
+			{Type: "user_input", Content: content},
 		},
 		Store: false,
 	}
+
+	if p.Temperature != nil || p.TopP != nil {
+		req.GenerationConfig = &GenerationConfig{Temperature: p.Temperature, TopP: p.TopP}
+	}
+
+	return req, nil
+}
+
+// mediaRefsToParts converts input media refs into interaction Parts of the given
+// type ("image" or "video"). Inline bytes are base64-encoded; gs:// refs are sent
+// by URI. Exactly one of Data/URI must be set per ref.
+func mediaRefsToParts(partType string, refs []OmniMediaRef) ([]Part, error) {
+	parts := make([]Part, 0, len(refs))
+	for i, ref := range refs {
+		switch {
+		case len(ref.Data) > 0 && ref.URI != "":
+			return nil, fmt.Errorf("omni: %s input %d has both inline data and a URI (set exactly one)", partType, i)
+		case len(ref.Data) > 0:
+			parts = append(parts, Part{
+				Type:     partType,
+				MimeType: ref.MimeType,
+				Data:     base64.StdEncoding.EncodeToString(ref.Data),
+			})
+		case ref.URI != "":
+			parts = append(parts, Part{
+				Type:     partType,
+				MimeType: ref.MimeType,
+				URI:      ref.URI,
+			})
+		default:
+			return nil, fmt.Errorf("omni: %s input %d has neither inline data nor a URI", partType, i)
+		}
+	}
+	return parts, nil
 }
 
 // mapOmniResponse walks the interaction's steps[] (falling back to outputs[]),

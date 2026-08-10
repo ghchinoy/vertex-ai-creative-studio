@@ -64,7 +64,10 @@ func TestInteractionsClientCreate(t *testing.T) {
 	baseURL := ts.URL + "/v1beta1/projects/test-project/locations/global/interactions"
 	c := newTestClient(baseURL, ts.Client())
 
-	req := buildOmniRequest("gemini-omni-flash-preview", OmniParams{Prompt: "a red balloon"})
+	req, err := buildOmniRequest("gemini-omni-flash-preview", OmniParams{Prompt: "a red balloon"})
+	if err != nil {
+		t.Fatalf("buildOmniRequest returned error: %v", err)
+	}
 	resp, err := c.Create(context.Background(), req)
 	if err != nil {
 		t.Fatalf("Create returned error: %v", err)
@@ -106,7 +109,11 @@ func TestInteractionsClientCreateAPIError(t *testing.T) {
 
 	c := newTestClient(ts.URL, ts.Client())
 
-	_, err := c.Create(context.Background(), buildOmniRequest("m", OmniParams{Prompt: "x"}))
+	req, err := buildOmniRequest("m", OmniParams{Prompt: "x"})
+	if err != nil {
+		t.Fatalf("buildOmniRequest returned error: %v", err)
+	}
+	_, err = c.Create(context.Background(), req)
 	if err == nil {
 		t.Fatal("expected an error for a 400 response, got nil")
 	}

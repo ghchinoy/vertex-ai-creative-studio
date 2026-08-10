@@ -65,6 +65,19 @@ type InteractionRequest struct {
 	ResponseModalities []string    `json:"response_modalities,omitempty"`
 	Input              []InputItem `json:"input"`
 	Store              bool        `json:"store"`
+	// GenerationConfig carries sampling controls (temperature/top_p). It is only
+	// sent when non-nil; the Omni Interactions endpoint parses and validates these
+	// (empirically confirmed: temperature is range-checked to [0.0, 2.0]).
+	GenerationConfig *GenerationConfig `json:"generation_config,omitempty"`
+}
+
+// GenerationConfig models the subset of generation_config the suite sends. Fields
+// are pointers so an unset value is omitted from the wire entirely (the endpoint
+// rejects unknown fields, so we only send what it accepts — e.g. candidate_count
+// is deliberately NOT modeled because the endpoint rejects it, findings/p2a).
+type GenerationConfig struct {
+	Temperature *float32 `json:"temperature,omitempty"`
+	TopP        *float32 `json:"top_p,omitempty"`
 }
 
 // InputItem is one entry in an interaction's input array. For Omni the shape is
@@ -223,12 +236,19 @@ func toLibRequest(req *InteractionRequest) *interactions.InteractionRequest {
 	}
 
 	store := req.Store
-	return &interactions.InteractionRequest{
+	libReq := &interactions.InteractionRequest{
 		Model:              req.Model,
 		ResponseModalities: req.ResponseModalities,
 		Input:              contents,
 		Store:              &store,
 	}
+	if req.GenerationConfig != nil {
+		libReq.GenerationConfig = &interactions.GenerationConfig{
+			Temperature: req.GenerationConfig.Temperature,
+			TopP:        req.GenerationConfig.TopP,
+		}
+	}
+	return libReq
 }
 
 // fromLibResponse translates the library's response type into the suite's own

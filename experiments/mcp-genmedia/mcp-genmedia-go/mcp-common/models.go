@@ -479,6 +479,7 @@ func ResolveLyriaModel(modelInput string, allowUnsafe bool) (LyriaModelInfo, boo
 
 	return LyriaModelInfo{}, false
 }
+
 // --- Omni Model Configuration ---
 
 // DefaultOmniModel is the canonical default Gemini Omni model ID.
