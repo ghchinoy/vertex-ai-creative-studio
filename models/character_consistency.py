@@ -135,7 +135,7 @@ def generate_character_video(
     )
 
     candidate_image_gcs_uris, candidate_image_bytes_list = _generate_gemini_candidates(
-        final_prompt, reference_image_gcs_uris
+        final_prompt, reference_image_gcs_uris, negative_prompt=negative_prompt
     )
 
     step_duration = time.time() - step_start_time
@@ -238,9 +238,23 @@ def generate_character_video(
     add_media_item_to_firestore(new_item)
     logger.info("Workflow complete in %.2f seconds. MediaItem ID: %s", total_duration, new_item.id)
 
+def _fold_negative_prompt(prompt: str, negative_prompt: str | None) -> str:
+    """Folds a negative prompt into a prompt-based request.
+
+    The Gemini Image (Nano Banana) adapter has no dedicated ``negative_prompt``
+    input (unlike the retired Imagen ``EditImageConfig``). To honour the user's
+    negative-prompt intent via the prompt-based path, it is appended as an
+    explicit "avoid" instruction rather than being stored-but-ignored.
+    """
+    if negative_prompt and negative_prompt.strip():
+        return f"{prompt}\n\nAvoid the following in the image: {negative_prompt.strip()}"
+    return prompt
+
+
 def _generate_gemini_candidates(
     final_prompt: str,
     reference_image_gcs_uris: list[str],
+    negative_prompt: str | None = None,
     num_candidates: int = 4,
 ) -> tuple[list[str], list[bytes]]:
     """Generates candidate images with Gemini (Nano Banana), prompt-based.
@@ -249,21 +263,26 @@ def _generate_gemini_candidates(
     edit path. Rather than passing reference images as Imagen ``SubjectReferenceImage``
     objects with a mask, the reference images and the scene prompt are sent to the
     Gemini Image (Nano Banana) ``generateContent`` adapter, which performs a
-    prompt-based, mask-free edit/customization.
+    prompt-based, mask-free edit/customization. The ``negative_prompt`` (which the
+    Imagen path passed via ``EditImageConfig``) is folded into the prompt text,
+    since the Gemini adapter has no negative-prompt input.
 
     ``gemini-2.5-flash-image`` returns one image per call, so ``num_candidates``
     calls are issued in parallel (mirroring the previous behaviour of returning a
     set of candidates for downstream best-image selection).
 
     Returns the candidate GCS URIs and their downloaded bytes (the bytes are
-    required by the downstream best-image selection step).
+    required by the downstream best-image selection step). Raises ``RuntimeError``
+    if every candidate call comes back empty, so an empty candidate set never
+    silently flows into best-image selection.
     """
+    candidate_prompt = _fold_negative_prompt(final_prompt, negative_prompt)
     candidate_image_gcs_uris: list[str] = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [
             executor.submit(
                 generate_image_from_prompt_and_images,
-                final_prompt,
+                candidate_prompt,
                 reference_image_gcs_uris,
                 aspect_ratio="1:1",
                 gcs_folder="character_consistency_candidates",
@@ -274,6 +293,12 @@ def _generate_gemini_candidates(
         for future in futures:
             gcs_uris, _, _, _, _ = future.result()
             candidate_image_gcs_uris.extend(gcs_uris)
+
+    if not candidate_image_gcs_uris:
+        raise RuntimeError(
+            "Gemini (Nano Banana) candidate generation returned no images "
+            f"for {len(reference_image_gcs_uris)} reference image(s)",
+        )
 
     candidate_image_bytes_list = [
         download_from_gcs(gcs_uri) for gcs_uri in candidate_image_gcs_uris

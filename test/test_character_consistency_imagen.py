@@ -143,6 +143,51 @@ def test_generate_gemini_candidates_calls_adapter_per_candidate(cc_module) -> No
         assert kwargs["aspect_ratio"] == "1:1"
 
 
+def test_generate_gemini_candidates_folds_negative_prompt(cc_module) -> None:
+    """The negative prompt is folded into the prompt text (adapter has no such input)."""
+    seen_prompts = []
+
+    def fake_adapter(prompt, images, **kwargs):
+        seen_prompts.append(prompt)
+        return _fake_adapter_return(["gs://bucket/candidate.png"])
+
+    with mock.patch.object(
+        cc_module, "generate_image_from_prompt_and_images", side_effect=fake_adapter
+    ), mock.patch.object(cc_module, "download_from_gcs", side_effect=lambda uri: b"b"):
+        cc_module._generate_gemini_candidates(
+            "a hero on a rooftop",
+            ["gs://bucket/ref1.png"],
+            negative_prompt="blurry, deformed hands",
+            num_candidates=2,
+        )
+
+    assert seen_prompts, "adapter should have been called"
+    for prompt in seen_prompts:
+        assert "a hero on a rooftop" in prompt
+        assert "blurry, deformed hands" in prompt
+        assert "Avoid" in prompt
+
+
+def test_generate_gemini_candidates_raises_when_all_empty(cc_module) -> None:
+    """If every candidate call returns no image, raise instead of feeding an empty set."""
+    with mock.patch.object(
+        cc_module,
+        "generate_image_from_prompt_and_images",
+        side_effect=lambda *a, **k: _fake_adapter_return([]),
+    ), mock.patch.object(cc_module, "download_from_gcs", side_effect=lambda uri: b""):
+        with pytest.raises(RuntimeError):
+            cc_module._generate_gemini_candidates(
+                "prompt", ["gs://bucket/ref1.png"], num_candidates=4
+            )
+
+
+def test_fold_negative_prompt_noop_when_absent(cc_module) -> None:
+    """No negative prompt (None / blank) leaves the prompt unchanged."""
+    assert cc_module._fold_negative_prompt("p", None) == "p"
+    assert cc_module._fold_negative_prompt("p", "   ") == "p"
+    assert "Avoid" in cc_module._fold_negative_prompt("p", "ugly")
+
+
 def test_reframe_image_to_16_9_uses_gemini_adapter(cc_module) -> None:
     """The reframe (old outpaint) step is a prompt-based 16:9 Gemini edit."""
     captured = {}
