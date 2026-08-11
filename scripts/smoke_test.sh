@@ -98,7 +98,7 @@ fail() {
 }
 
 # --- Step 1: toolchain check (fail fast, do NOT auto-install) ---------------
-echo "🔎 1/4  Checking toolchain..."
+echo "🔎 1/5  Checking toolchain..."
 if ! command -v uv >/dev/null 2>&1; then
   fail "'uv' is not installed. Install it (https://github.com/astral-sh/uv), e.g.
         curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -108,16 +108,25 @@ echo "     ✅ uv found: $(uv --version)"
 
 # --- Step 2: dependency sync -----------------------------------------------
 echo ""
-echo "📦 2/4  Syncing dependencies (uv sync)..."
+echo "📦 2/5  Syncing dependencies (uv sync)..."
 if ! uv sync >/tmp/gmcs_smoke_sync.log 2>&1; then
   echo "--- uv sync output ---"; tail -30 /tmp/gmcs_smoke_sync.log || true
   fail "'uv sync' failed. Ensure Python >=3.14 is available (uv can install it)."
 fi
 echo "     ✅ dependencies synced"
 
-# --- Step 3: boot the app in APP_ENV=local ---------------------------------
+# --- Step 3: import smoke check (pages & models) --------------------------
 echo ""
-echo "🚦 3/4  Booting app (APP_ENV=local) on port ${PORT}..."
+echo "🧪 3/5  Running page & model import smoke test..."
+if ! uv run pytest test/test_app_imports.py >/tmp/gmcs_smoke_imports.log 2>&1; then
+  echo "--- import smoke test output ---"; tail -30 /tmp/gmcs_smoke_imports.log || true
+  fail "Page or model import smoke test failed."
+fi
+echo "     ✅ all core pages and models imported successfully"
+
+# --- Step 4: boot the app in APP_ENV=local ---------------------------------
+echo ""
+echo "🚦 4/5  Booting app (APP_ENV=local) on port ${PORT}..."
 
 if [ -z "${PROJECT_ID:-}" ]; then
   PROJECT_ID="$(gcloud config get-value project 2>/dev/null || true)"
@@ -143,9 +152,9 @@ APP_ENV=local PROJECT_ID="${PROJECT_ID}" PORT="${PORT}" \
 APP_PID=$!
 echo "     app pid/pgid: ${APP_PID}  (log: ${BOOT_LOG})"
 
-# --- Step 4: poll until the UI serves 200 ----------------------------------
+# --- Step 5: poll until the UI serves 200 ----------------------------------
 echo ""
-echo "🌐 4/4  Waiting for the UI (timeout ${BOOT_TIMEOUT}s)..."
+echo "🌐 5/5  Waiting for the UI (timeout ${BOOT_TIMEOUT}s)..."
 deadline=$(( $(date +%s) + BOOT_TIMEOUT ))
 home_code="000"
 while [ "$(date +%s)" -lt "${deadline}" ]; do

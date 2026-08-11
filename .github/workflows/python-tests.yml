@@ -1,0 +1,58 @@
+name: Python Tests CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "common/**"
+      - "models/**"
+      - "pages/**"
+      - "config/**"
+      - "state/**"
+      - "test/**"
+      - "scripts/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/python-tests.yml"
+  pull_request:
+    paths:
+      - "common/**"
+      - "models/**"
+      - "pages/**"
+      - "config/**"
+      - "state/**"
+      - "test/**"
+      - "scripts/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/python-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python 3.14
+        run: uv python install 3.14
+
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Run Pytest
+        env:
+          PROJECT_ID: test-project
+          LOCATION: us-central1
+          VEO_PROJECT_ID: test-project
+          VEO_LOCATION: us-central1
+        run: |
+          uv run pytest test/test_app_imports.py test/test_telemetry.py -v
