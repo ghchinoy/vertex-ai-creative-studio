@@ -52,9 +52,39 @@ Stay up-to-date with upcoming breaking changes and releases on our **[Changelog 
 
 ### Quick Start
 
-If you want to quickly run the UI without having to set up a local development environment, use Cloud Shell and follow the tutorial instructions:
+#### Run it locally
+
+The app is a Python ([Mesop](https://mesop-dev.github.io/mesop/) on FastAPI) application that requires **Python 3.14+** and uses [`uv`](https://github.com/astral-sh/uv) for dependency management. You also need a Google Cloud project with Vertex AI access — the UI calls Vertex (Gemini, Veo, Imagen, Lyria) regardless of where the web server runs.
+
+```bash
+# 1. Install uv (macOS/Linux) if you don't have it:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. Authenticate to Google Cloud (provides Application Default Credentials):
+gcloud auth application-default login
+export PROJECT_ID=$(gcloud config get-value project)
+
+# 3. Sync dependencies (uv installs Python 3.14 automatically) and run:
+uv sync
+uv run main.py
+```
+
+Then open <http://localhost:8080/> — `/` redirects to `/home`. See [Local Setup & Development](https://googlecloudplatform.github.io/vertex-ai-creative-studio/core/installation/local_setup/) on the Documentation Hub for `.env` configuration and available environment variables.
+
+Prefer a fully hosted environment? Use Cloud Shell and follow the tutorial:
 
 [![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/GoogleCloudPlatform/vertex-ai-creative-studio.git&cloudshell_tutorial=tutorial.md)
+
+#### Smoke-test before you merge
+
+`scripts/smoke_test.sh` is a quick, automated boot check for the core app: it runs `uv sync`, boots the app under gunicorn/uvicorn in `APP_ENV=local` mode, and verifies the UI serves (`GET /` → `/home` → 200, `GET /__login` → 200). An optional, env-gated leg (`-l`) makes one live Vertex `gemini-2.5-flash` generation call when a `PROJECT_ID` and Application Default Credentials are present.
+
+```bash
+./scripts/smoke_test.sh        # boot + UI check
+./scripts/smoke_test.sh -l     # also run the live Vertex generation leg
+```
+
+Run it **before merging any PR that touches core-app runtime code** (`pages/`, `models/`, `state/`, `config/`, `main.py`) to catch boot-health regressions early. It is a fast pre-merge sanity check, **not** a substitute for the test suite and **not** a deploy/IAP/Load-Balancer validation (that's the [Terraform deployment path](https://googlecloudplatform.github.io/vertex-ai-creative-studio/core/installation/deploy/)). To click around the running app yourself, use the local run above; the script is for a quick, hands-off "does it still boot and serve?" answer.
 
 ### Deploying to Google Cloud
 

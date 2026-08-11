@@ -48,3 +48,14 @@ uv run main.py
 ```
 
 Traditional Mesop hot reload capabilities (i.e. `mesop main.py`) are not fully available at this time.
+
+### Smoke-testing your changes
+
+Before merging any change that touches core-app runtime code (`pages/`, `models/`, `state/`, `config/`, `main.py`), run the boot smoke test:
+
+```bash
+./scripts/smoke_test.sh        # uv sync + boot + GET / -> /home (200) + GET /__login (200)
+./scripts/smoke_test.sh -l     # also runs one live Vertex generateContent call (needs PROJECT_ID + ADC)
+```
+
+It is a fast, automated "does it still boot and serve?" check — not a replacement for the test suite, and not a deploy/IAP/Load Balancer validation. Running the app manually (above) remains the way to click around the UI yourself.

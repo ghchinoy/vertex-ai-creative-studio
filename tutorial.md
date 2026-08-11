@@ -1,8 +1,8 @@
-# GenMedia Creative Studio: Veo 2 module Tutorial
+# GenMedia Creative Studio: Quick Start Tutorial
 
 ## Welcome!
 
-If you're seeing this, you've cloned the correct repository, and you should be in the `experiments/veo-app` directory! Let's get started.
+If you're seeing this, you've cloned the correct repository. The core application lives at the repository root, so make sure you're in the repository's top-level directory before continuing. Let's get started.
 
 <walkthrough-project-setup></walkthrough-project-setup>
 
@@ -48,8 +48,6 @@ If you have one, great! If not, create one:
 ```bash
 gcloud storage buckets create -l us-central1 gs://<walkthrough-project-name/>-assets
 ```
-
-Notre
 
 ### uv
 
