@@ -146,6 +146,35 @@ func nanobananaGenerateContentHandler(client *genai.Client, ctx context.Context,
 	gentime := time.Now().Format("20060102150405")
 	expiry := common.SignedURLExpiryFromEnv("NANOBANANA_SIGNED_URL_EXPIRY_HOURS")
 
+	// First pass: count the generated image artifacts (and capture the MIME type
+	// of the first one) so the total count is known before naming — required for
+	// deterministic _1..n suffixing when output_filename is set.
+	imageCount := 0
+	firstImageMime := ""
+	for _, candidate := range resp.Candidates {
+		for _, part := range candidate.Content.Parts {
+			if part.InlineData != nil {
+				if imageCount == 0 {
+					firstImageMime = part.InlineData.MIMEType
+				}
+				imageCount++
+			}
+		}
+	}
+
+	// When output_filename is set, precompute client-predictable names via the
+	// shared helper (extension forced to the true MIME, deterministic suffixing).
+	// When unset, names is nil and each image keeps the default per-part scheme —
+	// byte-for-byte unchanged legacy behavior.
+	base := clientOutputFilename(request.GetArguments())
+	names, err := buildImageFilenames(base, imageCount, firstImageMime)
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	// Second pass: preserve the original text/image interleaving exactly and
+	// persist each image through the shared seam.
+	imgIdx := 0
 	for _, candidate := range resp.Candidates {
 		for n, part := range candidate.Content.Parts {
 			if part.Text != "" {
@@ -154,7 +183,22 @@ func nanobananaGenerateContentHandler(client *genai.Client, ctx context.Context,
 			if part.InlineData != nil {
 				log.Printf("part %d mime-type: %s", n, part.InlineData.MIMEType)
 
-				fileName := fmt.Sprintf("gemini_%s_%d%s", gentime, n, extForMimeType(part.InlineData.MIMEType))
+				var fileName string
+				if names != nil {
+					fileName = names[imgIdx]
+				} else {
+					fileName = defaultImageFilename(gentime, n, part.InlineData.MIMEType)
+				}
+				imgIdx++
+
+				// Collision policy: overwrite with a warning (design §4e). Surface
+				// a local collision before the shared seam truncates the file.
+				if outputDir != "" {
+					if _, statErr := os.Stat(filepath.Join(outputDir, fileName)); statErr == nil {
+						log.Printf("Warning: output file %q already exists in %s; overwriting (collision policy).", fileName, outputDir)
+					}
+				}
+
 				persisted, err := common.PersistMediaOutputs(ctx, common.MediaArtifact{
 					Data:     part.InlineData.Data,
 					MimeType: part.InlineData.MIMEType,
@@ -224,6 +268,42 @@ func inferMimeType(path string) string {
 		// A more robust solution might involve reading file headers.
 		return "image/png"
 	}
+}
+
+// clientOutputFilename returns the client-supplied base output name.
+// output_filename is the canonical parameter and always wins. nanobanana carries
+// no legacy naming parameter of its own (per the #842 design's Path-A table), so
+// no alias is wired into its tool schema; the variadic legacyKeys argument
+// implements the shared accept-and-alias precedence contract (output_filename >
+// legacy > default) that the fan-out servers (e.g. lyria file_name) reuse.
+func clientOutputFilename(args map[string]any, legacyKeys ...string) string {
+	if v, ok := args["output_filename"].(string); ok && strings.TrimSpace(v) != "" {
+		return strings.TrimSpace(v)
+	}
+	for _, k := range legacyKeys {
+		if v, ok := args[k].(string); ok && strings.TrimSpace(v) != "" {
+			return strings.TrimSpace(v)
+		}
+	}
+	return ""
+}
+
+// buildImageFilenames returns the persisted file names for `count` image
+// artifacts of the given MIME type. When the client supplied output_filename
+// (base != ""), names are client-predictable and deterministically suffixed via
+// the shared common helper. Otherwise it returns nil so the caller falls back to
+// its default per-part scheme (byte-for-byte unchanged legacy behavior).
+func buildImageFilenames(base string, count int, mimeType string) ([]string, error) {
+	if strings.TrimSpace(base) == "" || count < 1 {
+		return nil, nil
+	}
+	return common.BuildOutputFilenames(base, count, mimeType)
+}
+
+// defaultImageFilename is nanobanana's legacy naming scheme, used when
+// output_filename is unset. Preserved verbatim to guarantee zero regression.
+func defaultImageFilename(gentime string, partIndex int, mimeType string) string {
+	return fmt.Sprintf("gemini_%s_%d%s", gentime, partIndex, extForMimeType(mimeType))
 }
 
 // extForMimeType returns a reasonable file extension for a given image MIME type.
