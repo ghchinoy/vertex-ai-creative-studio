@@ -223,6 +223,12 @@ func TestExtensionForMIMEType(t *testing.T) {
 		{"audio/x-wav", ".wav"},
 		{"audio/L16", ".wav"},
 		{"audio/ogg", ".ogg"},
+		{"audio/mp4", ".m4a"},
+		{"audio/x-m4a", ".m4a"},
+		{"audio/mulaw", ".mulaw"},
+		{"audio/alaw", ".alaw"},
+		{"audio/pcm", ".pcm"},
+		{"AUDIO/PCM", ".pcm"}, // case-insensitive
 		// video
 		{"video/mp4", ".mp4"},
 		{"video/webm", ".webm"},

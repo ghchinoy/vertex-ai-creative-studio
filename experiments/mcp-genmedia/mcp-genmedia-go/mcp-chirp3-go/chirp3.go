@@ -99,7 +99,6 @@ func init() {
 	flag.StringVar(&transport, "transport", "stdio", "Transport type (stdio, sse, or http)")
 	flag.IntVar(&port, "p", 0, "Port for SSE/HTTP server (defaults to PORT env var or 8080/8081)")
 	flag.IntVar(&port, "port", 0, "Port for SSE/HTTP server (defaults to PORT env var or 8080/8081)")
-	flag.Parse()
 
 	titleCaser := cases.Title(language.Und)
 	for k := range LanguageNameToCodeMap {
@@ -244,6 +243,8 @@ func parseMcpPronunciations(pronunciationsParam interface{}, encodingStr string)
 // the 'chirp_tts' and 'list_chirp_voices' tools, and starts listening for requests
 // on the configured transport (stdio, sse, or http).
 func main() {
+	flag.Parse() // Parse in main (not init) so `go test` flags are not consumed; matches sibling servers.
+
 	// Initialize OpenTelemetry
 	var cleanup func()
 	_, cleanup = common.Init(serviceName, version)
@@ -266,9 +267,12 @@ func main() {
 		mcp.WithString("voice_name",
 			mcp.Description(fmt.Sprintf("Optional. The specific Chirp3-HD voice name to use (e.g., '%s'). If not provided, defaults to '%s' if available, otherwise the first available Chirp3-HD voice.", defaultChirpVoiceName, defaultChirpVoiceName)),
 		),
+		mcp.WithString("output_filename",
+			mcp.Description("Optional. Client-predictable base name for the saved audio file. The extension is forced to the true audio media type (.wav). Used as-is for a single file (e.g. 'greeting.wav'); multiple artifacts are suffixed '_1', '_2', ... before the extension. Takes precedence over the deprecated output_filename_prefix. An existing file of the same name is overwritten."),
+		),
 		mcp.WithString("output_filename_prefix",
 			mcp.DefaultString("chirp_audio"),
-			mcp.Description("Optional. A prefix for the output WAV filename if saving locally. A timestamp and .wav extension will be appended."),
+			mcp.Description("Optional (deprecated; use output_filename). A prefix for the output WAV filename if saving locally. A voice name, timestamp and .wav extension will be appended."),
 		),
 		mcp.WithString("output_directory",
 			mcp.Description("Optional. If provided, specifies a local directory to save the generated audio file to. Filenames will be generated automatically using the prefix. If not provided, audio data is returned in the response."),
@@ -469,6 +473,33 @@ func main() {
 // from the request, selects an appropriate voice, and calls the Text-to-Speech API.
 // It can save the resulting audio to a local file or return it directly in the
 // response as base64-encoded data.
+// chirpAudioMIMEType is the true media type chirp3 always emits (LINEAR16 WAV).
+const chirpAudioMIMEType = "audio/wav"
+
+// resolveChirpOutputFilename decides the saved audio filename. The canonical
+// output_filename wins over the deprecated output_filename_prefix (design §4a):
+// when set, it yields a client-predictable base name with the extension forced to
+// the true audio MIME (design §4b) — a single artifact is used as-is (<stem>.wav),
+// multiple would be suffixed _1..n by the shared helper. When only the legacy
+// prefix (or neither) is provided, the historical <prefix>-<voice>-<timestamp>.wav
+// scheme is preserved byte-for-byte.
+func resolveChirpOutputFilename(args map[string]any, voiceName string) (string, error) {
+	if base := common.ResolveOutputFilename(args); base != "" {
+		names, err := common.BuildOutputFilenames(base, 1, chirpAudioMIMEType)
+		if err != nil {
+			return "", err
+		}
+		return names[0], nil
+	}
+	prefix, _ := args["output_filename_prefix"].(string)
+	if strings.TrimSpace(prefix) == "" {
+		prefix = "chirp_audio"
+	}
+	safeVoiceName := strings.ReplaceAll(voiceName, "/", "_")
+	safeVoiceName = strings.ReplaceAll(safeVoiceName, ":", "_")
+	return fmt.Sprintf("%s-%s-%s.wav", prefix, safeVoiceName, time.Now().Format(timeFormatForFilename)), nil
+}
+
 func chirpTTSHandler(client *texttospeech.Client, ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	var contentItems []mcp.Content
 
@@ -544,11 +575,6 @@ func chirpTTSHandler(client *texttospeech.Client, ctx context.Context, request m
 		}
 	}
 
-	filenamePrefix, _ := request.GetArguments()["output_filename_prefix"].(string)
-	if strings.TrimSpace(filenamePrefix) == "" {
-		filenamePrefix = "chirp_audio"
-	}
-
 	outputDir := ""
 	if dir, ok := request.GetArguments()["output_directory"].(string); ok && strings.TrimSpace(dir) != "" {
 		outputDir = strings.TrimSpace(dir)
@@ -595,11 +621,17 @@ func chirpTTSHandler(client *texttospeech.Client, ctx context.Context, request m
 			audioItem := mcp.AudioContent{Type: "audio", Data: base64AudioData, MIMEType: "audio/wav"}
 			contentItems = append(contentItems, audioItem)
 		} else {
-			safeVoiceName := strings.ReplaceAll(selectedVoice.Name, "/", "_")
-			safeVoiceName = strings.ReplaceAll(safeVoiceName, ":", "_")
-			genFilename := fmt.Sprintf("%s-%s-%s.wav", filenamePrefix, safeVoiceName, time.Now().Format(timeFormatForFilename))
+			genFilename, nameErr := resolveChirpOutputFilename(request.GetArguments(), selectedVoice.Name)
+			if nameErr != nil {
+				return mcp.NewToolResultError(nameErr.Error()), nil
+			}
 			savedFilename = filepath.Join(outputDir, genFilename)
 			savedFilename = filepath.Clean(savedFilename)
+
+			// Collision policy: overwrite with a warning (design §4e).
+			if _, statErr := os.Stat(savedFilename); statErr == nil {
+				log.Printf("Warning: output file %q already exists in %s; overwriting (collision policy).", genFilename, outputDir)
+			}
 
 			err = os.WriteFile(savedFilename, audioContentBytes, 0644)
 			if err != nil {

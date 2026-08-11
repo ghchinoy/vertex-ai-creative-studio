@@ -140,6 +140,14 @@ func ExtensionForMIMEType(mimeType string) string {
 		return ".wav"
 	case "audio/ogg":
 		return ".ogg"
+	case "audio/mp4", "audio/aac", "audio/x-m4a":
+		return ".m4a"
+	case "audio/mulaw":
+		return ".mulaw"
+	case "audio/alaw":
+		return ".alaw"
+	case "audio/pcm", "audio/l8", "audio/l24":
+		return ".pcm"
 	case "video/mp4":
 		return ".mp4"
 	case "video/webm":
