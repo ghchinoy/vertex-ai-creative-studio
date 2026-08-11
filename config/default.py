@@ -186,7 +186,10 @@ class Default:
     TEMP_BEST_IMAGE_SELECTION: float = 0.2
 
     # Character Consistency
-    CHARACTER_CONSISTENCY_IMAGEN_MODEL: str = "imagen-3.0-capability-001"
+    # NOTE: CHARACTER_CONSISTENCY_IMAGEN_MODEL ("imagen-3.0-capability-001") was
+    # removed for the 2026-06-30 GA sunset. The Character Consistency edit steps
+    # (subject customization + 16:9 reframe) were ported to the prompt-based
+    # Gemini Image (Nano Banana) adapter, which uses GEMINI_IMAGE_GEN_MODEL.
     CHARACTER_CONSISTENCY_VEO_MODEL: str = os.environ.get(
         "CHARACTER_CONSISTENCY_VEO_MODEL",
         "veo-3.1-fast-generate-001",

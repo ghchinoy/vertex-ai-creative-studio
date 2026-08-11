@@ -23,8 +23,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 from google import genai
-from google.genai import types
-from google.genai.types import GenerateContentConfig
 from PIL import Image as PIL_Image
 
 from common.metadata import MediaItem, add_media_item_to_firestore
@@ -131,31 +129,14 @@ def generate_character_video(
     yield WorkflowStepResult(
         step_name="generate_candidates",
         status="processing",
-        message="Step 4 of 7: Generating candidate images with Imagen and Gemini...",
+        message="Step 4 of 7: Generating candidate images with Gemini (Nano Banana)...",
         duration_seconds=0,
         data={},
     )
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        # Generate images with Imagen
-        imagen_future = executor.submit(
-            _generate_imagen_candidates, reference_image_bytes_list, all_descriptions, final_prompt, negative_prompt
-        )
-        # Generate images with Gemini
-        gemini_future = executor.submit(
-            generate_image_from_prompt_and_images,
-            final_prompt,
-            reference_image_gcs_uris,
-            aspect_ratio="1:1",
-            gcs_folder="character_consistency_candidates",
-            file_prefix="candidate",
-        )
-
-        imagen_candidate_gcs_uris, imagen_candidate_image_bytes_list = imagen_future.result()
-        gemini_candidate_gcs_uris, _, _, _ = gemini_future.result()
-
-    candidate_image_gcs_uris = imagen_candidate_gcs_uris + gemini_candidate_gcs_uris
-    candidate_image_bytes_list = imagen_candidate_image_bytes_list  # We don't have bytes from Gemini yet
+    candidate_image_gcs_uris, candidate_image_bytes_list = _generate_gemini_candidates(
+        final_prompt, reference_image_gcs_uris
+    )
 
     step_duration = time.time() - step_start_time
     yield WorkflowStepResult(
@@ -193,27 +174,18 @@ def generate_character_video(
     yield WorkflowStepResult(
         step_name="outpaint_image",
         status="processing",
-        message="Step 6 of 7: Outpainting the best image...",
+        message="Step 6 of 7: Reframing the best image to 16:9 with Gemini (Nano Banana)...",
         duration_seconds=0,
         data={},
     )
-    best_image_bytes = None
-    for i, gcs_uri in enumerate(candidate_image_gcs_uris):
-        if gcs_uri == best_image_gcs_uri:
-            best_image_bytes = candidate_image_bytes_list[i]
-            break
-    outpainted_image_bytes = _outpaint_image(best_image_bytes, final_prompt)
-    outpainted_image_gcs_uri = store_to_gcs(
-        folder="character_consistency_outpainted",
-        file_name=f"outpainted_{uuid.uuid4()}.png",
-        mime_type="image/png",
-        contents=outpainted_image_bytes,
+    outpainted_image_gcs_uri, outpainted_image_bytes = _reframe_image_to_16_9(
+        best_image_gcs_uri, final_prompt
     )
     step_duration = time.time() - step_start_time
     yield WorkflowStepResult(
         step_name="outpaint_image",
         status="complete",
-        message="Image outpainted.",
+        message="Image reframed to 16:9.",
         duration_seconds=step_duration,
         data={"outpainted_image_gcs_uri": outpainted_image_gcs_uri, "outpainted_image_bytes": outpainted_image_bytes},
     )
@@ -266,53 +238,46 @@ def generate_character_video(
     add_media_item_to_firestore(new_item)
     logger.info("Workflow complete in %.2f seconds. MediaItem ID: %s", total_duration, new_item.id)
 
-def _generate_imagen_candidates(reference_image_bytes_list, all_descriptions, final_prompt, negative_prompt):
-    """Generates candidate images with Imagen."""
-    client = genai.Client(
-        vertexai=True,
-        project=cfg.PROJECT_ID,
-        location=cfg.LOCATION,
-        http_options={"api_version": cfg.VERTEX_API_VERSION},
-    )
-    edit_model = cfg.CHARACTER_CONSISTENCY_IMAGEN_MODEL
-    reference_images_for_generation = []
-    for i, image_bytes in enumerate(reference_image_bytes_list[:4]):
-        image = types.Image(image_bytes=image_bytes)
-        reference_images_for_generation.append(
-            types.SubjectReferenceImage(
-                reference_id=i,
-                reference_image=image,
-                config=types.SubjectReferenceConfig(
-                    subject_type="SUBJECT_TYPE_PERSON",
-                    subject_description=all_descriptions[i],
-                ),
-            ),
-        )
-    response = client.models.edit_image(
-        model=edit_model,
-        prompt=final_prompt,
-        reference_images=reference_images_for_generation,
-        config=types.EditImageConfig(
-            edit_mode="EDIT_MODE_DEFAULT",
-            number_of_images=4,
-            aspect_ratio="1:1",
-            person_generation="allow_all",
-            safety_filter_level="block_only_high",
-            negative_prompt=negative_prompt,
-        ),
-    )
-    candidate_image_gcs_uris = []
-    candidate_image_bytes_list = []
-    for i, image in enumerate(response.generated_images):
-        image_bytes = image.image.image_bytes
-        gcs_uri = store_to_gcs(
-            folder="character_consistency_candidates",
-            file_name=f"candidate_{uuid.uuid4()}_{i}.png",
-            mime_type="image/png",
-            contents=image_bytes,
-        )
-        candidate_image_gcs_uris.append(gcs_uri)
-        candidate_image_bytes_list.append(image_bytes)
+def _generate_gemini_candidates(
+    final_prompt: str,
+    reference_image_gcs_uris: list[str],
+    num_candidates: int = 4,
+) -> tuple[list[str], list[bytes]]:
+    """Generates candidate images with Gemini (Nano Banana), prompt-based.
+
+    Replaces the retired ``imagen-3.0-capability-001`` mask/subject-customization
+    edit path. Rather than passing reference images as Imagen ``SubjectReferenceImage``
+    objects with a mask, the reference images and the scene prompt are sent to the
+    Gemini Image (Nano Banana) ``generateContent`` adapter, which performs a
+    prompt-based, mask-free edit/customization.
+
+    ``gemini-2.5-flash-image`` returns one image per call, so ``num_candidates``
+    calls are issued in parallel (mirroring the previous behaviour of returning a
+    set of candidates for downstream best-image selection).
+
+    Returns the candidate GCS URIs and their downloaded bytes (the bytes are
+    required by the downstream best-image selection step).
+    """
+    candidate_image_gcs_uris: list[str] = []
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [
+            executor.submit(
+                generate_image_from_prompt_and_images,
+                final_prompt,
+                reference_image_gcs_uris,
+                aspect_ratio="1:1",
+                gcs_folder="character_consistency_candidates",
+                file_prefix="candidate",
+            )
+            for _ in range(num_candidates)
+        ]
+        for future in futures:
+            gcs_uris, _, _, _, _ = future.result()
+            candidate_image_gcs_uris.extend(gcs_uris)
+
+    candidate_image_bytes_list = [
+        download_from_gcs(gcs_uri) for gcs_uri in candidate_image_gcs_uris
+    ]
     return candidate_image_gcs_uris, candidate_image_bytes_list
 
 
@@ -383,127 +348,42 @@ def _generate_video_from_image(
 
     return operation.response.generated_videos[0].video.video_bytes, video_prompt
 
-def _outpaint_image(image_bytes: bytes, prompt: str) -> bytes:
+def _reframe_image_to_16_9(
+    image_gcs_uri: str,
+    prompt: str,
+) -> tuple[str, bytes]:
+    """Reframes the best candidate image to a 16:9 aspect ratio, prompt-based.
+
+    Replaces the retired ``imagen-3.0-capability-001`` mask-based OUTPAINT step.
+    Imagen outpaint padded the image onto a wider 16:9 canvas and filled the
+    user-provided mask region. There is no like-for-like mask-based replacement,
+    so the go-forward is a prompt-based reframe via the Gemini Image (Nano Banana)
+    adapter: the source image plus a reframe instruction are sent with
+    ``aspect_ratio="16:9"`` and the model extends the scene to fill the wider
+    frame. This is mask-free (no explicit outpaint canvas/pad region), which is
+    the accepted go-forward behaviour change.
+
+    Returns the reframed image's GCS URI (stored by the adapter) and its bytes
+    (needed by the downstream Veo step).
     """
-    Performs outpainting on an image to a 16:9 aspect ratio.
-    """
-    client = genai.Client(
-        vertexai=True,
-        project=cfg.PROJECT_ID,
-        location=cfg.LOCATION,
-        http_options={"api_version": cfg.VERTEX_API_VERSION},
+    reframe_prompt = (
+        f"{prompt}\n\n"
+        "Expand and reframe this image to a 16:9 widescreen aspect ratio. "
+        "Naturally extend the scene on the left and right to fill the wider frame, "
+        "keeping the existing subject unchanged, in-focus, and consistent in "
+        "identity, lighting, and style. Do not crop, distort, or alter the subject."
     )
-    edit_model = cfg.CHARACTER_CONSISTENCY_IMAGEN_MODEL
-
-    initial_image = PIL_Image.open(io.BytesIO(image_bytes))
-
-    mask = PIL_Image.new("L", initial_image.size, 0)
-
-    target_height = 1080
-    target_width = int(target_height * 16 / 9)
-    target_size = (target_width, target_height)
-
-    image_pil_outpaint, mask_pil_outpaint = _pad_image_and_mask(
-        initial_image,
-        mask,
-        target_size,
-        0,
-        0,
+    gcs_uris, _, _, _, _ = generate_image_from_prompt_and_images(
+        reframe_prompt,
+        [image_gcs_uri],
+        aspect_ratio="16:9",
+        gcs_folder="character_consistency_outpainted",
+        file_prefix="outpainted",
     )
-
-    image_for_api = types.Image(image_bytes=_get_bytes_from_pil(image_pil_outpaint))
-    mask_for_api = types.Image(image_bytes=_get_bytes_from_pil(mask_pil_outpaint))
-
-    raw_ref_image = types.RawReferenceImage(
-        reference_image=image_for_api, reference_id=0
-    )
-    mask_ref_image = types.MaskReferenceImage(
-        reference_id=1,
-        reference_image=mask_for_api,
-        config=types.MaskReferenceConfig(
-            mask_mode="MASK_MODE_USER_PROVIDED",
-            mask_dilation=0.03,
-        ),
-    )
-
-    edited_image_response = client.models.edit_image(
-        model=edit_model,
-        prompt=prompt,
-        reference_images=[raw_ref_image, mask_ref_image],
-        config=types.EditImageConfig(
-            edit_mode="EDIT_MODE_OUTPAINT",
-            number_of_images=1,
-            safety_filter_level="BLOCK_MEDIUM_AND_ABOVE",
-            person_generation="ALLOW_ALL",
-        ),
-    )
-
-    return edited_image_response.generated_images[0].image.image_bytes
-
-def _get_bytes_from_pil(image: PIL_Image.Image) -> bytes:
-    """Gets the image bytes from a PIL Image object."""
-    byte_io_png = io.BytesIO()
-    image.save(byte_io_png, "PNG")
-    return byte_io_png.getvalue()
-
-def _pad_to_target_size(
-    source_image,
-    target_size,
-    mode="RGB",
-    vertical_offset_ratio=0,
-    horizontal_offset_ratio=0,
-    fill_val=255,
-):
-    """Pads an image to a target size."""
-    orig_image_size_w, orig_image_size_h = source_image.size
-    target_size_w, target_size_h = target_size
-
-    insert_pt_x = (target_size_w - orig_image_size_w) // 2 + int(
-        horizontal_offset_ratio * target_size_w
-    )
-    insert_pt_y = (target_size_h - orig_image_size_h) // 2 + int(
-        vertical_offset_ratio * target_size_h
-    )
-    insert_pt_x = min(insert_pt_x, target_size_w - orig_image_size_w)
-    insert_pt_y = min(insert_pt_y, target_size_h - orig_image_size_h)
-
-    if mode == "RGB":
-        source_image_padded = PIL_Image.new(
-            mode, target_size, color=(fill_val, fill_val, fill_val)
+    if not gcs_uris:
+        raise RuntimeError(
+            "Gemini (Nano Banana) reframe returned no image for "
+            f"{image_gcs_uri}",
         )
-    elif mode == "L":
-        source_image_padded = PIL_Image.new(mode, target_size, color=(fill_val))
-    else:
-        raise ValueError("source image mode must be RGB or L.")
-
-    source_image_padded.paste(source_image, (insert_pt_x, insert_pt_y))
-    return source_image_padded
-
-def _pad_image_and_mask(
-    image_pil: PIL_Image.Image,
-    mask_pil: PIL_Image.Image,
-    target_size,
-    vertical_offset_ratio,
-    horizontal_offset_ratio,
-):
-    """Pads and resizes an image and its mask to the same target size."""
-    image_pil.thumbnail(target_size)
-    mask_pil.thumbnail(target_size)
-
-    image_pil_padded = _pad_to_target_size(
-        image_pil,
-        target_size=target_size,
-        mode="RGB",
-        vertical_offset_ratio=vertical_offset_ratio,
-        horizontal_offset_ratio=horizontal_offset_ratio,
-        fill_val=0,
-    )
-    mask_pil_padded = _pad_to_target_size(
-        mask_pil,
-        target_size=target_size,
-        mode="L",
-        vertical_offset_ratio=vertical_offset_ratio,
-        horizontal_offset_ratio=horizontal_offset_ratio,
-        fill_val=255,  # White for the area to be filled
-    )
-    return image_pil_padded, mask_pil_padded
+    reframed_gcs_uri = gcs_uris[0]
+    return reframed_gcs_uri, download_from_gcs(reframed_gcs_uri)
