@@ -20,6 +20,21 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
+// resolveAVToolOutputFilename applies the shared accept-and-alias precedence
+// (design #842 §4a): the canonical output_filename wins over the deprecated
+// output_file_name alias. avtool is EXEMPT from extension-forcing (design §4d) —
+// the client-provided extension selects the ffmpeg output container/format, so it
+// is preserved. The name is still sanitized to a single safe path component
+// (traversal defense), which keeps any extension intact. An empty result falls
+// through to HandleOutputPreparation's unique-name default.
+func resolveAVToolOutputFilename(argsMap map[string]interface{}) string {
+	base := common.ResolveOutputFilename(argsMap, "output_file_name")
+	if base == "" {
+		return ""
+	}
+	return common.SanitizeBaseFilename(base)
+}
+
 // getArguments safely extracts the tool call arguments from an MCP request.
 // It checks if the arguments are present and are of the expected type (map[string]interface{}).
 // This function helps in gracefully handling malformed or missing arguments.
@@ -101,7 +116,8 @@ func addConvertAudioTool(s *server.MCPServer, cfg *common.Config) {
 	tool := mcp.NewTool("ffmpeg_convert_audio_wav_to_mp3",
 		mcp.WithDescription("Converts a WAV audio file to MP3 format using FFMpeg."),
 		mcp.WithString("input_audio_uri", mcp.Required(), mcp.Description("URI of the input WAV audio file (local path or gs://).")),
-		mcp.WithString("output_file_name", mcp.Description("Optional. Desired name for the output MP3 file (e.g., 'converted.mp3'). If omitted, a unique name is generated.")),
+		mcp.WithString("output_filename", mcp.Description("Optional. Desired name for the output file (e.g., 'converted.mp3'). The client-provided extension is honored and selects the output format. Takes precedence over the deprecated output_file_name. If omitted, a unique name is generated. An existing file of the same name is overwritten.")),
+		mcp.WithString("output_file_name", mcp.Description("Optional (deprecated; use output_filename). Desired name for the output MP3 file (e.g., 'converted.mp3'). If omitted, a unique name is generated.")),
 		mcp.WithString("output_local_dir", mcp.Description("Optional. Local directory to save the output MP3 file.")),
 		mcp.WithString("output_gcs_bucket", mcp.Description("Optional. GCS bucket to upload the output MP3 file to.")),
 	)
@@ -126,7 +142,7 @@ func ffmpegConvertAudioHandler(ctx context.Context, request mcp.CallToolRequest,
 	log.Printf("Handling %s request with arguments: %v", "ffmpeg_convert_audio_wav_to_mp3", argsMap)
 
 	inputAudioURI, _ := argsMap["input_audio_uri"].(string)
-	outputFileName, _ := argsMap["output_file_name"].(string)
+	outputFileName := resolveAVToolOutputFilename(argsMap)
 	outputLocalDir, _ := argsMap["output_local_dir"].(string)
 	outputGCSBucket, _ := argsMap["output_gcs_bucket"].(string)
 	outputGCSBucket = strings.TrimSpace(outputGCSBucket)
@@ -204,7 +220,8 @@ func addCreateGifTool(s *server.MCPServer, cfg *common.Config) {
 		mcp.WithString("input_video_uri", mcp.Required(), mcp.Description("URI of the input video file (local path or gs://).")),
 		mcp.WithNumber("scale_width_factor", mcp.DefaultNumber(0.33), mcp.Description("Factor to scale the input video's width by (e.g., 0.33 for 33%). Height is scaled automatically to maintain aspect ratio. Use 1.0 for original width.")),
 		mcp.WithNumber("fps", mcp.DefaultNumber(15), mcp.Min(1), mcp.Max(50), mcp.Description("Frames per second for the output GIF (e.g., 10, 15, 25).")),
-		mcp.WithString("output_file_name", mcp.Description("Optional. Desired name for the output GIF file (e.g., 'animation.gif'). If omitted, a unique name is generated.")),
+		mcp.WithString("output_filename", mcp.Description("Optional. Desired name for the output file (e.g., 'animation.gif'). The client-provided extension is honored and selects the output format. Takes precedence over the deprecated output_file_name. If omitted, a unique name is generated. An existing file of the same name is overwritten.")),
+		mcp.WithString("output_file_name", mcp.Description("Optional (deprecated; use output_filename). Desired name for the output GIF file (e.g., 'animation.gif'). If omitted, a unique name is generated.")),
 		mcp.WithString("output_local_dir", mcp.Description("Optional. Local directory to save the output GIF file.")),
 		mcp.WithString("output_gcs_bucket", mcp.Description("Optional. GCS bucket to upload the output GIF file to (uses GENMEDIA_BUCKET if set and this is empty).")),
 	)
@@ -248,7 +265,7 @@ func ffmpegVideoToGifHandler(ctx context.Context, request mcp.CallToolRequest, c
 		fpsParam = 50
 	}
 
-	outputFileName, _ := argsMap["output_file_name"].(string)
+	outputFileName := resolveAVToolOutputFilename(argsMap)
 	outputLocalDir, _ := argsMap["output_local_dir"].(string)
 	outputGCSBucket, _ := argsMap["output_gcs_bucket"].(string)
 	outputGCSBucket = strings.TrimSpace(outputGCSBucket)
@@ -353,7 +370,8 @@ func addCombineAudioVideoTool(s *server.MCPServer, cfg *common.Config) {
 		mcp.WithString("input_audio_uri", mcp.Required(), mcp.Description("URI of the input audio file (local path or gs://).")),
 		mcp.WithNumber("input_video_volume_db_change", mcp.Description("Optional. Volume change in dB for the input video's audio track (e.g., -10).")),
 		mcp.WithNumber("input_audio_volume_db_change", mcp.Description("Optional. Volume change in dB for the input audio track (e.g., +5).")),
-		mcp.WithString("output_file_name", mcp.Description("Optional. Desired name for the output video file (e.g., 'combined.mp4').")),
+		mcp.WithString("output_filename", mcp.Description("Optional. Desired name for the output file (e.g., 'combined.mp4'). The client-provided extension is honored and selects the output format. Takes precedence over the deprecated output_file_name. If omitted, a unique name is generated. An existing file of the same name is overwritten.")),
+		mcp.WithString("output_file_name", mcp.Description("Optional (deprecated; use output_filename). Desired name for the output video file (e.g., 'combined.mp4').")),
 		mcp.WithString("output_local_dir", mcp.Description("Optional. Local directory to save the output video file.")),
 		mcp.WithString("output_gcs_bucket", mcp.Description("Optional. GCS bucket to upload the output video file to.")),
 	)
@@ -380,7 +398,7 @@ func ffmpegCombineAudioVideoHandler(ctx context.Context, request mcp.CallToolReq
 
 	inputVideoURI, _ := argsMap["input_video_uri"].(string)
 	inputAudioURI, _ := argsMap["input_audio_uri"].(string)
-	outputFileName, _ := argsMap["output_file_name"].(string)
+	outputFileName := resolveAVToolOutputFilename(argsMap)
 	outputLocalDir, _ := argsMap["output_local_dir"].(string)
 	outputGCSBucket, _ := argsMap["output_gcs_bucket"].(string)
 	outputGCSBucket = strings.TrimSpace(outputGCSBucket)
@@ -451,19 +469,19 @@ func ffmpegCombineAudioVideoHandler(ctx context.Context, request mcp.CallToolReq
 	if hasAudio {
 		// Mix audio tracks using amix filter
 		var filterParts []string
-		
+
 		if hasVideoVol {
 			filterParts = append(filterParts, fmt.Sprintf("[0:a]volume=%.2fdB[v_a]", inputVideoVolume))
 		} else {
 			filterParts = append(filterParts, "[0:a]anull[v_a]")
 		}
-		
+
 		if hasAudioVol {
 			filterParts = append(filterParts, fmt.Sprintf("[1:a]volume=%.2fdB[a_a]", inputAudioVolume))
 		} else {
 			filterParts = append(filterParts, "[1:a]anull[a_a]")
 		}
-		
+
 		filterParts = append(filterParts, "[v_a][a_a]amix=inputs=2:duration=longest[a]")
 		filterComplex := strings.Join(filterParts, "; ")
 
@@ -517,7 +535,8 @@ func addOverlayImageOnVideoTool(s *server.MCPServer, cfg *common.Config) {
 		mcp.WithString("input_image_uri", mcp.Required(), mcp.Description("URI of the input image file (local path or gs://).")),
 		mcp.WithNumber("x_coordinate", mcp.DefaultNumber(0), mcp.Description("X coordinate for the overlay (top-left).")),
 		mcp.WithNumber("y_coordinate", mcp.DefaultNumber(0), mcp.Description("Y coordinate for the overlay (top-left).")),
-		mcp.WithString("output_file_name", mcp.Description("Optional. Desired name for the output video file (e.g., 'overlayed_video.mp4').")),
+		mcp.WithString("output_filename", mcp.Description("Optional. Desired name for the output file (e.g., 'overlayed_video.mp4'). The client-provided extension is honored and selects the output format. Takes precedence over the deprecated output_file_name. If omitted, a unique name is generated. An existing file of the same name is overwritten.")),
+		mcp.WithString("output_file_name", mcp.Description("Optional (deprecated; use output_filename). Desired name for the output video file (e.g., 'overlayed_video.mp4').")),
 		mcp.WithString("output_local_dir", mcp.Description("Optional. Local directory to save the output video file.")),
 		mcp.WithString("output_gcs_bucket", mcp.Description("Optional. GCS bucket to upload the output video file to.")),
 	)
@@ -547,7 +566,7 @@ func ffmpegOverlayImageHandler(ctx context.Context, request mcp.CallToolRequest,
 	yCoordFloat, _ := argsMap["y_coordinate"].(float64)
 	xCoord := int(xCoordFloat)
 	yCoord := int(yCoordFloat)
-	outputFileName, _ := argsMap["output_file_name"].(string)
+	outputFileName := resolveAVToolOutputFilename(argsMap)
 	outputLocalDir, _ := argsMap["output_local_dir"].(string)
 	outputGCSBucket, _ := argsMap["output_gcs_bucket"].(string)
 	outputGCSBucket = strings.TrimSpace(outputGCSBucket)
@@ -633,7 +652,8 @@ func addConcatenateMediaTool(s *server.MCPServer, cfg *common.Config) {
 	tool := mcp.NewTool("ffmpeg_concatenate_media_files",
 		mcp.WithDescription("Concatenates multiple media files. If output is WAV, inputs must be PCM WAV; otherwise, inputs are standardized to MP4/AAC before concatenation."),
 		mcp.WithArray("input_media_uris", mcp.Required(), mcp.Description("Array of URIs for the input media files (local paths or gs://)."), mcp.Items(map[string]any{"type": "string"})),
-		mcp.WithString("output_file_name", mcp.Description("Optional. Desired name for the output file (e.g., 'concatenated.mp4'). Extension determines behavior for audio concatenation.")),
+		mcp.WithString("output_filename", mcp.Description("Optional. Desired name for the output file (e.g., 'concatenated.mp4'). The client-provided extension is honored and selects the output format (and determines behavior for audio concatenation). Takes precedence over the deprecated output_file_name. If omitted, a unique name is generated. An existing file of the same name is overwritten.")),
+		mcp.WithString("output_file_name", mcp.Description("Optional (deprecated; use output_filename). Desired name for the output file (e.g., 'concatenated.mp4'). Extension determines behavior for audio concatenation.")),
 		mcp.WithString("output_local_dir", mcp.Description("Optional. Local directory to save the output file.")),
 		mcp.WithString("output_gcs_bucket", mcp.Description("Optional. GCS bucket to upload the output file to.")),
 	)
@@ -667,7 +687,7 @@ func ffmpegConcatenateMediaHandler(ctx context.Context, request mcp.CallToolRequ
 		}
 	}
 
-	outputFileName, _ := argsMap["output_file_name"].(string)
+	outputFileName := resolveAVToolOutputFilename(argsMap)
 	outputLocalDir, _ := argsMap["output_local_dir"].(string)
 	outputGCSBucket, _ := argsMap["output_gcs_bucket"].(string)
 	outputGCSBucket = strings.TrimSpace(outputGCSBucket)
@@ -1016,7 +1036,8 @@ func addAdjustVolumeTool(s *server.MCPServer, cfg *common.Config) {
 		mcp.WithDescription("Adjusts the volume of an audio file by a specified dB amount."),
 		mcp.WithString("input_audio_uri", mcp.Required(), mcp.Description("URI of the input audio file (local path or gs://).")),
 		mcp.WithNumber("volume_db_change", mcp.Required(), mcp.Description("Volume change in dB (e.g., -10 for -10dB, 5 for +5dB).")),
-		mcp.WithString("output_file_name", mcp.Description("Optional. Desired name for the output audio file.")),
+		mcp.WithString("output_filename", mcp.Description("Optional. Desired name for the output audio file. The client-provided extension is honored and selects the output format. Takes precedence over the deprecated output_file_name. If omitted, a unique name is generated. An existing file of the same name is overwritten.")),
+		mcp.WithString("output_file_name", mcp.Description("Optional (deprecated; use output_filename). Desired name for the output audio file.")),
 		mcp.WithString("output_local_dir", mcp.Description("Optional. Local directory to save the output audio file.")),
 		mcp.WithString("output_gcs_bucket", mcp.Description("Optional. GCS bucket to upload the output audio file to.")),
 	)
@@ -1046,7 +1067,7 @@ func ffmpegAdjustVolumeHandler(ctx context.Context, request mcp.CallToolRequest,
 		return mcp.NewToolResultError("Parameter 'volume_db_change' is required and must be a number."), nil
 	}
 	volumeDBChange := int(volumeDBChangeFloat)
-	outputFileName, _ := argsMap["output_file_name"].(string)
+	outputFileName := resolveAVToolOutputFilename(argsMap)
 	outputLocalDir, _ := argsMap["output_local_dir"].(string)
 	outputGCSBucket, _ := argsMap["output_gcs_bucket"].(string)
 	outputGCSBucket = strings.TrimSpace(outputGCSBucket)
@@ -1137,7 +1158,8 @@ func addLayerAudioTool(s *server.MCPServer, cfg *common.Config) {
 	tool := mcp.NewTool("ffmpeg_layer_audio_files",
 		mcp.WithDescription("Layers multiple audio files together (mixing)."),
 		mcp.WithArray("input_audio_uris", mcp.Required(), mcp.Description("Array of URIs for the input audio files to layer (local paths or gs://)."), mcp.Items(map[string]any{"type": "string"})),
-		mcp.WithString("output_file_name", mcp.Description("Optional. Desired name for the output mixed audio file (e.g., 'layered_audio.mp3').")),
+		mcp.WithString("output_filename", mcp.Description("Optional. Desired name for the output file (e.g., 'layered_audio.mp3'). The client-provided extension is honored and selects the output format. Takes precedence over the deprecated output_file_name. If omitted, a unique name is generated. An existing file of the same name is overwritten.")),
+		mcp.WithString("output_file_name", mcp.Description("Optional (deprecated; use output_filename). Desired name for the output mixed audio file (e.g., 'layered_audio.mp3').")),
 		mcp.WithString("output_local_dir", mcp.Description("Optional. Local directory to save the output file.")),
 		mcp.WithString("output_gcs_bucket", mcp.Description("Optional. GCS bucket to upload the output file to.")),
 	)
@@ -1213,7 +1235,7 @@ func ffmpegLayerAudioHandler(ctx context.Context, request mcp.CallToolRequest, c
 		}
 	}
 
-	outputFileName, _ := argsMap["output_file_name"].(string)
+	outputFileName := resolveAVToolOutputFilename(argsMap)
 	outputLocalDir, _ := argsMap["output_local_dir"].(string)
 	outputGCSBucket, _ := argsMap["output_gcs_bucket"].(string)
 	outputGCSBucket = strings.TrimSpace(outputGCSBucket)

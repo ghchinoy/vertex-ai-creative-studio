@@ -108,6 +108,10 @@ func ProcessOutputAfterFFmpeg(ctx context.Context, ffmpegOutputActualPath, final
 			return "", "", fmt.Errorf("failed to create specified output local directory %s: %w", outputLocalDir, errMkdir)
 		}
 		destLocalPath := filepath.Join(outputLocalDir, finalOutputFilename)
+		// Collision policy: overwrite with a warning (design #842 §4e).
+		if _, statErr := os.Stat(destLocalPath); statErr == nil {
+			log.Printf("Warning: output file %q already exists in %s; overwriting (collision policy).", finalOutputFilename, outputLocalDir)
+		}
 		log.Printf("Moving FFMpeg output from %s to %s", currentLocalPath, destLocalPath)
 		if errRename := os.Rename(currentLocalPath, destLocalPath); errRename != nil {
 			// If rename fails (e.g. different devices), try copy then remove original
