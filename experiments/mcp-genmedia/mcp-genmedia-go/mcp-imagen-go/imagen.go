@@ -63,11 +63,13 @@ func init() {
 	flag.StringVar(&transport, "transport", "stdio", "Transport type (stdio, sse, or http)")
 	flag.IntVar(&port, "p", 0, "Port for SSE/HTTP server (defaults to PORT env var or 8080/8081)")
 	flag.IntVar(&port, "port", 0, "Port for SSE/HTTP server (defaults to PORT env var or 8080/8081)")
-	flag.Parse()
 }
 
 // main is the entry point for the mcp-imagen-go service.
 func main() {
+	// Parse flags here (not in init) so `go test` flags are not consumed at
+	// package init, matching the sibling genmedia servers.
+	flag.Parse()
 
 	var cleanup func()
 	appConfig, cleanup = common.Init(serviceName, version)
@@ -145,6 +147,7 @@ func main() {
 		),
 		mcp.WithString("gcs_bucket_uri", mcp.Description("Optional. GCS URI prefix to store the generated images (e.g., your-bucket/outputs/ or gs://your-bucket/outputs/).")),
 		mcp.WithString("output_directory", mcp.Description("Optional. Local directory to save the generated image(s) to.")),
+		mcp.WithString("output_filename", mcp.Description("Optional. Base name for the output file(s). The extension is forced to the true image type (e.g. .png). For a single image the name is used as-is (foo.png); for multiple images a 1-based suffix is inserted before the extension (foo_1.png, foo_2.png, ...). For GCS output the API-written objects are copy-renamed to this name after generation (adds a short GCS copy latency).")),
 	)
 
 	handlerWithClient := func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -257,6 +260,50 @@ func contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+// imagenOutputNames returns the deterministic per-image output file names when a
+// client output_filename is set (extension forced to the true image MIME, 1-based
+// suffixing for count > 1 per design #842 §4b/§4c). It returns nil when
+// output_filename is unset or cannot be applied, so the handler falls back to its
+// existing default naming scheme (byte-for-byte legacy behavior).
+func imagenOutputNames(outputFilename string, count int, mimeType string) []string {
+	if strings.TrimSpace(outputFilename) == "" {
+		return nil
+	}
+	names, err := common.BuildOutputFilenames(outputFilename, count, mimeType)
+	if err != nil {
+		log.Printf("output_filename %q could not be applied (%v); falling back to default naming", outputFilename, err)
+		return nil
+	}
+	return names
+}
+
+// buildImagenRenamePlan maps the API-written GCS objects (Path C: imagen lets
+// Vertex name the objects sample_k under the output prefix) to the client-desired
+// names. It returns the bucket, the ordered src→dst renames, and the resulting
+// gs:// URIs (aligned with srcURIs order). names are the output of
+// imagenOutputNames; when names is empty it returns nil (default API names kept).
+func buildImagenRenamePlan(gcsOutputURI string, srcURIs, names []string) (bucket string, renames []common.Rename, dstURIs []string) {
+	if len(names) == 0 || len(srcURIs) == 0 {
+		return "", nil, nil
+	}
+	bucket, prefix := common.ParseGCSBucketAndPrefix(gcsOutputURI)
+	n := len(srcURIs)
+	if len(names) < n {
+		n = len(names)
+	}
+	for i := 0; i < n; i++ {
+		_, srcObject, err := common.ParseGCSPath(srcURIs[i])
+		if err != nil {
+			log.Printf("skipping GCS rename for unparseable URI %q: %v", srcURIs[i], err)
+			continue
+		}
+		dstObject := prefix + names[i]
+		renames = append(renames, common.Rename{Src: srcObject, Dst: dstObject})
+		dstURIs = append(dstURIs, common.BuildGCSURI(bucket, dstObject))
+	}
+	return bucket, renames, dstURIs
 }
 
 func imagenGenerationHandler(client *genai.Client, ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -435,6 +482,22 @@ func imagenGenerationHandler(client *genai.Client, ctx context.Context, request 
 	returnImageDataInResponse := gcsOutputURI == "" && !attemptLocalSave
 	log.Printf("Will return image data in response: %t", returnImageDataInResponse)
 
+	// Resolve an optional client-supplied output_filename (design #842). When set,
+	// outputNames holds the deterministic per-image names (extension forced to the
+	// true image MIME, 1-based suffix for >1 image); when unset it is nil and the
+	// handler keeps its existing default naming scheme (byte-for-byte legacy
+	// behavior). The MIME is taken from the first image (imagen returns a
+	// homogeneous batch); default image/png.
+	outputFilename := common.ResolveOutputFilename(request.GetArguments())
+	firstMimeType := "image/png"
+	for _, gi := range response.GeneratedImages {
+		if gi.Image != nil && gi.Image.MIMEType != "" {
+			firstMimeType = gi.Image.MIMEType
+			break
+		}
+	}
+	outputNames := imagenOutputNames(outputFilename, len(response.GeneratedImages), firstMimeType)
+
 	for n, genImg := range response.GeneratedImages {
 		var imageData []byte
 		imageMimeType := "image/png"
@@ -464,14 +527,21 @@ func imagenGenerationHandler(client *genai.Client, ctx context.Context, request 
 		}
 
 		if attemptLocalSave {
-			localFilename := fmt.Sprintf("imagen-%s-%s-%d", model, time.Now().Format("20060102-150405"), n)
-			switch imageMimeType {
-			case "image/jpeg":
-				localFilename += ".jpg"
-			case "image/webp":
-				localFilename += ".webp"
-			default:
-				localFilename += ".png"
+			var localFilename string
+			if outputNames != nil {
+				// Client output_filename: use the deterministic name (extension
+				// already forced to the true media MIME).
+				localFilename = outputNames[n]
+			} else {
+				localFilename = fmt.Sprintf("imagen-%s-%s-%d", model, time.Now().Format("20060102-150405"), n)
+				switch imageMimeType {
+				case "image/jpeg":
+					localFilename += ".jpg"
+				case "image/webp":
+					localFilename += ".webp"
+				default:
+					localFilename += ".png"
+				}
 			}
 			actualSavePath := filepath.Join(outputDir, localFilename)
 			actualSavePath = filepath.Clean(actualSavePath)
@@ -521,6 +591,28 @@ func imagenGenerationHandler(client *genai.Client, ctx context.Context, request 
 		}
 	}
 
+	// Path C copy-rename (design #842 §4d): imagen lets Vertex name the GCS objects
+	// itself (sample_k) under the output prefix. When output_filename is set, copy-
+	// rename those API-written objects to the client-desired names and delete the
+	// originals. Already-renamed valid outputs are not rolled back on a partial
+	// failure; the reported URIs reflect the successfully-renamed objects.
+	var renameNote string
+	if outputNames != nil && len(gcsSavedURIs) > 0 {
+		renameBucket, renames, dstURIs := buildImagenRenamePlan(gcsOutputURI, gcsSavedURIs, outputNames)
+		if len(renames) > 0 {
+			renamed, rErr := common.RenameGCSObjects(ctx, renameBucket, renames)
+			for i := 0; i < len(renamed) && i < len(dstURIs); i++ {
+				gcsSavedURIs[i] = dstURIs[i]
+			}
+			if rErr != nil {
+				renameNote = fmt.Sprintf("Note: renaming generated GCS object(s) to match output_filename '%s' partially failed (some API-original sample_* objects may remain): %v", outputFilename, rErr)
+				log.Print(renameNote)
+			} else {
+				log.Printf("Renamed %d generated GCS object(s) to match output_filename '%s'.", len(renamed), outputFilename)
+			}
+		}
+	}
+
 	var resultText string
 	var saveMessageParts []string
 
@@ -535,6 +627,9 @@ func imagenGenerationHandler(client *genai.Client, ctx context.Context, request 
 			saveMessageParts = append(saveMessageParts, fmt.Sprintf("GCS output was requested to '%s', but API did not return GCS URIs for the generated images.", config.OutputGCSURI))
 		} else {
 			saveMessageParts = append(saveMessageParts, fmt.Sprintf("GCS output was requested to '%s', but no images with GCS URIs were returned by the API.", config.OutputGCSURI))
+		}
+		if renameNote != "" {
+			saveMessageParts = append(saveMessageParts, renameNote)
 		}
 	}
 
