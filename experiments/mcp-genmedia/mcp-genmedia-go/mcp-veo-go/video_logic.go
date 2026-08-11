@@ -474,5 +474,17 @@ func callGenerateVideosAPI(
 		}
 	}
 
-	return mcp.NewToolResultText(strings.TrimSpace(resultText)), nil
+	// Text output is unchanged; append one resource_link per GCS video artifact
+	// (design #483), in generation order. content[0]=text, content[1..n]=links.
+	content := []mcp.Content{mcp.TextContent{Type: "text", Text: strings.TrimSpace(resultText)}}
+	var mediaResults []common.MediaResult
+	for i, uri := range gcsVideoURIs {
+		mediaResults = append(mediaResults, common.MediaResult{
+			GCSURI:      uri,
+			MimeType:    videoMIMEType,
+			Description: fmt.Sprintf("veo output %d of %d", i+1, len(gcsVideoURIs)),
+		})
+	}
+	content = common.AppendMediaContent(content, mediaResults)
+	return &mcp.CallToolResult{Content: content}, nil
 }
