@@ -148,6 +148,9 @@ func processGeminiImageResponse(ctx context.Context, resp *genai.GenerateContent
 	var responseText strings.Builder
 	var savedFiles []string
 	var gcsSavedURIs []string
+	// gcsSavedMimes stays 1:1 with gcsSavedURIs so a resource_link per GCS
+	// artifact carries the right MIME type (design #483).
+	var gcsSavedMimes []string
 	var responseImages []mcp.Content
 	generatedImages := 0
 	returnImageDataInResponse := outputDir == "" && gcsOutputURI == ""
@@ -230,6 +233,7 @@ func processGeminiImageResponse(ctx context.Context, resp *genai.GenerateContent
 						return mcp.NewToolResultError(fmt.Sprintf("failed to upload image to GCS: %v", err)), nil
 					}
 					gcsSavedURIs = append(gcsSavedURIs, common.BuildGCSURI(gcsBucketName, objectName))
+					gcsSavedMimes = append(gcsSavedMimes, mimeType)
 				}
 
 				if returnImageDataInResponse {
@@ -262,6 +266,18 @@ func processGeminiImageResponse(ctx context.Context, resp *genai.GenerateContent
 	if returnImageDataInResponse {
 		contentItems = append(contentItems, responseImages...)
 	}
+
+	// Text output is unchanged; append one resource_link per GCS artifact
+	// (design #483). content[1..n] = resource_link in generation order.
+	var mediaResults []common.MediaResult
+	for i, uri := range gcsSavedURIs {
+		mediaResults = append(mediaResults, common.MediaResult{
+			GCSURI:      uri,
+			MimeType:    gcsSavedMimes[i],
+			Description: fmt.Sprintf("gemini output %d of %d", i+1, len(gcsSavedURIs)),
+		})
+	}
+	contentItems = common.AppendMediaContent(contentItems, mediaResults)
 
 	return &mcp.CallToolResult{Content: contentItems}, nil
 }
