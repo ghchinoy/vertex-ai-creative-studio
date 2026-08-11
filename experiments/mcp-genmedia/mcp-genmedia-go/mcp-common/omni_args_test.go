@@ -498,6 +498,51 @@ func TestRenderOmniResultGCSResourceLinks(t *testing.T) {
 	}
 }
 
+// TestRenderOmniResultGCSResourceLinksSubset proves review NB-2: when a subset of
+// videos fails to persist to GCS, the "omni output i of n" description denominator
+// reflects the count of videos actually persisted to GCS (len(mediaResults)), not
+// the total video count — consistent with the other servers' len(gcsSavedURIs).
+// The first video's upload is made to fail (GCSURI stays empty, no link), so only
+// the second video yields a link, described "omni output 1 of 1" (pre-fix this
+// would have been "omni output 2 of 2"). Behavior is identical in the all-or-none
+// common case covered by TestRenderOmniResultGCSResourceLinks.
+func TestRenderOmniResultGCSResourceLinksSubset(t *testing.T) {
+	origUpload := uploadToGCSFn
+	origSign := generateV4SignedURLFn
+	t.Cleanup(func() { uploadToGCSFn = origUpload; generateV4SignedURLFn = origSign })
+	// Fail the first video's upload (object name ends "_0.mp4"); succeed otherwise.
+	uploadToGCSFn = func(_ context.Context, _, object, _ string, _ []byte) error {
+		if strings.HasSuffix(object, "_0.mp4") {
+			return fmt.Errorf("simulated upload failure for %s", object)
+		}
+		return nil
+	}
+	generateV4SignedURLFn = func(_ context.Context, _, object string, _ time.Duration) (string, error) {
+		return "https://signed.example/" + object, nil
+	}
+
+	result := &OmniResult{
+		Videos:         [][]byte{[]byte("a"), []byte("b")},
+		VideoMimeTypes: []string{"video/mp4", "video/mp4"},
+		Text:           "two videos",
+	}
+	content, err := RenderOmniResult(context.Background(), result, "", "my-bucket/prefix", "")
+	if err != nil {
+		t.Fatalf("RenderOmniResult returned error: %v", err)
+	}
+	// text + exactly one link (only the second video persisted to GCS).
+	if len(content) != 2 {
+		t.Fatalf("expected 2 content items (text + 1 link), got %d", len(content))
+	}
+	link, ok := content[1].(mcp.ResourceLink)
+	if !ok {
+		t.Fatalf("content[1] = %T, want mcp.ResourceLink", content[1])
+	}
+	if want := "omni output 1 of 1"; link.Description != want {
+		t.Errorf("content[1].Description = %q, want %q (denominator = GCS artifact count, NB-2)", link.Description, want)
+	}
+}
+
 // TestRenderOmniResultNoDestination confirms the "none saved" summary is used
 // when neither an output directory nor a GCS bucket is provided.
 func TestRenderOmniResultNoDestination(t *testing.T) {

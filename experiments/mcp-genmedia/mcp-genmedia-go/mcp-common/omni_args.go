@@ -242,11 +242,13 @@ func RenderOmniResult(ctx context.Context, result *OmniResult, outputDir, gcsBuc
 		}
 		if persisted.GCSURI != "" {
 			savedFiles = append(savedFiles, persisted.GCSURI)
-			// Collect a resource_link per GCS artifact (1-based description).
-			mediaResults = append(mediaResults, MediaResultFromPersisted(
-				persisted, mimeType,
-				fmt.Sprintf("omni output %d of %d", n+1, len(result.Videos)),
-			))
+			// Collect a resource_link per GCS-persisted artifact. The 1-based
+			// "omni output i of n" description is filled in after the loop (below)
+			// so the numerator/denominator reflect the count of videos actually
+			// persisted to GCS (consistent with the other servers' len(gcsSavedURIs))
+			// rather than the total video count — correct even if a subset of videos
+			// lacks a GCS URI. Behavior is identical in the all-or-none common case.
+			mediaResults = append(mediaResults, MediaResultFromPersisted(persisted, mimeType, ""))
 		}
 		if persisted.SignedURL != "" {
 			fmt.Fprintf(&responseText, "\n\nSigned URL for %s (valid %s):\n%s", persisted.GCSObject, expiry, persisted.SignedURL)
@@ -261,6 +263,13 @@ func RenderOmniResult(ctx context.Context, result *OmniResult, outputDir, gcsBuc
 		finalMessage += fmt.Sprintf("\n\nGenerated and saved %d video(s): %s", len(result.Videos), strings.Join(savedFiles, ", "))
 	} else {
 		finalMessage += fmt.Sprintf("\n\nGenerated %d video(s) but none were saved (set output_directory or gcs_bucket_uri).", len(result.Videos))
+	}
+
+	// Fill in the 1-based resource_link descriptions now that the count of videos
+	// actually persisted to GCS is known (review NB-2): the denominator is the GCS
+	// artifact count (len(mediaResults)), matching the other servers' len(gcsSavedURIs).
+	for i := range mediaResults {
+		mediaResults[i].Description = fmt.Sprintf("omni output %d of %d", i+1, len(mediaResults))
 	}
 
 	// Text output is unchanged; append one resource_link per GCS artifact.
