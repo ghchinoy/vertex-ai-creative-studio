@@ -94,16 +94,6 @@
       "video_url": "https://storage.googleapis.com/gdm-deepmind-com-prod-public/media/media/imagen__page_cover.mp4"
     },
     {
-      "id": 24,
-      "display": "Edit Images",
-      "icon": "edit",
-      "route": "/edit_images",
-      "group": "foundation",
-      "mode": "image",
-      "feature_flag": "EDIT_IMAGES_ENABLED",
-      "description": "Edit images using inpainting and outpainting."
-    },
-    {
       "id": 30,
       "display": "Virtual Try-On",
       "icon": "checkroom",

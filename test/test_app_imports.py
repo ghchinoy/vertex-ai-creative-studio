@@ -58,7 +58,6 @@ def test_import_pages_and_models():
 
     # Test pages
     import pages.banana_studio  # noqa: F401
-    import pages.edit_images  # noqa: F401
     import pages.gemini_image_generation  # noqa: F401
     import pages.imagen  # noqa: F401
     import pages.interior_design_v2  # noqa: F401

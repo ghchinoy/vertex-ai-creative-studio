@@ -124,7 +124,6 @@ EXPECTED_MODELS = {
     "chirp": "Chirp 3 HD (/chirp-3hd)",
     "vto": "Virtual Try-On (/vto)",
     "imagen": "Imagen Image Generation (/imagen)",
-    "edit_image": "Imagen Image Editing (/edit_images)",
     "banana": "Gemini Image / Nano Banana (/nano-banana)",
     "veo": "Veo Video Generation (/veo)",
     "omni": "Gemini Omni Flash (/gemini-omni)",

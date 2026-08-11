@@ -22,7 +22,7 @@ Analyzes local JSON application logs captured during UI generation flows.
 **Features:**
 - Summarizes total model calls, successes, failures, and unit capture counts.
 - Displays a detailed per-call breakdown of model name, duration, billing units, and error taxonomy.
-- Includes a coverage checklist across all 9 instrumented model subsystems (`Lyria`, `Gemini TTS`, `Chirp 3 HD`, `VTO`, `Imagen`, `Edit Images`, `Nano Banana`, `Veo`, `Gemini Omni`).
+- Includes a coverage checklist across all 8 instrumented model subsystems (`Lyria`, `Gemini TTS`, `Chirp 3 HD`, `VTO`, `Imagen`, `Nano Banana`, `Veo`, `Gemini Omni`).
 
 ---
 

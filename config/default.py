@@ -214,7 +214,6 @@ class Default:
     MODEL_IMAGEN4 = "imagen-4.0-generate-001"
     MODEL_IMAGEN4_FAST = "imagen-4.0-fast-generate-001"
     MODEL_IMAGEN4_ULTRA = "imagen-4.0-ultra-generate-001"
-    MODEL_IMAGEN_EDITING = "imagen-3.0-capability-001"
 
     IMAGEN_GENERATED_SUBFOLDER: str = os.environ.get(
         "IMAGEN_GENERATED_SUBFOLDER",
