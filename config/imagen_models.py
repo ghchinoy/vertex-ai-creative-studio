@@ -25,21 +25,13 @@ class ImagenModelConfig:
     default_samples: int
 
 # This list is the single source of truth for all Imagen model configurations.
+#
+# GA endpoint deprecation (sunset 2026-06-30): the Imagen 3 generate endpoints
+# `imagen-3.0-fast-generate-001` and `imagen-3.0-generate-002` were removed from
+# this list. Their go-forward replacements are already present below:
+# `imagen-4.0-fast-generate-001` (fast tier) and `imagen-4.0-generate-001`
+# (standard tier, also the page default). Do not re-add the Imagen 3 entries.
 IMAGEN_MODELS: List[ImagenModelConfig] = [
-    ImagenModelConfig(
-        model_name="imagen-3.0-fast-generate-001",
-        display_name="Imagen 3 Fast",
-        supported_aspect_ratios=["1:1", "3:4", "4:3", "9:16", "16:9"],
-        max_samples=4,
-        default_samples=4,
-    ),
-    ImagenModelConfig(
-        model_name="imagen-3.0-generate-002",
-        display_name="Imagen 3",
-        supported_aspect_ratios=["1:1", "3:4", "4:3", "9:16", "16:9"],
-        max_samples=4,
-        default_samples=4,
-    ),
     ImagenModelConfig(
         model_name="imagen-4.0-generate-001",
         display_name="Imagen 4",
