@@ -150,6 +150,10 @@ var persistMediaOutputs = common.PersistMediaOutputs
 func processImageResponse(ctx context.Context, resp *genai.GenerateContentResponse, args map[string]any, outputDir, gcsBucketURI string) (*mcp.CallToolResult, error) {
 	var responseText strings.Builder
 	var savedFiles []string
+	// mediaResults collects one entry per image persisted to GCS so the result
+	// can carry a resource_link per artifact in addition to the text summary
+	// (design #483 Phase 1). Purely additive: the text output below is unchanged.
+	var mediaResults []common.MediaResult
 
 	// Check for optional Sherlog header
 	if resp.SDKHTTPResponse != nil && resp.SDKHTTPResponse.Headers != nil {
@@ -232,6 +236,11 @@ func processImageResponse(ctx context.Context, resp *genai.GenerateContentRespon
 				}
 				if persisted.GCSURI != "" {
 					savedFiles = append(savedFiles, persisted.GCSURI)
+					// Collect a resource_link per GCS artifact (1-based description).
+					mediaResults = append(mediaResults, common.MediaResultFromPersisted(
+						persisted, part.InlineData.MIMEType,
+						fmt.Sprintf("nanobanana output %d of %d", imgIdx, imageCount),
+					))
 				}
 				// Best-effort V4 signed HTTPS URL so clients (e.g. Claude) can
 				// fetch/display the image without the bucket being public.
@@ -252,7 +261,10 @@ func processImageResponse(ctx context.Context, resp *genai.GenerateContentRespon
 		finalMessage += fmt.Sprintf("\n\nGenerated and saved %d image(s): %s", len(savedFiles), strings.Join(savedFiles, ", "))
 	}
 
-	return &mcp.CallToolResult{Content: []mcp.Content{mcp.TextContent{Type: "text", Text: strings.TrimSpace(finalMessage)}}}, nil
+	// Text output is unchanged; append one resource_link per GCS artifact.
+	content := []mcp.Content{mcp.TextContent{Type: "text", Text: strings.TrimSpace(finalMessage)}}
+	content = common.AppendMediaContent(content, mediaResults)
+	return &mcp.CallToolResult{Content: content}, nil
 }
 
 func inferMimeType(path string) string {
