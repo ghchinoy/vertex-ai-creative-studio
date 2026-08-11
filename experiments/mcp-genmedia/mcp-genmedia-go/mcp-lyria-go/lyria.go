@@ -424,6 +424,18 @@ func lyriaGenerateMusicHandler(ctx context.Context, request mcp.CallToolRequest)
 	textContent := mcp.TextContent{Type: "text", Text: messageText}
 	resultContents = append(resultContents, textContent)
 
+	// Text output is unchanged; append one resource_link for the GCS artifact
+	// (design #483). Lyria produces a single artifact. GCS and inline audio are
+	// mutually exclusive, so ordering stays content[0]=text, content[1]=link.
+	if gcsBucketParam != "" && gcsUploadedObjectName != "" {
+		fullGCSPath := fmt.Sprintf("gs://%s/%s", gcsBucketParam, gcsUploadedObjectName)
+		resultContents = common.AppendMediaContent(resultContents, []common.MediaResult{{
+			GCSURI:      fullGCSPath,
+			MimeType:    audioMIMEType,
+			Description: "lyria output 1 of 1",
+		}})
+	}
+
 	// Only include AudioContent if NEITHER GCS nor local path was specified
 	if gcsBucketParam == "" && localDirectoryPathParameter == "" {
 		log.Printf("Neither GCS nor local path specified. Returning audio data directly. Length: %d", len(base64AudioData))
