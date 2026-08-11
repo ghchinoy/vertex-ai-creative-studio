@@ -122,6 +122,34 @@ func TestRenameGCSObjectCopyFailNoOrphan(t *testing.T) {
 	}
 }
 
+// TestRenameGCSObjectPreexistingDstCopyFailPreservesPrior: destination
+// PRE-EXISTS (collision/overwrite intent) and the copy fails → fatal error, but
+// the prior good object MUST be left intact. Copy-failure cleanup must never
+// delete a destination it did not create (design #842 §4d; veo's declarative
+// re-run workflow makes this collision path common).
+func TestRenameGCSObjectPreexistingDstCopyFailPreservesPrior(t *testing.T) {
+	f := newFakeGCS("out/sample_0.png", "out/hero.png") // dst already exists
+	f.copyErrOn = "out/hero.png"                        // the overwrite copy fails
+	f.install(t)
+
+	err := RenameGCSObject(context.Background(), "bkt", "out/sample_0.png", "out/hero.png")
+	if err == nil {
+		t.Fatal("expected a fatal error on copy failure, got nil")
+	}
+	// The pre-existing destination must NOT be deleted by cleanup.
+	if !f.objects["out/hero.png"] {
+		t.Errorf("a failed overwrite must preserve the PRIOR destination object; objects=%v", f.list())
+	}
+	// The source is left intact so a re-run can recover.
+	if !f.objects["out/sample_0.png"] {
+		t.Errorf("copy failure must leave the source intact; objects=%v", f.list())
+	}
+	// Cleanup must not run for a pre-existing dst (nothing this copy created).
+	if f.deletes != 0 {
+		t.Errorf("cleanup must NOT delete a pre-existing destination; deletes=%d", f.deletes)
+	}
+}
+
 // TestRenameGCSObjectDeleteFailNonFatal: copy succeeds, delete of source fails →
 // nil returned (non-fatal), destination present.
 func TestRenameGCSObjectDeleteFailNonFatal(t *testing.T) {

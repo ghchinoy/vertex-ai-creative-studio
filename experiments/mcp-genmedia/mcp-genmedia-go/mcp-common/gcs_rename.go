@@ -50,9 +50,13 @@ type Rename struct{ Src, Dst string }
 // RenameGCSObject copies srcObject to dstObject within the same bucket
 // (server-side, no download) and deletes the source. Per design #842 §4d:
 //
-//   - Copy failure is FATAL: any partial destination is best-effort removed so
-//     no orphaned destination is left behind, the source is left intact, and a
-//     fatal error naming both src and dst is returned.
+//   - Copy failure is FATAL: any destination this copy could have created is
+//     best-effort removed so no orphaned destination is left behind, the source
+//     is left intact, and a fatal error naming both src and dst is returned. A
+//     destination that PRE-EXISTED (collision/overwrite intent) is left untouched
+//     on copy failure — cleanup must never delete a prior good object the copy did
+//     not create. (GCS object copy is atomic per object, so a failed copy never
+//     leaves a partial dst; there is nothing to clean up unless dst is fresh.)
 //   - Delete failure is NON-FATAL: the desired object (dst) exists and is valid,
 //     so a warning is logged and nil is returned — a leftover source object is
 //     cosmetic, not a data error.
@@ -77,18 +81,27 @@ func RenameGCSObject(ctx context.Context, bucket, srcObject, dstObject string) e
 	}
 
 	// Collision (§4e): overwrite, but make it observable. A best-effort existence
-	// probe only drives the warning log — it never blocks the rename.
+	// probe only drives the warning log — it never blocks the rename. Its result is
+	// also reused below so copy-failure cleanup never deletes a pre-existing object.
+	dstPreExisted := false
 	if exists, existsErr := gcsObjectExistsFn(ctx, bucket, dstObject); existsErr != nil {
 		log.Printf("RenameGCSObject: could not check whether destination gs://%s/%s exists (continuing): %v", bucket, dstObject, existsErr)
 	} else if exists {
+		dstPreExisted = true
 		log.Printf("RenameGCSObject: destination gs://%s/%s already exists; overwriting", bucket, dstObject)
 	}
 
 	if err := copyGCSObjectFn(ctx, bucket, srcObject, dstObject); err != nil {
-		// Copy failed. Best-effort remove any partial destination so no orphan is
-		// left, leave the source untouched, and return a fatal error.
-		if delErr := deleteGCSObjectFn(ctx, bucket, dstObject); delErr != nil && !errors.Is(delErr, storage.ErrObjectNotExist) {
-			log.Printf("RenameGCSObject: copy gs://%s/%s -> gs://%s/%s failed and cleanup of any partial destination also failed: %v", bucket, srcObject, bucket, dstObject, delErr)
+		// Copy failed. Only remove a destination THIS copy could have created: if
+		// dst pre-existed (collision/overwrite), a failed copy leaves the prior good
+		// object intact and cleanup must not delete it. GCS copy is atomic per
+		// object, so a failed copy never leaves a partial dst — the only thing worth
+		// cleaning up is a dst that did not exist before this call. Either way the
+		// source is left untouched and a fatal error is returned.
+		if !dstPreExisted {
+			if delErr := deleteGCSObjectFn(ctx, bucket, dstObject); delErr != nil && !errors.Is(delErr, storage.ErrObjectNotExist) {
+				log.Printf("RenameGCSObject: copy gs://%s/%s -> gs://%s/%s failed and cleanup of any partial destination also failed: %v", bucket, srcObject, bucket, dstObject, delErr)
+			}
 		}
 		return fmt.Errorf("RenameGCSObject: copy gs://%s/%s -> gs://%s/%s failed: %w", bucket, srcObject, bucket, dstObject, err)
 	}
