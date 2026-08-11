@@ -128,6 +128,23 @@ func geminiGenerateContentHandler(client *genai.Client, ctx context.Context, req
 	}
 
 	// --- Process Response ---
+	return processGeminiImageResponse(ctx, resp, request.GetArguments(), outputDir, gcsOutputURI, gcsBucketName, gcsObjectPrefix)
+}
+
+// writeFileFn / uploadToGCSFn are the local-write and GCS-upload seams. They are
+// package-level variables so tests can inject fakes and exercise the
+// response-processing wiring (naming, two-pass assignment, write/upload targets)
+// without a live genai client or cloud access.
+var (
+	writeFileFn   = os.WriteFile
+	uploadToGCSFn = common.UploadToGCS
+)
+
+// processGeminiImageResponse writes/uploads each generated image and builds the
+// user-facing summary, honoring output_filename-derived names when provided and
+// preserving the legacy gemini_<ts>_<n> per-part scheme otherwise. Extracted from
+// the handler so the naming + write/upload wiring is unit-testable (design #842).
+func processGeminiImageResponse(ctx context.Context, resp *genai.GenerateContentResponse, args map[string]any, outputDir, gcsOutputURI, gcsBucketName, gcsObjectPrefix string) (*mcp.CallToolResult, error) {
 	var responseText strings.Builder
 	var savedFiles []string
 	var gcsSavedURIs []string
@@ -143,6 +160,38 @@ func geminiGenerateContentHandler(client *genai.Client, ctx context.Context, req
 	}
 	gentime := time.Now().Format("20060102150405")
 
+	// First pass: count image artifacts (and capture the first MIME type) so the
+	// total is known before naming — required for deterministic _1..n suffixing
+	// when output_filename is set.
+	imageCount := 0
+	firstImageMime := ""
+	for _, candidate := range resp.Candidates {
+		for _, part := range candidate.Content.Parts {
+			if part.InlineData != nil {
+				if imageCount == 0 {
+					firstImageMime = common.NormalizeImageMIMEType(part.InlineData.MIMEType)
+				}
+				imageCount++
+			}
+		}
+	}
+
+	// When output_filename is set, precompute client-predictable names via the
+	// shared helper (extension forced to the true MIME, deterministic suffixing).
+	// When unset, names is nil and each image keeps the legacy per-part scheme —
+	// byte-for-byte unchanged behavior. gemini image carries no legacy alias.
+	var names []string
+	if base := common.ResolveOutputFilename(args); base != "" && imageCount > 0 {
+		var err error
+		names, err = common.BuildOutputFilenames(base, imageCount, firstImageMime)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+	}
+
+	// Second pass: preserve the original text/image interleaving and persist each
+	// image via the injectable write/upload seams.
+	imgIdx := 0
 	for _, candidate := range resp.Candidates {
 		for n, part := range candidate.Content.Parts {
 			if part.Text != "" {
@@ -151,7 +200,13 @@ func geminiGenerateContentHandler(client *genai.Client, ctx context.Context, req
 			if part.InlineData != nil {
 				generatedImages++
 				mimeType := common.NormalizeImageMIMEType(part.InlineData.MIMEType)
-				fileName := fmt.Sprintf("gemini_%s_%d%s", gentime, n, common.ImageExtensionForMIMEType(mimeType))
+				var fileName string
+				if names != nil {
+					fileName = names[imgIdx]
+				} else {
+					fileName = fmt.Sprintf("gemini_%s_%d%s", gentime, n, common.ImageExtensionForMIMEType(mimeType))
+				}
+				imgIdx++
 				log.Printf("part %d mime-type: %s", n, mimeType)
 
 				if outputDir != "" {
@@ -159,7 +214,11 @@ func geminiGenerateContentHandler(client *genai.Client, ctx context.Context, req
 						return mcp.NewToolResultError(fmt.Sprintf("failed to create output directory: %v", err)), nil
 					}
 					filePath := filepath.Join(outputDir, fileName)
-					if err := os.WriteFile(filePath, part.InlineData.Data, 0644); err != nil {
+					// Collision policy: overwrite with a warning (design §4e).
+					if _, statErr := os.Stat(filePath); statErr == nil {
+						log.Printf("Warning: output file %q already exists in %s; overwriting (collision policy).", fileName, outputDir)
+					}
+					if err := writeFileFn(filePath, part.InlineData.Data, 0644); err != nil {
 						return mcp.NewToolResultError(fmt.Sprintf("failed to write image file: %v", err)), nil
 					}
 					savedFiles = append(savedFiles, filePath)
@@ -167,7 +226,7 @@ func geminiGenerateContentHandler(client *genai.Client, ctx context.Context, req
 
 				if gcsOutputURI != "" {
 					objectName := common.JoinGCSObjectName(gcsObjectPrefix, fileName)
-					if err := common.UploadToGCS(ctx, gcsBucketName, objectName, mimeType, part.InlineData.Data); err != nil {
+					if err := uploadToGCSFn(ctx, gcsBucketName, objectName, mimeType, part.InlineData.Data); err != nil {
 						return mcp.NewToolResultError(fmt.Sprintf("failed to upload image to GCS: %v", err)), nil
 					}
 					gcsSavedURIs = append(gcsSavedURIs, common.BuildGCSURI(gcsBucketName, objectName))
