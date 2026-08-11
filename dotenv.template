@@ -207,8 +207,8 @@ PROJECT_ID=
 # USE_MEDIA_PROXY=true
 
 # [OPTIONAL] Model used specifically in the Character Consistency workflow.
-# Default: veo-3.0-fast-generate-001
-# CHARACTER_CONSISTENCY_VEO_MODEL=veo-3.0-fast-generate-001
+# Default: veo-3.1-fast-generate-001
+# CHARACTER_CONSISTENCY_VEO_MODEL=veo-3.1-fast-generate-001
 
 # [OPTIONAL] Gemini model used in the Character Consistency workflow.
 # Default: Same as MODEL_ID

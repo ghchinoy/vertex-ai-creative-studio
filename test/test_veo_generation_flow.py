@@ -12,68 +12,74 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Component test for the Veo generation flow's metadata handling.
 
+The synchronous on_click_veo path this file previously targeted was refactored
+into an async job flow; the MediaItem metadata (including the resolved model
+name) is now built in services.veo_service.create_initial_job. This test
+exercises that function directly, verifying both the happy path for a
+still-supported model and the fail-soft path for a GA-sunset model id.
+"""
 
-import pytest
-from unittest.mock import patch, MagicMock
-import datetime
-
-# Setup sys.path to allow imports from the parent directory.
 import os
 import sys
+from unittest.mock import patch
+
+import pytest
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from pages.veo import on_click_veo
-from state.veo_state import PageState
-from state.state import AppState
 from common.metadata import MediaItem
+from config.veo_models import VEO_MODELS
+from models.requests import VideoGenerationRequest
+from services.veo_service import create_initial_job
 
-@patch('pages.veo.add_media_item_to_firestore')
-@patch('pages.veo.generate_video', return_value="gs://fake-bucket/fake_video.mp4")
-@patch('mesop.state')
-def test_veo_generation_flow_and_metadata(mock_state, mock_generate_video, mock_add_media_item):
-    """
-    Tests the VEO generation flow, focusing on the data handling and metadata
-    creation after a successful API call.
-    """
-    # --- Arrange ---
-    # Setup the mocked state that the on_click_veo function will use.
-    mock_app_state = AppState(user_email="test_user@example.com")
-    mock_page_state = PageState(
-        veo_prompt_input="a test prompt for veo",
-        veo_model="2.0",
+# A still-supported model to drive the happy-path assertions.
+SUPPORTED_MODEL = VEO_MODELS[0]
+
+
+def _request(model_version_id):
+    return VideoGenerationRequest(
+        prompt="a test prompt for veo",
+        model_version_id=model_version_id,
         aspect_ratio="16:9",
-        video_length=5,
-        reference_image_gcs=None,
-        last_reference_image_gcs=None,
-        auto_enhance_prompt=False
+        resolution="720p",
+        duration_seconds=5,
+        video_count=1,
+        enhance_prompt=False,
+        generate_audio=False,
+        person_generation="Allow (Adults only)",
     )
 
-    # Configure the mesop.state mock to return the correct state object when called.
-    mock_state.side_effect = [mock_app_state, mock_page_state]
 
-    # --- Act ---
-    # Call the event handler function. This is a generator function, so we need to exhaust it.
-    for _ in on_click_veo(MagicMock()):
-        pass
+@patch("services.veo_service.add_media_item_to_firestore")
+def test_create_initial_job_logs_correct_model_metadata(mock_add_media_item):
+    """A job for a supported model logs a MediaItem with the resolved model_name."""
+    request = _request(SUPPORTED_MODEL.version_id)
 
-    # --- Assert ---
-    # 1. Verify that our main video generation function was called.
-    mock_generate_video.assert_called_once()
+    create_initial_job(request, user_email="test_user@example.com")
 
-    # 2. Verify that the Firestore logging function was called.
     mock_add_media_item.assert_called_once()
-
-    # 3. Inspect the data that was passed to the Firestore function.
-    # This is the crucial part that catches the `NameError` or `AttributeError`.
-    call_args, _ = mock_add_media_item.call_args
-    media_item_logged = call_args[0]
+    media_item_logged = mock_add_media_item.call_args[0][0]
 
     assert isinstance(media_item_logged, MediaItem)
     assert media_item_logged.user_email == "test_user@example.com"
     assert media_item_logged.prompt == "a test prompt for veo"
-    assert media_item_logged.gcsuri == "gs://fake-bucket/fake_video.mp4"
-    assert media_item_logged.model == "veo-2.0-generate-001" # This comes from config
+    assert media_item_logged.mode == "t2v"
+    # The model name is resolved from config for a supported version_id.
+    assert media_item_logged.model == SUPPORTED_MODEL.model_name
 
-    print("\nComponent-level integration test for VEO passed successfully.")
 
+@patch("services.veo_service.add_media_item_to_firestore")
+def test_create_initial_job_fails_soft_for_removed_model(mock_add_media_item):
+    """A job referencing a GA-sunset model id must NOT raise; it falls back to
+    recording the raw model_version_id rather than crashing on a None config."""
+    removed_id = "veo-2.0-generate-001"
+    request = _request(removed_id)
+
+    # Should not raise despite the model no longer existing in VEO_MODELS.
+    create_initial_job(request, user_email="test_user@example.com")
+
+    mock_add_media_item.assert_called_once()
+    media_item_logged = mock_add_media_item.call_args[0][0]
+    assert media_item_logged.model == removed_id

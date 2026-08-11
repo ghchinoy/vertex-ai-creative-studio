@@ -58,7 +58,7 @@ GenMedia Creative Studio is a web application showcasing Google Cloud's generati
 Current featureset
 
 - Image: Gemini 3.1 Flash-Lite Image (Nano Banana 2 Lite), Gemini 3.1 Flash Image Generation (Nano Banana 2), Gemini 3 Pro Image (Nano Banana Pro), Imagen 3, Imagen 4, Virtual Try-On
-- Video: Gemini Omni Flash, Veo 3.1, Veo 3, Veo 2
+- Video: Gemini Omni Flash, Veo 3.1, Veo 3
 - Music: Lyria
 - Speech: Chirp 3 HD, Gemini Text to Speech
 - Workflows: Character Consistency, Shop the Look, Starter Pack Moodboard, Interior Designer

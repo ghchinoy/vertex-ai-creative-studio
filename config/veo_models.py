@@ -52,58 +52,9 @@ class VeoModelConfig:
 
 # This list is the single source of truth for all VEO model configurations.
 VEO_MODELS: List[VeoModelConfig] = [
-    VeoModelConfig(
-        version_id="2.0",
-        model_name="veo-2.0-generate-001",
-        display_name="Veo 2.0",
-        supported_modes=["t2v", "i2v", "interpolation"],
-        supported_aspect_ratios=["16:9", "9:16"],
-        resolutions=["720p"],
-        min_duration=5,
-        max_duration=8,
-        default_duration=5,
-        max_samples=4,
-        default_samples=1,
-        supports_prompt_enhancement=True,
-        default_prompt_enhancement=True,
-        supports_video_extension=True,
-        supported_extension_durations=[7],
-    ),
-    VeoModelConfig(
-        version_id="3.0",
-        model_name="veo-3.0-generate-001",
-        display_name="Veo 3.0",
-        supported_modes=["t2v", "i2v"],
-        supported_aspect_ratios=["16:9", "9:16"],
-        resolutions=["720p", "1080p"],
-        min_duration=4,
-        max_duration=8,
-        default_duration=8,
-        max_samples=4,
-        default_samples=1,
-        supports_prompt_enhancement=True,
-        requires_prompt_enhancement=True,
-        default_prompt_enhancement=True,
-        supported_durations=[4, 6, 8],
-
-    ),
-    VeoModelConfig(
-        version_id="3.0-fast",
-        model_name="veo-3.0-fast-generate-001",
-        display_name="Veo 3.0 Fast",
-        supported_modes=["t2v", "i2v"],
-        supported_aspect_ratios=["16:9", "9:16"],
-        resolutions=["720p", "1080p"],
-        min_duration=4,
-        max_duration=8,
-        default_duration=8,
-        max_samples=4,
-        default_samples=1,
-        supports_prompt_enhancement=True,
-        requires_prompt_enhancement=True,
-        default_prompt_enhancement=True,
-        supported_durations=[4, 6, 8],
-    ),
+    # NOTE: The GA endpoints veo-2.0-generate-001, veo-3.0-generate-001, and
+    # veo-3.0-fast-generate-001 were removed here as part of the GA sunset
+    # (see GA deprecation). Veo 3.1 models are the supported replacements.
     VeoModelConfig(
         version_id="3.1-fast",
         model_name="veo-3.1-fast-generate-001",
