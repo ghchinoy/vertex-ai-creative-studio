@@ -25,6 +25,8 @@ The following tool is exposed by this server:
     *   `model_id` (string, optional): Specific Lyria model ID to use for the Vertex AI endpoint.
         *   Defaults to the value of the `DEFAULT_LYRIA_MODEL_ID (Deprecated)` environment variable, or `"lyria-3-clip-preview"` if the variable is not set.
 
+When audio is written to GCS (`output_gcs_bucket` or the `GENMEDIA_BUCKET` fallback), the tool appends one MCP `resource_link` content item for the uploaded audio (`uri` = the `gs://` URI, plus `name`, `mimeType`, and a 1-based `description`). The text summary is unchanged, and local-only / inline responses add no link. See [Resource Links for GCS Outputs](../README.md#resource-links-for-gcs-outputs).
+
 ## Environment Variable Configuration
 
 The tool utilizes the following environment variables:

@@ -23,6 +23,8 @@ The following tool is exposed by this server:
     *   `output_directory` (string, optional): If provided, specifies a local directory to save the generated image(s) to.
     *   `output_filename` (string, optional): Base name for the output(s), e.g. `hero.png`. The extension is forced to the true image type and, when more than one image is generated, a `_1..n` suffix is inserted before the extension (`hero_1.png … hero_n.png`). Applied identically to local files and GCS objects. See [Naming Outputs](../README.md#naming-outputs-output_filename).
 
+When images are written to GCS, the tool appends one MCP `resource_link` content item per uploaded image — and for image editing, one for the edited image (`uri` = the `gs://` URI, plus `name`, `mimeType`, and a 1-based `description`). The text summary is unchanged. See [Resource Links for GCS Outputs](../README.md#resource-links-for-gcs-outputs).
+
 ### Resources
 
 The server exposes the following resources:

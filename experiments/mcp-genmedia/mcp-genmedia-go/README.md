@@ -241,6 +241,33 @@ release):
 | `mcp-lyria-go` | `file_name` | Full output name. |
 | `mcp-chirp3-go`, `mcp-gemini-go` (TTS) | `output_filename_prefix` | A *prefix* only (a timestamp/voice + extension is appended); `output_filename` provides the full name. |
 
+## Resource Links for GCS Outputs
+
+When a tool writes an artifact to Google Cloud Storage, it additionally returns
+one MCP [`resource_link`](https://modelcontextprotocol.io/specification/2025-06-18/server/tools#resource-links)
+content item **per GCS artifact**, so an MCP client can address the output as a
+first-class resource rather than parsing it out of the text summary.
+
+- **GCS sink only.** A `resource_link` is emitted **only when the artifact was
+  uploaded to GCS** (`gcs_bucket_uri` or a server's bucket fallback). Inline-only
+  and local-only responses are unchanged — no link is added.
+- **One link per artifact,** appended after the existing content in generation
+  order (so for `n` GCS artifacts you get `n` links, aligned 1..n).
+- **`uri` is the `gs://` URI** — the durable identity of the object, **not** the
+  expiring V4-signed HTTPS URL. The signed URL (when generated) still appears in
+  the text summary as before; the `resource_link` gives clients a stable handle.
+- **`name`** is the object's name, **`mimeType`** is the artifact's true output
+  MIME type, and **`description`** is a 1-based human label (e.g.
+  `nanobanana output 1 of 1`).
+- **Text output is unchanged (back-compat).** The `resource_link` items are
+  *appended*; the existing text content (model text, signed-URL line, saved-files
+  summary) is byte-for-byte identical to before this feature.
+
+**In scope:** `mcp-nanobanana-go`, `mcp-gemini-go` (image generation/editing),
+`mcp-imagen-go` (text-to-image and edit), `mcp-veo-go`, `mcp-lyria-go`, and the
+shared omni renderer. **Out of scope:** `mcp-chirp3-go`, `mcp-gemini-go` **TTS**,
+and `mcp-avtool-go` do not emit `resource_link` items.
+
 ## Configuration (Environment Variables)
 
 All servers in this project are configured using environment variables. While some servers have unique variables, the following are common to most of them:

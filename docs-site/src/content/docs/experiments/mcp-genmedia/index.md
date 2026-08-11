@@ -103,6 +103,32 @@ removal planned): AVTool `output_file_name`, Lyria `file_name`, and the Chirp 3 
 Gemini TTS `output_filename_prefix` (a *prefix* only — `output_filename` gives the
 full name).
 
+## Resource Links for GCS Outputs
+
+When a tool writes an artifact to Google Cloud Storage, it additionally returns
+one MCP [`resource_link`](https://modelcontextprotocol.io/specification/2025-06-18/server/tools#resource-links)
+content item **per GCS artifact**, so an MCP client can address the output as a
+first-class resource rather than parsing it out of the text summary.
+
+*   **GCS sink only.** A `resource_link` is emitted **only when the artifact was
+    uploaded to GCS** (`gcs_bucket_uri` or a server's bucket fallback). Inline-only
+    and local-only responses are unchanged — no link is added.
+*   **One link per artifact,** appended after the existing content in generation
+    order (so `n` GCS artifacts produce `n` links, aligned 1..n).
+*   **`uri` is the `gs://` URI** — the durable identity of the object, **not** the
+    expiring V4-signed HTTPS URL. The signed URL (when generated) still appears in
+    the text summary; the `resource_link` gives clients a stable handle.
+*   **`name`** is the object's name, **`mimeType`** is the artifact's true output
+    MIME type, and **`description`** is a 1-based human label (e.g.
+    `nanobanana output 1 of 1`).
+*   **Text output is unchanged (back-compat).** The `resource_link` items are
+    *appended*; the existing text content is byte-for-byte identical to before this
+    feature.
+
+**In scope:** Gemini Image, Imagen (text-to-image and edit), Veo, Lyria,
+Nanobanana. **Out of scope:** Gemini TTS, Chirp 3, and AVTool do not emit
+`resource_link` items.
+
 ## Authentication
 
 The servers use Google's Application Default Credentials (ADC). Ensure you have authenticated by one of the following methods:

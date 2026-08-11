@@ -22,6 +22,8 @@ The server exposes the following tools:
     *   `aspect_ratio` (string, optional): Aspect ratio of the generated videos. Note: supported aspect ratios are model-dependent.
     *   `duration` (number, optional): Duration of the generated video in seconds. Note: the supported duration range is model-dependent.
 
+Because Veo always writes to GCS, every Veo tool appends one MCP `resource_link` content item per generated video (`uri` = the `gs://` URI, plus `name`, `mimeType`, and a 1-based `description`); the text summary is unchanged. See [Resource Links for GCS Outputs](../index.md#resource-links-for-gcs-outputs).
+
 ### 2. `veo_i2v` (Image-to-Video)
 
 *   **Description**: Generate a video from an input image (and optional prompt) using Veo. Video is saved to GCS and optionally downloaded locally. Supported image MIME types: image/jpeg, image/png.

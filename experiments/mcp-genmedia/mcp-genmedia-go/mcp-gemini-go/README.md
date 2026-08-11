@@ -17,6 +17,8 @@ Generates content (text and/or images) based on a multimodal prompt.
 - `gcs_bucket_uri` (string, optional): GCS URI prefix to store any generated images.
 - `output_filename` (string, optional): Base name for the output(s), e.g. `hero.png`. The extension is forced to the true image type and, when more than one image is generated, a `_1..n` suffix is inserted before the extension. Applied identically to local files and GCS objects. See [Naming Outputs](../README.md#naming-outputs-output_filename).
 
+When `gcs_bucket_uri` is set, `gemini_image_generation` appends one MCP `resource_link` content item per uploaded image (`uri` = the `gs://` URI, plus `name`, `mimeType`, and a 1-based `description`); the text summary is unchanged. This applies to image generation only — `gemini_audio_tts` does **not** emit resource links. See [Resource Links for GCS Outputs](../README.md#resource-links-for-gcs-outputs).
+
 ### `gemini_audio_tts`
 
 Synthesizes speech from text using Gemini models, allowing for granular control over style, pace, tone, and emotional expression through natural-language prompts.

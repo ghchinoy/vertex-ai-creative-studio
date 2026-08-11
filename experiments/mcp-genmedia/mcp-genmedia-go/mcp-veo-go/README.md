@@ -21,6 +21,8 @@ The server exposes the following tools:
     *   `duration` (number, optional): Duration of the generated video in seconds. Note: the supported duration range is model-dependent.
     *   `seed` (number, optional): Non-negative integer seed for best-effort reproducible video generation.
 
+Because Veo always writes to GCS, every Veo tool appends one MCP `resource_link` content item per generated video (`uri` = the `gs://` URI, plus `name`, `mimeType`, and a 1-based `description`). The text summary is unchanged. See [Resource Links for GCS Outputs](../README.md#resource-links-for-gcs-outputs).
+
 ### 2. `veo_i2v` (Image-to-Video)
 
 *   **Description**: Generate a video from an input image (and optional prompt) using Veo. Video is saved to GCS and optionally downloaded locally. Supported image MIME types: image/jpeg, image/png.

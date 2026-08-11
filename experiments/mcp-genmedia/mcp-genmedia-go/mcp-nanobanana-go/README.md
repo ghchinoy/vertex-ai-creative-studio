@@ -45,6 +45,8 @@ The tool utilizes the following environment variables:
 
 When `gcs_bucket_uri` (or the `GENMEDIA_BUCKET` fallback) is set, the tool uploads each generated image to GCS, returns the `gs://` URI, and additionally returns a **V4-signed HTTPS URL** so MCP clients can display the image without the bucket being public. This is useful for remote/containerized deployments (SSE bridge, Cloud Run) where no retrievable local directory exists — without a bucket configured and no `output_directory`, generated image bytes are discarded.
 
+On the GCS path the tool also appends one MCP `resource_link` content item per uploaded image (`uri` = the `gs://` URI, with the object `name`, `mimeType`, and a 1-based `description`). The text summary is unchanged. See [Resource Links for GCS Outputs](../README.md#resource-links-for-gcs-outputs).
+
 ### Signed URLs — credentials
 
 Generating a signed URL requires an RSA signer:
