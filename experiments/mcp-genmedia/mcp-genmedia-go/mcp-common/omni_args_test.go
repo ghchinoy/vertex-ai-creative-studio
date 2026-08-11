@@ -16,11 +16,29 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/mark3labs/mcp-go/mcp"
 )
+
+// omniResultText asserts content[0] is the text item and returns its text, so the
+// existing string-oriented assertions carry over to the new []mcp.Content shape.
+func omniResultText(t *testing.T, content []mcp.Content) string {
+	t.Helper()
+	if len(content) == 0 {
+		t.Fatalf("RenderOmniResult returned empty content")
+	}
+	text, ok := content[0].(mcp.TextContent)
+	if !ok {
+		t.Fatalf("content[0] = %T, want mcp.TextContent", content[0])
+	}
+	return text.Text
+}
 
 // TestParseMediaRefsGCSURI verifies gs:// entries are passed through by URI (no
 // file read) with a MIME type inferred from the extension.
@@ -397,9 +415,14 @@ func TestRenderOmniResultLocal(t *testing.T) {
 		ThoughtSteps:   1,
 	}
 
-	msg, err := RenderOmniResult(context.Background(), result, dir, "", "")
+	content, err := RenderOmniResult(context.Background(), result, dir, "", "")
 	if err != nil {
 		t.Fatalf("RenderOmniResult returned error: %v", err)
+	}
+	msg := omniResultText(t, content)
+	// Local-only save produces no GCS artifact, so no resource_link is appended.
+	if len(content) != 1 {
+		t.Errorf("expected 1 content item (text only, no GCS link), got %d", len(content))
 	}
 	if !strings.Contains(msg, "Here is your video.") {
 		t.Errorf("message missing model text: %q", msg)
@@ -424,6 +447,57 @@ func TestRenderOmniResultLocal(t *testing.T) {
 	}
 }
 
+// TestRenderOmniResultGCSResourceLinks confirms that on a GCS-sink call the
+// renderer appends one resource_link per video after the (unchanged) text item,
+// each carrying the gs:// URI, MIME type, and 1-based "omni output i of n"
+// description (design #483). The GCS upload and V4 signing seams are stubbed so
+// the test needs no live bucket.
+func TestRenderOmniResultGCSResourceLinks(t *testing.T) {
+	origUpload := uploadToGCSFn
+	origSign := generateV4SignedURLFn
+	t.Cleanup(func() { uploadToGCSFn = origUpload; generateV4SignedURLFn = origSign })
+	uploadToGCSFn = func(_ context.Context, _, _, _ string, _ []byte) error { return nil }
+	generateV4SignedURLFn = func(_ context.Context, _, object string, _ time.Duration) (string, error) {
+		return "https://signed.example/" + object, nil
+	}
+
+	result := &OmniResult{
+		Videos:         [][]byte{[]byte("a"), []byte("b")},
+		VideoMimeTypes: []string{"video/mp4", "video/mp4"},
+		Text:           "two videos",
+	}
+	content, err := RenderOmniResult(context.Background(), result, "", "my-bucket/prefix", "")
+	if err != nil {
+		t.Fatalf("RenderOmniResult returned error: %v", err)
+	}
+	if len(content) != 3 {
+		t.Fatalf("expected 3 content items (text + 2 links), got %d", len(content))
+	}
+	if msg := omniResultText(t, content); !strings.Contains(msg, "two videos") {
+		t.Errorf("content[0] missing model text: %q", msg)
+	}
+	for i := 1; i <= 2; i++ {
+		link, ok := content[i].(mcp.ResourceLink)
+		if !ok {
+			t.Fatalf("content[%d] = %T, want mcp.ResourceLink", i, content[i])
+		}
+		if link.Type != "resource_link" {
+			t.Errorf("content[%d].Type = %q, want resource_link", i, link.Type)
+		}
+		wantURI := "gs://my-bucket/prefix/omni_"
+		if !strings.HasPrefix(link.URI, wantURI) {
+			t.Errorf("content[%d].URI = %q, want prefix %q", i, link.URI, wantURI)
+		}
+		if link.MIMEType != "video/mp4" {
+			t.Errorf("content[%d].MIMEType = %q, want video/mp4", i, link.MIMEType)
+		}
+		wantDesc := fmt.Sprintf("omni output %d of 2", i)
+		if link.Description != wantDesc {
+			t.Errorf("content[%d].Description = %q, want %q", i, link.Description, wantDesc)
+		}
+	}
+}
+
 // TestRenderOmniResultNoDestination confirms the "none saved" summary is used
 // when neither an output directory nor a GCS bucket is provided.
 func TestRenderOmniResultNoDestination(t *testing.T) {
@@ -431,10 +505,11 @@ func TestRenderOmniResultNoDestination(t *testing.T) {
 		Videos:         [][]byte{[]byte("mp4-bytes")},
 		VideoMimeTypes: []string{"video/mp4"},
 	}
-	msg, err := RenderOmniResult(context.Background(), result, "", "", "")
+	content, err := RenderOmniResult(context.Background(), result, "", "", "")
 	if err != nil {
 		t.Fatalf("RenderOmniResult returned error: %v", err)
 	}
+	msg := omniResultText(t, content)
 	if !strings.Contains(msg, "none were saved (set output_directory or gcs_bucket_uri).") {
 		t.Errorf("message missing none-saved summary: %q", msg)
 	}

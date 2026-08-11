@@ -72,10 +72,10 @@ func omniVideoGenerationHandler(ctx context.Context, request mcp.CallToolRequest
 	span.SetAttributes(attribute.Int("video_count", len(result.Videos)))
 
 	// --- Render / persist output (shared) ---
-	finalMessage, err := common.RenderOmniResult(ctx, result, parsed.OutputDir, parsed.GCSBucketURI, parsed.OutputFilename)
+	content, err := common.RenderOmniResult(ctx, result, parsed.OutputDir, parsed.GCSBucketURI, parsed.OutputFilename)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	return &mcp.CallToolResult{Content: []mcp.Content{mcp.TextContent{Type: "text", Text: finalMessage}}}, nil
+	return &mcp.CallToolResult{Content: content}, nil
 }
