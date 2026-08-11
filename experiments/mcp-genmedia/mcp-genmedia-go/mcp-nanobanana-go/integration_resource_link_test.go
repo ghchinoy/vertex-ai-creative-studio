@@ -15,9 +15,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
@@ -104,15 +106,87 @@ func TestIntegrationNanobananaResourceLinks(t *testing.T) {
 	})
 
 	t.Run("live GCS sink (gated behind GENMEDIA_BUCKET)", func(t *testing.T) {
-		bucket := os.Getenv("GENMEDIA_BUCKET")
+		bucket := strings.TrimSpace(os.Getenv("GENMEDIA_BUCKET"))
 		if bucket == "" {
 			t.Skip("GENMEDIA_BUCKET not set; skipping live GCS resource_link integration")
 		}
-		// The default (network-free) subtest already validates the response-building
-		// contract against the real persistence seam's PersistedMedia shape. A full
-		// live run additionally needs a genai client + credentials; when a live
-		// harness is wired it should drive nanobananaGenerateContentHandler and
-		// assert content[0] text + content[1..n] resource_link with gs://%s/... uris.
-		t.Logf("GENMEDIA_BUCKET=%s set; live nanobanana resource_link path exercised by the live harness", bucket)
+		// This leg is a REAL live integration (#483 P4, resolves P1 review NB#2 —
+		// the former placeholder only logged). It drives processImageResponse through
+		// the REAL persistence seam (common.PersistMediaOutputs -> real GCS upload +
+		// real V4 signed URL) using ambient credentials (ADC or
+		// GOOGLE_APPLICATION_CREDENTIALS), then proves the emitted resource_link
+		// identifies an object that genuinely exists in GCS by downloading it back
+		// and comparing bytes.
+		//
+		// No genai call is needed: the resource_link contract lives entirely in the
+		// GCS-persist + response-building step, which this exercises end-to-end with
+		// real cloud I/O. The leg is fully gated behind GENMEDIA_BUCKET so it skips
+		// cleanly in CI (no creds, no bucket). Objects are written under a unique,
+		// self-cleaning prefix; cleanup is best-effort via `gcloud storage rm`.
+		ctx := context.Background()
+
+		// Normalize GENMEDIA_BUCKET to "gs://<bucket>[/prefix]" and append a unique
+		// per-run prefix so parallel/repeat runs never collide and cleanup is scoped.
+		base := strings.TrimSuffix(strings.TrimPrefix(bucket, "gs://"), "/")
+		gcsBucketURI := fmt.Sprintf("gs://%s/nanobanana_outputs/live-483-%d", base, time.Now().UnixNano())
+		t.Cleanup(func() {
+			// Best-effort teardown; ignore errors (e.g. gcloud absent) so a passing
+			// assertion is never masked by a cleanup failure.
+			out, err := exec.Command("gcloud", "storage", "rm", "--recursive", gcsBucketURI).CombinedOutput()
+			if err != nil {
+				t.Logf("cleanup: could not remove %s: %v (%s)", gcsBucketURI, err, strings.TrimSpace(string(out)))
+			}
+		})
+
+		// Use the REAL persistence seam for this leg (do NOT stub persistMediaOutputs).
+		imgBytes := []byte("\x89PNG\r\n\x1a\n#483 live resource_link integration payload")
+		resp := imageResponse(textPart("live leg"), imagePart("image/png", imgBytes))
+		res, err := processImageResponse(ctx, resp, map[string]any{}, "", gcsBucketURI)
+		if err != nil {
+			t.Fatalf("processImageResponse (live) error: %v", err)
+		}
+
+		// The real upload must have succeeded (GCS errors are non-fatal and surfaced
+		// as a warning line in the text — assert none appeared).
+		text, ok := res.Content[0].(mcp.TextContent)
+		if !ok {
+			t.Fatalf("content[0] is %T, want mcp.TextContent", res.Content[0])
+		}
+		if strings.Contains(text.Text, "failed to upload") {
+			t.Fatalf("live GCS upload reported a failure in the text summary: %q", text.Text)
+		}
+
+		// Exactly one image -> text + one resource_link.
+		if len(res.Content) != 2 {
+			t.Fatalf("content len = %d, want 2 (text + 1 link); text=%q", len(res.Content), text.Text)
+		}
+		rl, ok := res.Content[1].(mcp.ResourceLink)
+		if !ok {
+			t.Fatalf("content[1] is %T, want mcp.ResourceLink", res.Content[1])
+		}
+		if rl.Type != mcp.ContentTypeLink {
+			t.Errorf("content[1].Type = %q, want %q", rl.Type, mcp.ContentTypeLink)
+		}
+		if !strings.HasPrefix(rl.URI, gcsBucketURI+"/") || !strings.HasSuffix(rl.URI, ".png") {
+			t.Errorf("content[1].URI = %q, want %q/<name>.png", rl.URI, gcsBucketURI)
+		}
+		if rl.MIMEType != "image/png" {
+			t.Errorf("content[1].MIMEType = %q, want image/png", rl.MIMEType)
+		}
+		if rl.Description != "nanobanana output 1 of 1" {
+			t.Errorf("content[1].Description = %q, want %q", rl.Description, "nanobanana output 1 of 1")
+		}
+
+		// The decisive live assertion: the gs:// identity in the resource_link points
+		// at a real object whose bytes round-trip. This is what the old placeholder
+		// never did.
+		got, err := common.DownloadFromGCSAsBytes(ctx, rl.URI)
+		if err != nil {
+			t.Fatalf("downloading the linked object %s failed (object should exist): %v", rl.URI, err)
+		}
+		if !bytes.Equal(got, imgBytes) {
+			t.Errorf("linked object bytes (%d) != uploaded bytes (%d)", len(got), len(imgBytes))
+		}
+		t.Logf("live resource_link verified: %s (%d bytes round-tripped)", rl.URI, len(got))
 	})
 }
