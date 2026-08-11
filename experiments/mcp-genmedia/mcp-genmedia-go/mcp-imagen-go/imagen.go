@@ -719,6 +719,18 @@ func imagenGenerationHandler(client *genai.Client, ctx context.Context, request 
 
 	// Text output is unchanged; append one resource_link per GCS artifact
 	// (design #483), in generation order, using the (possibly renamed) gs:// URIs.
+	finalContentItems = appendImagenResourceLinks(finalContentItems, gcsSavedURIs, gcsSavedMimes)
+
+	return &mcp.CallToolResult{Content: finalContentItems}, nil
+}
+
+// appendImagenResourceLinks appends one resource_link per GCS image artifact to
+// items (design #483). gcsSavedURIs and gcsSavedMimes are aligned 1:1 by
+// construction, so each link carries that artifact's own MIME type; the
+// description is the 1-based "imagen output i of n". This only ADDS links (the
+// caller's text/image content is unchanged) and returns items unchanged when
+// there are no GCS artifacts (inline/local-only paths).
+func appendImagenResourceLinks(items []mcp.Content, gcsSavedURIs, gcsSavedMimes []string) []mcp.Content {
 	var mediaResults []common.MediaResult
 	for i, uri := range gcsSavedURIs {
 		mediaResults = append(mediaResults, common.MediaResult{
@@ -727,7 +739,5 @@ func imagenGenerationHandler(client *genai.Client, ctx context.Context, request 
 			Description: fmt.Sprintf("imagen output %d of %d", i+1, len(gcsSavedURIs)),
 		})
 	}
-	finalContentItems = common.AppendMediaContent(finalContentItems, mediaResults)
-
-	return &mcp.CallToolResult{Content: finalContentItems}, nil
+	return common.AppendMediaContent(items, mediaResults)
 }
