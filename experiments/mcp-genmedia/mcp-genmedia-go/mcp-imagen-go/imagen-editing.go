@@ -230,6 +230,9 @@ func imagenEditHandler(ctx context.Context, request mcp.CallToolRequest, client 
 
 	// Process the response
 	var statusText string
+	// editedGCSURI/editedMime capture the single edited-image GCS artifact so the
+	// result can carry a resource_link in addition to the text (design #483).
+	var editedGCSURI, editedMime string
 
 	if len(response.GeneratedImages) > 0 {
 		genImg := response.GeneratedImages[0]
@@ -243,9 +246,16 @@ func imagenEditHandler(ctx context.Context, request mcp.CallToolRequest, client 
 			}
 			gcsURI := fmt.Sprintf("gs://%s/%s", appConfig.GenmediaBucket, filename)
 			statusText = fmt.Sprintf("Image edited successfully. Edited image URI: %s", gcsURI)
+			editedGCSURI = gcsURI
+			editedMime = "image/png"
 		} else if genImg.Image != nil && genImg.Image.GCSURI != "" {
 			// The image is already in GCS.
 			statusText = fmt.Sprintf("Image edited successfully. Edited image URI: %s", genImg.Image.GCSURI)
+			editedGCSURI = genImg.Image.GCSURI
+			editedMime = "image/png"
+			if genImg.Image.MIMEType != "" {
+				editedMime = genImg.Image.MIMEType
+			}
 		} else {
 			statusText = "Image editing did not produce any images."
 		}
@@ -262,5 +272,15 @@ func imagenEditHandler(ctx context.Context, request mcp.CallToolRequest, client 
 	}
 	resultText += statusText
 
-	return mcp.NewToolResultText(resultText), nil
+	// Text output is unchanged; append one resource_link for the edited GCS
+	// artifact (design #483). content[0]=text, content[1]=resource_link.
+	content := []mcp.Content{mcp.TextContent{Type: "text", Text: resultText}}
+	if editedGCSURI != "" {
+		content = common.AppendMediaContent(content, []common.MediaResult{{
+			GCSURI:      editedGCSURI,
+			MimeType:    editedMime,
+			Description: "imagen output 1 of 1",
+		}})
+	}
+	return &mcp.CallToolResult{Content: content}, nil
 }
