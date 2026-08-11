@@ -397,7 +397,7 @@ func TestRenderOmniResultLocal(t *testing.T) {
 		ThoughtSteps:   1,
 	}
 
-	msg, err := RenderOmniResult(context.Background(), result, dir, "")
+	msg, err := RenderOmniResult(context.Background(), result, dir, "", "")
 	if err != nil {
 		t.Fatalf("RenderOmniResult returned error: %v", err)
 	}
@@ -431,11 +431,70 @@ func TestRenderOmniResultNoDestination(t *testing.T) {
 		Videos:         [][]byte{[]byte("mp4-bytes")},
 		VideoMimeTypes: []string{"video/mp4"},
 	}
-	msg, err := RenderOmniResult(context.Background(), result, "", "")
+	msg, err := RenderOmniResult(context.Background(), result, "", "", "")
 	if err != nil {
 		t.Fatalf("RenderOmniResult returned error: %v", err)
 	}
 	if !strings.Contains(msg, "none were saved (set output_directory or gcs_bucket_uri).") {
 		t.Errorf("message missing none-saved summary: %q", msg)
 	}
+}
+
+// TestRenderOmniResultOutputFilename confirms output_filename yields
+// client-predictable names: no suffix for a single video, 1-based _1..n
+// suffixing for multiple, with the extension forced to the true media type.
+func TestRenderOmniResultOutputFilename(t *testing.T) {
+	t.Run("single video honored, extension forced", func(t *testing.T) {
+		dir := t.TempDir()
+		result := &OmniResult{
+			Videos:         [][]byte{[]byte("mp4-bytes")},
+			VideoMimeTypes: []string{"video/mp4"},
+		}
+		// Wrong client extension must be forced to the true media type.
+		if _, err := RenderOmniResult(context.Background(), result, dir, "", "clip.mov"); err != nil {
+			t.Fatalf("RenderOmniResult returned error: %v", err)
+		}
+		entries, _ := os.ReadDir(dir)
+		if len(entries) != 1 || entries[0].Name() != "clip.mp4" {
+			t.Errorf("expected single file clip.mp4, got %v", names(entries))
+		}
+	})
+
+	t.Run("multiple videos suffixed 1-based", func(t *testing.T) {
+		dir := t.TempDir()
+		result := &OmniResult{
+			Videos:         [][]byte{[]byte("a"), []byte("b"), []byte("c")},
+			VideoMimeTypes: []string{"video/mp4", "video/mp4", "video/mp4"},
+		}
+		if _, err := RenderOmniResult(context.Background(), result, dir, "", "clip.mp4"); err != nil {
+			t.Fatalf("RenderOmniResult returned error: %v", err)
+		}
+		got := names(mustReadDir(t, dir))
+		want := map[string]bool{"clip_1.mp4": true, "clip_2.mp4": true, "clip_3.mp4": true}
+		if len(got) != 3 {
+			t.Fatalf("expected 3 files, got %v", got)
+		}
+		for _, n := range got {
+			if !want[n] {
+				t.Errorf("unexpected file %q (want clip_1..3.mp4)", n)
+			}
+		}
+	})
+}
+
+func mustReadDir(t *testing.T, dir string) []os.DirEntry {
+	t.Helper()
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("ReadDir: %v", err)
+	}
+	return entries
+}
+
+func names(entries []os.DirEntry) []string {
+	out := make([]string, len(entries))
+	for i, e := range entries {
+		out[i] = e.Name()
+	}
+	return out
 }

@@ -58,6 +58,11 @@ type OmniToolArgs struct {
 	// gcs_bucket_uri argument and otherwise falling back to the server's
 	// GENMEDIA_BUCKET + "/omni_outputs/".
 	GCSBucketURI string
+	// OutputFilename is the client-supplied base output name ("" when unset).
+	// When set, RenderOmniResult derives client-predictable, deterministically
+	// suffixed names (extension forced to the true media type). omni carries no
+	// legacy naming alias.
+	OutputFilename string
 }
 
 // ParseOmniToolArgs parses and validates the raw MCP tool argument map for the
@@ -147,6 +152,7 @@ func ParseOmniToolArgs(args map[string]interface{}, cfg *Config) (OmniToolArgs, 
 	}
 	out.OutputDir = outputDir
 	out.GCSBucketURI = gcsBucketURI
+	out.OutputFilename = ResolveOutputFilename(args)
 	return out, nil
 }
 
@@ -156,7 +162,7 @@ func ParseOmniToolArgs(args map[string]interface{}, cfg *Config) (OmniToolArgs, 
 // model text, a thought-step NOTE, per-video GCS warnings / signed URLs, and a
 // final saved-files summary. It returns the trimmed message both servers return
 // verbatim, so the output text can never drift between them.
-func RenderOmniResult(ctx context.Context, result *OmniResult, outputDir, gcsBucketURI string) (string, error) {
+func RenderOmniResult(ctx context.Context, result *OmniResult, outputDir, gcsBucketURI, outputFilename string) (string, error) {
 	// --- Process / persist output ---
 	var responseText strings.Builder
 	if result.SherlogLink != "" {
@@ -174,16 +180,46 @@ func RenderOmniResult(ctx context.Context, result *OmniResult, outputDir, gcsBuc
 	expiry := SignedURLExpiryFromEnv("OMNI_SIGNED_URL_EXPIRY_HOURS")
 	var savedFiles []string
 
+	// When output_filename is set, precompute client-predictable names via the
+	// shared helper (extension forced to the true MIME, deterministic _1..n
+	// suffixing). When unset, names is nil and each video keeps the legacy
+	// omni_<ts>_<n> scheme — byte-for-byte unchanged behavior.
+	var names []string
+	if strings.TrimSpace(outputFilename) != "" && len(result.Videos) > 0 {
+		firstMime := "video/mp4"
+		if len(result.VideoMimeTypes) > 0 && result.VideoMimeTypes[0] != "" {
+			firstMime = result.VideoMimeTypes[0]
+		}
+		var err error
+		names, err = BuildOutputFilenames(outputFilename, len(result.Videos), firstMime)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	for n, videoBytes := range result.Videos {
 		mimeType := "video/mp4"
 		if n < len(result.VideoMimeTypes) && result.VideoMimeTypes[n] != "" {
 			mimeType = result.VideoMimeTypes[n]
 		}
 
+		fileName := fmt.Sprintf("omni_%s_%d%s", gentime, n, videoExtForMimeType(mimeType))
+		if names != nil {
+			fileName = names[n]
+		}
+
+		// Collision policy: overwrite with a warning (design §4e). Surface a local
+		// collision before the shared seam truncates the file.
+		if outputDir != "" {
+			if _, statErr := os.Stat(filepath.Join(outputDir, fileName)); statErr == nil {
+				log.Printf("Warning: output file %q already exists in %s; overwriting (collision policy).", fileName, outputDir)
+			}
+		}
+
 		persisted, err := PersistMediaOutputs(ctx, MediaArtifact{
 			Data:     videoBytes,
 			MimeType: mimeType,
-			FileName: fmt.Sprintf("omni_%s_%d%s", gentime, n, videoExtForMimeType(mimeType)),
+			FileName: fileName,
 		}, outputDir, gcsBucketURI, expiry)
 		if err != nil {
 			return "", err
