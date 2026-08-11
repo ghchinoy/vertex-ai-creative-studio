@@ -189,7 +189,7 @@ class Default:
     CHARACTER_CONSISTENCY_IMAGEN_MODEL: str = "imagen-3.0-capability-001"
     CHARACTER_CONSISTENCY_VEO_MODEL: str = os.environ.get(
         "CHARACTER_CONSISTENCY_VEO_MODEL",
-        "veo-3.0-fast-generate-001",
+        "veo-3.1-fast-generate-001",
     )
     CHARACTER_CONSISTENCY_GEMINI_MODEL: str = os.environ.get(
         "CHARACTER_CONSISTENCY_GEMINI_MODEL",
