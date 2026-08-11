@@ -134,6 +134,20 @@ func nanobananaGenerateContentHandler(client *genai.Client, ctx context.Context,
 	}
 
 	// --- Process Response ---
+	return processImageResponse(ctx, resp, request.GetArguments(), outputDir, gcsBucketURI)
+}
+
+// persistMediaOutputs is the persistence seam. It is a package-level variable so
+// tests can inject a fake and exercise the response-processing wiring (naming,
+// two-pass assignment, MediaArtifact.FileName -> seam, collision branch) without
+// a live genai client or cloud access.
+var persistMediaOutputs = common.PersistMediaOutputs
+
+// processImageResponse builds the human-readable summary and persists each image
+// artifact from resp, honoring output_filename-derived names when provided and
+// preserving the legacy per-part scheme otherwise. Extracted from the handler so
+// the naming + seam wiring is unit-testable (design #842 Phase-1 review nit 4.1).
+func processImageResponse(ctx context.Context, resp *genai.GenerateContentResponse, args map[string]any, outputDir, gcsBucketURI string) (*mcp.CallToolResult, error) {
 	var responseText strings.Builder
 	var savedFiles []string
 
@@ -165,8 +179,9 @@ func nanobananaGenerateContentHandler(client *genai.Client, ctx context.Context,
 	// When output_filename is set, precompute client-predictable names via the
 	// shared helper (extension forced to the true MIME, deterministic suffixing).
 	// When unset, names is nil and each image keeps the default per-part scheme —
-	// byte-for-byte unchanged legacy behavior.
-	base := clientOutputFilename(request.GetArguments())
+	// byte-for-byte unchanged legacy behavior. The precedence contract lives in
+	// common.ResolveOutputFilename (nanobanana has no legacy alias of its own).
+	base := common.ResolveOutputFilename(args)
 	names, err := buildImageFilenames(base, imageCount, firstImageMime)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
@@ -199,7 +214,7 @@ func nanobananaGenerateContentHandler(client *genai.Client, ctx context.Context,
 					}
 				}
 
-				persisted, err := common.PersistMediaOutputs(ctx, common.MediaArtifact{
+				persisted, err := persistMediaOutputs(ctx, common.MediaArtifact{
 					Data:     part.InlineData.Data,
 					MimeType: part.InlineData.MIMEType,
 					FileName: fileName,
@@ -268,24 +283,6 @@ func inferMimeType(path string) string {
 		// A more robust solution might involve reading file headers.
 		return "image/png"
 	}
-}
-
-// clientOutputFilename returns the client-supplied base output name.
-// output_filename is the canonical parameter and always wins. nanobanana carries
-// no legacy naming parameter of its own (per the #842 design's Path-A table), so
-// no alias is wired into its tool schema; the variadic legacyKeys argument
-// implements the shared accept-and-alias precedence contract (output_filename >
-// legacy > default) that the fan-out servers (e.g. lyria file_name) reuse.
-func clientOutputFilename(args map[string]any, legacyKeys ...string) string {
-	if v, ok := args["output_filename"].(string); ok && strings.TrimSpace(v) != "" {
-		return strings.TrimSpace(v)
-	}
-	for _, k := range legacyKeys {
-		if v, ok := args[k].(string); ok && strings.TrimSpace(v) != "" {
-			return strings.TrimSpace(v)
-		}
-	}
-	return ""
 }
 
 // buildImageFilenames returns the persisted file names for `count` image

@@ -15,9 +15,14 @@
 package main
 
 import (
+	"context"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/mark3labs/mcp-go/mcp"
+	"google.golang.org/genai"
 
 	common "github.com/GoogleCloudPlatform/vertex-ai-creative-studio/experiments/mcp-genmedia/mcp-genmedia-go/mcp-common"
 )
@@ -39,57 +44,6 @@ func TestExtForMimeType(t *testing.T) {
 		t.Run(tc.mimeType, func(t *testing.T) {
 			if got := extForMimeType(tc.mimeType); got != tc.want {
 				t.Errorf("extForMimeType(%q) = %q, want %q", tc.mimeType, got, tc.want)
-			}
-		})
-	}
-}
-
-// TestClientOutputFilename covers the accept-and-alias precedence contract:
-// output_filename wins, then any legacy alias, then "" (default scheme).
-func TestClientOutputFilename(t *testing.T) {
-	tests := []struct {
-		name       string
-		args       map[string]any
-		legacyKeys []string
-		want       string
-	}{
-		{
-			name: "output_filename honored",
-			args: map[string]any{"output_filename": "hero.png"},
-			want: "hero.png",
-		},
-		{
-			name: "output_filename trimmed",
-			args: map[string]any{"output_filename": "  hero.png  "},
-			want: "hero.png",
-		},
-		{
-			name:       "legacy alias used when output_filename unset (back-compat)",
-			args:       map[string]any{"file_name": "legacy.png"},
-			legacyKeys: []string{"file_name"},
-			want:       "legacy.png",
-		},
-		{
-			name:       "output_filename wins on conflict with legacy alias",
-			args:       map[string]any{"output_filename": "new.png", "file_name": "legacy.png"},
-			legacyKeys: []string{"file_name"},
-			want:       "new.png",
-		},
-		{
-			name: "none set returns empty (default scheme)",
-			args: map[string]any{},
-			want: "",
-		},
-		{
-			name: "blank output_filename ignored",
-			args: map[string]any{"output_filename": "   "},
-			want: "",
-		},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			if got := clientOutputFilename(tc.args, tc.legacyKeys...); got != tc.want {
-				t.Errorf("clientOutputFilename(%v, %v) = %q, want %q", tc.args, tc.legacyKeys, got, tc.want)
 			}
 		})
 	}
@@ -203,6 +157,90 @@ func TestDefaultImageFilename(t *testing.T) {
 			}
 		})
 	}
+}
+
+// imageResponse builds a fake genai response with the given text/image parts so
+// the handler-level wiring can be exercised without a live genai client.
+func imageResponse(parts ...*genai.Part) *genai.GenerateContentResponse {
+	return &genai.GenerateContentResponse{
+		Candidates: []*genai.Candidate{{Content: &genai.Content{Parts: parts}}},
+	}
+}
+
+func textPart(s string) *genai.Part { return &genai.Part{Text: s} }
+
+func imagePart(mime string, data []byte) *genai.Part {
+	return &genai.Part{InlineData: &genai.Blob{MIMEType: mime, Data: data}}
+}
+
+// TestProcessImageResponseWiring exercises the actual handler response path
+// (two-pass count/assign, imgIdx, MediaArtifact.FileName -> seam, text
+// interleaving) with an injected persistence seam — the Phase-1 review nit 4.1.
+// Downstream Path-A servers inherit this wiring-test pattern.
+func TestProcessImageResponseWiring(t *testing.T) {
+	// Swap in a fake seam that records the FileName it was asked to persist.
+	orig := persistMediaOutputs
+	t.Cleanup(func() { persistMediaOutputs = orig })
+
+	t.Run("output_filename sets deterministic suffixed names via seam", func(t *testing.T) {
+		var gotNames []string
+		persistMediaOutputs = func(_ context.Context, art common.MediaArtifact, _, _ string, _ time.Duration) (common.PersistedMedia, error) {
+			gotNames = append(gotNames, art.FileName)
+			return common.PersistedMedia{LocalPath: "/out/" + art.FileName}, nil
+		}
+
+		resp := imageResponse(
+			textPart("here you go"),
+			imagePart("image/png", []byte("a")),
+			imagePart("image/png", []byte("b")),
+		)
+		res, err := processImageResponse(context.Background(), resp, map[string]any{"output_filename": "hero.jpeg"}, "/out", "")
+		if err != nil {
+			t.Fatalf("processImageResponse error: %v", err)
+		}
+		// Extension forced to real MIME (png), 1-based suffix because n>1.
+		want := []string{"hero_1.png", "hero_2.png"}
+		if !reflect.DeepEqual(gotNames, want) {
+			t.Errorf("persisted FileNames = %v, want %v", gotNames, want)
+		}
+		text := res.Content[0].(mcp.TextContent).Text
+		if !strings.Contains(text, "here you go") {
+			t.Errorf("summary missing model text; got %q", text)
+		}
+		if !strings.Contains(text, "Generated and saved 2 image(s)") {
+			t.Errorf("summary missing saved-count line; got %q", text)
+		}
+	})
+
+	t.Run("single image no suffix", func(t *testing.T) {
+		var gotNames []string
+		persistMediaOutputs = func(_ context.Context, art common.MediaArtifact, _, _ string, _ time.Duration) (common.PersistedMedia, error) {
+			gotNames = append(gotNames, art.FileName)
+			return common.PersistedMedia{LocalPath: "/out/" + art.FileName}, nil
+		}
+		resp := imageResponse(imagePart("image/png", []byte("a")))
+		if _, err := processImageResponse(context.Background(), resp, map[string]any{"output_filename": "hero"}, "/out", ""); err != nil {
+			t.Fatalf("processImageResponse error: %v", err)
+		}
+		if want := []string{"hero.png"}; !reflect.DeepEqual(gotNames, want) {
+			t.Errorf("persisted FileNames = %v, want %v", gotNames, want)
+		}
+	})
+
+	t.Run("unset output_filename falls back to legacy default scheme", func(t *testing.T) {
+		var gotNames []string
+		persistMediaOutputs = func(_ context.Context, art common.MediaArtifact, _, _ string, _ time.Duration) (common.PersistedMedia, error) {
+			gotNames = append(gotNames, art.FileName)
+			return common.PersistedMedia{LocalPath: "/out/" + art.FileName}, nil
+		}
+		resp := imageResponse(imagePart("image/jpeg", []byte("a")))
+		if _, err := processImageResponse(context.Background(), resp, map[string]any{}, "/out", ""); err != nil {
+			t.Fatalf("processImageResponse error: %v", err)
+		}
+		if len(gotNames) != 1 || !strings.HasPrefix(gotNames[0], "gemini_") || !strings.HasSuffix(gotNames[0], ".jpg") {
+			t.Errorf("expected legacy gemini_*.jpg default name, got %v", gotNames)
+		}
+	})
 }
 
 // TestSignedURLExpiryWiring guards the nanobanana-specific env var name that is

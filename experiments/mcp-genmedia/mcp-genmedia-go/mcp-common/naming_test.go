@@ -251,3 +251,73 @@ func TestExtensionForMIMETypeFallback(t *testing.T) {
 		t.Errorf("ExtensionForMIMEType(empty) = %q, want empty", got)
 	}
 }
+
+// TestResolveOutputFilename covers the shared accept-and-alias precedence
+// contract (§4a): output_filename wins, then the first non-empty legacy alias
+// (in order), then "" (caller falls back to its default scheme).
+func TestResolveOutputFilename(t *testing.T) {
+	tests := []struct {
+		name       string
+		args       map[string]any
+		legacyKeys []string
+		want       string
+	}{
+		{
+			name: "output_filename honored",
+			args: map[string]any{"output_filename": "hero.png"},
+			want: "hero.png",
+		},
+		{
+			name: "output_filename trimmed",
+			args: map[string]any{"output_filename": "  hero.png  "},
+			want: "hero.png",
+		},
+		{
+			name:       "legacy alias used when output_filename unset (back-compat)",
+			args:       map[string]any{"file_name": "legacy.wav"},
+			legacyKeys: []string{"file_name"},
+			want:       "legacy.wav",
+		},
+		{
+			name:       "output_filename wins on conflict with legacy alias",
+			args:       map[string]any{"output_filename": "new.wav", "file_name": "legacy.wav"},
+			legacyKeys: []string{"file_name"},
+			want:       "new.wav",
+		},
+		{
+			name:       "first non-empty legacy alias wins when multiple given",
+			args:       map[string]any{"output_file_name": "second.mp4"},
+			legacyKeys: []string{"missing_key", "output_file_name"},
+			want:       "second.mp4",
+		},
+		{
+			name:       "blank legacy alias skipped",
+			args:       map[string]any{"file_name": "   "},
+			legacyKeys: []string{"file_name"},
+			want:       "",
+		},
+		{
+			name: "none set returns empty (default scheme)",
+			args: map[string]any{},
+			want: "",
+		},
+		{
+			name: "blank output_filename ignored",
+			args: map[string]any{"output_filename": "   "},
+			want: "",
+		},
+		{
+			name:       "non-string values ignored",
+			args:       map[string]any{"output_filename": 42, "file_name": true},
+			legacyKeys: []string{"file_name"},
+			want:       "",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := ResolveOutputFilename(tc.args, tc.legacyKeys...); got != tc.want {
+				t.Errorf("ResolveOutputFilename(%v, %v) = %q, want %q", tc.args, tc.legacyKeys, got, tc.want)
+			}
+		})
+	}
+}
