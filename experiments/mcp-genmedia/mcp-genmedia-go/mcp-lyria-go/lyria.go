@@ -131,8 +131,11 @@ func main() {
 		mcp.WithString("output_gcs_bucket",
 			mcp.Description("Optional. Google Cloud Storage bucket name. If provided, audio is saved to GCS and direct audio data is NOT returned."),
 		),
+		mcp.WithString("output_filename",
+			mcp.Description("Optional. Client-predictable base name for the generated file. The extension is forced to the true audio media type (e.g. .wav). Used for the GCS object and the local file. If omitted, a unique name is generated. An existing file/object of the same name is overwritten."),
+		),
 		mcp.WithString("file_name",
-			mcp.Description("Optional. Desired file name (e.g., 'my_song.wav'). Used for GCS object and local file. If omitted, a unique name is generated."),
+			mcp.Description("Optional. (deprecated; use output_filename) Desired file name (e.g., 'my_song.wav'). Used for GCS object and local file. If omitted, a unique name is generated."),
 		),
 		mcp.WithString("local_path",
 			mcp.Description("Optional. Local directory path. If provided, audio is saved locally and direct audio data is NOT returned (unless GCS is also not specified)."),
@@ -268,9 +271,12 @@ func lyriaGenerateMusicHandler(ctx context.Context, request mcp.CallToolRequest)
 		gcsBucketParam = strings.TrimPrefix(gcsBucketParam, "gs://")
 	}
 
-	fileNameParam := ""
-	if val, ok := params["file_name"].(string); ok && strings.TrimSpace(val) != "" {
-		fileNameParam = strings.TrimSpace(val)
+	// output_filename is the canonical param; file_name is the legacy alias
+	// (output_filename wins). When set, the extension is forced to the true audio
+	// MIME and the base is sanitized (§4a/§4b) via resolveLyriaOutputFilename.
+	fileNameParam, err := resolveLyriaOutputFilename(params)
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
 	}
 
 	localDirectoryPathParameter := ""
@@ -372,6 +378,10 @@ func lyriaGenerateMusicHandler(ctx context.Context, request mcp.CallToolRequest)
 				log.Printf("Error creating local directory %s: %v", localDirectoryPathParameter, errMkdir)
 			} else {
 				fullLocalPath := filepath.Join(localDirectoryPathParameter, baseFilename)
+				// Collision policy: overwrite with a warning (design §4e).
+				if _, statErr := os.Stat(fullLocalPath); statErr == nil {
+					log.Printf("Warning: output file %q already exists in %s; overwriting (collision policy).", baseFilename, localDirectoryPathParameter)
+				}
 				errWrite := os.WriteFile(fullLocalPath, audioBytes, 0644)
 				if errWrite != nil {
 					localSaveMessage = fmt.Sprintf("Failed to save audio locally to %s: %v.", fullLocalPath, errWrite)
@@ -427,6 +437,23 @@ func lyriaGenerateMusicHandler(ctx context.Context, request mcp.CallToolRequest)
 		Content: resultContents,
 		IsError: false,
 	}, nil
+}
+
+// resolveLyriaOutputFilename resolves the output file name honoring the canonical
+// output_filename over the legacy file_name alias (§4a), forcing the extension to
+// the true audio MIME and sanitizing the base (§4b). Lyria returns a single
+// artifact, so no _1..n suffix is applied. Returns "" when neither param is set
+// so the caller falls back to its shortid default scheme (byte-for-byte unchanged).
+func resolveLyriaOutputFilename(params map[string]any) (string, error) {
+	base := common.ResolveOutputFilename(params, "file_name")
+	if base == "" {
+		return "", nil
+	}
+	names, err := common.BuildOutputFilenames(base, 1, audioMIMEType)
+	if err != nil {
+		return "", err
+	}
+	return names[0], nil
 }
 
 // invokeLyriaAndUpload calls the Lyria model and optionally uploads the result to GCS.
@@ -520,7 +547,7 @@ func invokeLyriaAndUpload(client *aiplatform.PredictionClient, ctx context.Conte
 		if extractedB64Audio == "" {
 			return "", "", "", errors.New("failed to extract audio data (audio or bytesBase64Encoded) from Lyria prediction")
 		}
-		
+
 		audioBytes, err = base64.StdEncoding.DecodeString(extractedB64Audio)
 		if err != nil {
 			return "", "", "", fmt.Errorf("failed to decode base64 audio data: %w", err)
@@ -534,7 +561,7 @@ func invokeLyriaAndUpload(client *aiplatform.PredictionClient, ctx context.Conte
 		if gcsObjectNameForUpload == "" {
 			return "", extractedB64Audio, sherlogLink, errors.New("GCS bucket provided but object name for upload is empty")
 		}
-		
+
 		uploadErr := common.UploadToGCS(ctx, gcsBucket, gcsObjectNameForUpload, audioMIMEType, audioBytes)
 		if uploadErr != nil {
 			return "", extractedB64Audio, sherlogLink, fmt.Errorf("failed to upload audio to GCS (bucket: %s, object: %s): %w", gcsBucket, gcsObjectNameForUpload, uploadErr)
