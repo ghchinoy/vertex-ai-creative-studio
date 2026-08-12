@@ -12,7 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import sys
+from unittest.mock import MagicMock
+
 import pytest
+
+# Ensure dummy env vars exist for tests when running without GCP environment
+os.environ.setdefault("PROJECT_ID", "test-project")
+os.environ.setdefault("LOCATION", "us-central1")
+os.environ.setdefault("VEO_PROJECT_ID", "test-project")
+os.environ.setdefault("VEO_LOCATION", "us-central1")
+
+# Mock parselmouth if not installed in testing environment
+if "parselmouth" not in sys.modules:
+    try:
+        import parselmouth  # noqa: F401
+    except ImportError:
+        mock_pm = MagicMock()
+        sys.modules["parselmouth"] = mock_pm
+        sys.modules["parselmouth.praat"] = mock_pm.praat
 
 
 def pytest_addoption(parser):

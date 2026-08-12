@@ -16,8 +16,10 @@ from typing import Optional
 import firebase_admin
 from firebase_admin import credentials, firestore
 
+
 class FirebaseClient:
     """Firebase client singleton class"""
+
     _instance = None
     _client = None
 
@@ -34,7 +36,14 @@ class FirebaseClient:
             print(f"[FirebaseClient] - initiating firebase client with `{database_id}`")
         except ValueError:
             print("[FirebaseClient] - Firebase already initialized.")
-        self._client = firestore.client(database_id=database_id)
+        except Exception as e:
+            print(f"[FirebaseClient] - Error initializing firebase app: {e}")
+
+        try:
+            self._client = firestore.client(database_id=database_id)
+        except Exception as e:
+            print(f"[FirebaseClient] - Error initializing firestore client: {e}")
+            self._client = None
 
     def get_client(self):
         return self._client
