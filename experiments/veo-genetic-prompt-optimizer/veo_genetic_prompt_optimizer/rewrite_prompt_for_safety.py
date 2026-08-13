@@ -6,18 +6,13 @@ This script sanitizes a given prompt for safety using the Gemini API.
 import argparse
 import time
 import random
+from typing import Optional
 from google import genai
-import os
 
-# Load environment variables from .env file
-from dotenv import load_dotenv
-load_dotenv()
-
-# --- Configuration ---
-PROJECT_ID = os.getenv("PROJECT_ID")
-LOCATION = os.getenv("LOCATION")
-# GEMINI_MODEL_ID = "gemini-2.5-flash-lite-preview-06-17"
-GEMINI_MODEL_ID = os.getenv("GEMINI_MODEL_ID")
+try:
+    from . import config
+except ImportError:
+    import config
 
 SANITIZATION_PROMPT = """You are an AI specializing in prompt sanitization with a single, critical focus: removing any and all references to children. Your task is to analyze a given prompt and, if it contains any mention of a child, rewrite it to preserve the original scene and intent as much as possible, but without the child.
 
@@ -66,11 +61,7 @@ Now, analyze and sanitize the following query:
 
 def get_genai_client() -> genai.Client:
     """Initializes and returns a GenAI client."""
-    try:
-        return genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
-    except Exception as e:
-        print(f"Error initializing GenAI client: {e}")
-        raise
+    return config.get_genai_client()
 
 def _generate_content_with_retry(client: genai.Client, *args, **kwargs) -> genai.types.GenerateContentResponse:
     """Wrapper for generate_content with exponential backoff."""
@@ -80,7 +71,7 @@ def _generate_content_with_retry(client: genai.Client, *args, **kwargs) -> genai
         try:
             return client.models.generate_content(*args, **kwargs)
         except Exception as e:
-            if "resource exhausted" in str(e).lower():
+            if "resource exhausted" in str(e).lower() or "429" in str(e):
                 if n < max_retries - 1:
                     delay = base_delay * (2**n) + random.uniform(0, 1)
                     print(f"Resource exhausted error. Retrying in {delay:.2f} seconds...")
@@ -91,8 +82,9 @@ def _generate_content_with_retry(client: genai.Client, *args, **kwargs) -> genai
             else:
                 raise e
 
-def sanitize_prompt(client: genai.Client, prompt_to_sanitize: str) -> str:
+def sanitize_prompt(client: genai.Client, prompt_to_sanitize: str, model_id: Optional[str] = None) -> str:
     """Sanitizes a prompt using the Gemini API."""
+    model = model_id or config.GEMINI_MODEL_ID
     full_prompt = f"{SANITIZATION_PROMPT}\n{prompt_to_sanitize}"
     
     contents = [genai.types.Content(role="user", parts=[genai.types.Part.from_text(text=full_prompt)])]
@@ -100,21 +92,20 @@ def sanitize_prompt(client: genai.Client, prompt_to_sanitize: str) -> str:
         "temperature": 0,
         "top_p": 1.0,
         "max_output_tokens": 65535,
-        "thinking_config": genai.types.ThinkingConfig(thinking_budget=-1),
         "safety_settings": [
             genai.types.SafetySetting(category="HARM_CATEGORY_HATE_SPEECH", threshold="OFF"),
             genai.types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="OFF"),
-            genai.types.SafetySetting(category="HARM_CATEGORY_SEXUALLY_EXPLICIT",   threshold="OFF"),
+            genai.types.SafetySetting(category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="OFF"),
             genai.types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="OFF"),
         ]
     }
-    config = genai.types.GenerateContentConfig(**config_dict)
+    cfg = genai.types.GenerateContentConfig(**config_dict)
     
     try:
-        response = _generate_content_with_retry(client, model=GEMINI_MODEL_ID, contents=contents, config=config)
+        response = _generate_content_with_retry(client, model=model, contents=contents, config=cfg)
         return response.text.strip()
     except Exception as e:
-        print(f"  - Gemini API call failed: {e}")
+        print(f"  - Gemini API call failed during sanitization: {e}")
         return "I am unable to process this request. Please try a different prompt."
 
 def main():
