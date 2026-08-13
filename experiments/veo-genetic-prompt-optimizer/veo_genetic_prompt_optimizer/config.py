@@ -63,7 +63,7 @@ AUTORATER_MODEL_ID: str = (
     or "gemini-3.6-flash"
 )
 
-VEO_MODEL_ID: str = os.getenv("VEO_MODEL_ID", "veo-2.0-generate-001")
+VEO_MODEL_ID: str = os.getenv("VEO_MODEL_ID", "veo-3.1-fast-generate-001")
 VEO_LOCATION: str = os.getenv("VEO_LOCATION", "us-central1")
 
 

@@ -47,7 +47,7 @@ GEMINI_MODEL_ID="gemini-3.6-flash"
 LOCATION="global"
 AUTORATER_MODEL_ID="gemini-3.6-flash"
 AUTORATER_LOCATION="global"
-VEO_MODEL_ID="veo-2.0-generate-001"
+VEO_MODEL_ID="veo-3.1-fast-generate-001"
 VEO_LOCATION="us-central1"
 ```
 
@@ -195,7 +195,7 @@ graph TD
 | `LOCATION` | `global` | Region for Gemini API endpoints |
 | `AUTORATER_MODEL_ID`| `gemini-3.6-flash` | Gemini model for evaluation scoring |
 | `AUTORATER_LOCATION`| `global` | Region for autorater evaluation tasks |
-| `VEO_MODEL_ID` | `veo-2.0-generate-001` | Veo model ID for video generation |
+| `VEO_MODEL_ID` | `veo-3.1-fast-generate-001` | Veo model ID for video generation |
 | `VEO_LOCATION` | `us-central1` | Region for Veo video generation endpoints |
 | `NUM_GENERATIONS` | `5` | Default number of evolutionary generations |
 | `POPULATION_SIZE` | `10` | Number of candidate metaprompts per generation |
