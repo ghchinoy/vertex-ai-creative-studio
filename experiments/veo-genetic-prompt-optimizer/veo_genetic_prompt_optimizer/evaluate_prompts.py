@@ -7,34 +7,27 @@ single and batch evaluation modes, with custom metric support for multimodal eva
 import json
 import os
 import pandas as pd
-import uuid
 import time
 import random
+from typing import List, Dict, Tuple, Any, Optional
 import vertexai
 from vertexai.preview.evaluation import EvalTask, PointwiseMetric, PairwiseMetric, AutoraterConfig, CustomMetric
 from google import genai
-from typing import List, Dict, Tuple, Any, Optional
 
-import veo_prompt_eval_templates
+try:
+    from . import config
+    from . import veo_prompt_eval_templates
+except ImportError:
+    import config
+    import veo_prompt_eval_templates
 
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
-# --- Configuration ---
-PROJECT_ID = os.getenv("PROJECT_ID")
-AUTORATER_LOCATION = os.getenv("AUTORATER_LOCATION")
-AUTORATER_MODEL_ID = os.getenv("AUTORATER_MODEL_ID")
 
 # --- Client Initialization ---
 def get_genai_client() -> genai.Client:
     """Initializes and returns a GenAI client."""
-    try:
-        return genai.Client(vertexai=True, project=PROJECT_ID, location=AUTORATER_LOCATION)
-    except Exception as e:
-        print(f"Error initializing GenAI client: {e}")
-        raise
+    config.init_vertexai()
+    return config.get_genai_client(location=config.AUTORATER_LOCATION)
+
 
 # --- Custom Metric Functions for Multimodal Evaluation ---
 
@@ -46,7 +39,7 @@ def _generate_content_with_retry(client: genai.Client, *args, **kwargs) -> genai
         try:
             return client.models.generate_content(*args, **kwargs)
         except Exception as e:
-            if "resource exhausted" in str(e).lower():
+            if "resource exhausted" in str(e).lower() or "429" in str(e):
                 if n < max_retries - 1:
                     delay = base_delay * (2**n) + random.uniform(0, 1)
                     print(f"Resource exhausted error. Retrying in {delay:.2f} seconds...")
@@ -57,12 +50,13 @@ def _generate_content_with_retry(client: genai.Client, *args, **kwargs) -> genai
             else:
                 raise e
 
+
 def _get_autorater_response(client: genai.Client, prompt_parts: List[genai.types.Part], metric_name: str, response_schema: Dict) -> Dict[str, Any]:
     """
     Calls the autorater model with a given prompt and returns the parsed JSON response.
     """
     config_dict = {
-        "temperature": 1,
+        "temperature": 0.1,
         "top_p": 0.95,
         "max_output_tokens": 65535,
         "safety_settings": [
@@ -71,24 +65,24 @@ def _get_autorater_response(client: genai.Client, prompt_parts: List[genai.types
             genai.types.SafetySetting(category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="OFF"),
             genai.types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="OFF"),
         ],
-        "thinking_config": genai.types.ThinkingConfig(thinking_budget=-1),
         "response_mime_type": "application/json",
         "response_schema": response_schema,
     }
-    config = genai.types.GenerateContentConfig(**config_dict)
+    cfg = genai.types.GenerateContentConfig(**config_dict)
 
     try:
-        response = _generate_content_with_retry(client, model=AUTORATER_MODEL_ID, contents=prompt_parts, config=config)
+        response = _generate_content_with_retry(client, model=config.AUTORATER_MODEL_ID, contents=prompt_parts, config=cfg)
         response_json = json.loads(response.text)
         return response_json
     except Exception as e:
         print(f"  - Autorater API call failed: {e}")
         # Return a schema-compliant error response
-        if "score" in response_schema["properties"]:
+        if "score" in response_schema.get("properties", {}):
             return {"score": 0.0, "explanation": f"API call failed: {e}"}
-        elif "pairwise_choice" in response_schema["properties"]:
+        elif "pairwise_choice" in response_schema.get("properties", {}):
             return {"pairwise_choice": "ERROR", "explanation": f"API call failed: {e}"}
         return {}
+
 
 def custom_metric_fn(instance: dict, client: genai.Client, metric_template: str, metric_name: str, response_schema: Dict) -> Dict[str, Any]:
     """
@@ -100,8 +94,9 @@ def custom_metric_fn(instance: dict, client: genai.Client, metric_template: str,
     
     image_path = instance.get("image_path")
     if image_path and pd.notna(image_path):
+        resolved_img = config.resolve_path(str(image_path))
         try:
-            with open(image_path, "rb") as f:
+            with open(resolved_img, "rb") as f:
                 image_data = f.read()
                 prompt_parts.append(genai.types.Part.from_bytes(data=image_data, mime_type="image/jpeg"))
         except (FileNotFoundError, Exception) as e:
@@ -129,12 +124,13 @@ def evaluate_pointwise_single(
     metric_name: str,
     metric_template: str,
     experiment: str,
-    sampling_count: int
+    sampling_count: int = 1
 ) -> Tuple[Optional[float], Optional[str]]:
     """
     Evaluates a single prompt, switching between PointwiseMetric for text-only
     and CustomMetric for multimodal inputs.
     """
+    config.init_vertexai()
     print(f"--- Running Pointwise Single Evaluation: {experiment} ---")
     eval_dataset = pd.DataFrame([prompt_data])
 
@@ -169,17 +165,19 @@ def evaluate_pointwise_single(
         return score, explanation
     return None, "Evaluation failed to produce a result."
 
+
 def evaluate_pointwise_batch(
     prompts_data: List[Dict[str, Any]],
     metric_name: str,
     metric_template: str,
     experiment: str,
-    sampling_count: int
+    sampling_count: int = 1
 ) -> Tuple[Dict[str, Any], pd.DataFrame]:
     """
     Runs a batch pointwise evaluation, switching between PointwiseMetric for text-only
     and CustomMetric for multimodal inputs.
     """
+    config.init_vertexai()
     print(f"--- Running Pointwise Batch Evaluation: {experiment} ---")
     eval_dataset = pd.DataFrame(prompts_data)
 
@@ -209,6 +207,7 @@ def evaluate_pointwise_batch(
     result = eval_task.evaluate()
     return result.summary_metrics, result.metrics_table
 
+
 # --- Pairwise Evaluation Functions ---
 
 def evaluate_pairwise_single(
@@ -216,13 +215,14 @@ def evaluate_pairwise_single(
     metric_name: str,
     metric_template: str,
     experiment: str,
-    sampling_count: int,
-    flip_enabled: bool
+    sampling_count: int = 1,
+    flip_enabled: bool = True
 ) -> Tuple[Optional[str], Optional[str]]:
     """
     Evaluates a single pair of prompts, switching between PairwiseMetric for text-only
     and CustomMetric for multimodal inputs.
     """
+    config.init_vertexai()
     print(f"--- Running Pairwise Single Evaluation: {experiment} ---")
     eval_dataset = pd.DataFrame([pairwise_data])
 
@@ -256,18 +256,20 @@ def evaluate_pairwise_single(
         return winner, explanation
     return None, "Evaluation failed to produce a result."
 
+
 def evaluate_pairwise_batch(
     pairwise_data: List[Dict[str, Any]],
     metric_name: str,
     metric_template: str,
     experiment: str,
-    sampling_count: int,
-    flip_enabled: bool
+    sampling_count: int = 1,
+    flip_enabled: bool = True
 ) -> Tuple[Dict[str, Any], pd.DataFrame]:
     """
     Runs a batch pairwise evaluation, switching between PairwiseMetric for text-only
     and CustomMetric for multimodal inputs.
     """
+    config.init_vertexai()
     print(f"--- Running Pairwise Batch Evaluation: {experiment} ---")
     eval_dataset = pd.DataFrame(pairwise_data)
 
@@ -300,29 +302,22 @@ def evaluate_pairwise_batch(
 # --- Main Execution Logic (for testing) ---
 
 def main():
-    """Runs a full test of all evaluation configurations."""
-    try:
-        vertexai.init(project=PROJECT_ID, location=AUTORATER_LOCATION)
-        print(f"Vertex AI initialized for project {PROJECT_ID} in {AUTORATER_LOCATION}")
-    except Exception as e:
-        print(f"Error initializing Vertex AI: {e}")
-        exit()
-
-    SAMPLING_COUNT = 1
-    FLIP_ENABLED = True
+    """Runs a test evaluation suite."""
+    config.init_vertexai()
+    SAMPLING_COUNT = config.SAMPLING_COUNT
+    FLIP_ENABLED = config.FLIP_ENABLED
 
     dummy_image_path = "dummy_image.jpg"
     if not os.path.exists(dummy_image_path):
         try:
             from PIL import Image
-            img = Image.new('RGB', (60, 30), color = 'red')
+            img = Image.new('RGB', (60, 30), color='red')
             img.save(dummy_image_path)
             print(f"\nCreated dummy image: {dummy_image_path}")
         except ImportError:
-            print("\nCould not create dummy image. Please install Pillow (`pip install Pillow`) to run the multimodal test.")
+            print("\nCould not create dummy image. Pillow is required for multimodal test.")
             return
 
-    # --- Single Evaluations ---
     print("\n" + "#"*80)
     print("### 1. POINTWISE SINGLE (TEXT-ONLY) ###")
     print("#"*80)
@@ -340,163 +335,6 @@ def main():
     )
     print("\n--- RESULT ---")
     print(f"Score: {score}\nExplanation: {explanation}")
-
-    print("\n" + "#"*80)
-    print("### 2. POINTWISE SINGLE (MULTIMODAL) ###")
-    print("#"*80)
-    score_mm, explanation_mm = evaluate_pointwise_single(
-        prompt_data={
-            "original_prompt": "a cat",
-            "augmented_prompt": "a fluffy ginger cat sleeping on a red couch, animated",
-            "image_path": dummy_image_path
-        },
-        metric_name="veo_effectiveness_single_mm",
-        metric_template=veo_prompt_eval_templates.VEO_PROMPT_EFFECTIVENESS_TEMPLATE_W_IMAGE,
-        experiment="veo-test-pointwise-single-multimodal",
-        sampling_count=SAMPLING_COUNT
-    )
-    print("\n--- RESULT ---")
-    print(f"Score: {score_mm}\nExplanation: {explanation_mm}")
-
-    print("\n" + "#"*80)
-    print("### 3. PAIRWISE SINGLE (TEXT-ONLY) ###")
-    print("#"*80)
-    winner, explanation = evaluate_pairwise_single(
-        pairwise_data={
-            "original_prompt": "A cat playing.",
-            "baseline_model_response": "A cat playing.",
-            "response": "A fluffy ginger cat chasing a laser pointer."
-        },
-        metric_name="veo_effectiveness_pairwise_single_text",
-        metric_template=veo_prompt_eval_templates.PAIRWISE_VEO_PROMPT_EFFECTIVENESS_TEMPLATE,
-        experiment="veo-test-pairwise-single-text",
-        sampling_count=SAMPLING_COUNT,
-        flip_enabled=FLIP_ENABLED
-    )
-    print("\n--- RESULT ---")
-    print(f"Winner: {winner}\nExplanation: {explanation}")
-
-    print("\n" + "#"*80)
-    print("### 4. PAIRWISE SINGLE (MULTIMODAL) ###")
-    print("#"*80)
-    winner_mm, explanation_mm = evaluate_pairwise_single(
-        pairwise_data={
-            "original_prompt": "A red car",
-            "baseline_model_response": "a red car driving",
-            "response": "a vibrant red convertible driving along a coastal highway at sunset",
-            "image_path": dummy_image_path
-        },
-        metric_name="veo_effectiveness_pairwise_single_mm",
-        metric_template=veo_prompt_eval_templates.PAIRWISE_VEO_PROMPT_EFFECTIVENESS_TEMPLATE_W_IMAGE,
-        experiment="veo-test-pairwise-single-multimodal",
-        sampling_count=SAMPLING_COUNT,
-        flip_enabled=FLIP_ENABLED
-    )
-    print("\n--- RESULT ---")
-    print(f"Winner: {winner_mm}\nExplanation: {explanation_mm}")
-
-    # --- Batch Evaluations ---
-    print("\n" + "#"*80)
-    print("### 5. POINTWISE BATCH (TEXT-ONLY) ###")
-    print("#"*80)
-    text_only_data = [
-        {"original_prompt": "a cat", "augmented_prompt": "a fluffy ginger cat sleeping on a couch"},
-        {"original_prompt": "a dog", "augmented_prompt": "a happy golden retriever playing fetch in a park"}
-    ]
-    summary, matrix = evaluate_pointwise_batch(
-        prompts_data=text_only_data,
-        metric_name="veo_effectiveness_text_only_batch",
-        metric_template=veo_prompt_eval_templates.VEO_PROMPT_EFFECTIVENESS_TEMPLATE,
-        experiment="veo-test-pointwise-batch-text",
-        sampling_count=SAMPLING_COUNT
-    )
-    print("\n--- RESULTS (TEXT-ONLY) ---")
-    print("\nSummary Metrics:\n", summary)
-    print("\nMetrics Table:\n", matrix)
-
-    print("\n" + "#"*80)
-    print("### 6. POINTWISE BATCH (MULTIMODAL) ###")
-    print("#"*80)
-    multimodal_data = [
-        {
-            "original_prompt": "a cat",
-            "augmented_prompt": "a fluffy ginger cat sleeping on a red couch, animated",
-            "image_path": dummy_image_path
-        },
-        {
-            "original_prompt": "a dog",
-            "augmented_prompt": "a happy golden retriever playing fetch in a park with a red ball",
-            "image_path": None
-        }
-    ]
-    summary_mm, matrix_mm = evaluate_pointwise_batch(
-        prompts_data=multimodal_data,
-        metric_name="veo_effectiveness_multimodal_batch",
-        metric_template=veo_prompt_eval_templates.VEO_PROMPT_EFFECTIVENESS_TEMPLATE_W_IMAGE,
-        experiment="veo-test-pointwise-batch-multimodal",
-        sampling_count=SAMPLING_COUNT
-    )
-    print("\n--- RESULTS (MULTIMODAL) ---")
-    print("\nSummary Metrics:\n", summary_mm)
-    print("\nMetrics Table:\n", matrix_mm)
-
-    print("\n" + "#"*80)
-    print("### 7. PAIRWISE BATCH (TEXT-ONLY) ###")
-    print("#"*80)
-    pairwise_text_data = [
-        {
-            "original_prompt": "a person walking",
-            "baseline_model_response": "a person walking on the street",
-            "response": "cinematic shot of a person walking on a cobblestone street at night under a streetlamp",
-        },
-        {
-            "original_prompt": "a red car",
-            "baseline_model_response": "a red car driving",
-            "response": "a vibrant red convertible driving along a coastal highway at sunset",
-        }
-    ]
-    summary_pw_text, matrix_pw_text = evaluate_pairwise_batch(
-        pairwise_data=pairwise_text_data,
-        metric_name="veo_effectiveness_pairwise_text_batch",
-        metric_template=veo_prompt_eval_templates.PAIRWISE_VEO_PROMPT_EFFECTIVENESS_TEMPLATE,
-        experiment="veo-test-pairwise-batch-text",
-        sampling_count=SAMPLING_COUNT,
-        flip_enabled=True
-    )
-    print("\n--- RESULTS (PAIRWISE TEXT) ---")
-    print("\nSummary Metrics:\n", summary_pw_text)
-    print("\nMetrics Table:\n", matrix_pw_text)
-
-
-    print("\n" + "#"*80)
-    print("### 8. PAIRWISE BATCH (MULTIMODAL) ###")
-    print("#"*80)
-    pairwise_multimodal_data = [
-        {
-            "original_prompt": "a person walking",
-            "baseline_model_response": "a person walking on the street",
-            "response": "cinematic shot of a person walking on a cobblestone street at night under a streetlamp",
-            "image_path": None
-        },
-        {
-            "original_prompt": "a red car",
-            "baseline_model_response": "a red car driving",
-            "response": "a vibrant red convertible driving along a coastal highway at sunset",
-            "image_path": dummy_image_path
-        }
-    ]
-    summary_pw, matrix_pw = evaluate_pairwise_batch(
-        pairwise_data=pairwise_multimodal_data,
-        metric_name="veo_effectiveness_pairwise_multimodal_batch",
-        metric_template=veo_prompt_eval_templates.PAIRWISE_VEO_PROMPT_EFFECTIVENESS_TEMPLATE_W_IMAGE,
-        experiment="veo-test-pairwise-batch-multimodal",
-        sampling_count=SAMPLING_COUNT,
-        flip_enabled=True
-    )
-    print("\n--- RESULTS (PAIRWISE MULTIMODAL) ---")
-    print("\nSummary Metrics:\n", summary_pw)
-    print("\nMetrics Table:\n", matrix_pw)
-    print("\n" + "#"*80)
 
 
 if __name__ == "__main__":

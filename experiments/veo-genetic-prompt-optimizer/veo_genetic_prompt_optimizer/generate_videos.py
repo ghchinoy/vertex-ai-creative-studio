@@ -1,42 +1,41 @@
+# -*- coding: utf-8 -*-
+"""
+Generates videos from prompts (and optional reference images) using the Veo model.
+"""
+
 import os
 import json
 import time
 import random
+import argparse
+from pathlib import Path
 from typing import Optional, Dict, Any
 from PIL import Image
 from google import genai
 from google.genai import types as genai_types
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Load environment variables from .env file
-from dotenv import load_dotenv
-load_dotenv()
+try:
+    from . import config
+except ImportError:
+    import config
 
-# --- Configuration ---
-PROJECT_ID = os.getenv("PROJECT_ID")
-LOCATION = os.getenv("VEO_LOCATION")
-VEO_MODEL_ID = os.getenv("VEO_MODEL_ID")
-VIDEO_DURATION_SECONDS = 5
-VEO_OUTPUT_DIR = "video_pairs"
-GENERATED_PROMPTS_JSON = "augmented_prompts.json"
-VIDEO_GEN_MAX_WORKERS = 4
 
 def get_genai_client() -> genai.Client:
-    """Initializes and returns a GenAI client."""
-    try:
-        return genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
-    except Exception as e:
-        print(f"Error initializing GenAI client: {e}")
-        raise
+    """Initializes and returns a GenAI client for Veo."""
+    return config.get_genai_client(location=config.VEO_LOCATION)
+
 
 def generate_single_video(
     client: genai.Client,
     prompt_text: str,
     output_path: str,
     image_path: Optional[str] = None,
-    max_retries=3,
-    enhance_prompt=False
-):
+    max_retries: int = 3,
+    enhance_prompt: bool = False,
+    duration_seconds: Optional[int] = None,
+    model_id: Optional[str] = None,
+) -> bool:
     """
     Generates a video from a prompt, optionally with an image.
     """
@@ -44,30 +43,33 @@ def generate_single_video(
         print(f"Skipping video generation for {output_path} due to empty prompt.")
         return False
 
+    duration = duration_seconds or config.VIDEO_DURATION_SECONDS
+    model = model_id or config.VEO_MODEL_ID
     input_image = None
     aspect_ratio = "16:9"
 
     if image_path:
+        resolved_img = config.resolve_path(image_path)
         try:
-            with Image.open(image_path) as pil_image:
+            with Image.open(resolved_img) as pil_image:
                 width, height = pil_image.size
                 aspect_ratio = "9:16" if height > width else "16:9"
-            input_image = genai_types.Image.from_file(location=image_path)
+            input_image = genai_types.Image.from_file(location=str(resolved_img))
         except FileNotFoundError:
-            print(f"Error: Image file not found at {image_path}. Skipping video generation.")
+            print(f"Error: Image file not found at {resolved_img}. Skipping video generation.")
             return False
         except Exception as e:
-            print(f"Error opening image {image_path}: {e}. Skipping video generation.")
+            print(f"Error opening image {resolved_img}: {e}. Skipping video generation.")
             return False
 
     base_delay = 5  # seconds
     for attempt in range(max_retries):
         try:
             generate_videos_kwargs = {
-                "model": VEO_MODEL_ID,
+                "model": model,
                 "prompt": prompt_text,
                 "config": genai_types.GenerateVideosConfig(
-                    duration_seconds=VIDEO_DURATION_SECONDS,
+                    duration_seconds=duration,
                     aspect_ratio=aspect_ratio,
                     number_of_videos=1,
                     enhance_prompt=enhance_prompt,
@@ -81,14 +83,21 @@ def generate_single_video(
             operation = client.models.generate_videos(**generate_videos_kwargs)
 
             print(f"  - Waiting for '{os.path.basename(output_path)}' to complete...")
-            while not operation.done:
+            poll_count = 0
+            max_polls = 120  # ~20 minutes timeout
+            while not operation.done and poll_count < max_polls:
                 time.sleep(10)
+                poll_count += 1
                 operation = client.operations.get(operation)
+
+            if not operation.done:
+                print(f"  - Timeout waiting for video generation for {output_path}.")
+                return False
 
             if operation.error:
                 error_message = str(operation.error).lower()
                 print(f"  - Error generating video {os.path.basename(output_path)}: {operation.error}")
-                if ("internal error" in error_message or "resource exhausted" in error_message or "quota exceeded" in error_message) and attempt < max_retries - 1:
+                if any(k in error_message for k in ["internal error", "resource exhausted", "quota exceeded", "429"]) and attempt < max_retries - 1:
                     delay = base_delay * (2**attempt) + random.uniform(0, 1)
                     print(f"  - Retrying after operation error in {delay:.2f} seconds...")
                     time.sleep(delay)
@@ -106,7 +115,7 @@ def generate_single_video(
         except Exception as e:
             error_message = str(e).lower()
             print(f"Exception during video generation for {os.path.basename(output_path)}: {e}")
-            if ("internal error" in error_message or "resource exhausted" in error_message or "quota exceeded" in error_message) and attempt < max_retries - 1:
+            if any(k in error_message for k in ["internal error", "resource exhausted", "quota exceeded", "429"]) and attempt < max_retries - 1:
                 delay = base_delay * (2**attempt) + random.uniform(0, 1)
                 print(f"  - Retrying after exception in {delay:.2f} seconds...")
                 time.sleep(delay)
@@ -116,7 +125,8 @@ def generate_single_video(
     print(f"Failed to generate video {os.path.basename(output_path)} after {max_retries} attempts.")
     return False
 
-def process_prompt_item(client: genai.Client, prompt_item: Dict[str, Any]):
+
+def process_prompt_item(client: genai.Client, prompt_item: Dict[str, Any], output_dir_base: str = "video_pairs") -> None:
     """
     Processes a single item from the prompts file to generate original and augmented videos.
     """
@@ -128,11 +138,11 @@ def process_prompt_item(client: genai.Client, prompt_item: Dict[str, Any]):
         print(f"\n--- Processing Pair for Image: {image_path} ---")
         base_name = os.path.splitext(os.path.basename(image_path))[0]
     else:
-        sanitized_name = "".join(c for c in original_prompt if c.isalnum() or c in " _-").rstrip()
+        sanitized_name = "".join(c for c in (original_prompt or "video") if c.isalnum() or c in " _-").rstrip()
         base_name = f"text_{sanitized_name.replace(' ', '_').lower()[:30]}"
         print(f"\n--- Processing Pair for Text Prompt: {base_name} ---")
 
-    output_dir = os.path.join(VEO_OUTPUT_DIR, base_name)
+    output_dir = os.path.join(output_dir_base, base_name)
     os.makedirs(output_dir, exist_ok=True)
 
     # Generate original video
@@ -153,17 +163,25 @@ def process_prompt_item(client: genai.Client, prompt_item: Dict[str, Any]):
             image_path=image_path
         )
 
-def main():
+
+def main(prompts_file: str = "augmented_prompts.json", output_dir: str = "video_pairs", max_workers: int = 4):
     """
     Loads prompts and generates video pairs in parallel.
     """
+    parser = argparse.ArgumentParser(description="Generate videos from augmented prompts.")
+    parser.add_argument("--prompts", default=prompts_file, help="Path to augmented prompts JSON file.")
+    parser.add_argument("--output-dir", default=output_dir, help="Directory to save generated videos.")
+    parser.add_argument("--max-workers", type=int, default=max_workers, help="Concurrent worker count.")
+    args, _ = parser.parse_known_args()
+
     client = get_genai_client()
+    resolved_prompts_file = config.resolve_path(args.prompts)
 
     try:
-        with open(GENERATED_PROMPTS_JSON, 'r') as f:
+        with open(resolved_prompts_file, 'r') as f:
             prompts_data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"Error loading {GENERATED_PROMPTS_JSON}: {e}. Exiting.")
+        print(f"Error loading {resolved_prompts_file}: {e}. Exiting.")
         return
 
     if not prompts_data:
@@ -173,8 +191,8 @@ def main():
     print(f"Found {len(prompts_data)} prompt items to process.")
     start_time = time.time()
 
-    with ThreadPoolExecutor(max_workers=VIDEO_GEN_MAX_WORKERS) as executor:
-        futures = [executor.submit(process_prompt_item, client, item) for item in prompts_data]
+    with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
+        futures = [executor.submit(process_prompt_item, client, item, args.output_dir) for item in prompts_data]
         for future in as_completed(futures):
             try:
                 future.result()
@@ -185,8 +203,9 @@ def main():
     print("\n" + "="*80)
     print("### VIDEO GENERATION COMPLETE ###")
     print(f"Total time taken: {end_time - start_time:.2f} seconds.")
-    print(f"Videos saved in '{VEO_OUTPUT_DIR}' directory.")
+    print(f"Videos saved in '{args.output_dir}' directory.")
     print("="*80)
+
 
 if __name__ == "__main__":
     main()
