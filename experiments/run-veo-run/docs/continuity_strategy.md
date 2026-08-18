@@ -8,7 +8,7 @@ Veo 3.1 is an image/video-to-video model, but it relies heavily on the text prom
 ## The Solution: "Analyze & Augment" Loop
 
 ### 1. Analysis Step (Gemini)
-After Veo generates a clip, we automatically trigger a Gemini 2.5 Multimodal analysis of that clip.
+After Veo generates a clip, we automatically trigger a Gemini 3 Multimodal analysis of that clip.
 
 **Endpoint:** `/api/gemini/analyze-context`
 **Input:** `videoUri` (GCS)

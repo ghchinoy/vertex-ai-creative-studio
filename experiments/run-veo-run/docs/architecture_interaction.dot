@@ -27,7 +27,7 @@ digraph ArchitectureInteraction {
         color = "#888888";
         
         VertexVeo [label="Vertex AI\n(Veo 3.1)", shape=hexagon, fillcolor="#fff0d0"];
-        VertexGemini [label="Vertex AI\n(Gemini 2.5)", shape=hexagon, fillcolor="#fff0d0"];
+        VertexGemini [label="Vertex AI\n(Gemini 3)", shape=hexagon, fillcolor="#fff0d0"];
         GCS [label="Cloud Storage\n(Buckets)", shape=cylinder, fillcolor="#fff0d0"];
     }
 
