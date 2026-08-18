@@ -1,3 +1,11 @@
+## 2025-12-21
+- Add --dev flag to build-run.sh (run-veo-run-v50)
+- Fix Enhanced Prompt Dialog UX (run-veo-run-4tj)
+- Show enhanced prompt dialog (run-veo-run-8oy)
+
+## 2025-12-19
+- Improve Gemini analysis prompt to include audio (run-veo-run-ley)
+
 ## 2025-12-15
 - Enforce Video Upload Constraints (run-veo-run-32l)
 - Research Veo Extension Limits (run-veo-run-dk1)

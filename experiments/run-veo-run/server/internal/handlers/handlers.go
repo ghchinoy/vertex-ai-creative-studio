@@ -25,16 +25,18 @@ import (
 )
 
 type Handler struct {
-	Config     *config.Config
-	AuthClient *auth.Client
-	GenAI      *genai.Client
+	Config       *config.Config
+	AuthClient   *auth.Client
+	GeminiClient *genai.Client
+	VeoClient    *genai.Client
 }
 
-func New(cfg *config.Config, authClient *auth.Client, genaiClient *genai.Client) *Handler {
+func New(cfg *config.Config, authClient *auth.Client, geminiClient *genai.Client, veoClient *genai.Client) *Handler {
 	return &Handler{
-		Config:     cfg,
-		AuthClient: authClient,
-		GenAI:      genaiClient,
+		Config:       cfg,
+		AuthClient:   authClient,
+		GeminiClient: geminiClient,
+		VeoClient:    veoClient,
 	}
 }
 

@@ -51,12 +51,13 @@ func (h *Handler) HandleAnalyzeVideo(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Analyzing video context", "uri", req.VideoURI, "model", h.Config.GeminiModel)
 
 	// Construct Prompt
-	prompt := `Analyze this video clip to ensure visual continuity for a generative video extension. 
+	prompt := `Analyze this video clip to ensure visual and audio continuity for a generative video extension. 
 Provide a concise, comma-separated descriptive summary including:
 1. Visual Style (e.g., film grain, color palette)
 2. Lighting (e.g., neon, harsh shadows)
 3. Main Subject description (appearance, clothing)
 4. Setting description
+5. Audio context (e.g. ambient noise, music style, speech, silence)
 
 Return the result in this JSON format: { "context": "description string" }`
 
@@ -78,7 +79,7 @@ Return the result in this JSON format: { "context": "description string" }`
 
 	slog.Info("Sending request to Gemini", "file_uri", req.VideoURI)
 
-	resp, err := h.GenAI.Models.GenerateContent(r.Context(), h.Config.GeminiModel,
+	resp, err := h.GeminiClient.Models.GenerateContent(r.Context(), h.Config.GeminiModel,
 		contents,
 		&genai.GenerateContentConfig{
 			ResponseMIMEType: "application/json",

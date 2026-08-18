@@ -52,6 +52,16 @@ The application is structured as a single-page application (SPA) encapsulated wi
     *   **Preview:** Uses an HTML `<video>` element for playback validation.
 *   **Usage:** In "Upload" mode to provide a base for extension.
 
+#### `<github-badge>`
+*   **File:** `src/components/github-badge.ts`
+*   **Role:** A reusable component that displays a "how it's built" message and a GitHub star button.
+*   **Usage:**
+    *   Added to the main `run-veo-run` component.
+    *   The `githubRepo` attribute must be set to the URL of the GitHub repository to be starred.
+*   **Functionality:**
+    *   Displays a "how it's built" message with a distinctive style.
+    *   Dynamically loads the `buttons.github.io/buttons.js` script to render the GitHub star button.
+
 ### 3. API Layer
 The application logic is decoupled from UI components via the `api/` directory.
 

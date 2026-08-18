@@ -52,19 +52,29 @@ func main() {
 		}
 	}
 
-	// 4. Initialize GenAI Client
-	genaiClient, err := genai.NewClient(ctx, &genai.ClientConfig{
+	// 4. Initialize GenAI Clients
+	geminiClient, err := genai.NewClient(ctx, &genai.ClientConfig{
 		Project:  cfg.ProjectID,
 		Location: cfg.GeminiLocation,
 		Backend:  genai.BackendVertexAI,
 	})
 	if err != nil {
-		slog.Error("Failed to create GenAI client", "error", err)
+		slog.Error("Failed to create Gemini GenAI client", "error", err)
+		os.Exit(1)
+	}
+
+	veoClient, err := genai.NewClient(ctx, &genai.ClientConfig{
+		Project:  cfg.ProjectID,
+		Location: cfg.VeoLocation,
+		Backend:  genai.BackendVertexAI,
+	})
+	if err != nil {
+		slog.Error("Failed to create Veo GenAI client", "error", err)
 		os.Exit(1)
 	}
 
 	// 5. Initialize Handlers
-	h := handlers.New(cfg, authClient, genaiClient)
+	h := handlers.New(cfg, authClient, geminiClient, veoClient)
 
 	// Rate Limiter
 	rl := security.NewRateLimiter(cfg.RateLimitPerMinute, time.Minute)

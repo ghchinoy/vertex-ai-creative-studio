@@ -21,6 +21,7 @@ import '@material/web/button/text-button.js';
 import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/linear-progress.js';
+import '@material/web/progress/circular-progress.js';
 import '@material/web/textfield/filled-text-field.js';
 import '@material/web/checkbox/checkbox.js';
 import '@material/web/dialog/dialog.js';
@@ -33,6 +34,7 @@ import { generateVideo, extendVideo } from './api/veo';
 import { analyzeVideo } from './api/gemini';
 import './components/image-upload';
 import './components/video-upload';
+import './components/github-badge';
 import type { UploadResult } from './components/image-upload';
 
 type GenMode = 'text' | 'image' | 'storyboard' | 'ingredients' | 'video-upload';
@@ -47,13 +49,19 @@ export class RunVeoRun extends LitElement {
   @state() private prompt = 'A futuristic cyberpunk runner sprinting through neon streets, industrial techno vibe';
   @state() private error = '';
   
-  @state() private selectedModel = 'veo-3.1-fast-generate-preview'; // TODO: Update to veo-3.1-fast-generate-001 as preview is deprecated
+  @state() private selectedModel = 'veo-3.1-fast-generate-001';
   @state() private selectedAspectRatio = '16:9';
   @state() private useContinuity = true;
   @state() private genMode: GenMode = 'text';
   @state() private startImageUri = '';
   @state() private lastImageUri = '';
   @state() private refImageUris: string[] = [];
+  @state() private enhancedPrompt = '';
+  @state() private isAnalyzingContext = false;
+
+  connectedCallback() {
+    super.connectedCallback(); // Call super's connectedCallback as good practice
+  }
 
   static styles = css`
     :host {
@@ -261,6 +269,12 @@ export class RunVeoRun extends LitElement {
                 @change="${(e: Event) => this.useContinuity = (e.target as HTMLInputElement).checked}">
               </md-checkbox>
               <span>Enhance with Context Analysis</span>
+              <md-icon-button 
+                @click="${this.previewPrompt}" 
+                title="Preview Enhanced Prompt" 
+                ?disabled="${!this.useContinuity || this.isRunning}">
+                <md-icon>visibility</md-icon>
+              </md-icon-button>
             </div>
           </div>
         ` : ''}
@@ -298,11 +312,11 @@ export class RunVeoRun extends LitElement {
             label="Veo Model"
             .value="${this.selectedModel}"
             @change="${(e: Event) => this.selectedModel = (e.target as HTMLSelectElement).value}">
-            <md-select-option value="veo-3.1-fast-generate-preview">
-              <div slot="headline">Veo 3.1 Fast (Preview)</div>
+            <md-select-option value="veo-3.1-fast-generate-001">
+              <div slot="headline">Veo 3.1 Fast</div>
             </md-select-option>
-            <md-select-option value="veo-3.1-generate-preview">
-              <div slot="headline">Veo 3.1 Standard (Preview)</div>
+            <md-select-option value="veo-3.1-generate-001">
+              <div slot="headline">Veo 3.1 Standard</div>
             </md-select-option>
           </md-outlined-select>
 
@@ -332,6 +346,22 @@ export class RunVeoRun extends LitElement {
         </div>
       </md-dialog>
 
+      <md-dialog id="prompt-dialog">
+        <div slot="headline">Enhanced Prompt Preview</div>
+        <div slot="content" style="white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
+          ${this.isAnalyzingContext 
+            ? html`<div style="display:flex; align-items:center; gap:8px;">
+                     <md-circular-progress indeterminate style="--md-circular-progress-size: 24px;"></md-circular-progress>
+                     <span>Analyzing video context...</span>
+                   </div>`
+            : this.enhancedPrompt
+          }
+        </div>
+        <div slot="actions">
+          <md-text-button @click="${this.closePromptPreview}">Close</md-text-button>
+        </div>
+      </md-dialog>
+
       <md-dialog id="info-dialog">
         <div slot="headline">About Run, Veo, Run</div>
         <div slot="content">
@@ -340,7 +370,7 @@ export class RunVeoRun extends LitElement {
           </p>
           <p>
             It uses <b>Vertex AI Veo 3.1</b> to extend video clips up through 30 seconds.
-            When "Enhance with Context Analysis" is enabled, <em>Gemini 3</em> analyzes the previous clip to ensure visual style and character consistency in the next segment.
+            When "Enhance with Context Analysis" is enabled, <em>Gemini 3</em> analyzes the previous clip to further ensure visual style and character consistency in the next segment.
           </p>
           <p>
             <em>The ball is round. The game lasts 90 minutes. Everything else is pure theory.</em>
@@ -372,8 +402,8 @@ export class RunVeoRun extends LitElement {
       else if (tabs.activeTabIndex === 3) {
           this.genMode = 'ingredients';
           // Ingredients requires Standard model and 16:9
-          if (this.selectedModel === 'veo-3.1-fast-generate-preview') {
-              this.selectedModel = 'veo-3.1-generate-preview';
+          if (this.selectedModel === 'veo-3.1-fast-generate-001') {
+              this.selectedModel = 'veo-3.1-generate-001';
           }
           if (this.selectedAspectRatio === '9:16') {
               this.selectedAspectRatio = '16:9';
@@ -428,6 +458,31 @@ export class RunVeoRun extends LitElement {
   private closeInfo() {
     const dialog = this.shadowRoot?.querySelector('#info-dialog') as MdDialog;
     dialog.close();
+  }
+
+  private closePromptPreview() {
+    const dialog = this.shadowRoot?.querySelector('#prompt-dialog') as MdDialog;
+    dialog.close();
+  }
+
+  private async previewPrompt() {
+      if (!this.sourceUri) return;
+      
+      this.enhancedPrompt = '';
+      this.isAnalyzingContext = true;
+      const dialog = this.shadowRoot?.querySelector('#prompt-dialog') as MdDialog;
+      dialog.show();
+
+      try {
+          const analysis = await analyzeVideo(this.sourceUri);
+          this.enhancedPrompt = `${this.prompt} 
+
+[Visual Context: ${analysis.context}]`;
+      } catch (e: any) {
+          this.enhancedPrompt = `Error analyzing video: ${e.message}`;
+      } finally {
+          this.isAnalyzingContext = false;
+      }
   }
 
   private async handleRun() {

@@ -59,7 +59,7 @@ func (h *Handler) HandleGenerateVideo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	model := req.Model
+	model := normalizeVeoModel(req.Model)
 	if model == "" {
 		model = h.Config.VeoModel
 	}
@@ -129,7 +129,7 @@ func (h *Handler) HandleGenerateVideo(w http.ResponseWriter, r *http.Request) {
 				cfg.ReferenceImages = refs
 			}
 		
-			op, err := h.GenAI.Models.GenerateVideosFromSource(r.Context(), model, source, cfg)
+			op, err := h.VeoClient.Models.GenerateVideosFromSource(r.Context(), model, source, cfg)
 			if err != nil {		slog.Error("Failed to start video generation", "error", err)
 		http.Error(w, fmt.Sprintf("Generation failed: %v", err), http.StatusInternalServerError)
 		return
@@ -184,7 +184,7 @@ func (h *Handler) HandleExtendVideo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	model := req.Model
+	model := normalizeVeoModel(req.Model)
 	if model == "" {
 		model = h.Config.VeoModel
 	}
@@ -208,7 +208,7 @@ func (h *Handler) HandleExtendVideo(w http.ResponseWriter, r *http.Request) {
 		OutputGCSURI: gcsDest,
 	}
 
-	op, err := h.GenAI.Models.GenerateVideosFromSource(r.Context(), model, source, cfg)
+	op, err := h.VeoClient.Models.GenerateVideosFromSource(r.Context(), model, source, cfg)
 	if err != nil {
 		slog.Error("Failed to start video extension", "error", err)
 		http.Error(w, fmt.Sprintf("Extension failed: %v", err), http.StatusInternalServerError)
@@ -258,7 +258,7 @@ func (h *Handler) waitForOperation(ctx context.Context, op *genai.GenerateVideos
 			return nil, ctx.Err()
 		case <-ticker.C:
 			// Poll the operation
-			latestOp, err := h.GenAI.Operations.GetVideosOperation(ctx, op, nil)
+			latestOp, err := h.VeoClient.Operations.GetVideosOperation(ctx, op, nil)
 			if err != nil {
 				return nil, fmt.Errorf("failed to poll operation: %w", err)
 			}
@@ -303,4 +303,15 @@ func (h *Handler) signURL(ctx context.Context, gcsURI string) (string, error) {
 		return "", fmt.Errorf("sign failed: %w", err)
 	}
 	return u, nil
+}
+
+func normalizeVeoModel(model string) string {
+	switch strings.TrimSpace(model) {
+	case "veo-3.1-fast-generate-preview":
+		return "veo-3.1-fast-generate-001"
+	case "veo-3.1-generate-preview":
+		return "veo-3.1-generate-001"
+	default:
+		return strings.TrimSpace(model)
+	}
 }

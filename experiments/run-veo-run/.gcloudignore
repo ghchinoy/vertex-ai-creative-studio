@@ -1,0 +1,45 @@
+# Google Cloud ignore file
+# Prevents uploading unnecessary large directories, local binaries, and sensitive files to Cloud Build.
+
+.gcloudignore
+.dockerignore
+.git/
+.gitignore
+.gitattributes
+.beads/
+.gemini/
+.genkit/
+
+# Sensitive environment files
+.env
+.env.*
+!.env.sample
+!sample.env
+
+# Local build artifacts and binaries
+server/server
+server/bin/
+server/dist/
+frontend/dist/
+frontend/node_modules/
+node_modules/
+*.exe
+*.test
+*.prof
+
+# Documentation and heavy assets
+docs/
+*.png
+*.jpg
+*.jpeg
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs and temporary files
+*.log
+tmp/
+.commit.txt

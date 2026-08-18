@@ -7,9 +7,26 @@
     <title>Run, Veo, Run</title>
     <!-- Material Symbols -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <style>
+      .persistent-header {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+      }
+    </style>
   </head>
   <body>
+    <div class="persistent-header">
+      <github-badge></github-badge>
+      <a class="github-button" href="https://github.com/GoogleCloudPlatform/vertex-ai-creative-studio" data-size="large" data-show-count="true" aria-label="Star GoogleCloudPlatform/vertex-ai-creative-studio on GitHub">Star</a>
+    </div>
     <run-veo-run></run-veo-run>
     <script type="module" src="/src/run-veo-run.ts"></script>
+    <script type="module" src="/src/components/github-badge.ts"></script>
   </body>
 </html>

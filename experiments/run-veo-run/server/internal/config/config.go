@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Config struct {
@@ -27,47 +28,53 @@ type Config struct {
 	VeoModel           string
 	VeoBucket          string
 	Location           string
+	VeoLocation        string
 	GeminiLocation     string
 	RateLimitPerMinute int
 }
 
 func Load() *Config {
-	projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
+	projectID := strings.TrimSpace(os.Getenv("GOOGLE_CLOUD_PROJECT"))
 	if projectID == "" {
 		projectID = "your-project-here" // Default
 	}
 
-	port := os.Getenv("PORT")
+	port := strings.TrimSpace(os.Getenv("PORT"))
 	if port == "" {
 		port = "8080"
 	}
 
-	geminiModel := os.Getenv("GEMINI_MODEL")
+	geminiModel := strings.TrimSpace(os.Getenv("GEMINI_MODEL"))
 	if geminiModel == "" {
 		geminiModel = "gemini-3-flash-preview"
 	}
 
-	veoModel := os.Getenv("VEO_MODEL")
+	veoModel := strings.TrimSpace(os.Getenv("VEO_MODEL"))
 	if veoModel == "" {
-		veoModel = "veo-3.1-fast-generate-preview" // TODO: Update to veo-3.1-fast-generate-001 as preview is deprecated
+		veoModel = "veo-3.1-fast-generate-001"
 	}
 
-	veoBucket := os.Getenv("VEO_BUCKET")
+	veoBucket := strings.TrimSpace(os.Getenv("VEO_BUCKET"))
 	if veoBucket == "" {
 		veoBucket = fmt.Sprintf("%s-assets", projectID) // Default bucket
 	}
 
-	location := os.Getenv("GOOGLE_CLOUD_LOCATION")
+	location := strings.TrimSpace(os.Getenv("GOOGLE_CLOUD_LOCATION"))
 	if location == "" {
 		location = "us-central1"
 	}
 
-	geminiLocation := os.Getenv("GEMINI_MODEL_LOCATION")
-	if geminiLocation == "" {
-		geminiLocation = location
+	veoLocation := strings.TrimSpace(os.Getenv("VEO_LOCATION"))
+	if veoLocation == "" {
+		veoLocation = location
 	}
 
-	rateLimitStr := os.Getenv("RATE_LIMIT_PER_MINUTE")
+	geminiLocation := strings.TrimSpace(os.Getenv("GEMINI_MODEL_LOCATION"))
+	if geminiLocation == "" {
+		geminiLocation = "global"
+	}
+
+	rateLimitStr := strings.TrimSpace(os.Getenv("RATE_LIMIT_PER_MINUTE"))
 	rateLimit := 3 // Default safe limit (Global quota is ~10 RPM)
 	if rateLimitStr != "" {
 		if val, err := strconv.Atoi(rateLimitStr); err == nil {
@@ -82,6 +89,7 @@ func Load() *Config {
 		VeoModel:           veoModel,
 		VeoBucket:          veoBucket,
 		Location:           location,
+		VeoLocation:        veoLocation,
 		GeminiLocation:     geminiLocation,
 		RateLimitPerMinute: rateLimit,
 	}

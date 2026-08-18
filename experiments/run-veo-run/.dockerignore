@@ -1,0 +1,47 @@
+# Docker ignore file
+# Prevents adding unneeded files to the Docker build context and invalidating layer caches.
+
+.git
+.gitignore
+.gitattributes
+.gcloudignore
+.dockerignore
+.beads
+.gemini
+.genkit
+
+# Sensitive environment files
+.env
+.env.*
+!.env.sample
+!sample.env
+
+# Local build artifacts and binaries
+server/server
+server/bin/
+server/dist/
+frontend/dist/
+frontend/node_modules/
+node_modules/
+*.exe
+*.test
+*.prof
+
+# Documentation & non-build assets
+docs/
+*.png
+*.jpg
+*.jpeg
+*.md
+!CHANGELOG.md
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs and temporary files
+*.log
+tmp/
+.commit.txt

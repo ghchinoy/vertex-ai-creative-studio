@@ -2,7 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 # Stage 1: Build Frontend
-FROM node:24-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm ci
@@ -13,7 +13,7 @@ RUN if [ -f ../CHANGELOG.md ]; then cp ../CHANGELOG.md public/; fi
 RUN npm run build
 
 # Stage 2: Build Backend
-FROM golang:1.26-alpine AS backend-builder
+FROM golang:1.25-alpine AS backend-builder
 WORKDIR /app/server
 COPY server/go.mod server/go.sum ./
 RUN go mod download
