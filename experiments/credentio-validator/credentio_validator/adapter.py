@@ -124,10 +124,14 @@ def to_manifest_store(crjson: dict) -> dict:
         }
         manifests[label] = target_manifest
 
-        # The active manifest's validation codes drive the top-level status,
-        # matching how summarize_c2pa reads a single validation_status list.
-        if idx == 0:
-            validation_status = _validation_status_from_manifest(cred_manifest)
+        # Multi-manifest behavior (resolves review item 2): c2pa-python's
+        # top-level validation_status is a FLAT list that can carry codes from
+        # the active manifest AND nested/ingredient manifests. We therefore
+        # aggregate problem codes across ALL manifests, active first, rather than
+        # only the active one. For the single-manifest case this is identical to
+        # the Phase 1 behavior (and to how summarize_c2pa reads one list), so the
+        # gate and existing tests are unaffected.
+        validation_status.extend(_validation_status_from_manifest(cred_manifest))
 
     store: dict = {
         "active_manifest": active_manifest,
@@ -153,3 +157,55 @@ def summarize(manifest_store: dict) -> dict:
     else:
         status = "invalid"
     return {"status": status, "codes": codes}
+
+
+def build_summary(manifest_store: dict) -> dict:
+    """Build the EXACT ``summarize_c2pa``-shaped dict on a success path.
+
+    Mirrors ``experiments/veo-variations/core/c2pa.py::summarize_c2pa`` byte for
+    byte in its output shape and status label strings -- ``"Valid"``,
+    ``"Untrusted (Sandbox)"``, ``"Invalid (<code>)"`` -- so it is a true drop-in
+    (resolves review item 3). The failure-path dict
+    (``{"status": "Error", "error_detail": ..., "actions": [], "generator":
+    "Unknown"}``) is produced by ``client.summarize`` when there is no manifest
+    store to summarize.
+
+    Actions are formatted identically: ``{"label": <action>, "detail":
+    "<action>: <description> (<ds_name>)"}`` where ``<ds_name>`` is the last path
+    segment of ``digitalSourceType``.
+    """
+    validation_status = manifest_store.get("validation_status", []) or []
+    status_label = "Valid"
+    if validation_status:
+        codes = [s.get("code") for s in validation_status]
+        if all(c == _UNTRUSTED_CODE for c in codes):
+            status_label = "Untrusted (Sandbox)"
+        else:
+            status_label = f"Invalid ({codes[0]})"
+
+    active_manifest_id = manifest_store.get("active_manifest")
+    active_manifest = manifest_store.get("manifests", {}).get(active_manifest_id, {}) or {}
+
+    generator = "Unknown"
+    gen_info = active_manifest.get("claim_generator_info", [])
+    if gen_info and isinstance(gen_info, list):
+        generator = gen_info[0].get("name", "Unknown")
+    elif active_manifest.get("claim_generator"):
+        generator = active_manifest.get("claim_generator")
+
+    summary = {"status": status_label, "generator": generator, "actions": []}
+
+    for assertion in active_manifest.get("assertions", []) or []:
+        label = assertion.get("label", "")
+        if "c2pa.actions" in label:
+            for action in assertion.get("data", {}).get("actions", []) or []:
+                action_name = action.get("action", "unknown action")
+                description = action.get("description", "")
+                ds_type = action.get("digitalSourceType", "")
+                detail = f"{action_name}: {description}"
+                if ds_type:
+                    ds_name = ds_type.split("/")[-1] if "/" in ds_type else ds_type
+                    detail += f" ({ds_name})"
+                summary["actions"].append({"label": action_name, "detail": detail})
+
+    return summary

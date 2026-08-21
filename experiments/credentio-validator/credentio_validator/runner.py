@@ -38,6 +38,22 @@ DEFAULT_CLAIM_SIGNER_TRUST = _EXP_DIR / "trust" / "c2pa_conformance_anchors.pem"
 
 DEFAULT_TIMEOUT_S = 60
 
+# The credentio binary exposes NO --version flag (absl prints only the program
+# name). credentio's MODULE.bazel declares module c2pa version 0.1.0; the spike
+# built commit 4ac69fc. We report that here for /healthz -- honest and pinned,
+# since the binary itself carries no queryable version.
+CREDENTIO_VERSION = "0.1.0 (c2pa module; built from commit 4ac69fc; no --version flag)"
+
+
+def binary_info(binary: str | os.PathLike | None = None) -> dict:
+    """Best-effort health/version info for the credentio binary (for /healthz)."""
+    bin_path = _resolve_binary(binary)
+    return {
+        "available": Path(bin_path).exists(),
+        "path": str(bin_path),
+        "credentio_version": CREDENTIO_VERSION,
+    }
+
 
 @dataclass
 class RunnerResult:
@@ -49,7 +65,16 @@ class RunnerResult:
     stdout: str = ""
     stderr: str = ""
     error: str | None = None            # populated on any failure
+    no_manifest: bool = False           # True when the asset simply has no C2PA
+                                        # manifest -- a RESULT, not a fault
+                                        # (see design POST /validate contract)
     cmd: list[str] = field(default_factory=list)
+
+
+# credentio prints this to stderr (exit 1) when an asset carries no C2PA
+# manifest. That is a normal result (like c2pa-python's ManifestNotFound), NOT a
+# service fault -- callers/the service must not surface it as a 5xx.
+_NO_MANIFEST_MARKER = "No manifest store found"
 
 
 def _resolve_binary(binary: str | os.PathLike | None) -> Path:
@@ -134,6 +159,17 @@ def run_validate(
         return RunnerResult(ok=False, error=f"failed to exec c2pa_validate: {exc}", cmd=cmd)
 
     if proc.returncode != 0:
+        # Distinguish "no manifest" (a normal result) from a genuine fault.
+        if _NO_MANIFEST_MARKER in proc.stderr:
+            return RunnerResult(
+                ok=False,
+                no_manifest=True,
+                returncode=proc.returncode,
+                stdout=proc.stdout,
+                stderr=proc.stderr,
+                error="no C2PA manifest found",
+                cmd=cmd,
+            )
         return RunnerResult(
             ok=False,
             returncode=proc.returncode,

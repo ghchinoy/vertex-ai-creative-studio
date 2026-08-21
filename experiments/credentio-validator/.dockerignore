@@ -1,0 +1,9 @@
+# The binary is compiled inside the builder stage; never copy a host build in.
+bin/c2pa_validate
+**/__pycache__/
+*.py[oc]
+.venv/
+**/.venv/
+*.log
+.pytest_cache/
+testdata/

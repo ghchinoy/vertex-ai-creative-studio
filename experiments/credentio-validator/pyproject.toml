@@ -3,13 +3,27 @@ name = "credentio-validator"
 version = "0.1.0"
 description = "Standalone read/validate-only C2PA validator built on Google's credentio C++ CLI (spike / PoC)."
 readme = "README.md"
+# Matches the repo convention. NOTE (review item 4): this spike was actually
+# developed and tested on Python 3.11.2 (the toolchain available in the build
+# env); nothing here uses a 3.12+ feature. If you install under 3.11, either
+# relax this pin locally or use `uv pip install --python 3.11`. See README.
 requires-python = ">=3.14"
-# Phase 1 (GATE) subset. The runner/adapter core has NO third-party runtime
-# dependencies -- it shells out to the credentio c2pa_validate binary and parses
-# its JSON. c2pa-python is a DEMO-COMPARE-ONLY dependency used by scripts/demo.py
-# to cross-check the normalized output; it is NOT used by runner.py/adapter.py.
+# The runner/adapter core has NO third-party runtime dependencies -- it shells
+# out to the credentio c2pa_validate binary and parses its JSON. c2pa-python is a
+# DEMO-COMPARE-ONLY dependency used by scripts/demo.py to cross-check the
+# normalized output; it is NOT used by runner.py/adapter.py/client.py.
 dependencies = [
-    "c2pa-python>=0.30.0",  # demo-compare only (scripts/demo.py)
+    "c2pa-python>=0.30.0",  # demo-compare only (scripts/demo.py, fixture gen)
+]
+
+[project.optional-dependencies]
+# The HTTP service (service.py) and the client's HTTP transport. The subprocess
+# transport and the core need none of these.
+service = [
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+    "pydantic>=2",
+    "requests>=2.28",
 ]
 
 [[tool.uv.index]]
