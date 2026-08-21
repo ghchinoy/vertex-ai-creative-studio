@@ -27,6 +27,7 @@ is modified — these are test/analysis/generation-script files only.
 | `generate_gemini_image.py` | One image via Vertex `generate_content` (mirrors `test/c2pa/validate_c2pa.py`); model `gemini-2.5-flash-image` (product default `gemini-3-pro-image` is 404 on `ghchinoy-genai-sa` — documented substitution). |
 | `generate_gemini_tts.py` | One short LINEAR16 utterance (mirrors `models/gemini_tts.py::synthesize_speech`); cheapest model `gemini-2.5-flash-lite-preview-tts`, via TTS REST. |
 | `generate_lyria.py` | One `lyria-002` sample (mirrors `models/lyria.py` predict path), `sampleCount=1`, via Vertex predict REST. |
+| `generate_veo.py` | One `veo-3.1-lite-generate-001` clip (mirrors `models/veo.py`), 4s / 720p / 1 video / audio off, generated exactly once, via google-genai (inline bytes, no GCS). |
 | `compare_real_asset.py` | Runs BOTH validators on a real asset and diffs on the consumer schema, reusing `consumer_schema.compare` UNCHANGED. Reports NO_MANIFEST as a valid finding. |
 | `inspect_cert_chain.py` | Extracts the embedded x5chain, reports leaf/intermediate/root + EKU, and compares the chain against `trust/c2pa_conformance_anchors.pem`. |
 
@@ -49,7 +50,7 @@ python tests/migration_compare/livegen/inspect_cert_chain.py --asset tests/migra
 
 ## Assets
 
-`assets/gemini_image.png` and `assets/gemini_tts.wav` are committed (small).
-`assets/lyria.wav` (~6 MB) is gitignored and mirrored to the durability mirror
-under `primary/artifact/...` — its only evidentiary content ("no C2PA manifest")
-is fully captured in `lyria_result.json`.
+`assets/gemini_image.png`, `assets/gemini_tts.wav` and `assets/veo.mp4` are
+committed (small). `assets/lyria.wav` (~6 MB) is gitignored and mirrored to the
+durability mirror under `primary/artifact/...` — its only evidentiary content
+("no C2PA manifest") is fully captured in `lyria_result.json`.
