@@ -20,6 +20,11 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BIN_DIR="${HERE}/bin"
 WORK_DIR="${CREDENTIO_SRC_DIR:-${HOME}/work/credentio}"
 CREDENTIO_REPO="https://mediaprovenance.googlesource.com/credentio"
+# Pin the commit the spike built + validated against (same as the Dockerfile's
+# ARG CREDENTIO_COMMIT). credentio is live-at-head with "breaking changes without
+# notice", so pin for reproducibility; override with CREDENTIO_COMMIT=<sha> (empty
+# string keeps live-at-head).
+CREDENTIO_COMMIT="${CREDENTIO_COMMIT-4ac69fc}"
 
 echo ">> credentio source dir: ${WORK_DIR}"
 if [[ ! -d "${WORK_DIR}/.git" ]]; then
@@ -28,6 +33,11 @@ if [[ ! -d "${WORK_DIR}/.git" ]]; then
 fi
 
 cd "${WORK_DIR}"
+if [[ -n "${CREDENTIO_COMMIT}" ]]; then
+  echo ">> checking out pinned commit ${CREDENTIO_COMMIT}"
+  git fetch --quiet origin "${CREDENTIO_COMMIT}" 2>/dev/null || git fetch --quiet origin
+  git checkout --quiet "${CREDENTIO_COMMIT}"
+fi
 echo ">> credentio commit: $(git rev-parse HEAD)"
 
 # credentio's .bazelrc forces clang + libc++. Make sure Bazel uses clang.

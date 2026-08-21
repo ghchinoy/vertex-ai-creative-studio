@@ -22,9 +22,18 @@ class ValidateRequest(BaseModel):
 
 
 class ValidationBlock(BaseModel):
-    """Design-vocabulary validation verdict: valid | untrusted | invalid."""
+    """Validation verdict.
 
-    status: str
+    ``status`` is the design vocabulary ``valid | untrusted | invalid`` for an
+    asset that carries a manifest, plus one spike-added value: ``"none"`` for an
+    asset that has NO manifest (a 200 result with ``manifest_store: null``). The
+    ``"none"`` value is inert to callers -- the client keys off ``ok`` /
+    ``manifest_store`` (a no-manifest asset yields ``validate() -> None``), so
+    ``"none"`` is purely informational. (Genuine faults never reach this block;
+    they return a 5xx with ``error`` set and no ``validation``.)
+    """
+
+    status: str  # valid | untrusted | invalid | none
     codes: list[str] = Field(default_factory=list)
 
 

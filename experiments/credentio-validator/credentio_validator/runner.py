@@ -74,6 +74,13 @@ class RunnerResult:
 # credentio prints this to stderr (exit 1) when an asset carries no C2PA
 # manifest. That is a normal result (like c2pa-python's ManifestNotFound), NOT a
 # service fault -- callers/the service must not surface it as a 5xx.
+#
+# COUPLING: this literal is the ONLY signal distinguishing "no manifest" (a 200
+# result) from a genuine fault (a 5xx). If a future credentio build changes the
+# message, matching fails safe (a no-manifest asset would be reported as a fault,
+# not the reverse) -- but the "no-manifest is 200" contract would silently
+# regress. tests/test_runner_failsoft.py pins this literal and the no_manifest
+# detection so a message drift breaks a test rather than the contract silently.
 _NO_MANIFEST_MARKER = "No manifest store found"
 
 

@@ -136,7 +136,10 @@ make serve                # uvicorn on :8000  (uses ./bin/c2pa_validate)
   `validation` block (`valid|untrusted|invalid` + codes), and (if requested) a
   `summary`;
 * an asset with **no manifest** -> `200`, `ok:true`, `manifest_store:null`,
-  `validation.status:"none"` (a *result*, not an error);
+  `validation.status:"none"` (a *result*, not an error). `"none"` is a
+  spike-added value beyond the design vocabulary (`valid | untrusted | invalid`);
+  it is inert to callers, which key off `ok` / `manifest_store`
+  (`client.validate()` returns `None` for a no-manifest asset);
 * a **genuine fault** (binary missing/crash/timeout, bad URI, `gs://` unwired)
   -> `5xx`, `ok:false`, `error` set. The body still follows the response schema,
   so the client maps it to a sentinel.
@@ -189,6 +192,19 @@ python -m pytest -q       # 38 tests
 Adapter/build_summary/client-selection/service (no-manifest vs fault) tests run
 without the binary; end-to-end tests that need `bin/c2pa_validate` skip cleanly
 when it is absent.
+
+## Security / not for production
+
+This is a spike. In particular, the service's `POST /validate` will fetch **any**
+`http(s)://` `asset_uri` server-side (`service._resolve_to_local`), with no
+allowlist, authentication, size cap, or timeout budget beyond the request
+timeout. That is a server-side request forgery (SSRF) surface and is
+**intentionally out of scope** here (it mirrors the existing
+`C2PAService.read_manifest` download pattern). Before any non-local deployment,
+this fetch **must** be gated -- an allowlist of hosts/schemes and/or
+authentication, plus request-size/time limits -- or restricted to local paths
+and pre-fetched assets only. Likewise, `gs://` resolution is unwired and returns
+`501` rather than pulling credentials into the spike.
 
 ## Fail-soft
 

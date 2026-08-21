@@ -62,7 +62,10 @@ COPY trust/ /app/trust/
 COPY pyproject.toml README.md /app/
 COPY credentio_validator/ /app/credentio_validator/
 
-RUN pip install --no-cache-dir "fastapi>=0.110" "uvicorn>=0.27" "pydantic>=2" "requests>=2.28"
+# Install the package with its [service] extra -- single source of truth for the
+# service dependency set (pyproject.toml [project.optional-dependencies].service),
+# so versions are never duplicated here.
+RUN pip install --no-cache-dir ".[service]"
 
 # runner.py resolves the binary via CREDENTIO_VALIDATE_BIN (falls back to
 # ./bin/c2pa_validate). Point it at the copied binary explicitly.
