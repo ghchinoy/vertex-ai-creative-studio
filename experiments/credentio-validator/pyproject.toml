@@ -1,0 +1,20 @@
+[project]
+name = "credentio-validator"
+version = "0.1.0"
+description = "Standalone read/validate-only C2PA validator built on Google's credentio C++ CLI (spike / PoC)."
+readme = "README.md"
+requires-python = ">=3.14"
+# Phase 1 (GATE) subset. The runner/adapter core has NO third-party runtime
+# dependencies -- it shells out to the credentio c2pa_validate binary and parses
+# its JSON. c2pa-python is a DEMO-COMPARE-ONLY dependency used by scripts/demo.py
+# to cross-check the normalized output; it is NOT used by runner.py/adapter.py.
+dependencies = [
+    "c2pa-python>=0.30.0",  # demo-compare only (scripts/demo.py)
+]
+
+[[tool.uv.index]]
+url = "https://pypi.org/simple"
+default = true
+
+[tool.setuptools.packages.find]
+include = ["credentio_validator*"]
