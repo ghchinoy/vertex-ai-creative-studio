@@ -99,7 +99,13 @@ def _run_surface(surface: Surface) -> dict:
         print(f"  ERROR: c2pa-python validation failed: {exc}")
         return {"surface": surface.key, "status": "ERROR", "error": str(exc)}
 
-    res = cs.compare(ref_store, cred_store)
+    # Comparison is inside the guarded block too: a malformed store must yield a
+    # clean ERROR/shape-mismatch, never crash the whole run (review O2).
+    try:
+        res = cs.compare(ref_store, cred_store)
+    except Exception as exc:  # noqa: BLE001
+        print(f"  ERROR: comparison failed: {exc}")
+        return {"surface": surface.key, "status": "ERROR", "error": str(exc)}
 
     print("\n  consumer-schema projection -- c2pa-python (incumbent):")
     print("    " + json.dumps(res.ref_projection, indent=2).replace("\n", "\n    "))
@@ -116,6 +122,11 @@ def _run_surface(surface: Surface) -> dict:
             print(f"    [{d.code} {d.title}] {d.detail}")
     else:
         print("\n  documented expected-divergences: none")
+
+    if res.warnings:
+        print("\n  warnings (non-failing signals):")
+        for w in res.warnings:
+            print(f"    [!] {w}")
 
     if surface.special:
         # Lyria: highlight the ADDED validation capability explicitly.
@@ -148,6 +159,7 @@ def _run_surface(surface: Surface) -> dict:
         "cred_labels": res.cred_labels,
         "consumer_diffs": res.consumer_diffs,
         "divergences": [asdict(d) for d in res.divergences],
+        "warnings": res.warnings,
     }
     return out
 

@@ -78,11 +78,17 @@ def _generator_info(manifest: dict) -> list[dict]:
     return out
 
 
+# The action-assertion labels the product consumes. Exact-set membership (rather
+# than an ``"c2pa.actions" in label`` substring test) so that, if a manifest ever
+# carried both blocks, their action lists are not silently concatenated (review O3).
+_ACTION_LABELS = frozenset({"c2pa.actions", "c2pa.actions.v2"})
+
+
 def _actions(manifest: dict) -> list[dict]:
     """Project the c2pa.actions* assertion to {action, digitalSourceType}."""
     out = []
     for a in manifest.get("assertions", []) or []:
-        if "c2pa.actions" in (a.get("label") or ""):
+        if (a.get("label") or "") in _ACTION_LABELS:
             for act in a.get("data", {}).get("actions", []) or []:
                 out.append({
                     "action": act.get("action"),
@@ -111,7 +117,13 @@ def assertion_labels(store: dict) -> list[str]:
 
 
 def codes(store: dict) -> list[str]:
-    return [s.get("code") for s in store.get("validation_status", []) or []]
+    # Guard against a non-list validation_status: a malformed/degraded store must
+    # yield a clean shape mismatch downstream, not an AttributeError that crashes
+    # the whole run (review O2). project() already treats a non-list as a shape diff.
+    vs = store.get("validation_status")
+    if not isinstance(vs, list):
+        return []
+    return [s.get("code") for s in vs if isinstance(s, dict)]
 
 
 # --------------------------------------------------------------------------- #
@@ -149,6 +161,7 @@ class SurfaceResult:
     cred_projection: dict
     consumer_diffs: list[str]                    # unexplained consumed-field diffs (empty on PASS)
     divergences: list[Divergence] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)  # non-failing signals (e.g. O1)
     ref_codes: list[str] = field(default_factory=list)
     cred_codes: list[str] = field(default_factory=list)
     ref_labels: list[str] = field(default_factory=list)
@@ -210,14 +223,38 @@ def compare(ref_store: dict, cred_store: dict) -> SurfaceResult:
     raw_diffs = diff(ref_proj, cred_proj)
     divs = _detect_divergences(ref_store, cred_store)
 
-    # Reclassify: when the v1-claim gap (D3) is present, consumed-field diffs it
-    # causes (generator_info/actions dropped by credentio) are expected, not fails.
+    # Reclassify: when the v1-claim gap (D3) is present, the ONLY documented
+    # behavior is that credentio *drops* generator_info/actions (projects to an
+    # empty value). We therefore skip a generator_info/actions diff ONLY when
+    # credentio's projected value is actually empty -- i.e. the documented drop.
+    # A NON-EMPTY value that diverges (e.g. a forged generator) is still a real
+    # FAIL, so the D3 safeguard cannot silently swallow a wrong value (review R1).
     unexplained: list[str] = []
     for d in raw_diffs:
         field_name = d.split(":", 1)[0]
-        if _is_v1_gap(divs) and field_name in ("generator_info", "actions"):
+        if (
+            _is_v1_gap(divs)
+            and field_name in ("generator_info", "actions")
+            and not cred_proj.get(field_name)   # only the documented drop-to-empty
+        ):
             continue
         unexplained.append(d)
+
+    # O1: shape-only validation_status means a credentio that silently stopped
+    # validating (empty validation_status) would still match on the consumed
+    # fields. Surface that as a non-failing WARNING when the incumbent DID report
+    # codes but credentio reported none -- so a degraded validator is visible
+    # rather than scoring a clean pass under the "credentio adds validation" claim.
+    warnings: list[str] = []
+    ref_codes = codes(ref_store)
+    cred_codes = codes(cred_store)
+    if ref_codes and not cred_codes:
+        warnings.append(
+            f"credentio validation_status is EMPTY while c2pa-python reports "
+            f"{ref_codes} -- credentio may not have validated this asset. "
+            f"(Consumed fields still compare on list SHAPE, so this does not fail "
+            f"the surface, but it is surfaced here.)"
+        )
 
     return SurfaceResult(
         passed=(len(unexplained) == 0),
@@ -225,8 +262,9 @@ def compare(ref_store: dict, cred_store: dict) -> SurfaceResult:
         cred_projection=cred_proj,
         consumer_diffs=unexplained,
         divergences=divs,
-        ref_codes=codes(ref_store),
-        cred_codes=codes(cred_store),
+        warnings=warnings,
+        ref_codes=ref_codes,
+        cred_codes=cred_codes,
         ref_labels=assertion_labels(ref_store),
         cred_labels=assertion_labels(cred_store),
     )

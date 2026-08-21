@@ -73,6 +73,51 @@ def test_d3_v1_gap_reclassifies_consumed_diff():
     assert any(d.code == "D3" for d in res.divergences)
 
 
+def test_d3_does_not_swallow_nonempty_forged_generator():
+    # R1 regression: v1 code present BUT credentio reports a NON-EMPTY divergent
+    # generator (a forged value, not the documented drop-to-empty). This must FAIL
+    # -- the D3 reclassification only excuses the drop-to-empty behavior.
+    ref = _store(gen=("credentio-spike", "0.1.0"))
+    cred = _store(gen=("evil-forged", "9.9.9"),
+                  codes=("com.google.unsupportedSpecVersion",))
+    res = cs.compare(ref, cred)
+    assert not res.passed, "forged non-empty generator on a v1 asset must FAIL"
+    assert any("generator_info" in d for d in res.consumer_diffs)
+    assert any(d.code == "D3" for d in res.divergences)  # D3 still reported
+
+
+def test_d3_does_not_swallow_nonempty_divergent_actions():
+    # R1 regression, actions variant: v1 code present but credentio reports a
+    # non-empty divergent action list -> FAIL (not the documented drop).
+    ref = _store(actions=(("c2pa.created", "http://.../trainedAlgorithmicMedia"),))
+    cred = _store(actions=(("c2pa.edited", "http://.../compositeWithTrainedAlgorithmicMedia"),),
+                  codes=("com.google.unsupportedSpecVersion",))
+    res = cs.compare(ref, cred)
+    assert not res.passed
+    assert any("actions" in d for d in res.consumer_diffs)
+
+
+def test_o1_empty_credentio_validation_status_warns():
+    # O1: credentio validation_status empty while incumbent reports codes ->
+    # non-failing WARNING (consumed fields still match on shape, so it PASSES).
+    ref = _store(codes=("signingCredential.untrusted",))
+    cred = _store(codes=())
+    res = cs.compare(ref, cred)
+    assert res.passed                                # shape-only comparison
+    assert res.warnings and "EMPTY" in res.warnings[0]
+
+
+def test_codes_tolerates_non_list_validation_status():
+    # O2: a malformed (non-list) validation_status must not raise; compare() must
+    # return a clean result (shape mismatch surfaced), never crash.
+    ref = _store()
+    cred = _store()
+    cred["validation_status"] = {"unexpected": "dict"}   # malformed
+    res = cs.compare(ref, cred)                            # must not raise
+    assert not res.passed
+    assert any("validation_status_is_list" in d for d in res.consumer_diffs)
+
+
 def test_unexpected_action_divergence_fails():
     ref = _store(actions=(("c2pa.created", "http://.../trainedAlgorithmicMedia"),))
     cred = _store(actions=(("c2pa.edited", "http://.../trainedAlgorithmicMedia"),))
