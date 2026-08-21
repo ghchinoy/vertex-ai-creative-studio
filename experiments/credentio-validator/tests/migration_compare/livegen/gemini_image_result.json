@@ -1,0 +1,64 @@
+{
+  "title": "Gemini Image (gemini-2.5-flash-image, live)",
+  "asset": "tests/migration_compare/livegen/assets/gemini_image.png",
+  "asset_bytes": 269159,
+  "manifest_present": true,
+  "manifest_detail": "active_manifest='urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779'",
+  "status": "PASS",
+  "ref_projection": {
+    "has_active_manifest": true,
+    "active_manifest_present_in_map": true,
+    "generator_info": [
+      {
+        "name": "Google C2PA Core Generator Library",
+        "version": "966772408:966772408"
+      }
+    ],
+    "actions": [
+      {
+        "action": "c2pa.created",
+        "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+      }
+    ],
+    "validation_status_is_list": true
+  },
+  "cred_projection": {
+    "has_active_manifest": true,
+    "active_manifest_present_in_map": true,
+    "generator_info": [
+      {
+        "name": "Google C2PA Core Generator Library",
+        "version": "966772408:966772408"
+      }
+    ],
+    "actions": [
+      {
+        "action": "c2pa.created",
+        "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+      }
+    ],
+    "validation_status_is_list": true
+  },
+  "ref_codes": [
+    "signingCredential.untrusted"
+  ],
+  "cred_codes": [
+    "signingCredential.untrusted"
+  ],
+  "ref_labels": [
+    "c2pa.actions.v2"
+  ],
+  "cred_labels": [
+    "c2pa.actions.v2",
+    "c2pa.hash.data"
+  ],
+  "consumer_diffs": [],
+  "divergences": [
+    {
+      "code": "D1",
+      "title": "EXTRA_RAW_ASSERTIONS",
+      "detail": "credentio surfaces raw assertions c2pa-python filters/relocates: ['c2pa.hash.data']. Outside the consumed fields (only c2pa.actions* is read); does not change the verdict."
+    }
+  ],
+  "warnings": []
+}

@@ -1,0 +1,8 @@
+{
+  "title": "Lyria (lyria-002, live)",
+  "asset": "tests/migration_compare/livegen/assets/lyria.wav",
+  "asset_bytes": 6291544,
+  "manifest_present": false,
+  "manifest_detail": "c2pa.Reader could not read a manifest: ManifestNotFound: no JUMBF data found",
+  "status": "NO_MANIFEST"
+}
