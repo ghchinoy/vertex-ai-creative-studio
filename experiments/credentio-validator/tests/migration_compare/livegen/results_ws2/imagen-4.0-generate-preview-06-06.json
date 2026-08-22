@@ -1,0 +1,10 @@
+{
+  "model": "imagen-4.0-generate-preview-06-06",
+  "family": "Imagen",
+  "c2pa": "Unreachable",
+  "manifest_present": false,
+  "status": "UNREACHABLE",
+  "probe_verb": "predict",
+  "http_code": 404,
+  "error": "Publisher model `projects/ghchinoy-genai-sa/locations/us-central1/publishers/google/models/imagen-4.0-generate-preview-06-06` was not found or your project does not have access to it. Ensure you are using a valid model name and that the model is available in the specified region. For more information, see: https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/locations."
+}

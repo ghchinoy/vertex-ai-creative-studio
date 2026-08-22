@@ -1,0 +1,105 @@
+{
+  "model": "gemini-2.5-flash-image",
+  "family": "Gemini Image/Nano Banana",
+  "asset": "tests/migration_compare/livegen/assets/gemini_image.png",
+  "asset_bytes": 269159,
+  "c2pa": "Yes",
+  "manifest_present": true,
+  "active_manifest": "urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779",
+  "manifest_store": {
+    "active_manifest": "urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779",
+    "manifests": {
+      "urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779": {
+        "claim_generator_info": [
+          {
+            "name": "Google C2PA Core Generator Library",
+            "version": "966772408:966772408"
+          }
+        ],
+        "instance_id": "d93a8a39-1b55-b3b2-0560-476ef94226c4",
+        "assertions": [
+          {
+            "label": "c2pa.actions.v2",
+            "data": {
+              "actions": [
+                {
+                  "action": "c2pa.created",
+                  "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
+                  "description": "Created by Google Generative AI."
+                }
+              ]
+            },
+            "created": true
+          }
+        ],
+        "signature_info": {
+          "alg": "Es256",
+          "issuer": "Google LLC",
+          "common_name": "Google Media Processing Services",
+          "cert_serial_number": "3749439107714397552747700385516808634044526153",
+          "time": "2026-08-21T23:39:03+00:00"
+        },
+        "label": "urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779",
+        "claim_version": 2
+      }
+    },
+    "validation_status": [
+      {
+        "code": "signingCredential.untrusted",
+        "url": "self#jumbf=/c2pa/urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779/c2pa.signature",
+        "explanation": "signing certificate untrusted"
+      }
+    ],
+    "validation_results": {
+      "activeManifest": {
+        "success": [
+          {
+            "code": "timeStamp.validated",
+            "url": "self#jumbf=/c2pa/urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779/c2pa.signature",
+            "explanation": "timestamp message digest matched: Google Core Time Stamping Authority T9"
+          },
+          {
+            "code": "claimSignature.insideValidity",
+            "url": "self#jumbf=/c2pa/urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779/c2pa.signature",
+            "explanation": "claim signature valid"
+          },
+          {
+            "code": "claimSignature.validated",
+            "url": "self#jumbf=/c2pa/urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779/c2pa.signature",
+            "explanation": "claim signature valid"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779/c2pa.assertions/c2pa.actions.v2",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779/c2pa.assertions/c2pa.hash.data",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+          },
+          {
+            "code": "assertion.dataHash.match",
+            "url": "self#jumbf=/c2pa/urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779/c2pa.assertions/c2pa.hash.data",
+            "explanation": "data hash valid"
+          }
+        ],
+        "informational": [
+          {
+            "code": "timeStamp.untrusted",
+            "url": "self#jumbf=/c2pa/urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779/c2pa.signature",
+            "explanation": "timestamp cert untrusted: Google Core Time Stamping Authority T9"
+          }
+        ],
+        "failure": [
+          {
+            "code": "signingCredential.untrusted",
+            "url": "self#jumbf=/c2pa/urn:c2pa:1480a05f-ca37-722e-a1a4-4b5822b7b779/c2pa.signature",
+            "explanation": "signing certificate untrusted"
+          }
+        ]
+      }
+    },
+    "validation_state": "Valid"
+  }
+}

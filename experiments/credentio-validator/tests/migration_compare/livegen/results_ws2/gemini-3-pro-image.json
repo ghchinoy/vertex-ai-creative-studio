@@ -1,0 +1,110 @@
+{
+  "model": "gemini-3-pro-image",
+  "family": "Gemini Image/Nano Banana",
+  "asset": "tests/migration_compare/livegen/assets_ws2/gemini-3-pro-image.png",
+  "asset_bytes": 71876,
+  "c2pa": "Yes",
+  "manifest_present": true,
+  "active_manifest": "urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629",
+  "manifest_store": {
+    "active_manifest": "urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629",
+    "manifests": {
+      "urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629": {
+        "claim_generator_info": [
+          {
+            "name": "Google C2PA Core Generator Library",
+            "version": "965946091:965946091"
+          }
+        ],
+        "instance_id": "a230922a-1957-e045-96e6-4f33b527c766",
+        "assertions": [
+          {
+            "label": "c2pa.actions.v2",
+            "data": {
+              "actions": [
+                {
+                  "action": "c2pa.created",
+                  "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
+                  "description": "Created by Google Generative AI."
+                },
+                {
+                  "action": "c2pa.edited",
+                  "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
+                  "description": "Applied imperceptible SynthID watermark."
+                }
+              ]
+            },
+            "created": true
+          }
+        ],
+        "signature_info": {
+          "alg": "Es256",
+          "issuer": "Google LLC",
+          "common_name": "Google Media Processing Services",
+          "cert_serial_number": "2575326648387111575080732744127317570261491066",
+          "time": "2026-08-22T03:33:58+00:00"
+        },
+        "label": "urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629",
+        "claim_version": 2
+      }
+    },
+    "validation_status": [
+      {
+        "code": "signingCredential.untrusted",
+        "url": "self#jumbf=/c2pa/urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629/c2pa.signature",
+        "explanation": "signing certificate untrusted"
+      }
+    ],
+    "validation_results": {
+      "activeManifest": {
+        "success": [
+          {
+            "code": "timeStamp.validated",
+            "url": "self#jumbf=/c2pa/urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629/c2pa.signature",
+            "explanation": "timestamp message digest matched: Google Core Time Stamping Authority T9"
+          },
+          {
+            "code": "claimSignature.insideValidity",
+            "url": "self#jumbf=/c2pa/urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629/c2pa.signature",
+            "explanation": "claim signature valid"
+          },
+          {
+            "code": "claimSignature.validated",
+            "url": "self#jumbf=/c2pa/urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629/c2pa.signature",
+            "explanation": "claim signature valid"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629/c2pa.assertions/c2pa.actions.v2",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.actions.v2"
+          },
+          {
+            "code": "assertion.hashedURI.match",
+            "url": "self#jumbf=/c2pa/urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629/c2pa.assertions/c2pa.hash.data",
+            "explanation": "hashed uri matched: self#jumbf=c2pa.assertions/c2pa.hash.data"
+          },
+          {
+            "code": "assertion.dataHash.match",
+            "url": "self#jumbf=/c2pa/urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629/c2pa.assertions/c2pa.hash.data",
+            "explanation": "data hash valid"
+          }
+        ],
+        "informational": [
+          {
+            "code": "timeStamp.untrusted",
+            "url": "self#jumbf=/c2pa/urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629/c2pa.signature",
+            "explanation": "timestamp cert untrusted: Google Core Time Stamping Authority T9"
+          }
+        ],
+        "failure": [
+          {
+            "code": "signingCredential.untrusted",
+            "url": "self#jumbf=/c2pa/urn:c2pa:b223a87d-b44f-0c07-1c6c-45021d81e629/c2pa.signature",
+            "explanation": "signing certificate untrusted"
+          }
+        ]
+      }
+    },
+    "validation_state": "Valid"
+  }
+}
