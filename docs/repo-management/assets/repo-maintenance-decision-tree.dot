@@ -1,0 +1,65 @@
+digraph DependabotRenovateDecision {
+    rankdir=TB;
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=12, margin="0.2,0.12"];
+    edge [fontname="Helvetica", fontsize=11];
+
+    labelloc="t";
+    label="Dependabot / Renovate PR — Daily Cleanup Decision Tree\n(dedicated thread — bot PRs only)";
+    fontname="Helvetica-Bold";
+    fontsize=18;
+
+    start [label="New day: pull every\nopen dependabot/renovate PR", shape=oval, fillcolor="#E8E8E8"];
+
+    bot [label="Was this opened\nby a bot?\n(dependabot / renovate)", fillcolor="#FFF3CD"];
+    not_bot [label="Not in scope here —\nleave for general chore review", fillcolor="#D6D8DB"];
+
+    ci [label="Do the automated\nchecks pass?", fillcolor="#FFF3CD"];
+    ci_fail [label="HOLD\nReport: checks are failing", fillcolor="#F8D7DA"];
+
+    conflict [label="Any conflict with\nother pending changes?", fillcolor="#FFF3CD"];
+    conflict_yes [label="HOLD\nReport: real conflict,\nneeds a person", fillcolor="#F8D7DA"];
+
+    major [label="Is this a big\nversion jump\n(a \"major\" bump)?", fillcolor="#FFF3CD"];
+    major_yes [label="HOLD\nReport: major bump,\nwants a careful look", fillcolor="#F8D7DA"];
+
+    coreapp [label="Does it touch the\nmain app's core\ndependencies\n(not just an experiment)?", fillcolor="#FFF3CD"];
+
+    verify [label="Actually install the new\nversion together with everything\nelse and confirm nothing breaks\n(not just trust the bot)", fillcolor="#CFE2FF"];
+
+    verify_fail [label="HOLD\nReport: real install/\ncompatibility problem found", fillcolor="#F8D7DA"];
+
+    dup [label="Does another open PR\npropose the same change\n(dependabot vs renovate\nduplicate)?", fillcolor="#FFF3CD"];
+    dup_resolve [label="Keep the better one,\nclose the other with\na short explanation", fillcolor="#D1E7DD"];
+
+    merge [label="MERGE AUTOMATICALLY", shape=oval, fillcolor="#D1E7DD", fontcolor="#0F5132", fontname="Helvetica-Bold"];
+    report [label="Daily report either way:\nwhat merged, what's waiting,\nand why", shape=oval, fillcolor="#E8E8E8"];
+
+    start -> bot;
+    bot -> not_bot [label="no"];
+    bot -> ci [label="yes"];
+
+    ci -> ci_fail [label="failing"];
+    ci -> conflict [label="passing"];
+
+    conflict -> conflict_yes [label="yes"];
+    conflict -> major [label="no"];
+
+    major -> major_yes [label="yes (major)"];
+    major -> coreapp [label="no (patch/minor/\ndigest-pin)"];
+
+    coreapp -> verify [label="small bump either way"];
+
+    verify -> verify_fail [label="breaks something"];
+    verify -> dup [label="all clear"];
+
+    dup -> dup_resolve [label="yes, duplicate found"];
+    dup -> merge [label="no duplicate"];
+    dup_resolve -> merge;
+
+    ci_fail -> report;
+    conflict_yes -> report;
+    major_yes -> report;
+    verify_fail -> report;
+    merge -> report;
+    not_bot -> report [style=dashed, label="(informational only)"];
+}

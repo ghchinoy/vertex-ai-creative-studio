@@ -104,6 +104,8 @@ Interested in contributing? Please open an issue describing the intended change.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute.
 
+Maintainers: see [docs/repo-management/](docs/repo-management/README.md) for the repository-management system (recurring jobs, review discipline, and branch-hygiene policy).
+
 ## Licensing
 
 Code in this repository is licensed under the Apache 2.0. See [LICENSE](LICENSE).

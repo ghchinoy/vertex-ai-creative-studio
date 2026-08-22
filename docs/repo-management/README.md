@@ -1,0 +1,71 @@
+# Repository Management System
+
+> **Purpose:** the single entry point that explains how this project keeps its open-source
+> repository healthy — what runs automatically, what waits for a human, and the rules behind
+> each decision.
+
+## Who this is for
+
+This is written for anyone on the team who helps look after the repository, whether or not
+you have seen the automation behind it before. It assumes general engineering literacy but
+**no prior knowledge of this project's internal tooling or jargon**. Terms like *upstream*,
+*fork*, *fast-forward*, and *transitive dependency* are explained the first time they appear in
+the relevant document.
+
+## A few terms up front
+
+| Term | Plain meaning |
+|---|---|
+| **Upstream** | The canonical repository everyone treats as the source of truth: `GoogleCloudPlatform/vertex-ai-creative-studio`. |
+| **Fork** | A personal copy of upstream (here, `ghchinoy/vertex-ai-creative-studio`) used to stage and test work before it goes into upstream. |
+| **`main`** | The primary branch of a repository — the "current, released" line of code. |
+| **PR (pull request)** | A proposed change, opened for review before it becomes part of `main`. |
+| **CI** | *Continuous Integration* — the automated checks (tests, linters) that run against every PR. |
+
+## Why this system exists
+
+An active open-source repository accumulates work that is mostly mechanical but never quite
+zero-effort:
+
+- **Dependency updates** arrive constantly. Automated bots (Dependabot, Renovate) open a pull
+  request every time a library releases a new version. Most are harmless; a few quietly break
+  things.
+- **Branches pile up.** Every merged feature leaves a branch behind. Over time the repository
+  collects hundreds of them, and it becomes hard to tell which still matter.
+- **The fork drifts** from upstream unless something keeps it in sync.
+- **Chore and cleanup PRs** — from people and bots alike — need a consistent risk assessment so
+  the safe ones move quickly and the risky ones get real scrutiny.
+
+Doing all of this by hand is tedious and easy to get wrong. This system **automates the
+mechanical, low-risk parts and keeps a human in the loop for anything that carries judgment or
+risk.** The guiding idea throughout: *match the amount of process to the size and risk of the
+change.*
+
+## The pieces
+
+Each document below covers one part of the system. Read them in any order; they cross-link where
+they connect.
+
+| Document | What it covers |
+|---|---|
+| **[recurring-jobs.md](./recurring-jobs.md)** | The three standing jobs that run on a schedule: Fork Sync, Bot-PR Cleanup, and General Chore Review. What each does, how often, and exactly what each will and won't do without asking. |
+| **[verification-principle.md](./verification-principle.md)** | The **"trust but verify"** discipline: why a green CI run and a bot's description are not enough, and how an empirical dependency-resolver check has caught real breakage that CI missed. |
+| **[review-discipline.md](./review-discipline.md)** | How code review works here: the author never reviews their own change, reviewers rotate, there's an escalation cap, and every comment carries a severity label. Includes a real worked example. |
+| **[branch-hygiene-policy.md](./branch-hygiene-policy.md)** | The repeatable policy for deciding when a branch is safe to delete — and the safeguard that stops genuinely valuable work from being deleted by mistake. |
+| **[extending-the-system.md](./extending-the-system.md)** | How to scope and dispatch new recurring jobs or one-off reviews, sized to the work: a small fix versus a large, cross-cutting effort. |
+
+## How the pieces fit together
+
+- **[Recurring jobs](./recurring-jobs.md)** are the day-to-day engine. Two of them (Bot-PR Cleanup
+  and General Chore Review) lean directly on the
+  **[verification principle](./verification-principle.md)** before merging anything.
+- **[Review discipline](./review-discipline.md)** governs any human-authored change of substance,
+  independent of the recurring jobs.
+- **[Branch hygiene](./branch-hygiene-policy.md)** is a periodic clean-up with its own safety rules.
+- **[Extending the system](./extending-the-system.md)** explains how new work — a new recurring job,
+  or a larger effort — gets sized and handed off.
+
+---
+
+*All examples and figures in this set are drawn from real activity in this project. Where a
+concrete number, PR, or catch is cited, it comes from the project's own records.*
