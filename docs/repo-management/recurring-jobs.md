@@ -91,7 +91,7 @@ This job handles **bot-authored PRs only** — human-written `chore(deps)` PRs a
 The diagram below is the authoritative summary of this job's logic. The prose after it says the
 same thing in words.
 
-![Dependabot / Renovate daily-cleanup decision tree](./assets/repo-maintenance-decision-tree.png)
+![Dependabot / Renovate daily-cleanup decision tree](./assets/repo-maintenance-decision-tree.webp)
 
 *(The diagram source is [`assets/repo-maintenance-decision-tree.dot`](./assets/repo-maintenance-decision-tree.dot).)*
 
