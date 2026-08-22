@@ -12,13 +12,28 @@ resolves two open items:
   decide whether `conformance-public` already covers Google or a Google root must
   be added.
 
+> Note: there is no `generate_omni.py` — the Gemini Omni surface was deliberately
+> not generated. See `primary/comparison-test-result.md` Addendum A.1.5 for why
+> (enterprise Interactions-API-only path + redundant video media type; EM NO-GO).
+
 ## Cost discipline
 
-Every paid model is **FREE-probed first** (Gemini-shaped models via
-`:countTokens`; predict-shaped models via an empty-`instances` request that 400s
-iff the model resolves and is authorized). Each surface is generated **exactly
-once**, cheapest variant, smallest/shortest, single sample. No product C2PA code
-is modified — these are test/analysis/generation-script files only.
+Every paid model was FREE-probed before spend, but the probe lives in two places
+depending on the surface:
+
+- **TTS and Lyria** gate the paid call **in-driver**: `generate_gemini_tts.py`
+  and `generate_lyria.py` each run a `free_probe()` (TTS `voices:list`; Lyria an
+  empty-`instances` predict that 400s iff the model resolves and is authorized)
+  and refuse to spend if it fails.
+- **Image and Veo** call the paid API **directly** in these drivers; they were
+  probed **manually, out-of-band** first via the committed probe scripts
+  `test/nano_banana_2_lite_probe.py` (image model resolution) and
+  `test/veo_feature_probe.py` (Veo feature/region resolution). The drivers here
+  do not re-run that probe inline.
+
+Each surface is generated **exactly once**, cheapest variant, smallest/shortest,
+single sample. No product C2PA code is modified — these are
+test/analysis/generation-script files only.
 
 ## Scripts
 

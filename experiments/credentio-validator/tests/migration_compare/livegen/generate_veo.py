@@ -13,8 +13,9 @@ HARD COST CONSTRAINTS (EM-approved, one-time):
   * number_of_videos = 1, generate_audio = False (audio adds cost)
   * generate EXACTLY ONCE -- no retries, no regeneration
 
-Veo was FREE-probed first (predictLongRunning with empty instances -> 400
-INVALID_ARGUMENT, i.e. the model resolves and is authorized).
+This driver calls the paid API DIRECTLY -- it does not probe inline. Veo was
+FREE-probed manually out-of-band first (feature/region resolution) via the
+committed script ``test/veo_feature_probe.py`` before this one-time spend.
 
 Usage:
     cd experiments/credentio-validator

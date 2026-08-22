@@ -14,7 +14,9 @@ code must NOT be edited; this driver substitutes the nearest current cheap model
 substitution. Everything else mirrors the product call.
 
 COST DISCIPLINE: ONE image, single candidate, smallest square aspect. Run exactly
-once. FREE-probe the model with ``:countTokens`` before calling (see probe_model.py).
+once. This driver calls the paid API DIRECTLY -- it does not probe inline; the
+model was FREE-probed manually out-of-band first (``:countTokens`` -> 200) via the
+committed script ``test/nano_banana_2_lite_probe.py``.
 
 Usage:
     cd experiments/credentio-validator

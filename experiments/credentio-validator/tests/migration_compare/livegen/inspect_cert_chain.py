@@ -4,9 +4,10 @@ real signed asset and answer the trust-list coverage question.
 
 Resolves the OPEN Check 2 of ``primary/trustlist-spike.md``: obtain a real
 Google-signed asset, read its signing cert chain (leaf issuer, intermediate(s),
-ROOT CA, and the EKU ``c2pa-kp-claimSigning`` / 1.3.6.1.5.5.7.3.36), and decide
-whether the bundled ``conformance-public`` anchor list already covers the Google
-chain or a Google-operated root must be ADDED.
+ROOT CA, and the EKU ``c2pa-kp-claimSigning`` under the C2PA PEN 62558,
+1.3.6.1.4.1.62558.2.1 -- note 1.3.6.1.5.5.7.3.36 is id-kp-documentSigning, a
+different OID), and decide whether the bundled ``conformance-public`` anchor list
+already covers the Google chain or a Google-operated root must be ADDED.
 
 How it works (no product code, no c2patool needed): the C2PA COSE_Sign1 signature
 embeds the signer's X.509 chain as an ``x5chain`` header. Those certs are DER
@@ -65,6 +66,9 @@ def _extract_der_certs(blob: bytes) -> list[x509.Certificate]:
     i = 0
     n = len(blob)
     while i < n - 4:
+        # Only matches the 0x30 0x82 DER form (SEQUENCE with a 2-byte length,
+        # i.e. 256..65535 bytes); real C2PA leaf/CA certs always fall in this
+        # range, so shorter (0x30 0x81) or longer (0x30 0x83) forms are skipped.
         if blob[i] == 0x30 and blob[i + 1] == 0x82:
             length = (blob[i + 2] << 8) | blob[i + 3]
             end = i + 4 + length
@@ -157,7 +161,7 @@ def _load_anchor_subjects(anchors_pem: Path) -> list[dict]:
 def _cn(name: x509.Name) -> str:
     try:
         return name.get_attributes_for_oid(x509.NameOID.COMMON_NAME)[0].value
-    except (IndexError, Exception):  # noqa: BLE001
+    except IndexError:
         return ""
 
 
