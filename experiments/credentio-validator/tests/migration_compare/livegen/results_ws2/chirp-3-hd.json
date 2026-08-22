@@ -1,0 +1,10 @@
+{
+  "model": "chirp-3-hd",
+  "family": "Chirp TTS",
+  "asset": "tests/migration_compare/livegen/assets_ws2/chirp-3-hd.wav",
+  "asset_bytes": 36524,
+  "c2pa": "No",
+  "manifest_present": false,
+  "active_manifest": null,
+  "absence_detail": "c2pa.Reader raised (no readable manifest): ManifestNotFound: no JUMBF data found"
+}

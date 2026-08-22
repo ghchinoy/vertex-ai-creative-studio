@@ -1,0 +1,8 @@
+# WS2 model-inventory assets. Large media are gitignored (evidence is fully
+# captured in ../results_ws2/*.json manifest dumps) and mirrored to
+# primary/artifact/ for durability. Small images/audio are committed for
+# reproducibility, mirroring the P4 assets/ convention.
+*.mp4
+virtual-try-on-001.png
+vto_person.png
+vto_garment.png

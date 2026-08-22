@@ -1,0 +1,11 @@
+{
+  "model": "lyria-002",
+  "family": "Lyria",
+  "asset": "tests/migration_compare/livegen/assets/lyria.wav",
+  "asset_bytes": 6291544,
+  "c2pa": "No",
+  "manifest_present": false,
+  "active_manifest": null,
+  "absence_detail": "c2pa.Reader raised (no readable manifest): ManifestNotFound: no JUMBF data found",
+  "carryforward_note": "P4 carry-forward re-read (zero spend). lyria.wav is gitignored large audio (see assets/.gitignore); re-read from the durable artifact mirror primary/artifact/.../livegen/assets/lyria.wav. Matches P4 result lyria_result.json (asset_bytes 6291544, ManifestNotFound). Lyria predict-path WAV carries no C2PA."
+}

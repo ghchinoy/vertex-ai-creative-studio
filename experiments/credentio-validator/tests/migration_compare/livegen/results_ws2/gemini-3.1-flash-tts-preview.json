@@ -1,0 +1,10 @@
+{
+  "model": "gemini-3.1-flash-tts-preview",
+  "family": "Gemini TTS",
+  "asset": "tests/migration_compare/livegen/assets_ws2/gemini-3.1-flash-tts-preview.wav",
+  "asset_bytes": 69164,
+  "c2pa": "No",
+  "manifest_present": false,
+  "active_manifest": null,
+  "absence_detail": "c2pa.Reader raised (no readable manifest): ManifestNotFound: no JUMBF data found"
+}
