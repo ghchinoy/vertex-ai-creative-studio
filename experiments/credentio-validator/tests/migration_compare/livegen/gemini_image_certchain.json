@@ -1,0 +1,124 @@
+{
+  "asset": "tests/migration_compare/livegen/assets/gemini_image.png",
+  "n_certs_found": 5,
+  "chain_len": 2,
+  "leaf": {
+    "subject": "CN=Google Media Processing Services,OU=Google System 10274,O=Google LLC,C=US",
+    "issuer": "CN=Google C2PA Media Services 1P ICA G3,O=Google LLC,C=US",
+    "serial_hex": "a8217339845f2710405e1e53822004aef82e49",
+    "is_ca": false,
+    "self_signed": false,
+    "eku_oids": [
+      "1.3.6.1.5.5.7.3.4",
+      "1.3.6.1.4.1.62558.2.1"
+    ],
+    "eku_names": [
+      "id-kp-emailProtection",
+      "c2pa-kp-claimSigning (C2PA PEN 62558)"
+    ],
+    "has_c2pa_claim_signing_eku": true,
+    "not_before": "2026-03-03T23:01:51+00:00",
+    "not_after": "2027-02-26T23:01:50+00:00",
+    "sha256_fingerprint": "4633c920b6fbc9d9b8adade931b8dcdd259ed4157375e7f802e848993a6a99f9"
+  },
+  "chain": [
+    {
+      "subject": "CN=Google Media Processing Services,OU=Google System 10274,O=Google LLC,C=US",
+      "issuer": "CN=Google C2PA Media Services 1P ICA G3,O=Google LLC,C=US",
+      "serial_hex": "a8217339845f2710405e1e53822004aef82e49",
+      "is_ca": false,
+      "self_signed": false,
+      "eku_oids": [
+        "1.3.6.1.5.5.7.3.4",
+        "1.3.6.1.4.1.62558.2.1"
+      ],
+      "eku_names": [
+        "id-kp-emailProtection",
+        "c2pa-kp-claimSigning (C2PA PEN 62558)"
+      ],
+      "has_c2pa_claim_signing_eku": true,
+      "not_before": "2026-03-03T23:01:51+00:00",
+      "not_after": "2027-02-26T23:01:50+00:00",
+      "sha256_fingerprint": "4633c920b6fbc9d9b8adade931b8dcdd259ed4157375e7f802e848993a6a99f9"
+    },
+    {
+      "subject": "CN=Google C2PA Media Services 1P ICA G3,O=Google LLC,C=US",
+      "issuer": "CN=Google C2PA Root CA G3,O=Google LLC,C=US",
+      "serial_hex": "41faa52147762158da7f9b2cff8dfd16091eee3e",
+      "is_ca": true,
+      "self_signed": false,
+      "eku_oids": [
+        "1.3.6.1.5.5.7.3.4",
+        "1.3.6.1.4.1.62558.2.1"
+      ],
+      "eku_names": [
+        "id-kp-emailProtection",
+        "c2pa-kp-claimSigning (C2PA PEN 62558)"
+      ],
+      "has_c2pa_claim_signing_eku": true,
+      "not_before": "2025-05-08T22:36:26+00:00",
+      "not_after": "2030-05-08T22:36:26+00:00",
+      "sha256_fingerprint": "24213596a832efb823864eacf5b2428c3d472435e38991cd805ce72af4bb9924"
+    }
+  ],
+  "other_embedded_certs": [
+    {
+      "subject": "CN=C2PA OCSP Responder,O=Google LLC,C=US",
+      "issuer": "CN=Google C2PA Media Services 1P ICA G3,O=Google LLC,C=US",
+      "serial_hex": "b266f0cb6facfd068ab1bd01634b4f0e02c02",
+      "is_ca": false,
+      "self_signed": false,
+      "eku_oids": [
+        "1.3.6.1.5.5.7.3.9"
+      ],
+      "eku_names": [
+        "id-kp-OCSPSigning"
+      ],
+      "has_c2pa_claim_signing_eku": false,
+      "not_before": "2026-08-21T14:21:59+00:00",
+      "not_after": "2026-09-20T14:21:58+00:00",
+      "sha256_fingerprint": "1d611203bb865c486cb514ea12db2af35dbc4a91b7d1d204acee451213183ded"
+    },
+    {
+      "subject": "CN=Google Core Time Stamping Authority T9,O=Google LLC,C=US",
+      "issuer": "CN=Google C2PA Core Time-Stamping ICA G3,O=Google LLC,C=US",
+      "serial_hex": "b2d5d51f21675e13bc4130aa88bc3be4e0ba1e",
+      "is_ca": false,
+      "self_signed": false,
+      "eku_oids": [
+        "1.3.6.1.5.5.7.3.8"
+      ],
+      "eku_names": [
+        "id-kp-timeStamping"
+      ],
+      "has_c2pa_claim_signing_eku": false,
+      "not_before": "2025-09-08T13:48:55+00:00",
+      "not_after": "2031-09-09T01:48:54+00:00",
+      "sha256_fingerprint": "82a5ab44008dd56d04000c147cce34fefa6e3b86b6c084401eea24663d7fa6c3"
+    },
+    {
+      "subject": "CN=Google C2PA Core Time-Stamping ICA G3,O=Google LLC,C=US",
+      "issuer": "CN=Google C2PA Root CA G3,O=Google LLC,C=US",
+      "serial_hex": "4500836e721302c564a49e643376fa8f09b764f4",
+      "is_ca": true,
+      "self_signed": false,
+      "eku_oids": [
+        "1.3.6.1.5.5.7.3.8"
+      ],
+      "eku_names": [
+        "id-kp-timeStamping"
+      ],
+      "has_c2pa_claim_signing_eku": false,
+      "not_before": "2025-05-08T22:36:26+00:00",
+      "not_after": "2040-05-08T22:36:26+00:00",
+      "sha256_fingerprint": "8376cbff1b9a621103e55759f926ff2253eea8913f7660a9cb5a3cdf59811b69"
+    }
+  ],
+  "leaf_has_c2pa_claim_signing_eku": true,
+  "top_of_embedded_chain_is_self_signed_root": false,
+  "anchors_file": "/workspace/.scratch-livegen-dev/vacs/experiments/credentio-validator/trust/c2pa_conformance_anchors.pem",
+  "n_anchors": 27,
+  "google_anchor_present": false,
+  "chain_covered_by_conformance_public": false,
+  "coverage_reason": "NOT covered: no embedded chain cert or its issuer is in the bundled anchors, and no Google root is present -> a Google root must be ADDED"
+}

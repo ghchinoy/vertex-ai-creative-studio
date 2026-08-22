@@ -1,0 +1,8 @@
+{
+  "title": "Gemini TTS (gemini-2.5-flash-lite-preview-tts, live)",
+  "asset": "tests/migration_compare/livegen/assets/gemini_tts.wav",
+  "asset_bytes": 37050,
+  "manifest_present": false,
+  "manifest_detail": "c2pa.Reader could not read a manifest: ManifestNotFound: no JUMBF data found",
+  "status": "NO_MANIFEST"
+}

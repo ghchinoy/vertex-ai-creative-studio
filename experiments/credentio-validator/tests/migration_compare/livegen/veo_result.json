@@ -1,0 +1,67 @@
+{
+  "title": "Veo (veo-3.1-lite-generate-001, live)",
+  "asset": "tests/migration_compare/livegen/assets/veo.mp4",
+  "asset_bytes": 869478,
+  "manifest_present": true,
+  "manifest_detail": "active_manifest='urn:c2pa:b0ff9b1c-f29c-a83e-4d21-42b844da25e6'",
+  "status": "PASS",
+  "ref_projection": {
+    "has_active_manifest": true,
+    "active_manifest_present_in_map": true,
+    "generator_info": [
+      {
+        "name": "Google C2PA Core Generator Library",
+        "version": "962985578:962985578"
+      }
+    ],
+    "actions": [
+      {
+        "action": "c2pa.created",
+        "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+      },
+      {
+        "action": "c2pa.edited",
+        "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+      }
+    ],
+    "validation_status_is_list": true
+  },
+  "cred_projection": {
+    "has_active_manifest": true,
+    "active_manifest_present_in_map": true,
+    "generator_info": [
+      {
+        "name": "Google C2PA Core Generator Library",
+        "version": "962985578:962985578"
+      }
+    ],
+    "actions": [
+      {
+        "action": "c2pa.created",
+        "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+      },
+      {
+        "action": "c2pa.edited",
+        "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+      }
+    ],
+    "validation_status_is_list": true
+  },
+  "ref_codes": [
+    "signingCredential.untrusted"
+  ],
+  "cred_codes": [
+    "signingCredential.untrusted"
+  ],
+  "ref_labels": [
+    "c2pa.actions.v2",
+    "c2pa.hash.bmff.v3"
+  ],
+  "cred_labels": [
+    "c2pa.actions.v2",
+    "c2pa.hash.bmff.v3"
+  ],
+  "consumer_diffs": [],
+  "divergences": [],
+  "warnings": []
+}
