@@ -8,9 +8,17 @@ returning ``bytesBase64Encoded`` image. To avoid importing product modules (heav
 deps) this driver issues the SAME predict request over REST -- the same
 transport-agnostic pattern the harness already uses.
 
-COST DISCIPLINE: sampleCount=1, ONE image, smallest 1:1 aspect. FREE-probe
-(empty instances -> 400 iff the model resolves and is authorized) runs first.
-Generate exactly once. No retries.
+COST DISCIPLINE: sampleCount=1, ONE image, smallest 1:1 aspect. Generate
+exactly once. No retries.
+
+PROBE METHODOLOGY (corrected -- see model-c2pa-inventory.md): an empty-instances
+:predict returning 400 does NOT prove the model resolves or is authorized. That
+claim was DISPROVEN in WS2: request-body validation runs BEFORE the model-access
+check, so an unauthorized/absent model still returns 400 "Empty instances" -- a
+FALSE POSITIVE. The DEFINITIVE, no-charge reachability test is the REAL minimal
+call itself: a successful 200 means reachable (and bills for the one image); a
+404 means no access and is NOT billed. ``free_probe`` below is therefore only a
+cheap liveness hint, not an authorization gate -- the real call is authoritative.
 
 Supports the Imagen 4 generate family and the two input-image variants:
   * generate:   --model imagen-4.0-generate-001 (default), -fast, -ultra, preview
@@ -63,13 +71,20 @@ def _post(url: str, body: dict, token: str) -> tuple[int, dict]:
 
 
 def free_probe(url: str, token: str) -> bool:
+    """Cheap liveness HINT only -- NOT an authorization gate.
+
+    An empty-instances :predict returning 400 does NOT prove the model resolves
+    or is authorized (body validation precedes the access check, so an absent /
+    unauthorized model also 400s -- a false positive). We therefore never gate
+    spend on this result; the caller always proceeds to the real minimal call,
+    which is the definitive test (200 = reachable+billed; 404 = no access, NOT
+    billed). This probe is retained only as a diagnostic breadcrumb.
+    """
     code, body = _post(url, {"instances": []}, token)
     msg = json.dumps(body)[:160]
-    if code == 400:
-        print(f"  FREE-probe [{code}] resolves+authorized (empty-instances 400): {msg}")
-        return True
-    print(f"  FREE-probe [{code}] UNAVAILABLE/UNAUTHORIZED: {msg}")
-    return False
+    print(f"  liveness-hint (empty-instances) [{code}] "
+          f"(NON-authoritative; real call is definitive): {msg}")
+    return True
 
 
 def _b64_of(path: Path) -> str:
@@ -103,9 +118,10 @@ def generate(model: str, mode: str, prompt: str, input_img: Path | None,
              out: Path, project: str, location: str) -> bool:
     token = _token()
     url = _predict_url(project, location, model)
-    if not free_probe(url, token):
-        print("FREE-probe failed; not spending.", file=sys.stderr)
-        return False
+    # Diagnostic breadcrumb only -- NON-authoritative (see free_probe docstring).
+    # The real minimal call below is the definitive reachability test:
+    # 200 = reachable (bills one image); 404 = no access (NOT billed).
+    free_probe(url, token)
     body = build_body(mode, prompt, input_img)
     print(f"Generating ONE image: model={model}, mode={mode}, sampleCount=1 "
           f"(project={project}, {location})...")

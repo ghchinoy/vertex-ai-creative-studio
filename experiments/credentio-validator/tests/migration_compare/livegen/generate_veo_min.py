@@ -10,10 +10,19 @@ the SAME absolute-minimum cost envelope. Mirrors the product path
 HARD COST CONSTRAINTS (EM-approved, one-time, per model):
   * duration = 4s (model minimum), resolution = 720p (lowest)
   * number_of_videos = 1, generate_audio = False (audio adds cost)
+  * enhance_prompt = False (absolute-minimum intent; no extra LLM rewrite step)
   * generate EXACTLY ONCE per model -- no retries, no regeneration
 
-Veo was FREE-probed out-of-band first (predictLongRunning empty-instances -> 400
-== resolves+authorized). This driver only runs the one-time paid call.
+NOTE: the WS2 Veo clips already committed were generated with enhance_prompt=True
+(the pre-review default). They are NOT regenerated -- that spend is already made,
+and re-running would violate the no-regeneration rule. This default is now False
+so any FUTURE run matches the absolute-minimum intent.
+
+PROBE METHODOLOGY (corrected -- see model-c2pa-inventory.md): an empty-instances
+predictLongRunning returning 400 does NOT prove the model resolves or is
+authorized -- body validation precedes the access check, so an absent/unauthorized
+model also 400s (a FALSE POSITIVE). The definitive, no-charge reachability test is
+the real minimal call: it either succeeds (billed) or 404s at no charge.
 
 Usage:
     python generate_veo_min.py --model veo-3.1-fast-generate-001 --out fast.mp4
@@ -44,7 +53,7 @@ def generate(model: str, project: str, location: str, prompt: str,
         number_of_videos=1,
         duration_seconds=DURATION_SECONDS,
         resolution=RESOLUTION,
-        enhance_prompt=True,
+        enhance_prompt=False,  # absolute-minimum intent (committed clips used True; not regenerated)
         generate_audio=False,
         person_generation="dont_allow",
     )
