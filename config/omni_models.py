@@ -36,6 +36,19 @@ class OmniModelConfig:
 # Single source of truth for all Omni model configurations.
 OMNI_MODELS: list[OmniModelConfig] = [
     OmniModelConfig(
+        version_id="gemini-omni-1.1-flash-preview",
+        model_name="gemini-omni-1.1-flash-preview",
+        display_name="Gemini Omni 1.1 Flash (Preview)",
+        supported_modes=["t2v", "i2v", "ref2v", "edit"],
+        supported_aspect_ratios=["16:9", "9:16"],
+        resolutions=["360p", "720p", "1080p", "4k"],
+        min_duration=3,
+        max_duration=10,
+        default_duration=10,
+        max_samples=1,  # Quota limits focus on 1 sample
+        default_samples=1,
+    ),
+    OmniModelConfig(
         version_id="gemini-omni-flash-preview",
         model_name="gemini-omni-flash-preview",
         display_name="Gemini Omni Flash (Preview)",
@@ -77,5 +90,5 @@ from config.default import Default
 cfg = Default()
 DEFAULT_OMNI_VERSION_ID = (
     get_version_id_by_model_name(cfg.DEFAULT_OMNI_MODEL_NAME)
-    or "gemini-omni-flash-preview"
+    or "gemini-omni-1.1-flash-preview"
 )

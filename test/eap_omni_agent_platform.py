@@ -114,7 +114,7 @@ def show_video(video_bytes):
 
 """### Load the video generation model"""
 
-omni_model = "gemini-omni-flash-preview"
+omni_model = "gemini-omni-1.1-flash-preview"
 
 """## Video generation
 
@@ -127,7 +127,8 @@ With Gemini Omni Flash, you can generate videos directly from text prompts via t
 
 Notes on output videos:
 - **Audio generation:** Audio will be generated alongside the output video.
-- **Resolution:** 720p
+- **Resolution:** 360p, 720p (default), 1080p, or 4k. Specify a non-default
+  resolution via `response_format=[{"type": "video", "resolution": "1080p"}]`.
 """
 
 prompt = "A head-on shot of a woman sitting at a desk behind a closed laptop against a pale green wall. She opens the laptop and begins typing on the keyboard. As she types the words 'This is Omni' appear in a curved formation on the wall above her head in a typewriter font. She then gets up from the chair at the desk and touches the writing so that the 'This is Omni' text unfolds into a straight line."

@@ -78,7 +78,9 @@ def omni_page() -> None:
                     me.text(f"Mode: {state.omni_mode}")
                     me.text(f"Model: {state.omni_model}")
                     me.text(
-                        f"Aspect Ratio: {state.aspect_ratio} | Duration: {state.video_length}s",
+                        f"Aspect Ratio: {state.aspect_ratio} | "
+                        f"Resolution: {state.resolution} | "
+                        f"Duration: {state.video_length}s",
                     )
                     with dialog_actions():
                         me.button("Close", on_click=close_info_dialog, type="flat")
@@ -384,6 +386,22 @@ def render_settings_panel(state: PageState, _app_state: AppState) -> None:
         disabled=chat_started,
     )
 
+    selected_model = get_omni_model_config(state.omni_model)
+    resolution_options = (
+        selected_model.resolutions if selected_model else [state.resolution]
+    )
+    me.text("Resolution", type="body-2")
+    me.select(
+        label="Resolution",
+        options=[
+            me.SelectOption(label=_resolution_label(r), value=r)
+            for r in resolution_options
+        ],
+        value=state.resolution,
+        on_selection_change=on_resolution_change,
+        disabled=chat_started,
+    )
+
     me.text(f"Video Duration: {state.video_length}s", type="body-2")
     me.slider(
         min=3,
@@ -584,10 +602,21 @@ def on_mode_change(e: me.SelectSelectionChangeEvent) -> None:
     yield
 
 
+def _resolution_label(resolution: str) -> str:
+    """Return a display label for a resolution value (e.g. '4k' -> '4K')."""
+    return "4K" if resolution == "4k" else resolution
+
+
 def on_model_change(e: me.SelectSelectionChangeEvent) -> None:
     """Handle model version selection changes."""
     state = me.state(PageState)
     state.omni_model = e.value
+    # Keep the selected resolution valid for the newly selected model.
+    model_config = get_omni_model_config(e.value)
+    if model_config and state.resolution not in model_config.resolutions:
+        state.resolution = (
+            model_config.resolutions[0] if model_config.resolutions else "720p"
+        )
     yield
 
 
@@ -595,6 +624,13 @@ def on_aspect_ratio_change(e: me.SelectSelectionChangeEvent) -> None:
     """Handle aspect ratio selection changes."""
     state = me.state(PageState)
     state.aspect_ratio = e.value
+    yield
+
+
+def on_resolution_change(e: me.SelectSelectionChangeEvent) -> None:
+    """Handle resolution selection changes."""
+    state = me.state(PageState)
+    state.resolution = e.value
     yield
 
 

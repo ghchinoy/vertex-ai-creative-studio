@@ -115,7 +115,7 @@ def emit_samples():
 
     # 8. Gemini Omni
     with track_model_call(
-        "gemini-omni-flash-preview",
+        "gemini-omni-1.1-flash-preview",
         billing_units={
             "video_seconds_generated": 10,
             "sample_count": 1,

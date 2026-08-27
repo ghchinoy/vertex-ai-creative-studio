@@ -86,6 +86,13 @@ def generate_omni_video(request: OmniVideoGenerationRequest) -> tuple[str, str]:
                 "model": model_config.model_name,
                 "input": input_parts,
             }
+            # Request the desired output resolution via the Interactions API
+            # video response_format. Aspect ratio and duration continue to be
+            # conveyed through the prompt text (see _modify_prompt_for_omni).
+            if request.resolution:
+                call_args["response_format"] = [
+                    {"type": "video", "resolution": request.resolution},
+                ]
             if request.previous_interaction_id:
                 call_args["previous_interaction_id"] = request.previous_interaction_id
 

@@ -39,7 +39,7 @@ def test_build_input_parts_t2v() -> None:
         aspect_ratio="16:9",
         resolution="720p",
         omni_mode="t2v",
-        model_version_id="gemini-omni-flash-preview",
+        model_version_id="gemini-omni-1.1-flash-preview",
     )
     parts = _build_input_parts(req)
     assert parts == [{"type": "text", "text": "A cute cat playing with yarn"}]
@@ -53,7 +53,7 @@ def test_build_input_parts_i2v() -> None:
         aspect_ratio="16:9",
         resolution="720p",
         omni_mode="i2v",
-        model_version_id="gemini-omni-flash-preview",
+        model_version_id="gemini-omni-1.1-flash-preview",
         reference_image_gcs="gs://bucket/image.png",
         reference_image_mime_type="image/png",
     )
@@ -75,7 +75,7 @@ def test_build_input_parts_ref2v() -> None:
         aspect_ratio="16:9",
         resolution="720p",
         omni_mode="ref2v",
-        model_version_id="gemini-omni-flash-preview",
+        model_version_id="gemini-omni-1.1-flash-preview",
         r2v_references=[
             APIReferenceImage(gcs_uri="gs://bucket/ref1.jpg", mime_type="image/jpeg"),
             APIReferenceImage(gcs_uri="gs://bucket/ref2.jpg", mime_type="image/jpeg"),
@@ -104,7 +104,7 @@ def test_build_input_parts_edit() -> None:
         aspect_ratio="16:9",
         resolution="720p",
         omni_mode="edit",
-        model_version_id="gemini-omni-flash-preview",
+        model_version_id="gemini-omni-1.1-flash-preview",
         reference_image_gcs="gs://bucket/ref.png",
         reference_image_mime_type="image/png",
         reference_video_gcs="gs://bucket/base.mp4",
@@ -149,7 +149,7 @@ def test_build_input_parts_chat(mock_download: MagicMock) -> None:
         aspect_ratio="16:9",
         resolution="720p",
         omni_mode="edit",
-        model_version_id="gemini-omni-flash-preview",
+        model_version_id="gemini-omni-1.1-flash-preview",
         previous_interaction_id="int-123",
         chat_history_json=json.dumps(history),
     )
@@ -204,9 +204,9 @@ def test_generate_omni_video_success(
         prompt="Cinematic city sunset",
         duration_seconds=10,
         aspect_ratio="16:9",
-        resolution="720p",
+        resolution="1080p",
         omni_mode="t2v",
-        model_version_id="gemini-omni-flash-preview",
+        model_version_id="gemini-omni-1.1-flash-preview",
     )
 
     mock_client = MagicMock()
@@ -232,6 +232,11 @@ def test_generate_omni_video_success(
     assert interaction_id == "new-interaction-id"
 
     mock_client.interactions.create.assert_called_once()
+    # Resolution is passed through to the Interactions API via response_format.
+    _, call_kwargs = mock_client.interactions.create.call_args
+    assert call_kwargs["response_format"] == [
+        {"type": "video", "resolution": "1080p"},
+    ]
     mock_save.assert_called_once_with("encoded_video_data")
 
 
@@ -367,3 +372,75 @@ def test_on_video_select(mock_state: MagicMock) -> None:
 
     assert mock_page_state.reference_video_gcs == "gs://bucket/library/vid.mp4"
     assert "vid.mp4" in mock_page_state.reference_video_uri
+
+
+def test_omni_registry_default_and_legacy_model() -> None:
+    """The 1.1 model is the default and the legacy model remains selectable."""
+    from config.omni_models import (
+        DEFAULT_OMNI_VERSION_ID,
+        get_omni_model_config,
+    )
+
+    assert DEFAULT_OMNI_VERSION_ID == "gemini-omni-1.1-flash-preview"
+
+    new_model = get_omni_model_config("gemini-omni-1.1-flash-preview")
+    assert new_model is not None
+    assert new_model.resolutions == ["360p", "720p", "1080p", "4k"]
+
+    # Legacy model kept selectable (Q1) and constrained to 720p.
+    legacy_model = get_omni_model_config("gemini-omni-flash-preview")
+    assert legacy_model is not None
+    assert legacy_model.resolutions == ["720p"]
+
+
+@patch("pages.omni.me.state")
+def test_on_resolution_change(mock_state: MagicMock) -> None:
+    """Resolution selection updates page state."""
+    from pages.omni import on_resolution_change
+
+    mock_page_state = MagicMock()
+    mock_state.return_value = mock_page_state
+
+    event = MagicMock()
+    event.value = "1080p"
+
+    list(on_resolution_change(event))
+
+    assert mock_page_state.resolution == "1080p"
+
+
+@patch("pages.omni.me.state")
+def test_on_model_change_resets_unsupported_resolution(mock_state: MagicMock) -> None:
+    """Switching to the legacy model resets a resolution it doesn't support."""
+    from pages.omni import on_model_change
+
+    mock_page_state = MagicMock()
+    mock_page_state.resolution = "4k"
+    mock_state.return_value = mock_page_state
+
+    event = MagicMock()
+    event.value = "gemini-omni-flash-preview"
+
+    list(on_model_change(event))
+
+    assert mock_page_state.omni_model == "gemini-omni-flash-preview"
+    # 4k is not supported by the legacy model; it falls back to its first option.
+    assert mock_page_state.resolution == "720p"
+
+
+@patch("pages.omni.me.state")
+def test_on_model_change_keeps_supported_resolution(mock_state: MagicMock) -> None:
+    """Switching models keeps a resolution the new model supports."""
+    from pages.omni import on_model_change
+
+    mock_page_state = MagicMock()
+    mock_page_state.resolution = "1080p"
+    mock_state.return_value = mock_page_state
+
+    event = MagicMock()
+    event.value = "gemini-omni-1.1-flash-preview"
+
+    list(on_model_change(event))
+
+    assert mock_page_state.omni_model == "gemini-omni-1.1-flash-preview"
+    assert mock_page_state.resolution == "1080p"
