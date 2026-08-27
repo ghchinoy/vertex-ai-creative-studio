@@ -68,6 +68,7 @@ The servers are configured primarily through environment variables. Key variable
 *   **Gemini Image** Generate and edit images from text prompts.
 *   **Gemini TTS** Synthesize high-quality audio from text.
 *   **Veo:** Create videos from text or images.
+*   **Gemini Omni:** Generate video (with optional embedded audio) from a text prompt, optionally conditioned on input images and/or videos, via the Vertex Interactions API.
 *   **Lyria:** Generate music from text prompts.
 *   **Chirp 3 HD:** Synthesize high-quality audio from text.
 *   **Imagen:** Generate and edit images from text prompts.

@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import catppuccin from '@catppuccin/starlight';
 
 // https://astro.build/config
 export default defineConfig({
@@ -11,6 +12,11 @@ export default defineConfig({
 			title: 'GenMedia Creative Studio',
 			favicon: '/favicon.ico',
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/GoogleCloudPlatform/vertex-ai-creative-studio' }],
+			// Bright Catppuccin theme: Latte (light) forward, with Mocha for dark mode.
+			plugins: [catppuccin({
+				light: { flavor: 'latte', accent: 'blue' },
+				dark: { flavor: 'mocha', accent: 'blue' },
+			})],
 			sidebar: [
 				{
 					label: 'Core Application',
@@ -84,6 +90,7 @@ export default defineConfig({
 										{ label: 'mcp-chirp3-go', slug: 'experiments/mcp-genmedia/mcp-chirp3-go' },
 										{ label: 'mcp-nanobanana-go', slug: 'experiments/mcp-genmedia/mcp-nanobanana-go' },
 										{ label: 'mcp-gemini-go', slug: 'experiments/mcp-genmedia/mcp-gemini-go' },
+										{ label: 'mcp-omni-go', slug: 'experiments/mcp-genmedia/mcp-omni-go' },
 										{ label: 'mcp-avtool-go', slug: 'experiments/mcp-genmedia/mcp-avtool-go' },
 									]
 								},
