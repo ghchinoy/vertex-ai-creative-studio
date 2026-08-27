@@ -142,6 +142,7 @@ type GeminiImageModelInfo struct {
 	CanonicalName         string
 	Aliases               []string
 	SupportedAspectRatios []string
+	SupportedImageSizes   []string // mirrors ImagenModelInfo; empty means image_size is unsupported/ignored
 	Description           string
 }
 
@@ -150,26 +151,30 @@ var SupportedGeminiImageModels = map[string]GeminiImageModelInfo{
 	"gemini-3.1-flash-image": {
 		CanonicalName:         "gemini-3.1-flash-image",
 		Aliases:               []string{"Nano Banana 2"},
-		SupportedAspectRatios: []string{"1:1", "3:2", "2:3", "3:4", "4:1", "4:3", "4:5", "5:4", "8:1", "9:16", "16:9", "21:9"},
+		SupportedAspectRatios: []string{"1:1", "3:2", "2:3", "3:4", "1:4", "4:1", "4:3", "4:5", "5:4", "1:8", "8:1", "9:16", "16:9", "21:9", "9:21"},
+		SupportedImageSizes:   []string{"512", "1K", "2K", "4K"}, // 4K is Preview
 		Description:           "Gemini 3.1 Flash Image, or Nano Banana 2.",
 	},
 	"gemini-3.1-flash-lite-image": {
 		CanonicalName:         "gemini-3.1-flash-lite-image",
 		Aliases:               []string{"Nano Banana 2 Lite"},
-		SupportedAspectRatios: []string{"1:1", "3:2", "2:3", "3:4", "4:3", "9:16", "16:9", "21:9"},
+		SupportedAspectRatios: []string{"1:1", "1:4", "4:1", "1:8", "8:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"},
+		SupportedImageSizes:   []string{"1K"},
 		Description:           "Gemini 3.1 Flash Lite Image, or Nano Banana 2 Lite, is optimized for high-speed, cost-effective image generation at 1K resolution.",
 	},
 
 	"gemini-3-pro-image": {
 		CanonicalName:         "gemini-3-pro-image",
 		Aliases:               []string{"Nano Banana Pro", "Gemini 3 Pro Image"},
-		SupportedAspectRatios: []string{"1:1", "3:2", "2:3", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"},
+		SupportedAspectRatios: []string{"1:1", "3:2", "2:3", "3:4", "1:4", "4:1", "4:3", "4:5", "5:4", "1:8", "8:1", "9:16", "16:9", "21:9", "9:21"},
+		SupportedImageSizes:   []string{"1K", "2K", "4K"}, // 4K is Preview
 		Description:           "Gemini 3 Pro Image, or Gemini 3 Pro (with Nano Banana), is designed to tackle the most challenging image generation by incorporating state-of-the-art reasoning capabilities. It's the best model for complex and multi-turn image generation and editing, having improved accuracy and enhanced image quality.",
 	},
 	"gemini-2.5-flash-image": {
 		CanonicalName:         "gemini-2.5-flash-image",
 		Aliases:               []string{"Nano Banana", "nano-banana"},
-		SupportedAspectRatios: []string{"1:1", "3:4", "4:3", "9:16", "16:9"},
+		SupportedAspectRatios: []string{"1:1", "3:2", "2:3", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"},
+		SupportedImageSizes:   []string{}, // no resolution control: image_size is silently ignored by the API (verified empirically)
 		Description:           "Gemini 2.5 Flash Image, or Nano Banana, is optimized for image understanding and generation and offers a balance of price and performance.",
 	},
 }
@@ -196,7 +201,8 @@ func ResolveGeminiImageModel(modelInput string, allowUnsafe bool) (GeminiImageMo
 		// Return a permissive fallback struct for experimental models
 		return GeminiImageModelInfo{
 			CanonicalName:         modelInput,
-			SupportedAspectRatios: []string{"1:1", "3:2", "2:3", "3:4", "4:1", "4:3", "4:5", "5:4", "8:1", "9:16", "16:9", "21:9"},
+			SupportedAspectRatios: []string{"1:1", "3:2", "2:3", "3:4", "1:4", "4:1", "4:3", "4:5", "5:4", "1:8", "8:1", "9:16", "16:9", "21:9", "9:21"},
+			SupportedImageSizes:   []string{"512", "1K", "2K", "4K"},
 		}, true
 	}
 
@@ -216,6 +222,9 @@ func BuildGeminiImageModelDescription() string {
 	for _, name := range sortedNames {
 		info := SupportedGeminiImageModels[name]
 		fmt.Fprintf(&sb, "- *%s* (Ratios: %s)", info.CanonicalName, strings.Join(info.SupportedAspectRatios, ", "))
+		if len(info.SupportedImageSizes) > 0 {
+			fmt.Fprintf(&sb, " (Sizes: %s)", strings.Join(info.SupportedImageSizes, ", "))
+		}
 		if len(info.Aliases) > 0 {
 			fmt.Fprintf(&sb, " Aliases: *%s*", strings.Join(info.Aliases, "*, *"))
 		}
@@ -420,7 +429,6 @@ func BuildVeoModelDescription() string {
 	return sb.String()
 }
 
-
 // --- Lyria Model Configuration ---
 
 // LyriaModelInfo holds the details for a specific Lyria model.
@@ -473,7 +481,7 @@ func ResolveLyriaModel(modelInput string, allowUnsafe bool) (LyriaModelInfo, boo
 		// Default to Interactions API as it's the newer path for upcoming models.
 		return LyriaModelInfo{
 			CanonicalName: modelInput,
-			EndpointType:  "interactions", 
+			EndpointType:  "interactions",
 		}, true
 	}
 

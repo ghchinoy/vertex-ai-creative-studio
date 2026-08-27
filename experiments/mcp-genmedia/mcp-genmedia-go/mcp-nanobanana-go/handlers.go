@@ -22,6 +22,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -32,6 +33,29 @@ import (
 
 	common "github.com/GoogleCloudPlatform/vertex-ai-creative-studio/experiments/mcp-genmedia/mcp-genmedia-go/mcp-common"
 )
+
+// validateGeminiImageParams checks the requested aspect_ratio and image_size
+// against a resolved model's declared capabilities, mirroring the
+// mcp-imagen-go fallback pattern: an unsupported aspect_ratio falls back to
+// "1:1", and an image_size that the model does not support (or does not
+// support at all) is dropped so the API applies its own default. It returns
+// the (possibly adjusted) aspect_ratio and image_size.
+func validateGeminiImageParams(info common.GeminiImageModelInfo, model, aspectRatio, imageSize string) (string, string) {
+	if !slices.Contains(info.SupportedAspectRatios, aspectRatio) {
+		log.Printf("Warning: Requested aspect ratio '%s' is not supported by model %s. Supported ratios are: %v. Falling back to '1:1'.", aspectRatio, model, info.SupportedAspectRatios)
+		aspectRatio = "1:1"
+	}
+	if imageSize != "" {
+		if len(info.SupportedImageSizes) == 0 {
+			log.Printf("Warning: image_size parameter ('%s') provided, but model %s does not support it. The parameter will be ignored.", imageSize, model)
+			imageSize = ""
+		} else if !slices.Contains(info.SupportedImageSizes, imageSize) {
+			log.Printf("Warning: Requested image size '%s' is not supported by model %s. Supported sizes are: %v. The parameter will be ignored.", imageSize, model, info.SupportedImageSizes)
+			imageSize = ""
+		}
+	}
+	return aspectRatio, imageSize
+}
 
 func nanobananaGenerateContentHandler(client *genai.Client, ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	tr := otel.Tracer(serviceName)
@@ -57,11 +81,14 @@ func nanobananaGenerateContentHandler(client *genai.Client, ctx context.Context,
 	modelArg, _ := request.GetArguments()["model"].(string)
 	model := "gemini-3.1-flash-image"
 	if modelArg != "" {
-		if resolvedInfo, found := common.ResolveGeminiImageModel(modelArg, appConfig.AllowUnsafeModels); found {
-			model = resolvedInfo.CanonicalName
-		} else {
-			model = modelArg
-		}
+		model = modelArg
+	}
+	// Resolve the model (including the default) so aspect_ratio/image_size can be
+	// validated against its declared capabilities. Unknown models that cannot be
+	// resolved (AllowUnsafeModels disabled) are passed through untouched.
+	if resolvedInfo, found := common.ResolveGeminiImageModel(model, appConfig.AllowUnsafeModels); found {
+		model = resolvedInfo.CanonicalName
+		aspectRatio, imageSize = validateGeminiImageParams(resolvedInfo, model, aspectRatio, imageSize)
 	}
 
 	seed, err := common.ParseOptionalNonNegativeInt32(request.GetArguments(), "seed")
