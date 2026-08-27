@@ -491,7 +491,7 @@ func ResolveLyriaModel(modelInput string, allowUnsafe bool) (LyriaModelInfo, boo
 // --- Omni Model Configuration ---
 
 // DefaultOmniModel is the canonical default Gemini Omni model ID.
-const DefaultOmniModel = "gemini-omni-flash-preview"
+const DefaultOmniModel = "gemini-omni-1.1-flash-preview"
 
 // OmniModelInfo holds the details for a specific Gemini Omni model. Omni models
 // (text/image/video in, text+video out) are reachable only via the Vertex
@@ -499,15 +499,27 @@ const DefaultOmniModel = "gemini-omni-flash-preview"
 type OmniModelInfo struct {
 	CanonicalName string
 	Aliases       []string
-	Description   string
+	// SupportedResolutions lists the video output resolutions the model can emit
+	// (mirrors GeminiImageModelInfo.SupportedImageSizes). This is capability
+	// metadata surfaced in the tool description; the resolution request parameter
+	// itself is not yet wired into the tool (see follow-up).
+	SupportedResolutions []string
+	Description          string
 }
 
 // SupportedOmniModels is the single source of truth for all supported Omni models.
 var SupportedOmniModels = map[string]OmniModelInfo{
+	"gemini-omni-1.1-flash-preview": {
+		CanonicalName:        "gemini-omni-1.1-flash-preview",
+		Aliases:              []string{"Gemini Omni 1.1 Flash", "Omni 1.1", "Omni"},
+		SupportedResolutions: []string{"360p", "720p", "1080p", "4k"},
+		Description:          "Gemini Omni 1.1 Flash (Preview): text/image/video in, text+video out, via the Vertex Interactions API (global only). Supports 360p/720p/1080p/4k video output.",
+	},
 	"gemini-omni-flash-preview": {
-		CanonicalName: "gemini-omni-flash-preview",
-		Aliases:       []string{"Gemini Omni Flash", "Omni"},
-		Description:   "Gemini Omni Flash (Preview): text/image/video in, text+video out, via the Vertex Interactions API (global only).",
+		CanonicalName:        "gemini-omni-flash-preview",
+		Aliases:              []string{"Gemini Omni Flash"},
+		SupportedResolutions: []string{"720p"},
+		Description:          "Gemini Omni Flash (Preview): text/image/video in, text+video out, via the Vertex Interactions API (global only).",
 	},
 }
 
@@ -558,6 +570,9 @@ func BuildOmniModelDescription() string {
 		}
 		if info.Description != "" {
 			fmt.Fprintf(&sb, " - %s", info.Description)
+		}
+		if len(info.SupportedResolutions) > 0 {
+			fmt.Fprintf(&sb, " Supported resolutions: %s.", strings.Join(info.SupportedResolutions, ", "))
 		}
 		sb.WriteString("\n")
 	}

@@ -262,9 +262,12 @@ func TestResolveOmniModel(t *testing.T) {
 		want  string
 		found bool
 	}{
-		{"", "gemini-omni-flash-preview", true},
+		{"", "gemini-omni-1.1-flash-preview", true},
+		{"gemini-omni-1.1-flash-preview", "gemini-omni-1.1-flash-preview", true},
+		{"Omni", "gemini-omni-1.1-flash-preview", true},
+		// Legacy model kept selectable via explicit ID / alias (Q1).
 		{"gemini-omni-flash-preview", "gemini-omni-flash-preview", true},
-		{"Omni", "gemini-omni-flash-preview", true},
+		{"Gemini Omni Flash", "gemini-omni-flash-preview", true},
 		{"nonexistent-model", "", false},
 	}
 	for _, c := range cases {

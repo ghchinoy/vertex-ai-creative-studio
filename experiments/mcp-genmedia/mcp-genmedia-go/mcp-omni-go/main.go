@@ -14,7 +14,7 @@
 
 // Package main implements an MCP server for Google's Gemini Omni video model.
 //
-// Omni (gemini-omni-flash-preview) is reachable only through the Vertex
+// Omni (gemini-omni-1.1-flash-preview) is reachable only through the Vertex
 // Interactions API, so this server calls the shared common.GenerateOmniVideo
 // helper (which owns the Interactions client) rather than the shared genai.Client.
 

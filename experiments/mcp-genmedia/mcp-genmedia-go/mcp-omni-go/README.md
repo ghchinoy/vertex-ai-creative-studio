@@ -1,7 +1,7 @@
 # MCP Omni Server
 
 This tool provides video generation (with optional embedded audio) using Google's
-Gemini Omni model (`gemini-omni-flash-preview`) via the **Vertex Interactions API**.
+Gemini Omni model (`gemini-omni-1.1-flash-preview`) via the **Vertex Interactions API**.
 It is one of the MCP tools for Google Cloud Genmedia services, acting as an MCP
 server component to allow LLMs and other MCP clients to generate videos from a text
 prompt, optionally conditioned on input images and/or videos.
@@ -26,9 +26,11 @@ The server exposes the following tool:
 *   **Parameters**:
     *   `prompt` (string, required): The text prompt describing the video to generate.
     *   `model` (string, optional): Model to use. Can be the canonical model ID
-        (`gemini-omni-flash-preview`) or a common alias (e.g. `Omni`,
-        `Gemini Omni Flash`). See `mcp-common/models.go` for the supported list.
-        Defaults to `gemini-omni-flash-preview`.
+        (`gemini-omni-1.1-flash-preview`) or a common alias (e.g. `Omni`,
+        `Gemini Omni 1.1 Flash`). The prior `gemini-omni-flash-preview` remains
+        selectable via its ID or the `Gemini Omni Flash` alias. See
+        `mcp-common/models.go` for the supported list.
+        Defaults to `gemini-omni-1.1-flash-preview`.
     *   `images` (array of string, optional): Up to 10 input images to condition
         generation on. Each entry is a local file path or a `gs://` URI. The MIME
         type is inferred from the file extension: `image/png`, `image/jpeg`,
