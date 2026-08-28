@@ -57,7 +57,7 @@ GenMedia Creative Studio is a web application showcasing Google Cloud's generati
 
 Current featureset
 
-- Image: Gemini 3.1 Flash-Lite Image (Nano Banana 2 Lite), Gemini 3.1 Flash Image Generation (Nano Banana 2), Gemini 3 Pro Image (Nano Banana Pro), Virtual Try-On (Imagen was [deprecated across Google, including Vertex AI, around August 17, 2026](https://firebase.google.com/docs/ai-logic/imagen-models-migration?api=dev) — use Nano Banana instead)
+- Image: Gemini 3.1 Flash-Lite Image (Nano Banana 2 Lite), Gemini 3.1 Flash Image Generation (Nano Banana 2), Gemini 3 Pro Image (Nano Banana Pro), Virtual Try-On. (Imagen was [deprecated across Google, including Vertex AI, around August 17, 2026](https://firebase.google.com/docs/ai-logic/imagen-models-migration?api=dev) — use Nano Banana instead.)
 - Video: Gemini Omni Flash, Veo 3.1, Veo 3
 - Music: Lyria
 - Speech: Chirp 3 HD, Gemini Text to Speech
