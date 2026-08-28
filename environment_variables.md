@@ -14,6 +14,7 @@ These variables define the fundamental operating context of the application.
 | :--- | :--- | :--- |
 | **`PROJECT_ID`** | *None* (Required) | The Google Cloud Project ID where resources (Vertex AI, Firestore, Storage) are located. |
 | **`LOCATION`** | `us-central1` | The default GCP region for most services (Vertex AI, etc.). |
+| **`VERTEX_API_VERSION`** | `v1beta1` | The Vertex AI API version used for all `google-genai` client initializations. Override to switch the API surface in one place. |
 | **`APP_ENV`** | `""` (Empty) | Defines the environment name (e.g., `dev`, `godemos`). This is used as a metadata tag on the Config page. |
 | **`GMCS_OVERRIDE_PATH`** | *None* | **(Development Only)** An absolute path to a directory containing configuration overrides. If a file exists in this path (e.g., `config/about_content.json`), the app will prioritize it over the local version. |
 | **`API_BASE_URL`** | `http://localhost:{PORT}` | The base URL for the application's backend APIs. |
@@ -29,6 +30,8 @@ Controls which versions of the Gemini models are used for various tasks.
 | Variable | Default | Description |
 | :--- | :--- | :--- |
 | **`MODEL_ID`** | `gemini-3.5-flash` | The primary Gemini model used for general text and reasoning tasks throughout the app. |
+| **`GEMINI_LOCATION`** | `global` | Region for Gemini 3.x model calls. Gemini 3.x is served only from the `global` endpoint (and the us/eu multi-regions), so this is kept separate from `LOCATION`. |
+| **`GEMINI_TTS_LOCATION`** | `global` | Region for Gemini text-to-speech (TTS) model calls. |
 | **`GEMINI_IMAGE_GEN_MODEL`** | `gemini-3.1-flash-image` | The default model used for image generation features (supports `gemini-3.1-flash-lite-image`, `gemini-3.1-flash-image`, `gemini-3-pro-image`, or `gemini-2.5-flash-image`). |
 | **`GEMINI_IMAGE_GEN_LOCATION`** | `global` | The region for the Gemini Image Generation API. |
 | **`GEMINI_AUDIO_ANALYSIS_MODEL_ID`** | `gemini-3.1-flash-lite` | The model used specifically for analyzing audio content. |

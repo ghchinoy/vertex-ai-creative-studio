@@ -16,6 +16,7 @@ These variables define the fundamental operating context of the application.
 | :--- | :--- | :--- |
 | **`PROJECT_ID`** | *None* (Required) | The Google Cloud Project ID where resources (Google Cloud AI, Firestore, Storage) are located. |
 | **`LOCATION`** | `us-central1` | The default GCP region for most services (Google Cloud AI, etc.). |
+| **`VERTEX_API_VERSION`** | `v1beta1` | The Vertex AI API version used for all `google-genai` client initializations. Override to switch the API surface in one place. |
 | **`APP_ENV`** | `""` (Empty) | Defines the environment name (e.g., `dev`, `godemos`). This is used as a metadata tag on the Config page. |
 | **`GMCS_OVERRIDE_PATH`** | *None* | **(Development Only)** An absolute path to a directory containing configuration overrides. If a file exists in this path (e.g., `config/about_content.json`), the app will prioritize it over the local version. |
 | **`API_BASE_URL`** | `http://localhost:{PORT}` | The base URL for the application's backend APIs. |
@@ -31,6 +32,8 @@ Controls which versions of the Gemini models are used for various tasks.
 | Variable | Default | Description |
 | :--- | :--- | :--- |
 | **`MODEL_ID`** | `gemini-3.5-flash` | The primary Gemini model used for general text and reasoning tasks throughout the app. |
+| **`GEMINI_LOCATION`** | `global` | Region for Gemini 3.x model calls. Gemini 3.x is served only from the `global` endpoint (and the us/eu multi-regions), so this is kept separate from `LOCATION`. |
+| **`GEMINI_TTS_LOCATION`** | `global` | Region for Gemini text-to-speech (TTS) model calls. |
 | **`GEMINI_IMAGE_GEN_MODEL`** | `gemini-3.1-flash-image` | The default model used for image generation features (supports `gemini-3.1-flash-lite-image`, `gemini-3.1-flash-image`, `gemini-3-pro-image`, or `gemini-2.5-flash-image`). |
 | **`GEMINI_IMAGE_GEN_LOCATION`** | `global` | The region for the Gemini Image Generation API. |
 | **`GEMINI_AUDIO_ANALYSIS_MODEL_ID`** | `gemini-3.1-flash-lite` | The model used specifically for analyzing audio content. |
@@ -82,6 +85,23 @@ Specific configuration for the Virtual Try-On feature.
 | **`VTO_MODEL_ID`** | `virtual-try-on-001` | The specific VTO model version. |
 | **`GENMEDIA_VTO_MODEL_COLLECTION_NAME`** | `genmedia-vto-model` | Firestore collection for VTO model data. |
 | **`GENMEDIA_VTO_CATALOG_COLLECTION_NAME`** | `genmedia-vto-catalog` | Firestore collection for VTO product catalog data. |
+
+## 🔄 Object Rotation
+Specific configuration for the Object Rotation workflow.
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| **`OBJECT_ROTATION_VIDEO_MODEL`** | `veo-3.1-generate-001` | The specific Veo model used for 360-degree rotation videos. |
+| **`OBJECT_ROTATION_IMAGE_MODEL`** | `gemini-3.1-flash-image` | The specific Gemini image model used for generating multi-angle views. |
+
+## 🛋️ Interior Design
+Specific configuration for the Interior Design workflow.
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| **`INTERIOR_DESIGN_VIDEO_MODEL`** | `veo-3.1-lite-generate-001` | The specific Veo model used for 3D walkthrough video segments. |
+| **`INTERIOR_DESIGN_IMAGE_MODEL`** | `gemini-3-pro-image` | The specific Gemini image model used for floor plan to 3D and styled images. |
+| **`INTERIOR_DESIGN_VIDEO_DURATION`** | `6` | The duration in seconds for each generated video segment. |
 
 ## 🎵 Lyria (Music Generation)
 Configuration for the Lyria music generation model.

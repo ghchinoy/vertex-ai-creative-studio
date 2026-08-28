@@ -28,6 +28,7 @@ The experimental folder contains stand-alone applications, demos, and features n
 ## Audio & Voice
 
 * [Babel](/vertex-ai-creative-studio/experiments/babel) - Experiment with Chirp 3 HD voices.
+* [Creative Podcast Assistant](https://github.com/GoogleCloudPlatform/vertex-ai-creative-studio/tree/main/experiments/creative_podcast_assistant) - A demo notebook showcasing speech-to-text and text-to-speech features for creating a podcast with generative media.
 
 ## Developer Tools & MCP
 

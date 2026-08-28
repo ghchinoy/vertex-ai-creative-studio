@@ -14,6 +14,8 @@ Generates content (text and/or images) based on a multimodal prompt.
 
 - `prompt` (string, required): The text prompt for content generation.
 - `model` (string, optional): The specific Gemini model to use. Defaults to `gemini-3.1-flash-image`.
+- `aspect_ratio` (string, optional): Aspect ratio of the generated image(s), e.g. `1:1`, `16:9`, `21:9`. Defaults to `1:1`. Supported ratios are model-dependent; unsupported values fall back to `1:1`.
+- `image_size` (string, optional): Size of the generated image(s): `1K`, `2K`, or `4K`. When unset the model's default (`1K`) is used. Supported sizes are model-dependent; unsupported values are ignored.
 - `images` (string array, optional): A list of local file paths or GCS URIs for input images.
 - `output_directory` (string, optional): Local directory to save any generated image(s) to.
 - `output_filename` (string, optional): Base name for the output(s), e.g. `hero.png`. The extension is forced to the true image type and, when more than one image is generated, a `_1..n` suffix is inserted before the extension. Applied identically to local files and GCS objects. See [Naming Outputs](../index.md#naming-outputs-output_filename).

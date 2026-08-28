@@ -45,6 +45,9 @@ If you have an active local feature branch with unmerged commits:
 
 ## Recent Updates
 
+### Transitioning to Nano Banana as Imagen is Deprecated (August 2026)
+* **Models:** We are in the process of transitioning to Nano Banana (Gemini Image Generation, `gemini-2.5-flash-image`) as Imagen has been deprecated. All Imagen models were shut down across Google — including Vertex AI — around August 17, 2026. See the [Imagen models migration guide](https://firebase.google.com/docs/ai-logic/imagen-models-migration?api=dev) for the replacement mapping.
+
 ### Starlight Documentation Hub (May 2026)
 * **Docs:** Migrated all deployment guides, architecture diagrams, and MCP tool instructions to a centralized Starlight (Astro) documentation hub.
 * **UI:** Streamlined the root `README.md` to serve as a clean landing page pointing to the new docs.
