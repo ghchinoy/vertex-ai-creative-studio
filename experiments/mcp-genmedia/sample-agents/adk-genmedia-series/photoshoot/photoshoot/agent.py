@@ -41,6 +41,15 @@ MODEL = "gemini-3.8-flash"
 
 project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
 
+# Forward the whole environment to the stdio server, and add PROJECT_ID only when
+# it is set. Env values must be strings — passing PROJECT_ID=None (which happens
+# when GOOGLE_CLOUD_PROJECT is unset) raises TypeError when the subprocess
+# actually launches, so we guard rather than pass None. (GOOGLE_CLOUD_PROJECT
+# itself still passes through via os.environ when present.)
+server_env = dict(os.environ)
+if project_id:
+    server_env["PROJECT_ID"] = project_id
+
 # MCP Client (STDIO): assumes the genmedia suite (>= v3.18.1) is installed on
 # your PATH via the suite's install.sh, so `mcp-nanobanana-go` is runnable.
 # `tool_filter` keeps the agent's tool surface to exactly the one image tool,
@@ -50,7 +59,7 @@ nanobanana = MCPToolset(
     connection_params=StdioConnectionParams(
         server_params=StdioServerParameters(
             command="mcp-nanobanana-go",
-            env=dict(os.environ, PROJECT_ID=project_id),
+            env=server_env,
         ),
         timeout=120,
     ),

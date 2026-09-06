@@ -107,6 +107,18 @@ successfully does *not* mean you have an image. Two traps:
 This verify-by-existence discipline is reused by every agent in the series, so
 learn it here where there's only one tool to reason about.
 
+> **Two strengths of "verified", and which one you get.** A crawl agent wires
+> only its generation tool — it has *no* filesystem- or GCS-listing tool — so it
+> can't independently list the artifact. What it does is **trust the tool's
+> persisted-path report**: nanobanana emits the saved path / `gs://` URI only
+> *after* the bytes are actually written, so relaying that path (and telling you
+> the `gcloud storage ls` to run) is honest verification for this tier. That is
+> weaker than **true verify-by-listing**, where an agent with a listing tool
+> confirms the object out-of-band. The distinction matters downstream: the video
+> agent returns a `resource_link` that is *not* proof of persistence, so "the
+> tool returned a link" must never be trusted — you verify by listing the
+> destination.
+
 > **Naming note:** nanobanana uses `gcs_bucket_uri` for GCS output and
 > `output_directory` for local — but other genmedia servers spell these
 > differently (`bucket`, `output_gcs_bucket`, `local_path`, …). When you build a

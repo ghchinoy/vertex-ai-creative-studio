@@ -56,7 +56,7 @@ explicit GCS parameter is passed.
 |----------|-----------------|
 | `num_images` | imagen |
 | `num_videos` | veo |
-| `sample_count` | lyria, veo (some tools), omni |
+| `sample_count` | lyria, omni |
 
 > **Lyria caveat:** on the default Lyria-3 model `sample_count` (along with
 > `negative_prompt` and `seed`) is **silently ignored** — only the first sample
