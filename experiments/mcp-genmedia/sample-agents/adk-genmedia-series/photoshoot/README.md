@@ -65,11 +65,15 @@ The entire agent is `photoshoot/agent.py`. Annotated:
 ```python
 MODEL = "gemini-3.8-flash"            # one constant; change it to a model you have
 
+server_env = dict(os.environ)         # forward the environment to the server...
+if project_id:
+    server_env["PROJECT_ID"] = project_id   # ...adding PROJECT_ID only when set
+
 nanobanana = MCPToolset(              # one MCP server, wired over stdio
     connection_params=StdioConnectionParams(
         server_params=StdioServerParameters(
             command="mcp-nanobanana-go",              # the PATH-installed binary
-            env=dict(os.environ, PROJECT_ID=project_id),
+            env=server_env,
         ),
         timeout=120,
     ),
