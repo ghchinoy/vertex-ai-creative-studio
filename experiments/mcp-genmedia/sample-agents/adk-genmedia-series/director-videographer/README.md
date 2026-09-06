@@ -110,13 +110,17 @@ link.
 
 Video is where two footguns become mandatory. Both are baked into the
 instruction, and every rule below is **source-verified against the live
-`mcp-veo-go` Go server** (paths relative to
-[`../../../mcp-genmedia-go/mcp-veo-go/`](../../../mcp-genmedia-go/mcp-veo-go/)):
+genmedia Go sources** — the veo server files (`veo.go`, `handlers.go`, `utils.go`,
+`video_logic.go`) live in
+[`../../../mcp-genmedia-go/mcp-veo-go/`](../../../mcp-genmedia-go/mcp-veo-go/), and
+the shared model registry (`models.go`) lives in
+[`../../../mcp-genmedia-go/mcp-common/`](../../../mcp-genmedia-go/mcp-common/):
 
 **1. Pick an explicit Veo-3 model, or the "minimal" call fails.**
 `generate_audio` defaults to **true** (`utils.go:127`), but if you leave `model`
 unset the handler falls back to **`veo-2.0-generate-001`** (`utils.go:44-47`) —
-and that Veo-2 model has `SupportsGenerateAudio: false` (`models.go:257-264`), so
+and that Veo-2 model has `SupportsGenerateAudio: false`
+(`mcp-common/models.go:257-264`), so
 the server returns *"generate_audio is set to true, but is not supported by
 model"* (`utils.go:132-134`). A bare "make me a video" therefore errors out. The
 agent always passes an explicit Veo-3 model (default
@@ -127,10 +131,11 @@ chooses a model that clears the gate.
 **2. Model-gated aspect ratio & duration.** The server validates these against the
 chosen model and errors on a bad combo:
 - Aspect ratio (`utils.go:106-124`): Veo-3.1 supports `16:9` **and** `9:16`
-  (`models.go:312-330`); Veo-3.0 supports **`16:9` only** (`models.go:290-308`).
-  So a vertical `9:16` clip *requires* a Veo-3.1 model — the agent knows this.
+  (`mcp-common/models.go:312-330`); Veo-3.0 supports **`16:9` only**
+  (`mcp-common/models.go:290-308`). So a vertical `9:16` clip *requires* a Veo-3.1
+  model — the agent knows this.
 - Duration (`utils.go:81-104`): Veo-3 models support **4, 6, 8** seconds
-  (`models.go:290-363`); other values error.
+  (`mcp-common/models.go:290-363`); other values error.
 - Count is `num_videos` (`veo.go:119-122`), **not** `sample_count`.
 
 **3. GCS is required — and it's `bucket`, not `gcs_bucket_uri`.** Veo writes to
