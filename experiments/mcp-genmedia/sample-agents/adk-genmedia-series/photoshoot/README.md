@@ -139,7 +139,8 @@ learn it here where there's only one tool to reason about.
 
 ## Next in the series
 
-Head back to the [series overview](../README.md), or jump to **Director /
-Videographer** (coming next) — one agent, one tool, but this time video, where
-the "verify by existence" habit you just learned becomes mandatory (Veo always
-returns a resource link you must verify by *listing* the destination).
+Head back to the [series overview](../README.md), or jump to **[Director /
+Videographer](../director-videographer/)** — one agent, one tool, but this time
+video, where the "verify by existence" habit you just learned becomes mandatory
+(Veo always returns a resource link you must verify by *listing* the
+destination).

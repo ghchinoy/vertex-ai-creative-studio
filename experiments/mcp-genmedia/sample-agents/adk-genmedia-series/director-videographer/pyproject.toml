@@ -1,0 +1,10 @@
+[project]
+name = "director-videographer"
+version = "0.1.0"
+description = "ADK crawl-tier agent: turn a scene idea into a cinematic video via veo, with the Veo-3 model-gating and verify-by-listing gotchas baked in"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "python-dotenv>=1.0",
+    "google-adk[gcp,mcp]>=1.28.1",
+]
