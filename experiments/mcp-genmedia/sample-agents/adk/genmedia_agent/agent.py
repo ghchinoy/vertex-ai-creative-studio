@@ -15,7 +15,6 @@
 
 import os
 
-# as of google-adk==1.3.0, StdioConnectionParams
 from dotenv import load_dotenv
 from google.adk.agents import LlmAgent
 from google.adk.tools.mcp_tool.mcp_toolset import (
@@ -27,6 +26,10 @@ from google.adk.tools.mcp_tool.mcp_toolset import (
 load_dotenv()
 
 project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+
+# Model for the agent. gemini-3.8-flash runs in the GLOBAL region, so set
+# GOOGLE_CLOUD_LOCATION="global" in your .env (see README).
+MODEL = "gemini-3.8-flash"
 
 # MCP Client (STDIO)
 # assumes you've installed the MCP server on your path
@@ -50,23 +53,16 @@ chirp3 = MCPToolset(
     ),
 )
 
-imagen = MCPToolset(
+nanobanana = MCPToolset(
     connection_params=StdioConnectionParams(
         server_params=StdioServerParameters(
-            command="mcp-imagen-go",
+            command="mcp-nanobanana-go",
             env=dict(os.environ, PROJECT_ID=project_id),
         ),
         timeout=60,
     ),
+    tool_filter=["nanobanana_image_generation"],
 )
-
-# MCP Client (SSE)
-# assumes you've started the MCP server separately
-# e.g. mcp-imagen-go --transport sse
-# from google.adk.tools.mcp_tool.mcp_toolset import SseServerParams
-# remote_imagen, _ = MCPToolset(
-#     connection_params=SseServerParams(url="http://localhost:8080/sse"),
-# )
 
 avtool = MCPToolset(
     connection_params=StdioConnectionParams(
@@ -80,13 +76,13 @@ avtool = MCPToolset(
 
 
 root_agent = LlmAgent(
-    model='gemini-2.0-flash',
+    model=MODEL,
     name='genmedia_agent',
         instruction="""You're a creative assistant that can help users with creating audio, images, and video via your generative media tools. You also have the ability to composit these using your available tools.
         Feel free to be helpful in your suggestions, based on the information you know or can retrieve from your tools.
         If you're asked to translate into other languages, please do.
         """,
     tools=[
-       imagen, chirp3, veo, avtool,
+       nanobanana, chirp3, veo, avtool,
     ],
 )

@@ -8,3 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Keep the example env committed (repo-root .gitignore excludes .env*)
+!genmedia_agent/.env.example
