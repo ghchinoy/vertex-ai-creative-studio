@@ -36,7 +36,7 @@ or demo that does the same job on another surface.
 | 0 | **Meet ADK** — [the refreshed genmedia sample](../adk/) | an ADK agent is an `LlmAgent` + `MCPToolset`s; the LLM drives across many tools | baseline |
 | 1 | **Your first genmedia agent** — [Photoshoot](./photoshoot/) | one `LlmAgent` + one `MCPToolset` (`tool_filter`); output modes + verify-by-existence | **ready** |
 | 2 | **Now with video** — [Director / Videographer](./director-videographer/) | one tool again, but the Veo gotchas (verify by *listing*; explicit Veo-3 model) | **ready** |
-| 3 | **Two servers, one agent** — Music Producer | multiple `MCPToolset`s, `tool_name_prefix`, and the naming crosswalk | coming next |
+| 3 | **Two servers, one agent** — [Music Producer](./music-producer/) | multiple `MCPToolset`s, `tool_name_prefix`, and the naming crosswalk | **ready** |
 | 4 | **Your first pipeline** — Scriptwriter / Storyboarder | `SequentialAgent` + `output_key` state passing between agents | coming next |
 | 5 | **A real multi-agent app** — Ad creative-director's assistant | `SequentialAgent` ⊃ `ParallelAgent` + `AgentTool`; composing the persona agents | coming next |
 

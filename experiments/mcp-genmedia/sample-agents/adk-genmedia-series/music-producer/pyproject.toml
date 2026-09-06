@@ -1,0 +1,10 @@
+[project]
+name = "music-producer"
+version = "0.1.0"
+description = "ADK crawl-tier multi-server agent: generate a music bed (lyria) + voiceover (gemini TTS) and mix them (avtool), with tool_name_prefix and the naming crosswalk"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "python-dotenv>=1.0",
+    "google-adk[gcp,mcp]>=1.28.1",
+]
