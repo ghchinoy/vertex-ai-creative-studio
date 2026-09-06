@@ -1,4 +1,4 @@
-# Music Producer — two servers, one agent
+# Music Producer — three servers, one agent
 
 > This README follows the series' eight-section template (see
 > [Photoshoot](../photoshoot/README.md)): **What you'll build · What you'll
@@ -112,7 +112,7 @@ root_agent = LlmAgent(model=MODEL, name="music_producer",
                       instruction=INSTRUCTION, tools=[lyria, tts, avtool])
 ```
 
-`tool_name_prefix` is the teaching point: without it, two servers could both
+`tool_name_prefix` is the teaching point: without it, three servers could each
 expose a tool the model refers to ambiguously; with it, every tool the model can
 call is unambiguously namespaced (`lyria_*`, `tts_*`, `av_*`). The `INSTRUCTION`
 then does the sequencing — generate music → generate VO → mix — and, crucially,

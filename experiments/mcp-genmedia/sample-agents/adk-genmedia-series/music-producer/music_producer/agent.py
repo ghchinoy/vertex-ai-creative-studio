@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Music Producer — two servers, one agent (crawl tier).
+"""Music Producer — three servers, one agent (crawl tier).
 
 One LlmAgent wiring THREE MCPToolsets over stdio: lyria (music), gemini TTS
 (voiceover), and avtool (mix/convert). This is the first agent in the series to
@@ -113,9 +113,13 @@ tts = MCPToolset(
 #     output_local_dir :1163 / output_gcs_bucket :1164
 #   ffmpeg_convert_audio_wav_to_mp3   mcp_handlers.go:116   (WAV VO -> MP3)
 #     input_audio_uri (required) :118 / output_filename :119
-# No tool_filter here: the producer may reach for other avtool transforms
-# (get_media_info, adjust_volume, combine_audio_and_video); the av_ prefix keeps
-# them namespaced.
+# tool_filter narrows avtool's 8-tool surface to exactly the three this agent
+# uses, so — like lyria and tts above — the model only sees tools relevant to
+# this job (the video/gif/overlay/concat/volume transforms stay hidden). The
+# strings are the exact source tool names (verified: ffmpeg_layer_audio_files
+# mcp_handlers.go:1158, ffmpeg_convert_audio_wav_to_mp3 mcp_handlers.go:116,
+# ffmpeg_get_media_info mcp_handlers.go:57); a filter entry that doesn't match a
+# real tool name is silently dropped, so these must match source verbatim.
 avtool = MCPToolset(
     connection_params=StdioConnectionParams(
         server_params=StdioServerParameters(
@@ -124,6 +128,11 @@ avtool = MCPToolset(
         ),
         timeout=180,
     ),
+    tool_filter=[
+        "ffmpeg_layer_audio_files",
+        "ffmpeg_convert_audio_wav_to_mp3",
+        "ffmpeg_get_media_info",
+    ],
     tool_name_prefix="av_",
 )
 
