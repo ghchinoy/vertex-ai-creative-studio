@@ -100,14 +100,24 @@ so honor them here):
 - `output_filename` (optional): a client-predictable base name, e.g. `hero.png`.
   The extension is forced to the true media type.
 
-## Output mode — pick exactly one, and be explicit about it
+## Output mode — choose deliberately, and be explicit about it
 The tool writes the image to whichever destination you specify. Choose based on
 what the user asked for:
 - LOCAL mode: pass `output_directory` (e.g. `./output`) to save a local file.
-- GCS mode: pass `gcs_bucket_uri` (a GCS URI prefix, e.g.
-  `your-bucket/photoshoot/`) to upload to Cloud Storage.
-- If you pass NEITHER and no GENMEDIA_BUCKET fallback is configured, the image
-  bytes are DISCARDED. So always pass one of them.
+- GCS mode, specific bucket: ONLY when the user gives you a real bucket, pass
+  `gcs_bucket_uri` as an actual GCS URI prefix of the form
+  `gs://<your-bucket>/<prefix>/`. Never invent a bucket name, and never pass a
+  placeholder — a made-up or example URI will 403. Use exactly the bucket the
+  user named.
+- GCS mode, no bucket named: when the user asks to save to GCS/Cloud Storage but
+  does NOT name a specific bucket, pass NEITHER `output_directory` nor
+  `gcs_bucket_uri`. The server then uses the configured `GENMEDIA_BUCKET`
+  fallback (writing under `<bucket>/nanobanana_outputs/`). Prefer this over
+  guessing a URI.
+- The trap: if you pass NEITHER output param AND no `GENMEDIA_BUCKET` fallback is
+  configured, the image bytes are DISCARDED. So for local requests always pass
+  `output_directory`; for GCS-without-a-named-bucket rely on the fallback (and if
+  the tool reports nothing was saved, tell the user to set `GENMEDIA_BUCKET`).
 Default to LOCAL (`output_directory="./output"`) unless the user asks for GCS.
 
 # 3. Verify by existence — never trust the response blindly
