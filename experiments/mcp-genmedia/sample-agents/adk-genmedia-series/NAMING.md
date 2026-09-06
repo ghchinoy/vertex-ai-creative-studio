@@ -34,7 +34,7 @@ footnote); when in doubt, the server's own `main.go` / handler is ground truth.
 
 | Spelling | Servers / tools | Format note |
 |----------|-----------------|-------------|
-| `gcs_bucket_uri` | nanobanana, gemini image, omni, imagen | URI **prefix**, e.g. `your-bucket/outputs/` |
+| `gcs_bucket_uri` | nanobanana, gemini image, omni, imagen | URI **prefix** of the form `gs://<your-bucket>/<prefix>/` (never a pasteable placeholder — a made-up URI will 403) |
 | `bucket` | veo | bucket-style |
 | `output_gcs_bucket` | lyria, avtool | bucket name |
 | *(none)* | chirp3 | chirp3 has **no** GCS output — local WAV only |
