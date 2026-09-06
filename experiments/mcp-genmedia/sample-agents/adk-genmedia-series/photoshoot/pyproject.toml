@@ -1,0 +1,10 @@
+[project]
+name = "photoshoot"
+version = "0.1.0"
+description = "ADK crawl-tier agent: turn a terse shot idea into an art-directed image via nanobanana"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dotenv>=0.9.9",
+    "google-adk[gcp,mcp]>=1.28.1",
+]
