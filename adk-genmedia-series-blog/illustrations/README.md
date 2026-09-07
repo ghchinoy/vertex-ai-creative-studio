@@ -28,6 +28,7 @@ placeholder/stub PNG was ever committed** — the `.png` files are the genuine r
 | `crawl-01-photoshoot-hero.md` | `crawl-01-photoshoot.md` | 16:9 | amber (Gemini-forward) | ✅ `crawl-01-photoshoot-hero.png` (2752×1536) |
 | `crawl-02-director-hero.md` | `crawl-02-director.md` | 16:9 | teal (video) + gotcha-orange | ✅ `crawl-02-director-hero.png` (2752×1536) |
 | `crawl-03-music-producer-hero.md` | `crawl-03-music-producer.md` | 16:9 | indigo structure + teal (three tools) | ✅ `crawl-03-music-producer-hero.png` (2752×1536) |
+| `walk-01-scriptwriter-storyboarder-hero.md` | `walk-01-scriptwriter-storyboarder.md` | 16:9 | indigo/purple pipeline spine (state handoff) | ⏳ queued to EM render channel |
 
 Per-image render evidence (existence-verification + sizes): `../../briefs/archivist-render-batch-1-evidence.md`.
 

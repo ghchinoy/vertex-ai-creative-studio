@@ -1,0 +1,90 @@
+// scriptwriter-storyboarder.dot — architecture of the Scriptwriter/Storyboarder walk agent (PR-4 / #1816).
+// Theme: blog/graphic-theme.md §5. The walk-tier signature is the STATE handoff (purple note +
+// dashed purple arrow labelled with the output_key). Verified against merged
+// scriptwriter-storyboarder/scriptwriter_storyboarder/agent.py
+// (SequentialAgent[scriptwriter -> storyboarder]; output_key="shot_list"; storyboarder reads {shot_list}).
+// Render:
+//   dot -Tsvg blog/diagrams/scriptwriter-storyboarder.dot -o blog/diagrams/scriptwriter-storyboarder.svg
+//   dot -Tpng -Gdpi=144 blog/diagrams/scriptwriter-storyboarder.dot -o blog/diagrams/scriptwriter-storyboarder.png
+digraph scriptwriter_storyboarder {
+  graph [fontname="Inter", bgcolor="#FBFBF8", rankdir=TB, splines=true,
+         nodesep=0.4, ranksep=0.55,
+         label="Scriptwriter / Storyboarder — your first PIPELINE\lSequentialAgent(scriptwriter → storyboarder); state passed via output_key=\"shot_list\" → {shot_list}.\l",
+         labelloc="t", fontsize=14, fontcolor="#1F2933"];
+  node  [fontname="Inter", fontsize=11, penwidth=1.6];
+  edge  [fontname="JetBrains Mono", fontsize=9, color="#1F2933", penwidth=1.3];
+
+  user [shape=oval, style=filled, fillcolor="#F1F3F4", color="#52606D",
+        label="You\na one-line brief"];
+
+  // The SequentialAgent wraps the two stages (ADK, indigo).
+  subgraph cluster_pipeline {
+    label="root_agent = SequentialAgent(\"scriptwriter_storyboarder\")\lruns stage 1, THEN stage 2\l";
+    labelloc="t"; fontname="Inter"; fontsize=11; fontcolor="#5B4FE9";
+    color="#5B4FE9"; style="rounded,dashed";
+
+    // Stage 1: scriptwriter (ADK agent; text only, no tools)
+    scriptwriter [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+                  label="LlmAgent  name=\"scriptwriter\"\ntext only · no tools\noutput_key=\"shot_list\""];
+    // Stage 2: storyboarder (ADK agent; wires nanobanana)
+    storyboarder [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+                  label="LlmAgent  name=\"storyboarder\"\ninstruction contains {shot_list}\ntools=[nanobanana]"];
+  }
+
+  // Gemini reasoning inside each stage (amber ellipse)
+  g_write [shape=ellipse, style=filled, fillcolor="#FDF0CE", color="#F9A825", fontcolor="#1F2933",
+           label="Gemini writes the shot list\n≤ 6 shots · each: Scene / Action / Look"];
+  g_draw  [shape=ellipse, style=filled, fillcolor="#FDF0CE", color="#F9A825", fontcolor="#1F2933",
+           label="Gemini art-directs ONE prompt\nper shot, in order"];
+
+  // Session state (walk-tier signature: purple note)
+  state [shape=note, style=filled, fillcolor="white", color="#8E24AA", fontcolor="#8E24AA",
+         label="session state\nstate[\"shot_list\"]  =  the numbered shot list"];
+
+  // genmedia MCP tool (teal) — the same nanobanana as the Photoshoot
+  nb [shape=box3d, style=filled, fillcolor="#DBF3F1", color="#00A39C",
+      label="mcp-nanobanana-go\nnanobanana_image_generation\n(one call per shot)"];
+
+  // artifacts: one still per shot (bounded K ≤ 6)
+  stills [shape=folder, style=filled, fillcolor="#F1F3F4", color="#52606D",
+          label="./output/shot-01.png … shot-0K.png\n(one still per shot, K ≤ 6)"];
+
+  // verify + 1:1 map (green)
+  verify [shape=box, style="rounded,filled", fillcolor="white", color="#1E8E3E", fontcolor="#1E8E3E",
+          label="Verify by existence (per shot)\nemit shot→image map\nrows == shots  ⇒  proof the {shot_list} was read"];
+
+  // gotcha: the state-passing contract (orange dashed)
+  gotcha [shape=box, style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C",
+          label="The contract: writer's output_key == reader's {key}\nplain {shot_list} is REQUIRED → KeyError if missing\n(fail loud; {shot_list?} would inject \"\" — not used here)"];
+
+  // flow
+  user -> scriptwriter [label="brief"];
+  scriptwriter -> g_write [style=invis];   // keep reasoning near stage 1
+  g_write -> scriptwriter [style=dotted, color="#F9A825", arrowhead=none];
+
+  // the WRITE: scriptwriter -> state (purple dashed, labelled with the key)
+  scriptwriter -> state [style=dashed, color="#8E24AA", fontcolor="#8E24AA",
+                         label="output_key writes"];
+  // the READ: state -> storyboarder (purple dashed, labelled with the template)
+  state -> storyboarder [style=dashed, color="#8E24AA", fontcolor="#8E24AA",
+                         label="{shot_list} reads"];
+
+  storyboarder -> g_draw [style=dotted, color="#F9A825", arrowhead=none];
+  storyboarder -> nb [label="per shot"];
+  nb -> stills [label="prompt, output_directory"];
+  stills -> verify [color="#1E8E3E"];
+
+  // annotation
+  state -> gotcha [style=dashed, color="#E8590C", arrowhead=none, label="same key both sides"];
+
+  subgraph cluster_legend {
+    label="Legend"; fontname="Inter"; fontsize=11; color="#9AA5B1"; style="rounded";
+    L_adk    [shape=box,     style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9", label="ADK"];
+    L_mcp    [shape=box3d,   style="filled",         fillcolor="#DBF3F1", color="#00A39C", label="genmedia MCP"];
+    L_gemini [shape=ellipse, style="filled",         fillcolor="#FDF0CE", color="#F9A825", label="Gemini"];
+    L_state  [shape=note,    style="filled",         fillcolor="white",   color="#8E24AA", fontcolor="#8E24AA", label="session state / output_key"];
+    L_ver    [shape=box,     style="rounded,filled", fillcolor="white",   color="#1E8E3E", fontcolor="#1E8E3E", label="verify"];
+    L_got    [shape=box,     style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C", label="gotcha"];
+    L_adk -> L_mcp -> L_gemini -> L_state -> L_ver -> L_got [style=invis];
+  }
+}

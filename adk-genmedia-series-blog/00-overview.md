@@ -10,7 +10,8 @@ hero: illustrations/00-overview-hero.png
 diagram: diagrams/series-arc.png
 source_of_truth: >
   GoogleCloudPlatform/vertex-ai-creative-studio @ main.
-  Grounded on merged PRs #1811 (Tier-0), #1812 (Photoshoot), #1814 (Director), #1815 (Music Producer).
+  Grounded on merged PRs #1811 (Tier-0), #1812 (Photoshoot), #1814 (Director), #1815 (Music
+  Producer), #1816 (Scriptwriter/Storyboarder).
 ---
 
 # Your own AI creative studio: from a one-line brief to a full set of on-brand assets
@@ -61,7 +62,7 @@ not a gamble.
 | 1 | **The Photoshoot** — [your first agent](crawl-01-photoshoot.md) | a one-line idea → a richly art-directed, on-brand image | ✅ shipped (#1812) |
 | 2 | **The Director** — [now it moves](crawl-02-director.md) | a scene → a short cinematic clip, with sound, in the right format | ✅ shipped (#1814) |
 | 3 | **The Music Producer** — [give it a soundtrack](crawl-03-music-producer.md) | a brief → an original music bed + voiceover, mixed into one track | ✅ shipped (#1815) |
-| 4 | **The Scriptwriter / Storyboarder** — your first pipeline | an idea → a script → a storyboard, handed cleanly down the line | 🗺️ planned |
+| 4 | **The Scriptwriter / Storyboarder** — [your first pipeline](walk-01-scriptwriter-storyboarder.md) | an idea → a script → a storyboard, handed cleanly down the line | ✅ shipped (#1816) |
 | 5 | **The creative director's assistant** — the whole team | a campaign brief → a coordinated set of assets from every collaborator | 🗺️ planned |
 
 > Everything you read here ships only after it's been proven on a **real, credentialed run** — the

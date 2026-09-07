@@ -41,8 +41,8 @@ their diagrams, illustration art-direction, and the shared visual identity.
 | 0 | — | [00-overview](00-overview.md) | — | `series-arc` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
 | 1 | crawl | [crawl-01-photoshoot](crawl-01-photoshoot.md) | PR #1812 ✅ | `photoshoot` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
 | 2 | crawl | [crawl-02-director](crawl-02-director.md) | PR #1814 ✅ | `director` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
-| 3 | crawl | [crawl-03-music-producer](crawl-03-music-producer.md) | PR #1815 ✅ | `music-producer` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
-| 4 | walk | walk-01-scriptwriter-storyboarder | not yet | — | — | awaiting milestone |
+| 3 | crawl | [crawl-03-music-producer](crawl-03-music-producer.md) | PR #1815 ✅ | `music-producer` ✅ | art-direction ✅ / render ✅ | **draft** |
+| 4 | walk | [walk-01-scriptwriter-storyboarder](walk-01-scriptwriter-storyboarder.md) | PR #1816 ✅ | `scriptwriter-storyboarder` ✅ | art-direction ✅ / render ⏳ | **draft (this cycle)** |
 | 5 | run | run-01-ad-creative-director | not yet | — | — | awaiting milestone |
 
 Legend: ✅ done · ⏳ pending/merging. All four crawl-tier hero illustrations are now **real
@@ -65,7 +65,7 @@ last, while Gemini's reasoning stays front-and-centre from the very first agent.
 4. **Three servers, one agent** → **Music Producer** — *multiple `MCPToolset`s, `tool_name_prefix`,
    the naming crosswalk.* (PR #1815 ✅ — **crawl tier complete**)
 5. **Your first pipeline** → **Scriptwriter / Storyboarder** — *`SequentialAgent` + `output_key`
-   state passing between agents.* (planned)
+   state passing between agents.* (PR #1816 ✅ — **walk tier begins**)
 6. **A real multi-agent app** → **Ad creative-director's assistant** — *`SequentialAgent` ⊃
    `ParallelAgent` + `AgentTool`, composing the persona agents; optional QC loop.* (planned)
 

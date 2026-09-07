@@ -172,7 +172,10 @@ colours/shapes, so a diagram is self-explaining out of context.
   (contrast path) and verify-by-listing.
 - `music-producer` — one `LlmAgent` → three `MCPToolset`s (`tool_name_prefix` music/tts/av) →
   lyria bed + gemini-TTS VO → avtool mix, with the crosswalk and lyria-dropped-params gotcha.
-- *(added per milestone: `scriptwriter-storyboarder`, `ad-creative-director`.)*
+- `scriptwriter-storyboarder` — `SequentialAgent`(scriptwriter → storyboarder); the walk-tier
+  signature: the **purple session-state handoff** (`output_key="shot_list"` → `{shot_list}`) with the
+  same-key contract gotcha and per-shot verify + 1:1 shot→image map.
+- *(added per milestone: `ad-creative-director`.)*
 
 ---
 
