@@ -417,8 +417,9 @@ def trim_audio_to_video_length(
     Args:
       audio_path: local path to the mixed audio (music bed + VO) to trim.
       video_path: local path to the concatenated video whose duration is the target.
-      output_path: local path to write the trimmed audio to (e.g.
-        ./output/ad_mix_fit.m4a). The extension selects the container.
+      output_path: local path to write the trimmed AAC audio to — use an
+        .m4a/.mp4 container (the audio is re-encoded with -c:a aac); e.g.
+        ./output/ad_mix_fit.m4a.
 
     Returns:
       A human-readable status string with the video duration, the original and
