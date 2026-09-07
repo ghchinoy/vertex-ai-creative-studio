@@ -2,7 +2,7 @@
 > be read with rendered images (hero illustrations + diagrams) for **voice/tone review**. The durable
 > source of truth lives on the team scratchpad; the real publication venue is **Medium + the Google
 > Developers forum**, not this repo. Diagram embeds here point at PNG copies so GitHub renders them;
-> the canonical posts use SVG. Start with the four posts below.
+> the canonical posts use SVG. Start with the posts below.
 
 # ADK Genmedia Series — blog (index)
 
@@ -42,7 +42,7 @@ their diagrams, illustration art-direction, and the shared visual identity.
 | 1 | crawl | [crawl-01-photoshoot](crawl-01-photoshoot.md) | PR #1812 ✅ | `photoshoot` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
 | 2 | crawl | [crawl-02-director](crawl-02-director.md) | PR #1814 ✅ | `director` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
 | 3 | crawl | [crawl-03-music-producer](crawl-03-music-producer.md) | PR #1815 ✅ | `music-producer` ✅ | art-direction ✅ / render ✅ | **draft** |
-| 4 | walk | [walk-01-scriptwriter-storyboarder](walk-01-scriptwriter-storyboarder.md) | PR #1816 ✅ | `scriptwriter-storyboarder` ✅ | art-direction ✅ / render ⏳ | **draft (this cycle)** |
+| 4 | walk | [walk-01-scriptwriter-storyboarder](walk-01-scriptwriter-storyboarder.md) | PR #1816 ✅ | `scriptwriter-storyboarder` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
 | 5 | run | run-01-ad-creative-director | not yet | — | — | awaiting milestone |
 
 Legend: ✅ done · ⏳ pending/merging. All four crawl-tier hero illustrations are now **real

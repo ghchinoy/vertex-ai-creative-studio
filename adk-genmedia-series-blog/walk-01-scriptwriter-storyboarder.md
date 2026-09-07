@@ -16,7 +16,7 @@ three_fold: { adk: High, mcp: Med, gemini: High }
 
 # The Scriptwriter & Storyboarder: one line becomes a scripted, illustrated storyboard — automatically
 
-> *[Hero illustration is rendering on the credentialed channel — it will appear here once delivered. Art-direction: `illustrations/walk-01-scriptwriter-storyboarder-hero.md`.]*
+![A writer's numbered shot list flowing across the desk to a storyboard artist, who draws one frame per shot — a finished six-panel storyboard](illustrations/walk-01-scriptwriter-storyboarder-hero.png)
 
 Every campaign starts the same way: a single line of intent — *"a lonely lighthouse keeper's last
 night on the job"* — and the daunting gap between that idea and something you can actually pitch.
