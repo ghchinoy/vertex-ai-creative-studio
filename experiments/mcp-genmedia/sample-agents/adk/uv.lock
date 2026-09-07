@@ -18,7 +18,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "dotenv", specifier = ">=0.9.9" },
-    { name = "google-adk", extras = ["gcp", "mcp"], specifier = ">=1.28.1" },
+    { name = "google-adk", extras = ["gcp", "mcp"], specifier = ">=2.8.0" },
 ]
 
 [[package]]
