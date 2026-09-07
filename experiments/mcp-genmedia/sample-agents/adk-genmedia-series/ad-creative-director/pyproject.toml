@@ -1,0 +1,19 @@
+[project]
+name = "ad-creative-director"
+version = "0.1.0"
+description = "ADK run-tier capstone: a brand brief + duration -> one assembled short video ad, composing the crawl personas (Photoshoot/Director/Music Producer) via AgentTool"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "python-dotenv>=1.0",
+    "google-adk[gcp,mcp]>=2.8.0",
+]
+
+# NOTE: the sibling crawl agents (photoshoot/, director-videographer/,
+# music-producer/) are NOT listed as dependencies here. They are self-contained
+# uv example projects, not published/buildable libraries, so they are reused by
+# putting their project dirs on sys.path at import time (see
+# ad_creative_director/agent.py and the README "How it works"). Their only
+# runtime deps — google-adk and python-dotenv — are already provided above, so a
+# single `uv sync` in this project is enough to run the whole capstone, provided
+# the sibling example dirs are present at their series paths.

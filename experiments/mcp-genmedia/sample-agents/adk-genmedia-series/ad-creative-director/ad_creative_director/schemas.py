@@ -1,0 +1,104 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Schema-validated shot plan for the ad creative-director capstone.
+
+`AdPlan` is the planner's `output_schema`. Giving the planner an `output_schema`
+turns its reply into a schema-validated JSON spine that lands in session state
+(`state["ad_plan"]`) instead of free text — every downstream stage reads a
+guaranteed shape rather than parsing prose.
+
+ADK 2.8.0 write path (source-verified against the installed 2.8.0 —
+tag v2.8.0 of github.com/google/adk-python):
+  - `LlmAgent.output_schema` field: agents/llm_agent.py:404 (docstring :415).
+  - On the final response ADK runs `validate_schema(output_schema, text)` and
+    stores the result under `output_key`:
+    agents/llm_agent.py:1044-1045.
+  - For a Pydantic `type[BaseModel]`, `validate_schema` returns a **dict**
+    (`schema.model_validate_json(json_text).model_dump(exclude_none=True)`):
+    utils/_schema_utils.py:141-142. So `state["ad_plan"]` is a dict, and the
+    `{ad_plan}` instruction template renders it via `str(value)`
+    (utils/instructions_utils.py:162-165).
+
+MAX_SHOTS is intentionally small and FIXED. ADK's `ParallelAgent` has a STATIC
+`sub_agents` list (agents/parallel_agent.py:266 iterates `self.sub_agents`; it
+does not fan out to a runtime shot count), so the shot stage builds exactly
+MAX_SHOTS sub-agents and each reads `shots[i]` if present / no-ops if absent.
+The budget math for MAX_SHOTS is justified in agent.py and the README.
+"""
+
+from pydantic import BaseModel, Field
+
+# Fixed number of per-shot slots the ParallelAgent fans out to. Veo-3 clips are
+# 4, 6, or 8 seconds each (see the Director persona + agent.py budget note), so
+# MAX_SHOTS=3 gives 3 x {4,6,8}s = 12-24s of distinct hero footage — squarely a
+# short-form / bumper ad and comfortably inside the 15s-2m budget ceiling.
+MAX_SHOTS = 3
+
+
+class Shot(BaseModel):
+    """One hero shot: a still (look) that is then animated into a clip (motion)."""
+
+    look: str = Field(
+        description=(
+            "Art-direction for the still: subject, composition, lens, light, "
+            "and mood. This drives the Photoshoot (nanobanana) still."
+        )
+    )
+    motion: str = Field(
+        description=(
+            "Camera and subject motion for the clip: e.g. 'slow dolly-in, "
+            "low-angle'. This drives the Director (Veo) clip from the still."
+        )
+    )
+    vo_line: str = Field(
+        description="The single voiceover line spoken over this shot."
+    )
+    duration_seconds: int = Field(
+        description=(
+            "Length of this shot's clip in seconds. MUST be one of 4, 6, or 8 "
+            "(the durations Veo-3 supports)."
+        )
+    )
+
+
+class AdPlan(BaseModel):
+    """A duration-budgeted plan for one short video ad.
+
+    The sum of `shots[*].duration_seconds` is the assembled ad's hero-footage
+    length; it must respect `total_duration_seconds` and the 15s-2m envelope.
+    """
+
+    brand: str = Field(description="The brand or product the ad is for.")
+    total_duration_seconds: int = Field(
+        description=(
+            "Target length of the finished ad in seconds. Must be within the "
+            "15-120s (15s-2m) budget. The per-shot durations should sum to "
+            "approximately this value, up to the hero-footage ceiling "
+            "(MAX_SHOTS x 8s)."
+        )
+    )
+    music_mood: str = Field(
+        description=(
+            "The mood/genre for the music bed (e.g. 'upbeat indie-pop, warm, "
+            "optimistic'), handed to the Music Producer (lyria) persona."
+        )
+    )
+    shots: list[Shot] = Field(
+        description=(
+            f"The hero shots, in order. AT MOST {MAX_SHOTS} shots — the shot "
+            "stage has a fixed number of parallel slots."
+        ),
+        max_length=MAX_SHOTS,
+    )
