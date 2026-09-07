@@ -38,13 +38,12 @@ their diagrams, illustration art-direction, and the shared visual identity.
 | 3 | crawl | [crawl-03-music-producer](crawl-03-music-producer.md) | PR #1815 ✅ | `music-producer` ✅ | art-direction ✅ / render ✅ | **draft** |
 | 4 | walk | [walk-01-scriptwriter-storyboarder](walk-01-scriptwriter-storyboarder.md) | PR #1816 ✅ | `scriptwriter-storyboarder` ✅ | art-direction ✅ / render ✅ | **draft** |
 | 5 | run | [run-01-ad-creative-director](run-01-ad-creative-director.md) | PR #1821 ✅ | `ad-creative-director` ✅ | art-direction ✅ / render ✅ | **draft** |
-| 6 | run (dogfood) | [run-02-creative-studio-dogfood](run-02-creative-studio-dogfood.md) | PR #1823 ✅ | `creative-studio-dogfood` ✅ | art-direction ✅ / render ⏳ | **draft (this cycle)** |
+| 6 | run (dogfood) | [run-02-creative-studio-dogfood](run-02-creative-studio-dogfood.md) | PR #1823 ✅ | `creative-studio-dogfood` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
 
-Legend: ✅ done · ⏳ pending/merging. Six series hero illustrations (crawl ×4, walk ×1, run ×1) are
-**real existence-verified renders** (2752×1536 PNG, produced on the credentialed genmedia stack via
-the EM render channel and theme-compliance-reviewed by the archivist) dropped beside their
-art-direction in [`illustrations/`](illustrations/); the dogfood hero (post 6) is art-directed and
-queued to the render channel. No placeholder was ever committed.
+Legend: ✅ done · ⏳ pending/merging. **All seven series hero illustrations** (crawl ×4, walk ×1, run
+×2) are now **real existence-verified renders** (2752×1536 PNG, produced on the credentialed genmedia
+stack via the EM render channel and theme-compliance-reviewed by the archivist) dropped beside their
+art-direction in [`illustrations/`](illustrations/). No placeholder was ever committed.
 
 ## The through-line (map)
 
