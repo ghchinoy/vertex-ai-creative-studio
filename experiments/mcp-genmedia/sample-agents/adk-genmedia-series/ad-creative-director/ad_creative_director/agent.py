@@ -78,6 +78,27 @@ ADK 2.8.0 constructs used here are source-verified against the installed 2.8.0
     plain (non-`?`) placeholder raises KeyError if absent (:174), which is what
     we want: the planner always runs first, so a missing plan is a real failure.
 
+  * LoopAgent        — agents/loop_agent.py:57 (class; @deprecated :53-56, same
+    "in favor of Workflow" caveat as Sequential/Parallel above). Used ONLY when a
+    profile sets enable_qc (PR-7): the 4th stage becomes
+    LoopAgent(sub_agents=[assembler, critic], max_iterations=profile.qc_max_iterations)
+    — the "Editor's QC Room". It stops on EITHER exit, both source-verified:
+    (i) the max_iterations HARD CAP — while-condition :95-97
+    (`not self.max_iterations or times_looped < self.max_iterations`), times_looped
+    incremented :127 — the guarantee against an infinite loop even if the critic
+    never escalates; (ii) a sub_agent ESCALATING — it checks `event.actions.escalate`
+    on every yielded event (:116-117) and stops. It runs its sub_agents in order
+    each pass (:98) and restarts at index 0 each loop (:126), so assembler-FIRST
+    means the critic always reviews a real cut. The critic escalates via the local
+    `exit_loop` tool (tool_context.actions.escalate = True; ToolContext == Context
+    in 2.8.0, `Context.actions` at context.py:290 -> events/event_actions.py:125
+    `escalate`). Because an agent can have only ONE parent (base_agent.py:704-712,
+    which fires for sub_agents ONLY, not AgentTool), the SINGLE assembler instance
+    is placed in EXACTLY ONE tree position — inside the loop when QC is on, else
+    the bare 4th sub_agent; never both. The assembler reads the critic's verdict on
+    a re-run via the OPTIONAL template `{qc_verdict?}` (instructions_utils.py:136,
+    :170-172 renders '' when the key is absent — i.e. on the first pass).
+
   * FunctionTool     — tools/function_tool.py:99 (class), :106 (__init__ takes a
     `func` and reads its docstring as the tool description). A bare callable in
     an LlmAgent's `tools` list is auto-wrapped in one: llm_agent.py:206-207
@@ -109,16 +130,17 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from google.adk.agents import LlmAgent, ParallelAgent, SequentialAgent
+from google.adk.agents import LlmAgent, LoopAgent, ParallelAgent, SequentialAgent
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.tools.mcp_tool.mcp_toolset import (
     MCPToolset,
     StdioConnectionParams,
     StdioServerParameters,
 )
+from google.adk.tools.tool_context import ToolContext
 
 from .profiles import AD_PROFILE, Profile
-from .schemas import MAX_SHOTS
+from .schemas import MAX_SHOTS, QCVerdict
 
 load_dotenv()
 
@@ -127,6 +149,11 @@ load_dotenv()
 # GOOGLE_CLOUD_LOCATION="global" in your .env (see .env.example). The default
 # Lyria model reused via the Music Producer persona is also global-only.
 MODEL = "gemini-3.8-flash"
+
+# The session-state key the QC critic writes its QCVerdict to and the assembler
+# reads (via the optional {qc_verdict?} template) on a re-assemble. Only used when
+# a profile sets enable_qc (PR-7, the Editor's QC Room).
+QC_STATE_KEY = "qc_verdict"
 
 project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
 
@@ -1000,44 +1027,279 @@ measured duration.
 """
 
 
+# ---------------------------------------------------------------------------
+# QC LOOP support (PR-7). When a profile sets enable_qc, the assembler runs INSIDE
+# the editor_qc LoopAgent, ahead of the critic, so its instruction gets this
+# preamble prepended. The preamble is GATED behind profile.enable_qc so the
+# default (enable_qc=False) assembler instruction stays byte-identical to PR-6.
+#
+# It deliberately makes the FIRST pass skip the audio fit-trim (step 3) so the
+# fixed ~30s Lyria music bed GENUINELY overruns the video — a REAL, measured
+# defect for the critic to catch, never a hardcoded "always-fail-once" flag. On a
+# failed re-run the assembler applies the trim as the correction notes instruct.
+# This makes the Editor's QC Room the place the series' Lyria-overrun trap (the
+# whole reason trim_audio_to_video_length exists) is caught AND fixed on-camera.
+#
+# The ad and storyboard base instructions share the same numbered-step spine
+# (1 build/concat, 2 mix, 3 fit-trim, 4 combine, 5 verify), so ONE preamble drives
+# both. `{qc_verdict?}` renders '' on the first pass (key absent) and the previous
+# verdict dict on a re-run (instructions_utils.py:136, :170-172).
+_QC_ASSEMBLER_PREAMBLE = f"""\
+# Editor's QC Room — you run INSIDE a review loop
+You are assembling this cut inside an "Editor's QC Room" loop: after you finish, a
+critic MEASURES the result and either ACCEPTS it (the loop stops) or sends it back
+with correction notes for you to fix on the next pass. The previous pass's QC
+verdict is injected here — it is EMPTY on your first pass:
+
+<qc_verdict>
+{{{QC_STATE_KEY}?}}
+</qc_verdict>
+
+HOW TO USE IT (this OVERRIDES the fit-trim guidance in the numbered steps below):
+- If <qc_verdict> is EMPTY (this is your FIRST pass): perform the numbered steps
+  below but SKIP step 3 (the audio fit-trim) — in step 4 combine the mixed audio
+  from step 2 DIRECTLY over the video. Do not pre-emptively trim; the critic needs
+  a real cut to measure.
+- If <qc_verdict> contains a verdict with "acceptable": false: the previous cut
+  FAILED QC. Read its "correction_notes" and "issues" and APPLY the fix — in
+  particular DO perform step 3 now (call `trim_audio_to_video_length` on the mixed
+  audio against the video), then re-run step 4 (combine) and step 5 (verify) to
+  produce a fresh final file. Address EVERY item in the verdict's "issues".
+
+Everything else about the assembly is exactly as described below.
+
+"""
+
+
 def _build_assembler(profile: Profile) -> LlmAgent:
     if profile.assembler_recipe == "stills_animatic":
-        return LlmAgent(
-            model=MODEL,
-            name="assembler",
-            description=(
-                "Builds a silent slideshow from the panels' stills, mixes music "
-                "+ narration, trims the audio to the slideshow length, lays it "
-                "over the slideshow via avtool, and verifies animatic.mp4 by "
-                "existence."
-            ),
-            instruction=_stills_animatic_instruction(profile.plan_state_key),
-            # avtool for mix/combine/info, plus TWO local ffmpeg helpers: the new
-            # stills->video slideshow builder and the SAME trim helper the ad
-            # assembler uses (bare callables ADK auto-wraps in FunctionTools:
-            # llm_agent.py:206-207).
-            tools=[
-                storyboard_assembler_avtool,
-                build_stills_animatic_slideshow,
-                trim_audio_to_video_length,
-            ],
+        instruction = _stills_animatic_instruction(profile.plan_state_key)
+        description = (
+            "Builds a silent slideshow from the panels' stills, mixes music "
+            "+ narration, trims the audio to the slideshow length, lays it "
+            "over the slideshow via avtool, and verifies animatic.mp4 by "
+            "existence."
         )
-
-    # profile.assembler_recipe == "video_ad_concat" — the ad path (unchanged).
-    return LlmAgent(
-        model=MODEL,
-        name="assembler",
-        description=(
+        # avtool for mix/combine/info, plus TWO local ffmpeg helpers: the new
+        # stills->video slideshow builder and the SAME trim helper the ad
+        # assembler uses (bare callables ADK auto-wraps in FunctionTools:
+        # llm_agent.py:206-207).
+        tools = [
+            storyboard_assembler_avtool,
+            build_stills_animatic_slideshow,
+            trim_audio_to_video_length,
+        ]
+    else:
+        # profile.assembler_recipe == "video_ad_concat" — the ad path.
+        instruction = ASSEMBLER_INSTRUCTION
+        description = (
             "Concatenates the per-shot clips, mixes music + VO, trims the audio "
             "to the video length, lays it over the video via avtool, and verifies "
             "the final ad by existence."
-        ),
-        instruction=ASSEMBLER_INSTRUCTION,
+        )
         # avtool MCPToolset for the transform steps, plus one local ffmpeg helper
         # (a bare callable ADK auto-wraps in a FunctionTool: llm_agent.py:206-207)
         # that fills avtool's missing audio-trim; see the AUDIO/VIDEO DURATION note
         # in the module docstring.
-        tools=[assembler_avtool, trim_audio_to_video_length],
+        tools = [assembler_avtool, trim_audio_to_video_length]
+
+    if profile.enable_qc:
+        # PR-7: this assembler lives inside the editor_qc LoopAgent. Prepend the QC
+        # preamble so it skips the fit-trim on the first pass (a real overrun for
+        # the critic to catch) and applies the correction notes on a re-run. Gated
+        # here so the enable_qc=False instruction is byte-identical to PR-6.
+        instruction = _QC_ASSEMBLER_PREAMBLE + instruction
+
+    return LlmAgent(
+        model=MODEL,
+        name="assembler",
+        description=description,
+        instruction=instruction,
+        tools=tools,
+    )
+
+
+# ============================================================================
+# Stage 4b — the QC critic (LlmAgent + output_schema=QCVerdict) [enable_qc only]
+# ============================================================================
+# Built ONLY when profile.enable_qc. It runs SECOND inside the editor_qc LoopAgent
+# (after the assembler), MEASURES the just-assembled cut with a local ffprobe
+# helper (reusing _ffprobe_duration_seconds — no second ffprobe), and writes a
+# structured QCVerdict to state["qc_verdict"]. If the cut passes it calls
+# `exit_loop` to escalate (stops the loop); otherwise it writes actionable
+# correction_notes the assembler reads via `{qc_verdict?}` on the next iteration.
+
+# The audio/video sync tolerance. Post-trim runs measured ~0.003s / ~0.015s of
+# skew in PR-5/PR-6, while the untrimmed ~30s Lyria bed overruns a 12-24s ad video
+# (or a board-paced animatic) by many seconds — so a 1.0s threshold cleanly
+# separates a good cut from the overrun defect without flapping on sub-second
+# container rounding.
+QC_SYNC_TOLERANCE_SECONDS = 1.0
+
+
+def exit_loop(tool_context: ToolContext) -> str:
+    """Call ONLY when the assembled cut passes QC; stops the QC loop.
+
+    Sets the LoopAgent escalate signal (tool_context.actions.escalate = True) so
+    the Editor's QC Room stops iterating. Do NOT call this if the cut still has
+    issues — emit the QCVerdict with correction_notes and do not escalate instead.
+    """
+    tool_context.actions.escalate = True
+    return "QC passed: escalate set — the Editor's QC Room loop will stop."
+
+
+def probe_media_durations(media_paths: list[str]) -> str:
+    """Measure each media file's duration in seconds (ffprobe) for QC review.
+
+    Pass the local paths the assembler reported — e.g. the video-only track and
+    the final combined cut — and this returns, per file, whether it EXISTS and its
+    measured duration, so the critic can compare them objectively (audio/video
+    sync, and the total-duration budget for the ad profile). It verifies BY
+    EXISTENCE: a missing file is reported as MISSING, never assumed present. Never
+    trust a resource_link or a tool's success text as proof — THIS measurement is
+    the proof.
+
+    Args:
+      media_paths: local paths to probe, e.g. ["./output/ad_video.mp4",
+        "./output/final_ad.mp4"].
+
+    Returns:
+      One line per path: "<path>: EXISTS, duration=<n>s" or "<path>: MISSING ...".
+    """
+    if shutil.which("ffprobe") is None:
+        return (
+            "ERROR: 'ffprobe' is not on PATH. ffmpeg and ffprobe are required to "
+            "measure the assembled cut (see the project prerequisites)."
+        )
+    lines: list[str] = []
+    for p in media_paths:
+        if not p:
+            continue
+        if not os.path.isfile(p):
+            lines.append(f"{p}: MISSING (file does not exist)")
+            continue
+        try:
+            dur = _ffprobe_duration_seconds(p)
+        except (subprocess.CalledProcessError, ValueError) as exc:
+            lines.append(f"{p}: EXISTS but duration unreadable ({exc})")
+            continue
+        lines.append(f"{p}: EXISTS, duration={dur:.3f}s")
+    if not lines:
+        return "ERROR: no media paths were given to probe."
+    return "\n".join(lines)
+
+
+def _ad_critic_instruction() -> str:
+    return f"""\
+You are the QC reviewer in the ad editor's "Editor's QC Room". The just-assembled
+cut is described in the conversation above; the creative director's plan is
+injected for reference (shot order, total_duration_seconds):
+
+<ad_plan>
+{{ad_plan}}
+</ad_plan>
+
+Your job is an OBJECTIVE, reproducible pass/fail on the assembled cut — decide
+from MEASURED facts, never a tool's success text and never a resource_link.
+
+# 1. Measure (verify BY EXISTENCE)
+Read the exact paths the assembler reported: the concatenated VIDEO-only track
+(e.g. ./output/ad_video.mp4) and the FINAL combined cut (e.g.
+./output/final_ad.mp4). Call `probe_media_durations` with BOTH paths.
+
+# 2. Judge against these objective checks
+- EXISTENCE: the final cut file must EXIST. If probe reports it MISSING, it FAILS.
+- AUDIO/VIDEO SYNC: the final cut's duration must NOT exceed the video-only
+  track's duration by more than {QC_SYNC_TOLERANCE_SECONDS:.1f}s. If the assembler
+  skipped the audio fit-trim, the ~30s Lyria music bed overruns the video and the
+  final cut is many seconds longer than ad_video.mp4 — that FAILS.
+- DURATION BUDGET: the final cut's duration must be within the 15-120s ad budget.
+
+# 3. Verdict
+Emit a QCVerdict:
+- If EVERY check passes: set "acceptable": true, leave "issues" and
+  "correction_notes" empty, AND call the `exit_loop` tool to stop the QC loop.
+- If ANY check fails: set "acceptable": false, list the concrete MEASURED problems
+  in "issues" (e.g. "final 30.10s exceeds video 20.00s by 10.10s > 1.0s"), and
+  write actionable "correction_notes" telling the assembler how to fix it — for
+  the overrun, "re-run trim_audio_to_video_length on the mixed audio against the
+  concatenated video, then re-combine and re-verify". Do NOT call exit_loop when
+  the cut fails.
+
+Return ONLY the QCVerdict as JSON matching the required schema — no preamble.
+"""
+
+
+def _storyboard_critic_instruction(plan_key: str) -> str:
+    return f"""\
+You are the QC reviewer in the editorial animatic's "Editor's QC Room". The
+just-assembled animatic is described in the conversation above; the planner's
+storyboard plan is injected for reference:
+
+<plan>
+{{{plan_key}}}
+</plan>
+
+Your job is an OBJECTIVE, reproducible pass/fail on the assembled animatic —
+decide from MEASURED facts, never a tool's success text and never a resource_link.
+NOTE the storyboard profile is board-paced and has NO ad duration budget, so DO
+NOT apply any 15-120s budget check here.
+
+# 1. Measure (verify BY EXISTENCE)
+Read the exact paths the assembler reported: the silent SLIDESHOW video (e.g.
+{{package_dir}}/slideshow.mp4) and the FINAL animatic ({{package_dir}}/animatic.mp4).
+Call `probe_media_durations` with BOTH paths.
+
+# 2. Judge against these objective checks
+- EXISTENCE: {{package_dir}}/animatic.mp4 must EXIST. If probe reports it MISSING,
+  it FAILS.
+- AUDIO/VIDEO SYNC: the final animatic's duration must NOT exceed the slideshow's
+  duration by more than {QC_SYNC_TOLERANCE_SECONDS:.1f}s. If the assembler skipped
+  the audio fit-trim, the ~30s Lyria music bed overruns the slideshow and the
+  animatic is many seconds longer than slideshow.mp4 — that FAILS.
+
+# 3. Verdict
+Emit a QCVerdict:
+- If EVERY check passes: set "acceptable": true, leave "issues" and
+  "correction_notes" empty, AND call the `exit_loop` tool to stop the QC loop.
+- If ANY check fails: set "acceptable": false, list the concrete MEASURED problems
+  in "issues", and write actionable "correction_notes" — for the overrun, "re-run
+  trim_audio_to_video_length on the mixed audio against the slideshow, then
+  re-combine to animatic.mp4 and re-verify". Do NOT call exit_loop when the cut
+  fails.
+
+Return ONLY the QCVerdict as JSON matching the required schema — no preamble.
+"""
+
+
+def _build_critic(profile: Profile) -> LlmAgent:
+    # output_schema (QCVerdict) and tools are used TOGETHER: ADK exposes the tools
+    # during the thought loop and enforces the schema only on the final reply
+    # (llm_agent.py:414-417) — the same pattern the storyboard planner already
+    # ships. The critic measures with probe_media_durations and escalates with
+    # exit_loop when the cut passes.
+    if profile.assembler_recipe == "stills_animatic":
+        instruction = _storyboard_critic_instruction(profile.plan_state_key)
+        description = (
+            "Measures the assembled animatic (slideshow vs final) via ffprobe and "
+            "emits a QCVerdict; escalates (exit_loop) when it passes, else writes "
+            "correction_notes for a bounded re-assemble."
+        )
+    else:
+        instruction = _ad_critic_instruction()
+        description = (
+            "Measures the assembled ad (video vs final + 15-120s budget) via "
+            "ffprobe and emits a QCVerdict; escalates (exit_loop) when it passes, "
+            "else writes correction_notes for a bounded re-assemble."
+        )
+    return LlmAgent(
+        model=MODEL,
+        name="critic",
+        description=description,
+        instruction=instruction,
+        output_schema=QCVerdict,
+        output_key=QC_STATE_KEY,
+        tools=[probe_media_durations, exit_loop],
     )
 
 
@@ -1053,7 +1315,36 @@ def build_root_agent(profile: Profile = AD_PROFILE) -> SequentialAgent:
     is the editorial storyboard/dogfood profile reached via the `package` CLI.
     `root_agent` below is built with AD_PROFILE, so `adk web` loads the ad
     capstone unchanged.
+
+    When `profile.enable_qc` (PR-7, both shipped profiles), the 4th stage is the
+    "Editor's QC Room": a `LoopAgent(sub_agents=[assembler, critic],
+    max_iterations=profile.qc_max_iterations)`. The assembler runs FIRST (builds/
+    rebuilds the cut), the critic runs SECOND (measures it and either escalates to
+    stop or writes correction notes). The SINGLE assembler instance lives ONLY
+    inside the loop here — never also as a bare sub_agent — so the single-parent
+    guard (base_agent.py:704-712) is respected. The `max_iterations` cap is the
+    hard guarantee against an infinite loop (loop_agent.py:95-97).
     """
+    assembler = _build_assembler(profile)
+    if profile.enable_qc:
+        # The Editor's QC Room. Assembler-first so the critic always reviews a real
+        # cut (LoopAgent runs sub_agents in order each pass and restarts at index 0
+        # — loop_agent.py:98/:126). The cap bounds the loop even if the critic never
+        # escalates. `assembler` is placed ONCE (here), never also below.
+        final_stage = LoopAgent(
+            name="editor_qc",
+            description=(
+                "The Editor's QC Room: re-assembles the cut until the critic's "
+                "objective check passes (escalate) or the max_iterations cap is "
+                "reached — whichever comes first (no infinite loop)."
+            ),
+            sub_agents=[assembler, _build_critic(profile)],
+            max_iterations=profile.qc_max_iterations,
+        )
+    else:
+        # Pre-PR-7 shape: the assembler is the bare 4th stage.
+        final_stage = assembler
+
     return SequentialAgent(
         name=f"ad_creative_director_{profile.name}",
         description=(
@@ -1064,7 +1355,7 @@ def build_root_agent(profile: Profile = AD_PROFILE) -> SequentialAgent:
             _build_planner(profile),
             _build_shot_stage(profile),
             _build_audio_stage(profile),
-            _build_assembler(profile),
+            final_stage,
         ],
     )
 

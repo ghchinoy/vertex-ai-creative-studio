@@ -63,6 +63,17 @@ class Profile:
         templating. "ad_plan" for the ad profile (unchanged from PR-5), "plan"
         for the storyboard profile (the key the addendum §4.2d/§4.4 packager
         reads).
+      enable_qc: when True, the 4th (assembler) stage is wrapped in a `LoopAgent`
+        — the "Editor's QC Room" (PR-7). The assembler runs FIRST each iteration
+        (builds/rebuilds the cut) and a critic runs SECOND: it MEASURES the cut
+        (ffprobe) and either escalates to stop the loop (cut acceptable) or writes
+        correction notes the assembler reads on the next iteration. False (the
+        default) preserves the pre-PR-7 behavior exactly — a bare assembler as the
+        4th stage, no loop. Both shipped profiles set it True.
+      qc_max_iterations: the LoopAgent's hard `max_iterations` cap — the guarantee
+        against an infinite loop even if the critic never escalates
+        (google-adk loop_agent.py:95-97). Small on purpose (2): one pass to build
+        + catch, one to fix + accept. Only consulted when enable_qc is True.
     """
 
     name: str
@@ -73,6 +84,10 @@ class Profile:
     # Additive fields (defaults preserve the PR-5 AD_PROFILE behavior exactly).
     emit_package: bool = False
     plan_state_key: str = "ad_plan"
+    # PR-7 QC LoopAgent ("Editor's QC Room"). Defaults (enable_qc=False) preserve
+    # the pre-PR-7 behavior; both shipped profiles below set enable_qc=True.
+    enable_qc: bool = False
+    qc_max_iterations: int = 2
 
 
 # The tone/audience half of the planner instruction for the ad profile. The
@@ -96,7 +111,10 @@ AD_PROFILE = Profile(
     shot_media="clips",
     assembler_recipe="video_ad_concat",
     # emit_package / plan_state_key left at their defaults (False / "ad_plan"),
-    # so AD_PROFILE is byte-for-byte the PR-5 behavior.
+    # so the ad clip/plan pipeline is byte-for-byte the PR-5 behavior.
+    # PR-7: the QC LoopAgent applies to BOTH profiles (profile-agnostic on the
+    # engine), so the ad capstone / `adk web` now runs the Editor's QC Room too.
+    enable_qc=True,
 )
 
 
@@ -124,4 +142,8 @@ STORYBOARD_PROFILE = Profile(
     assembler_recipe="stills_animatic",
     emit_package=True,
     plan_state_key="plan",
+    # PR-7: the storyboard animatic also gets the Editor's QC Room (profile-
+    # agnostic). Its critic uses NO duration budget — only existence + audio/video
+    # sync — because the storyboard is board-paced (addendum §6).
+    enable_qc=True,
 )
