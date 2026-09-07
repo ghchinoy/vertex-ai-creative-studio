@@ -237,7 +237,7 @@ plain-Python dataclass + factory, **not** ADK's `from_config` / `AgentConfig`
 YAML, which is `@deprecated` *and* `@experimental` in ADK 2.8.0.
 
 The seam is small on purpose. `AD_PROFILE` keeps the existing behavior exactly —
-`shot_media="clips"` (still → Veo clip per shot), `assembler_recipe="clips_audio"`,
+`shot_media="clips"` (still → Veo clip per shot), `assembler_recipe="video_ad_concat"`,
 `plan_schema=AdPlan`, `plan_state_key="ad_plan"`, `emit_package=False` — so
 `root_agent = build_root_agent(AD_PROFILE)` and `adk web` are unchanged.
 `STORYBOARD_PROFILE` flips exactly the fields it must: `plan_schema=StoryboardPlan`,
