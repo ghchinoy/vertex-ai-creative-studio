@@ -122,7 +122,7 @@ call is unambiguously namespaced (`music_*`, `tts_*`, `av_*`). Two details that
 make this a *correct* prefixing example, not just a working one:
 
 - **ADK inserts the separator itself** — it exposes each tool as
-  `f"{prefix}_{tool.name}"` ([`base_toolset.py:162`](https://github.com/google/adk-python/blob/main/src/google/adk/tools/base_toolset.py)).
+  `f"{prefix}_{tool.name}"` ([`base_toolset.py:143` @ `v2.8.0`](https://github.com/google/adk-python/blob/v2.8.0/src/google/adk/tools/base_toolset.py#L143)).
   So the prefix VALUES are **bare role tokens with no trailing underscore**
   (`"music"`, not `"music_"`) — otherwise you'd get a doubled `music__…`. And you
   name them by **role**, not by echoing the server (`"music"`, not `"lyria"`),

@@ -21,9 +21,10 @@ wire more than one server, so it is where two ADK/genmedia ideas are taught:
   1. `tool_name_prefix` on every MCPToolset, so the three servers' tool names
      never collide and the model's tool choices stay legible (music_*, tts_*,
      av_*). ADK inserts the separator itself — prefixed_name = f"{prefix}_
-     {tool.name}" (base_toolset.py:162) — so the prefix VALUES are bare role
-     tokens with NO trailing underscore ("music", "tts", "av"), named by role so
-     they don't echo the base tool name.
+     {tool.name}" (google/adk-python base_toolset.py:143 @ tag v2.8.0:
+     https://github.com/google/adk-python/blob/v2.8.0/src/google/adk/tools/base_toolset.py#L143)
+     — so the prefix VALUES are bare role tokens with NO trailing underscore
+     ("music", "tts", "av"), named by role so they don't echo the base tool name.
   2. The naming crosswalk (../NAMING.md): the servers spell "the same" parameter
      differently (model_id vs model_name, output_gcs_bucket vs output_directory
      vs local_path vs output_local_dir, sample_count, text vs prompt). The model
