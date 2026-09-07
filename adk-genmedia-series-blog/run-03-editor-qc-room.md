@@ -16,7 +16,7 @@ three_fold: { adk: High, mcp: Med, gemini: High }
 
 # The editor who checks the work: an AI cut that critiques and fixes itself — safely
 
-> _[Hero illustration rendering — the credentialed render is queued to the EM channel; this note is a placeholder, never a stub image.]_
+![An AI editor holds a finished cut up to the light against a checklist, measures it with a ruler, spots that the music runs long, sends it back for one fix, and stamps the corrected cut approved](illustrations/run-03-editor-qc-room-hero.png)
 
 The finale built you a whole studio: a brand brief goes in, a finished, on-brand ad comes out. But
 every real studio has one more role you haven't hired yet — the person who watches the final cut
