@@ -158,13 +158,17 @@ if project_id:
 # idempotent, and a missing sibling fails LOUD with an actionable message — a
 # reader who copied only this dir gets help, not an opaque ImportError.
 _SERIES_ROOT = Path(__file__).resolve().parents[2]
-# The `storyboard` profile (PR-6) reuses PR-4's scriptwriter-storyboarder too, so
-# it is a required sibling of the engine alongside the three the ad profile uses.
+# These three siblings are what the DEFAULT (ad) profile composes, so they are
+# required at module load: `root_agent = build_root_agent(AD_PROFILE)` imports this
+# module, and `adk web` must construct the ad capstone. The `storyboard` profile
+# ALSO reuses PR-4's scriptwriter-storyboarder, but that sibling is imported LAZILY
+# (only when the storyboard planner is built — see `_load_scriptwriter_tool`), so
+# the ad path's import surface stays byte-identical to PR-5: adk web needs only
+# these three, never scriptwriter-storyboarder.
 for _sibling in (
     "photoshoot",
     "director-videographer",
     "music-producer",
-    "scriptwriter-storyboarder",
 ):
     _project_dir = _SERIES_ROOT / _sibling
     if not _project_dir.is_dir():
@@ -183,25 +187,54 @@ for _sibling in (
 from photoshoot.agent import root_agent as photoshoot_agent  # noqa: E402
 from director_videographer.agent import root_agent as director_agent  # noqa: E402
 from music_producer.agent import root_agent as music_producer_agent  # noqa: E402
-# REUSE PR-4's beat AUTHOR (the scriptwriter LEAF — text only, output_key=
-# "shot_list"), NOT the storyboarder image half: in the storyboard profile the
-# stills come from the shot stage reusing Photoshoot (addendum §4.4). Importing
-# scriptwriter_storyboarder.agent constructs its SequentialAgent, which sets
-# `scriptwriter.parent_agent` — that is fine: we reuse `scriptwriter` via
-# AgentTool, and AgentTool runs it in its OWN Runner and never adds it to a
-# sub_agents list, so there is no "already has a parent agent" conflict
-# (base_agent.py:704-712 only fires when an agent is added as a sub_agent).
-from scriptwriter_storyboarder.agent import scriptwriter  # noqa: E402
 
-# Wrap each persona as a callable tool. AgentTool(name=agent.name), so the tool
-# names the LLM sees are "photoshoot", "director_videographer", "music_producer",
-# "scriptwriter". These wrappers are stateless config, safe to share across the
+# Wrap each ad-profile persona as a callable tool. AgentTool(name=agent.name), so
+# the tool names the LLM sees are "photoshoot", "director_videographer",
+# "music_producer". These wrappers are stateless config, safe to share across the
 # parallel shot slots (each call gets its own isolated Runner + session; see the
-# header).
+# header). The storyboard profile's scriptwriter tool is built lazily in
+# `_load_scriptwriter_tool` so the ad path never imports that sibling.
 photoshoot_tool = AgentTool(agent=photoshoot_agent)
 director_tool = AgentTool(agent=director_agent)
 music_producer_tool = AgentTool(agent=music_producer_agent)
-scriptwriter_tool = AgentTool(agent=scriptwriter)
+
+
+def _load_scriptwriter_tool() -> AgentTool:
+    """Lazily import PR-4's scriptwriter LEAF and wrap it as a callable tool.
+
+    Called ONLY when the storyboard planner is built (`_build_planner`, stills
+    branch), never at module load — so the AD profile's import surface stays
+    byte-identical to PR-5: `adk web` (root_agent = build_root_agent(AD_PROFILE))
+    needs only the three ad siblings above and NOT scriptwriter-storyboarder.
+
+    The storyboard profile REUSES the scriptwriter LEAF (the text beat author,
+    output_key="shot_list"), NOT the storyboarder image half — in this profile the
+    stills come from the shot stage reusing Photoshoot (addendum §4.4). Importing
+    scriptwriter_storyboarder.agent constructs its SequentialAgent, which sets
+    `scriptwriter.parent_agent`; that is fine — AgentTool runs the wrapped agent in
+    its OWN Runner and never adds it to a sub_agents list, so there is no "already
+    has a parent agent" conflict (base_agent.py:704-712 only fires when an agent is
+    added as a sub_agent).
+
+    Fails LOUD (RuntimeError naming the missing sibling) if scriptwriter-
+    storyboarder/ is absent — the storyboard profile's extra co-location
+    requirement, documented in the README's Creative Studio section.
+    """
+    _project_dir = _SERIES_ROOT / "scriptwriter-storyboarder"
+    if not _project_dir.is_dir():
+        raise RuntimeError(
+            "The 'storyboard' profile REUSES PR-4's scriptwriter to author "
+            "editorial beats, so it needs the sibling example project "
+            f"'scriptwriter-storyboarder/' at {_project_dir}, but that directory "
+            "is missing. Check out the whole adk-genmedia-series/ tree next to "
+            "ad-creative-director/. (The AD profile / `adk web` does NOT need this "
+            "sibling.) See this project's README, section 'Creative Studio'."
+        )
+    if str(_project_dir) not in sys.path:
+        sys.path.insert(0, str(_project_dir))
+    from scriptwriter_storyboarder.agent import scriptwriter  # noqa: E402
+
+    return AgentTool(agent=scriptwriter)
 
 
 # ============================================================================
@@ -283,6 +316,10 @@ def _build_planner(profile: Profile) -> LlmAgent:
     # The storyboard profile reuses PR-4's scriptwriter to author beats and emits
     # a StoryboardPlan; the ad profile plans clips with no tools (unchanged).
     if profile.shot_media == "stills":
+        # Build the scriptwriter tool HERE (lazily) — this is the only place the
+        # storyboard profile pulls in the scriptwriter-storyboarder sibling, so the
+        # ad path never imports it (see _load_scriptwriter_tool).
+        scriptwriter_tool = _load_scriptwriter_tool()
         return LlmAgent(
             model=MODEL,
             name="storyboard_planner",
@@ -517,17 +554,21 @@ If either could not be verified, say so plainly — do not fabricate a path.
 # The storyboard audio stage: same reuse of the Music Producer persona, but it
 # reads a StoryboardPlan (narration_line per panel, not vo_line) and writes the
 # two files into the package's audio/ dir with predictable names the packager can
-# find (music.mp3, narration.wav).
-STORYBOARD_AUDIO_INSTRUCTION = """\
+# find (music.mp3, narration.wav). `plan_key` is threaded the way
+# _stills_slot_instruction does it: `{{{plan_key}}}` becomes the state template
+# `{plan}` (for the shipped profile), while `{{audio_dir}}` stays a runtime state
+# template. Resolved text is identical for plan_state_key="plan".
+def _storyboard_audio_instruction(plan_key: str) -> str:
+    return f"""\
 You are the audio department for an editorial storyboard animatic. The planner's
 storyboard plan is injected below, and the destination directory for the audio:
 
 <plan>
-{plan}
+{{{plan_key}}}
 </plan>
 
 Save audio into this directory (an absolute path):
-<audio_dir>{audio_dir}</audio_dir>
+<audio_dir>{{audio_dir}}</audio_dir>
 
 Produce TWO audio artifacts by delegating to the `music_producer` persona tool
 (it wires lyria for music and gemini TTS for voice, and verifies each file by
@@ -535,13 +576,13 @@ existence):
 
 # 1. The music bed
 Ask `music_producer` to generate a music bed matching the plan's `music_mood`,
-saved LOCALLY into {audio_dir} with the name `music.mp3` (lyria writes MP3 on the
+saved LOCALLY into {{audio_dir}} with the name `music.mp3` (lyria writes MP3 on the
 default model; give it a local destination so a file is actually written).
 
 # 2. The narration
 Concatenate the plan's per-panel `narration_line`s, in panel order, into ONE
 continuous explainer narration script and ask `music_producer` to generate it as
-speech, saved LOCALLY into {audio_dir} with the name `narration.wav`. The gemini
+speech, saved LOCALLY into {{audio_dir}} with the name `narration.wav`. The gemini
 TTS tool caps `text` at 800 characters — if the combined narration exceeds that,
 tell the user to shorten the narration lines rather than truncating silently. You
 want the narration as its OWN file; you do NOT need the persona's mixed output
@@ -549,8 +590,8 @@ want the narration as its OWN file; you do NOT need the persona's mixed output
 
 # 3. Report
 End with two labelled lines, each with the concrete verified local path:
-  music bed -> {audio_dir}/music.mp3 (verified)
-  narration -> {audio_dir}/narration.wav (verified)
+  music bed -> {{audio_dir}}/music.mp3 (verified)
+  narration -> {{audio_dir}}/narration.wav (verified)
 If either could not be verified, say so plainly — do not fabricate a path.
 """
 
@@ -565,7 +606,7 @@ def _build_audio_stage(profile: Profile) -> LlmAgent:
                 "music_mood) and an explainer narration (from the panels' "
                 "narration_lines) as files in the package's audio/ dir."
             ),
-            instruction=STORYBOARD_AUDIO_INSTRUCTION,
+            instruction=_storyboard_audio_instruction(profile.plan_state_key),
             tools=[music_producer_tool],
         )
     return LlmAgent(
@@ -895,22 +936,27 @@ storyboard_assembler_avtool = MCPToolset(
 )
 
 
-STILLS_ANIMATIC_INSTRUCTION = """\
+# `plan_key` is threaded the way _stills_slot_instruction does it: `{{{plan_key}}}`
+# becomes the state template `{plan}` (for the shipped profile), while
+# `{{package_dir}}` stays a runtime state template. Resolved text is identical for
+# plan_state_key="plan".
+def _stills_animatic_instruction(plan_key: str) -> str:
+    return f"""\
 You are the editor who assembles the final editorial ANIMATIC (a stills board set
 to narration + music). The planner's storyboard plan is injected for reference,
 and the package directory where the final file must land:
 
 <plan>
-{plan}
+{{{plan_key}}}
 </plan>
 
 Write the final animatic into this directory (an absolute path):
-<package_dir>{package_dir}</package_dir>
+<package_dir>{{package_dir}}</package_dir>
 
 The panel stage produced one verified still per panel (local, named
-shot-01.png, shot-02.png, … under {package_dir}/shots) and the audio stage
-produced a verified music bed ({package_dir}/audio/music.mp3) and a verified
-narration ({package_dir}/audio/narration.wav). The exact paths are in the
+shot-01.png, shot-02.png, … under {{package_dir}}/shots) and the audio stage
+produced a verified music bed ({{package_dir}}/audio/music.mp3) and a verified
+narration ({{package_dir}}/audio/narration.wav). The exact paths are in the
 conversation above — read them from there; do NOT guess names.
 
 There is NO Veo clip in this profile — you build the video FROM the stills. Work
@@ -918,38 +964,38 @@ in this order and verify by existence at the end:
 
 # 1. Build the silent slideshow FROM the stills
 Call the `build_stills_animatic_slideshow` tool with `image_paths` = the verified
-still paths IN PANEL ORDER, `output_path="{package_dir}/slideshow.mp4"`, and
-`narration_audio_path="{package_dir}/audio/narration.wav"` (so the slideshow is
+still paths IN PANEL ORDER, `output_path="{{package_dir}}/slideshow.mp4"`, and
+`narration_audio_path="{{package_dir}}/audio/narration.wav"` (so the slideshow is
 board-paced to the narration length). Use the video path it reports. If it
 returns an ERROR, stop and report it — do not continue.
 
 # 2. Mix the music bed + narration -> one audio track
 Call `ffmpeg_layer_audio_files` with `input_audio_uris` =
-["{package_dir}/audio/music.mp3", "{package_dir}/audio/narration.wav"],
-`output_filename="animatic_mix.m4a"`, `output_local_dir="{package_dir}"`.
+["{{package_dir}}/audio/music.mp3", "{{package_dir}}/audio/narration.wav"],
+`output_filename="animatic_mix.m4a"`, `output_local_dir="{{package_dir}}"`.
 
 # 3. Trim the mixed audio to the SLIDESHOW length
 The Lyria bed is a fixed ~30s clip and avtool mixes with amix=duration=longest,
 so the mixed audio is usually LONGER than the slideshow — combining directly
 leaves audio over a frozen last panel. Call `trim_audio_to_video_length` with
 `audio_path` = the mixed audio (step 2), `video_path` = the slideshow (step 1),
-and `output_path="{package_dir}/animatic_mix_fit.m4a"`. Use its returned audio
+and `output_path="{{package_dir}}/animatic_mix_fit.m4a"`. Use its returned audio
 path as the audio input to the next step.
 
 # 4. Lay the (fitted) audio over the slideshow -> the animatic
 Call `ffmpeg_combine_audio_and_video` with `input_video_uri` = the slideshow from
 step 1, `input_audio_uri` = the fitted audio from step 3,
-`output_filename="animatic.mp4"`, `output_local_dir="{package_dir}"`. The final
-file MUST be exactly {package_dir}/animatic.mp4 so the packager can find it.
+`output_filename="animatic.mp4"`, `output_local_dir="{{package_dir}}"`. The final
+file MUST be exactly {{package_dir}}/animatic.mp4 so the packager can find it.
 
 # 5. VERIFY the animatic by existence — never a resource_link
-Call `ffmpeg_get_media_info` on {package_dir}/animatic.mp4 and report its
+Call `ffmpeg_get_media_info` on {{package_dir}}/animatic.mp4 and report its
 duration, and tell the user to list the destination (e.g.
-`ls -l {package_dir}/animatic.mp4`). A tool returning successfully or a bare
+`ls -l {{package_dir}}/animatic.mp4`). A tool returning successfully or a bare
 resource_link is NOT proof — the destination listing / media info IS. If the file
 cannot be verified, say so plainly; do not claim success.
 
-End with the concrete verified path of {package_dir}/animatic.mp4 and its
+End with the concrete verified path of {{package_dir}}/animatic.mp4 and its
 measured duration.
 """
 
@@ -965,7 +1011,7 @@ def _build_assembler(profile: Profile) -> LlmAgent:
                 "over the slideshow via avtool, and verifies animatic.mp4 by "
                 "existence."
             ),
-            instruction=STILLS_ANIMATIC_INSTRUCTION,
+            instruction=_stills_animatic_instruction(profile.plan_state_key),
             # avtool for mix/combine/info, plus TWO local ffmpeg helpers: the new
             # stills->video slideshow builder and the SAME trim helper the ad
             # assembler uses (bare callables ADK auto-wraps in FunctionTools:

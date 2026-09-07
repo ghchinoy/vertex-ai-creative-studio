@@ -335,6 +335,17 @@ source of truth: `mcp-genmedia-go/VERSION`). If unset, the packager falls back t
 the series-pinned floor (`3.18.1`). This value is recorded in the manifest
 **deterministically — never authored by the LLM.**
 
+**One extra sibling.** The storyboard profile reuses PR-4's beat author, so — on
+top of the three siblings the ad capstone needs
+([`photoshoot/`](../photoshoot/), [`director-videographer/`](../director-videographer/),
+[`music-producer/`](../music-producer/)) — it **also** requires
+[`scriptwriter-storyboarder/`](../scriptwriter-storyboarder/) next to this project
+(**four** siblings in total). That import is **lazy**: it happens only when the
+storyboard planner is built, so the ad capstone / `adk web` never needs this
+fourth sibling and its import surface is unchanged. If you run the storyboard CLI
+without `scriptwriter-storyboarder/` present, the planner build **fails loud** with
+a `RuntimeError` naming the missing sibling.
+
 ### Package layout
 
 ```
