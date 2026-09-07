@@ -1,0 +1,121 @@
+// creative-studio-dogfood.dot — the storyboard profile + headless packager (PR-6 / #1823 "Creative Studio").
+// Theme: blog/graphic-theme.md §5. This is the SAME engine as ad-creative-director, run through a
+// SECOND profile via build_root_agent(profile); the run/walk state signature (purple) is the planner's
+// output_schema plan, and the new element is the DETERMINISTIC, NON-LLM packager (green) that verifies
+// every artifact by existence and emits a versioned manifest.json — the machine-readable contract.
+// Verified against merged ad-creative-director/ad_creative_director/{profiles.py,schemas.py,package.py}
+//   + README.md (#1823, squash-merge 31f00b04):
+//   STORYBOARD_PROFILE: plan_schema=StoryboardPlan, shot_media="stills" (photoshoot only, NO Veo),
+//   assembler_recipe="stills_animatic", plan_state_key="plan", emit_package=True; reuses PR-4
+//   scriptwriter as beat author (4th sibling, lazy import, fails loud); headless InMemoryRunner CLI;
+//   build_manifest verifies by os.path.exists, manifest_version "1", artifacts_verified = AND of all.
+// Render:
+//   dot -Tsvg blog/diagrams/creative-studio-dogfood.dot -o blog/diagrams/creative-studio-dogfood.svg
+//   dot -Tpng -Gdpi=144 blog/diagrams/creative-studio-dogfood.dot -o blog/diagrams/creative-studio-dogfood.png
+digraph creative_studio_dogfood {
+  graph [fontname="Inter", bgcolor="#FBFBF8", rankdir=TB, splines=true,
+         nodesep=0.42, ranksep=0.55, compound=true,
+         label="Creative Studio — the storyboard profile (dogfood)\lSAME engine as the ad capstone, a SECOND profile via build_root_agent(profile); headless CLI → package + manifest.json.\l",
+         labelloc="t", fontsize=14, fontcolor="#1F2933"];
+  node  [fontname="Inter", fontsize=11, penwidth=1.6];
+  edge  [fontname="JetBrains Mono", fontsize=9, color="#1F2933", penwidth=1.3];
+
+  // Headless entrypoint (not adk web) — a CLI you call.
+  cli [shape=oval, style=filled, fillcolor="#F1F3F4", color="#52606D",
+       label="python -m ad_creative_director.package\l--profile storyboard --brief \"…\" --out packages/<slug>/\l(headless InMemoryRunner — no adk web)"];
+
+  // The profile seam (the one flipped switch) — indigo note.
+  profile [shape=note, style=filled, fillcolor="#E8E6FD", color="#5B4FE9", fontcolor="#5B4FE9",
+           label="STORYBOARD_PROFILE (frozen dataclass)\lshot_media=\"stills\" (no Veo) · assembler=\"stills_animatic\"\lplan_schema=StoryboardPlan · plan_state_key=\"plan\" · emit_package=True"];
+
+  // The SAME SequentialAgent engine, storyboard-flavoured (ADK, indigo).
+  subgraph cluster_pipeline {
+    label="root_agent = build_root_agent(STORYBOARD_PROFILE)\lthe UNCHANGED SequentialAgent graph\l";
+    labelloc="t"; fontname="Inter"; fontsize=11; fontcolor="#5B4FE9";
+    color="#5B4FE9"; style="rounded,dashed";
+
+    planner [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+             label="LlmAgent  planner\noutput_schema=StoryboardPlan · output_key=\"plan\"\n(reuses PR-4 scriptwriter as beat author — 4th sibling, lazy import)"];
+
+    subgraph cluster_shots {
+      label="ParallelAgent(\"shots\") — 3 static slots, concurrent · stills ONLY (no Veo)";
+      labelloc="t"; fontname="Inter"; fontsize=10; fontcolor="#5B4FE9";
+      color="#5B4FE9"; style="rounded";
+      panel1 [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9", label="panel_1\ntools=[photoshoot]"];
+      panel2 [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9", label="panel_2\ntools=[photoshoot]"];
+      panel3 [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9", label="panel_3\ntools=[photoshoot]"];
+    }
+
+    audio [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+           label="LlmAgent  audio\ntools=[music_producer]\nmusic bed + narration"];
+
+    assembler [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+               label="LlmAgent  assembler (stills_animatic)\ntools=[avtool, build_stills_animatic_slideshow, trim_audio_to_video_length]"];
+  }
+
+  // Session state — the schema-checked storyboard plan (walk/run signature: purple note).
+  state [shape=note, style=filled, fillcolor="white", color="#8E24AA", fontcolor="#8E24AA",
+         label="session state\nstate[\"plan\"] = StoryboardPlan (validated)\nsubject · music_mood · shots[1..3]{ beat, prompt, narration_line }\n(NO duration budget — board-paced)"];
+
+  // Gemini reasoning in the planner (amber ellipse).
+  g_plan [shape=ellipse, style=filled, fillcolor="#FDF0CE", color="#F9A825", fontcolor="#1F2933",
+          label="Gemini writes the editorial beats\n(explainer register, not a CTA)"];
+
+  // Reused persona (teal) — photoshoot only.
+  photoshoot [shape=box3d, style=filled, fillcolor="#DBF3F1", color="#00A39C",
+              label="photoshoot_tool (AgentTool)\n→ nanobanana still · one per panel"];
+
+  // artifacts written into the package dir.
+  pkgfiles [shape=folder, style=filled, fillcolor="#F1F3F4", color="#52606D",
+            label="packages/<slug>/\nshots/shot-01..03.png · audio/narration.wav · audio/music.mp3\nanimatic.mp4 · plan.json"];
+
+  // THE NEW ELEMENT: deterministic non-LLM packager (green) — verify by existence.
+  packager [shape=box, style="rounded,filled", fillcolor="white", color="#1E8E3E", fontcolor="#1E8E3E",
+            label="build_manifest() — DETERMINISTIC, NON-LLM\nchecks every expected path with os.path.exists (NOT a resource_link)\nrecords verified:<bool> per artifact · stamps model + suite_version deterministically"];
+
+  // the machine-readable contract (green, the payoff).
+  manifest [shape=note, style="filled", fillcolor="#E6F4EA", color="#1E8E3E", fontcolor="#1E8E3E",
+            label="manifest.json  (manifest_version \"1\")\nthe versioned data contract a downstream tool reads\nartifacts_verified = AND of every verified flag"];
+
+  // the intended consumer (dogfood): the archivist.
+  consumer [shape=box, style="rounded,filled", fillcolor="white", color="#52606D", fontcolor="#52606D",
+            label="downstream consumer (this series' archivist)\nreads ONLY manifest.json — never the agent's Python"];
+
+  // gotcha: fail-closed (orange dashed).
+  gotcha [shape=box, style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C",
+          label="Exit code IS the contract: 0 only if EVERY artifact verifies\nany missing file → non-zero + artifacts_verified:false\nNo stubs, ever · empty plan never verifies (locked by unit tests)"];
+
+  // ---- flow ----
+  cli -> profile [label="selects"];
+  profile -> planner [label="builds", lhead=cluster_pipeline, color="#5B4FE9"];
+  planner -> g_plan [style=dotted, color="#F9A825", arrowhead=none];
+
+  planner -> state [style=dashed, color="#8E24AA", fontcolor="#8E24AA", label="output_schema writes"];
+  state -> panel1 [style=dashed, color="#8E24AA", fontcolor="#8E24AA", label="{plan}: shots[0..2]", lhead=cluster_shots];
+
+  panel2 -> photoshoot [label="still per panel", color="#00A39C"];
+
+  state -> audio [style=dashed, color="#8E24AA", fontcolor="#8E24AA", label="{plan}: music_mood, narration"];
+
+  photoshoot -> pkgfiles [color="#00A39C"];
+  audio -> pkgfiles [color="#00A39C"];
+  assembler -> pkgfiles [label="stills_animatic → animatic.mp4", color="#00A39C"];
+
+  // the packager reads the plan from state AND verifies files on disk, then emits the manifest.
+  state -> packager [style=dashed, color="#1E8E3E", label="reads plan (dict)"];
+  pkgfiles -> packager [color="#1E8E3E", label="verify by existence"];
+  packager -> manifest [color="#1E8E3E"];
+  manifest -> consumer [color="#52606D", label="stable versioned contract"];
+  packager -> gotcha [style=dashed, color="#E8590C", arrowhead=none];
+
+  subgraph cluster_legend {
+    label="Legend"; fontname="Inter"; fontsize=11; color="#9AA5B1"; style="rounded";
+    L_adk    [shape=box,     style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9", label="ADK"];
+    L_mcp    [shape=box3d,   style="filled",         fillcolor="#DBF3F1", color="#00A39C", label="genmedia MCP / reused persona"];
+    L_gemini [shape=ellipse, style="filled",         fillcolor="#FDF0CE", color="#F9A825", label="Gemini"];
+    L_state  [shape=note,    style="filled",         fillcolor="white",   color="#8E24AA", fontcolor="#8E24AA", label="session state / output_schema"];
+    L_ver    [shape=box,     style="rounded,filled", fillcolor="white",   color="#1E8E3E", fontcolor="#1E8E3E", label="deterministic verify / manifest"];
+    L_got    [shape=box,     style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C", label="gotcha (fail-closed)"];
+    L_adk -> L_mcp -> L_gemini -> L_state -> L_ver -> L_got [style=invis];
+  }
+}

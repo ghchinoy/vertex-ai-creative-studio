@@ -181,6 +181,13 @@ colours/shapes, so a diagram is self-explaining out of context.
   (photoshoot/director/music-producer in a dashed reuse cluster), the planner's **purple
   `output_schema` plan** (`AdPlan` → `{ad_plan}`), and two orange gotchas (static fan-out cap
   `MAX_SHOTS=3`; the Lyria-bed-vs-avtool trim seam). Ends on verify-by-existence of one `final_ad.mp4`.
+- `creative-studio-dogfood` — the dogfood post (#1823): the SAME engine run through a **second
+  `storyboard` profile** (an indigo `Profile` note flips the switches: stills-only, no Veo,
+  `stills_animatic`, `emit_package=True`) via a headless CLI. New visual element — the **green
+  deterministic, non-LLM packager** (`build_manifest`, verify-by-existence) emitting a **green
+  `manifest.json` contract** read by a downstream consumer (the archivist); purple `StoryboardPlan`
+  session-state; orange **fail-closed** gotcha (exit code IS the contract; no stubs; empty plan never
+  verifies). Introduces green as *deterministic verify / manifest* alongside the standard verify green.
 
 ---
 

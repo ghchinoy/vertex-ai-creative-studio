@@ -37,12 +37,14 @@ their diagrams, illustration art-direction, and the shared visual identity.
 | 2 | crawl | [crawl-02-director](crawl-02-director.md) | PR #1814 ✅ | `director` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
 | 3 | crawl | [crawl-03-music-producer](crawl-03-music-producer.md) | PR #1815 ✅ | `music-producer` ✅ | art-direction ✅ / render ✅ | **draft** |
 | 4 | walk | [walk-01-scriptwriter-storyboarder](walk-01-scriptwriter-storyboarder.md) | PR #1816 ✅ | `scriptwriter-storyboarder` ✅ | art-direction ✅ / render ✅ | **draft** |
-| 5 | run | [run-01-ad-creative-director](run-01-ad-creative-director.md) | PR #1821 ✅ | `ad-creative-director` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
+| 5 | run | [run-01-ad-creative-director](run-01-ad-creative-director.md) | PR #1821 ✅ | `ad-creative-director` ✅ | art-direction ✅ / render ✅ | **draft** |
+| 6 | run (dogfood) | [run-02-creative-studio-dogfood](run-02-creative-studio-dogfood.md) | PR #1823 ✅ | `creative-studio-dogfood` ✅ | art-direction ✅ / render ⏳ | **draft (this cycle)** |
 
-Legend: ✅ done · ⏳ pending/merging. **All six series hero illustrations** (crawl ×4, walk ×1, run
-×1) are now **real existence-verified renders** (2752×1536 PNG, produced on the credentialed genmedia
-stack via the EM render channel and theme-compliance-reviewed by the archivist) dropped beside their
-art-direction in [`illustrations/`](illustrations/). No placeholder was ever committed.
+Legend: ✅ done · ⏳ pending/merging. Six series hero illustrations (crawl ×4, walk ×1, run ×1) are
+**real existence-verified renders** (2752×1536 PNG, produced on the credentialed genmedia stack via
+the EM render channel and theme-compliance-reviewed by the archivist) dropped beside their
+art-direction in [`illustrations/`](illustrations/); the dogfood hero (post 6) is art-directed and
+queued to the render channel. No placeholder was ever committed.
 
 ## The through-line (map)
 
@@ -63,6 +65,10 @@ last, while Gemini's reasoning stays front-and-centre from the very first agent.
 6. **A real multi-agent app** → **Ad creative-director's assistant** — *`SequentialAgent` ⊃
    `ParallelAgent` + `AgentTool`, composing the persona agents; `output_schema` plan.* (PR #1821 ✅
    — **run tier / finale: the arc's payoff**)
+7. **The studio that documents itself** → **Creative Studio (dogfood)** — *a second `storyboard`
+   profile on the same engine (the `build_root_agent(profile)` seam) + a headless, deterministic
+   packager that emits a versioned `manifest.json` verified by existence.* (PR #1823 ✅ — **dogfood:
+   the studio packages its own output for downstream tools**)
 
 Each step ends with "what you learned," a link to the next, and a **See also** cross-link to the
 non-ADK skill/demo that does the same job on another surface — the series *complements* the skills,
@@ -82,6 +88,7 @@ the arc; MCP breadth peaks at Music Producer and the Run agent; Gemini stays **H
 | 3 · Music Producer | **High** | **High** | Med |
 | 4 · Scriptwriter/Storyboarder | **High** | Med | **High** |
 | 5 · Ad creative-director | **High** | **High** | **High** |
+| 6 · Creative Studio (dogfood) | **High** | Med | **High** |
 
 ## Maintenance protocol (for the standing archivist)
 

@@ -11,7 +11,8 @@ diagram: diagrams/series-arc.svg
 source_of_truth: >
   GoogleCloudPlatform/vertex-ai-creative-studio @ main.
   Grounded on merged PRs #1811 (Tier-0), #1812 (Photoshoot), #1814 (Director), #1815 (Music
-  Producer), #1816 (Scriptwriter/Storyboarder), #1821 (Ad creative-director — run-tier finale).
+  Producer), #1816 (Scriptwriter/Storyboarder), #1821 (Ad creative-director — run-tier finale),
+  #1823 (Creative Studio — storyboard-profile dogfood tool).
 ---
 
 # Your own AI creative studio: from a one-line brief to a full set of on-brand assets
@@ -64,10 +65,12 @@ not a gamble.
 | 3 | **The Music Producer** — [give it a soundtrack](crawl-03-music-producer.md) | a brief → an original music bed + voiceover, mixed into one track | ✅ shipped (#1815) |
 | 4 | **The Scriptwriter / Storyboarder** — [your first pipeline](walk-01-scriptwriter-storyboarder.md) | an idea → a script → a storyboard, handed cleanly down the line | ✅ shipped (#1816) |
 | 5 | **The creative director's assistant** — [the whole team](run-01-ad-creative-director.md) | a campaign brief → one finished, on-brand ad, assembled by every collaborator | ✅ shipped (#1821) |
+| 6 | **The Creative Studio** — [the studio that documents itself](run-02-creative-studio-dogfood.md) | a subject brief → a verified storyboard package + a machine-readable manifest a downstream tool can build on | ✅ shipped (#1823) |
 
 > Everything you read here ships only after it's been proven on a **real, credentialed run** — the
-> asset actually generated, the file actually there. The whole crawl→walk→run arc is now shipped,
-> from a single collaborator to the full creative team.
+> asset actually generated, the file actually there. The whole crawl→walk→run arc is now shipped —
+> from a single collaborator to the full creative team, and finally to a studio that packages its own
+> output for other tools to build on.
 
 ## Why these collaborators can be trusted
 
