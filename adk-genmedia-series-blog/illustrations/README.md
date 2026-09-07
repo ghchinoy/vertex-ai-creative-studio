@@ -2,10 +2,11 @@
 
 This directory holds **Nano Banana art-direction** for the series' hero illustrations: the exact
 generation prompt, intended placement, aspect ratio, anchor axis colour, and a theme-compliance
-checklist for each image. All of it obeys `blog/graphic-theme.md` §4. As of 2026-09-07 **every hero in the
-series** (crawl ×4, walk ×1, run ×2 — all seven) has its **real render** here beside the art-direction.
+checklist for each image. All of it obeys `blog/graphic-theme.md` §4. As of 2026-09-07 the **first
+seven heroes** (crawl ×4, walk ×1, run ×2) have their **real render** here beside the art-direction;
+the **eighth** (the Editor's QC Room, post 7) is art-directed and queued to the EM render channel.
 
-## Status: all seven series heroes rendered ✅ (real, existence-verified — none faked)
+## Status: 7 of 8 series heroes rendered ✅ (real, existence-verified — none faked); QC-room hero ⏳ queued
 
 The **real** images require the credentialed genmedia stack — the same one the series' own
 Photoshoot/Director agents use:
@@ -17,8 +18,9 @@ Photoshoot/Director agents use:
 This archivist container does **not** have that stack, so renders were produced on the credentialed
 validator env via the authorized **EM render channel** (`vaics-adk-series-em`), existence-verified
 there, then dropped beside each art-direction `.md` here. The archivist reviewed each PNG against its
-theme-compliance checklist and accepted all four. Per the anti-fake rule (Simulation Trap), **no
-placeholder/stub PNG was ever committed** — the `.png` files are the genuine renders.
+theme-compliance checklist and accepted each. Per the anti-fake rule (Simulation Trap), **no
+placeholder/stub PNG is ever committed** — the `.png` files here are the genuine renders, and a
+not-yet-rendered hero shows a "rendering" note in staging rather than a stub.
 
 ## Inventory
 
@@ -31,6 +33,7 @@ placeholder/stub PNG was ever committed** — the `.png` files are the genuine r
 | `walk-01-scriptwriter-storyboarder-hero.md` | `walk-01-scriptwriter-storyboarder.md` | 16:9 | indigo/purple pipeline spine (state handoff) | ✅ `walk-01-scriptwriter-storyboarder-hero.png` (2752×1536) |
 | `run-01-ad-creative-director-hero.md` | `run-01-ad-creative-director.md` | 16:9 | indigo-led spine that fans out (parallel) + purple plan + teal reused specialists | ✅ `run-01-ad-creative-director-hero.png` (2752×1536) |
 | `run-02-creative-studio-dogfood-hero.md` | `run-02-creative-studio-dogfood.md` | 16:9 | purple plan + green deterministic manifest/verify (the machine-readable package) | ✅ `run-02-creative-studio-dogfood-hero.png` (2752×1536) |
+| `run-03-editor-qc-room-hero.md` | `run-03-editor-qc-room.md` | 16:9 | indigo loop + green measure/approve + one orange caught flaw + purple verdict | ⏳ queued (EM render channel) |
 
 Per-image render evidence (existence-verification + sizes): `../../briefs/archivist-render-batch-1-evidence.md`.
 

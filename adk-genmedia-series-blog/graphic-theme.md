@@ -188,6 +188,16 @@ colours/shapes, so a diagram is self-explaining out of context.
   `manifest.json` contract** read by a downstream consumer (the archivist); purple `StoryboardPlan`
   session-state; orange **fail-closed** gotcha (exit code IS the contract; no stubs; empty plan never
   verifies). Introduces green as *deterministic verify / manifest* alongside the standard verify green.
+- `editor-qc-room` — the QC post (#1824), the series' **last ADK construct**: the optional self-critique
+  **`LoopAgent`** wrapping stage four of the same engine. Signature — an indigo `LoopAgent` cluster
+  (`assembler` first, `critic` second), the critic's **green `probe_media_durations` measurement**
+  (verify-by-existence + the 1.0s sync tolerance), a **purple `QCVerdict` session-state note**
+  (`acceptable` required → fails loud), an amber Gemini spark (judging from the numbers), and **two
+  green stop-guarantees** (escalate via `exit_loop` / the `max_iterations=2` hard cap). One orange
+  gotcha — the *taught* defect: the `enable_qc`-gated first-pass skipped trim that makes the ~30s Lyria
+  bed overrun, so the critic has a real measured flaw to catch. Green here also reads as *measure /
+  verify / stop-guarantee*; the single orange arrow is the one bounded re-assemble pass
+  (`correction_notes` via `{qc_verdict?}`).
 
 ---
 

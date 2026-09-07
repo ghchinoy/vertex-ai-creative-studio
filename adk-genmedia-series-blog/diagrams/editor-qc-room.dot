@@ -1,0 +1,94 @@
+// editor-qc-room.dot — the optional self-critique LoopAgent, the "Editor's QC Room" (PR-7 / #1824).
+// Theme: blog/graphic-theme.md §5. This is the SAME ad-creative-director engine as PR-5/PR-6; the ONE
+// new construct is the LoopAgent that wraps stage four: assembler FIRST (builds/rebuilds the cut),
+// critic SECOND (MEASURES it with ffprobe and either escalates to stop or writes correction notes the
+// assembler reads next pass). The loop always stops — a sub-agent escalates OR the max_iterations cap.
+// Verified against merged ad-creative-director/ad_creative_director/{agent.py,schemas.py,profiles.py}
+//   + README.md (#1824, squash-merge 57b54733):
+//   LoopAgent(name="editor_qc", sub_agents=[assembler, critic], max_iterations=profile.qc_max_iterations=2);
+//   critic = LlmAgent(output_schema=QCVerdict, output_key="qc_verdict", tools=[probe_media_durations, exit_loop]);
+//   exit_loop sets tool_context.actions.escalate=True; assembler reads {qc_verdict?} on a re-run;
+//   enable_qc gates a first-pass SKIPPED fit-trim so the ~30s Lyria bed overruns → a real measured defect;
+//   QC_SYNC_TOLERANCE_SECONDS=1.0; both shipped profiles set enable_qc=True (adk web runs it).
+// Render:
+//   dot -Tsvg blog/diagrams/editor-qc-room.dot -o blog/diagrams/editor-qc-room.svg
+//   dot -Tpng -Gdpi=144 blog/diagrams/editor-qc-room.dot -o blog/diagrams/editor-qc-room.png
+digraph editor_qc_room {
+  graph [fontname="Inter", bgcolor="#FBFBF8", rankdir=TB, splines=true,
+         nodesep=0.42, ranksep=0.55, compound=true,
+         label="The Editor's QC Room — an optional, bounded self-critique LoopAgent (stage four)\lSAME engine as the ad capstone; the critic MEASURES the cut and the loop re-assembles until it passes (escalate) or the cap is hit.\l",
+         labelloc="t", fontsize=14, fontcolor="#1F2933"];
+  node  [fontname="Inter", fontsize=11, penwidth=1.6];
+  edge  [fontname="JetBrains Mono", fontsize=9, color="#1F2933", penwidth=1.3];
+
+  // The unchanged first three stages, collapsed (context; detailed in the run-01 diagram).
+  upstream [shape=box, style="rounded,filled,dashed", fillcolor="#E8E6FD", color="#5B4FE9", fontcolor="#5B4FE9",
+            label="SequentialAgent — stages 1-3 (unchanged)\lplanner → ParallelAgent(shots) → audio\l(see the run-01 diagram)"];
+
+  // Stage four when enable_qc: the LoopAgent (ADK, indigo) wrapping assembler + critic.
+  subgraph cluster_loop {
+    label="stage 4 = LoopAgent \"editor_qc\"  (enable_qc=True — both shipped profiles)\lmax_iterations = qc_max_iterations = 2  · runs sub_agents in order, restarts at the top each pass\l";
+    labelloc="t"; fontname="Inter"; fontsize=11; fontcolor="#5B4FE9";
+    color="#5B4FE9"; style="rounded";
+
+    assembler [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+               label="1 · LlmAgent  assembler  (runs FIRST)\ncuts clips · mixes music under VO · combines · reports the paths\nreads {qc_verdict?} — empty on pass 1, the correction notes on a re-run"];
+
+    critic [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+            label="2 · LlmAgent  critic  (runs SECOND)\noutput_schema=QCVerdict · output_key=\"qc_verdict\"\ntools=[probe_media_durations, exit_loop]"];
+  }
+
+  // The critic's MEASUREMENT — objective, verify-by-existence (green).
+  measure [shape=box, style="rounded,filled", fillcolor="white", color="#1E8E3E", fontcolor="#1E8E3E",
+           label="probe_media_durations (ffprobe) — MEASURE, don't opine\nverify BY EXISTENCE (missing file = FAIL, never a resource_link)\nchecks: final exists · final ≤ video + 1.0s sync tol · (ad only) 15-120s budget"];
+
+  // The structured verdict in session state (walk/run signature: purple note).
+  verdict [shape=note, style=filled, fillcolor="white", color="#8E24AA", fontcolor="#8E24AA",
+           label="session state\nstate[\"qc_verdict\"] = QCVerdict (validated)\nacceptable:bool (REQUIRED) · issues[] · correction_notes\n(acceptable has no default — a malformed verdict fails LOUD)"];
+
+  // Gemini reasoning: the critic judges from the numbers (amber ellipse).
+  g_judge [shape=ellipse, style=filled, fillcolor="#FDF0CE", color="#F9A825", fontcolor="#1F2933",
+           label="Gemini judges from the MEASURED numbers\n(objective pass/fail, then writes fix notes)"];
+
+  // The two exits — both stop the loop (green: the guarantee).
+  escalate [shape=box, style="rounded,filled", fillcolor="#E6F4EA", color="#1E8E3E", fontcolor="#1E8E3E",
+            label="acceptable=true → exit_loop tool\ntool_context.actions.escalate = True → loop STOPS\n(loop_agent.py:116-117 @ v2.8.0)"];
+
+  cap [shape=box, style="rounded,filled", fillcolor="#E6F4EA", color="#1E8E3E", fontcolor="#1E8E3E",
+       label="OR the hard cap: times_looped < max_iterations (=2)\nthe framework-level guarantee of NO infinite loop\n(loop_agent.py:95-97 @ v2.8.0)"];
+
+  // The delivered artifact.
+  final [shape=folder, style=filled, fillcolor="#F1F3F4", color="#52606D",
+         label="the CORRECTED final cut\n./output/final_ad.mp4  (ad)  /  packages/<slug>/animatic.mp4  (storyboard)"];
+
+  // The gotcha: the deliberate, real defect the room is built to teach (orange dashed).
+  gotcha [shape=box, style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C",
+          label="Taught on-camera: with QC on, pass-1 assembler SKIPS the fit-trim,\nso the ~30s Lyria bed genuinely overruns the ~12-24s video — a REAL measured defect.\nGated behind enable_qc: with enable_qc=False the assembler is byte-identical to PR-6."];
+
+  // ---- flow ----
+  upstream -> assembler [label="assembled cut", color="#5B4FE9", lhead=cluster_loop];
+  assembler -> critic [label="paths to review", color="#5B4FE9"];
+  critic -> measure [label="calls", color="#1E8E3E"];
+  critic -> g_judge [style=dotted, color="#F9A825", arrowhead=none];
+  measure -> verdict [style=dashed, color="#8E24AA", fontcolor="#8E24AA", label="output_schema writes"];
+
+  // the two outcomes of a verdict
+  verdict -> escalate [color="#1E8E3E", label="acceptable=true"];
+  verdict -> assembler [color="#E8590C", fontcolor="#E8590C", constraint=false,
+                        label="acceptable=false → re-assemble\ncorrection_notes via {qc_verdict?}"];
+  cap -> escalate [style=invis];
+  critic -> cap [style=dotted, color="#1E8E3E", arrowhead=none, label="bounded by"];
+
+  escalate -> final [color="#1E8E3E"];
+  assembler -> gotcha [style=dashed, color="#E8590C", arrowhead=none];
+
+  subgraph cluster_legend {
+    label="Legend"; fontname="Inter"; fontsize=11; color="#9AA5B1"; style="rounded";
+    L_adk    [shape=box,     style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9", label="ADK (LoopAgent / LlmAgent)"];
+    L_gemini [shape=ellipse, style="filled",         fillcolor="#FDF0CE", color="#F9A825", label="Gemini"];
+    L_state  [shape=note,    style="filled",         fillcolor="white",   color="#8E24AA", fontcolor="#8E24AA", label="session state / output_schema"];
+    L_ver    [shape=box,     style="rounded,filled", fillcolor="white",   color="#1E8E3E", fontcolor="#1E8E3E", label="measure / verify / stop-guarantee"];
+    L_got    [shape=box,     style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C", label="gotcha (the taught defect)"];
+    L_adk -> L_gemini -> L_state -> L_ver -> L_got [style=invis];
+  }
+}

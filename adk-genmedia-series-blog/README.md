@@ -38,12 +38,14 @@ their diagrams, illustration art-direction, and the shared visual identity.
 | 3 | crawl | [crawl-03-music-producer](crawl-03-music-producer.md) | PR #1815 ✅ | `music-producer` ✅ | art-direction ✅ / render ✅ | **draft** |
 | 4 | walk | [walk-01-scriptwriter-storyboarder](walk-01-scriptwriter-storyboarder.md) | PR #1816 ✅ | `scriptwriter-storyboarder` ✅ | art-direction ✅ / render ✅ | **draft** |
 | 5 | run | [run-01-ad-creative-director](run-01-ad-creative-director.md) | PR #1821 ✅ | `ad-creative-director` ✅ | art-direction ✅ / render ✅ | **draft** |
-| 6 | run (dogfood) | [run-02-creative-studio-dogfood](run-02-creative-studio-dogfood.md) | PR #1823 ✅ | `creative-studio-dogfood` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
+| 6 | run (dogfood) | [run-02-creative-studio-dogfood](run-02-creative-studio-dogfood.md) | PR #1823 ✅ | `creative-studio-dogfood` ✅ | art-direction ✅ / render ✅ | **draft** |
+| 7 | run | [run-03-editor-qc-room](run-03-editor-qc-room.md) | PR #1824 ✅ | `editor-qc-room` ✅ | art-direction ✅ / render ⏳ | **draft (this cycle)** |
 
-Legend: ✅ done · ⏳ pending/merging. **All seven series hero illustrations** (crawl ×4, walk ×1, run
-×2) are now **real existence-verified renders** (2752×1536 PNG, produced on the credentialed genmedia
+Legend: ✅ done · ⏳ pending/merging. The **first seven series hero illustrations** (crawl ×4, walk ×1,
+run ×2) are **real existence-verified renders** (2752×1536 PNG, produced on the credentialed genmedia
 stack via the EM render channel and theme-compliance-reviewed by the archivist) dropped beside their
-art-direction in [`illustrations/`](illustrations/). No placeholder was ever committed.
+art-direction in [`illustrations/`](illustrations/). The **eighth** (QC-room, post 7) is art-directed
+and queued to the EM render channel. No placeholder was ever committed.
 
 ## The through-line (map)
 
@@ -68,6 +70,10 @@ last, while Gemini's reasoning stays front-and-centre from the very first agent.
    profile on the same engine (the `build_root_agent(profile)` seam) + a headless, deterministic
    packager that emits a versioned `manifest.json` verified by existence.* (PR #1823 ✅ — **dogfood:
    the studio packages its own output for downstream tools**)
+8. **The editor who checks the work** → **Editor's QC Room** — *an optional, bounded `LoopAgent`
+   self-critique stage: the assembler builds, a critic MEASURES the cut (ffprobe) and either escalates
+   to stop or sends correction notes for one more pass, hard-capped by `max_iterations`.* (PR #1824 ✅
+   — **the series' last ADK construct: self-correction, guaranteed to end**)
 
 Each step ends with "what you learned," a link to the next, and a **See also** cross-link to the
 non-ADK skill/demo that does the same job on another surface — the series *complements* the skills,
@@ -88,6 +94,7 @@ the arc; MCP breadth peaks at Music Producer and the Run agent; Gemini stays **H
 | 4 · Scriptwriter/Storyboarder | **High** | Med | **High** |
 | 5 · Ad creative-director | **High** | **High** | **High** |
 | 6 · Creative Studio (dogfood) | **High** | Med | **High** |
+| 7 · Editor's QC Room | **High** | Med | **High** |
 
 ## Maintenance protocol (for the standing archivist)
 
