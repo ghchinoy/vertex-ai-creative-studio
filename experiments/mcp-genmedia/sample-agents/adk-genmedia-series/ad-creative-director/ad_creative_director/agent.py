@@ -99,7 +99,6 @@ deliberate, documented teaching point (README "How it works").
 --------------------------------------------------------------------------------
 """
 
-import json
 import os
 import shutil
 import subprocess
