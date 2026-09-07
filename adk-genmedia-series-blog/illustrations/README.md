@@ -2,10 +2,10 @@
 
 This directory holds **Nano Banana art-direction** for the series' hero illustrations: the exact
 generation prompt, intended placement, aspect ratio, anchor axis colour, and a theme-compliance
-checklist for each image. All of it obeys `blog/graphic-theme.md` §4. As of 2026-09-07 the four
-crawl-tier heroes also have their **real renders** here beside the art-direction.
+checklist for each image. All of it obeys `blog/graphic-theme.md` §4. As of 2026-09-07 **every hero in the
+series** (crawl ×4, walk ×1, run ×1) has its **real render** here beside the art-direction.
 
-## Status: all four crawl-tier heroes rendered ✅ (real, existence-verified — none faked)
+## Status: all six series heroes rendered ✅ (real, existence-verified — none faked)
 
 The **real** images require the credentialed genmedia stack — the same one the series' own
 Photoshoot/Director agents use:
@@ -29,7 +29,7 @@ placeholder/stub PNG was ever committed** — the `.png` files are the genuine r
 | `crawl-02-director-hero.md` | `crawl-02-director.md` | 16:9 | teal (video) + gotcha-orange | ✅ `crawl-02-director-hero.png` (2752×1536) |
 | `crawl-03-music-producer-hero.md` | `crawl-03-music-producer.md` | 16:9 | indigo structure + teal (three tools) | ✅ `crawl-03-music-producer-hero.png` (2752×1536) |
 | `walk-01-scriptwriter-storyboarder-hero.md` | `walk-01-scriptwriter-storyboarder.md` | 16:9 | indigo/purple pipeline spine (state handoff) | ✅ `walk-01-scriptwriter-storyboarder-hero.png` (2752×1536) |
-| `run-01-ad-creative-director-hero.md` | `run-01-ad-creative-director.md` | 16:9 | indigo-led spine that fans out (parallel) + purple plan + teal reused specialists | ⏳ queued to EM render channel |
+| `run-01-ad-creative-director-hero.md` | `run-01-ad-creative-director.md` | 16:9 | indigo-led spine that fans out (parallel) + purple plan + teal reused specialists | ✅ `run-01-ad-creative-director-hero.png` (2752×1536) |
 
 Per-image render evidence (existence-verification + sizes): `../../briefs/archivist-render-batch-1-evidence.md`.
 
