@@ -37,7 +37,7 @@ or demo that does the same job on another surface.
 | 1 | **Your first genmedia agent** — [Photoshoot](./photoshoot/) | one `LlmAgent` + one `MCPToolset` (`tool_filter`); output modes + verify-by-existence | **ready** |
 | 2 | **Now with video** — [Director / Videographer](./director-videographer/) | one tool again, but the Veo gotchas (verify by *listing*; explicit Veo-3 model) | **ready** |
 | 3 | **Three servers, one agent** — [Music Producer](./music-producer/) | multiple `MCPToolset`s, `tool_name_prefix`, and the naming crosswalk | **ready** |
-| 4 | **Your first pipeline** — Scriptwriter / Storyboarder | `SequentialAgent` + `output_key` state passing between agents | coming next |
+| 4 | **Your first pipeline** — [Scriptwriter / Storyboarder](./scriptwriter-storyboarder/) | `SequentialAgent` + `output_key` state passing between agents | **ready** |
 | 5 | **A real multi-agent app** — Ad creative-director's assistant | `SequentialAgent` ⊃ `ParallelAgent` + `AgentTool`; composing the persona agents | coming next |
 
 > Steps 2–5 are being added as the series rolls out; they're listed here so you

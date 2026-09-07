@@ -1,0 +1,10 @@
+[project]
+name = "scriptwriter-storyboarder"
+version = "0.1.0"
+description = "ADK walk-tier pipeline: a SequentialAgent turns a brief into a shot list, then a still per shot via nanobanana"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "python-dotenv>=1.0",
+    "google-adk[gcp,mcp]>=1.28.1",
+]
