@@ -26,7 +26,7 @@ NOT re-author them.
             shot_1, shot_2, shot_3,    #   each: photoshoot still -> director clip (AgentTool)
         ),
         audio_stage,                   # LlmAgent -> music_producer persona (AgentTool): bed + VO
-        assembler,                     # LlmAgent -> avtool: concat clips + mix + combine, verify
+        assembler,                     # LlmAgent -> avtool: concat + mix + trim-to-video + combine, verify
     )
 
 The engine is built behind `build_root_agent(profile=AD_PROFILE)` (see
@@ -74,10 +74,35 @@ ADK 2.8.0 constructs used here are source-verified against the installed 2.8.0
     reads `session.state["ad_plan"]` (:162) and substitutes `str(value)`; a
     plain (non-`?`) placeholder raises KeyError if absent (:174), which is what
     we want: the planner always runs first, so a missing plan is a real failure.
+
+  * FunctionTool     — tools/function_tool.py:99 (class), :106 (__init__ takes a
+    `func` and reads its docstring as the tool description). A bare callable in
+    an LlmAgent's `tools` list is auto-wrapped in one: llm_agent.py:206-207
+    (`if callable(tool_union): return [FunctionTool(func=tool_union)]`). The
+    assembler uses this for its one local helper (see AUDIO/VIDEO DURATION below).
+
+--------------------------------------------------------------------------------
+AUDIO/VIDEO DURATION — why the assembler has a small local ffmpeg helper.
+The final ad's audio must not run past the visuals. The reused Music Producer's
+Lyria produces a FIXED-length (~30s) music bed — `lyria_generate_music` exposes
+no duration/length parameter (mcp-lyria-go/lyria.go:128-161: only `prompt` +
+model/output params). And avtool's mixing tools always mix with
+`amix=...:duration=longest` and expose NO `-shortest`/`-t`/trim option
+(mcp-avtool-go/mcp_handlers.go:485 in ffmpeg_combine_audio_and_video, :1310 in
+ffmpeg_layer_audio_files), so a 30s bed over a 20s video yields a ~30s file with
+a silent/last-frame tail. Modifying the shared avtool server is out of scope, so
+the assembler fills that gap itself with `trim_audio_to_video_length` below (a
+FunctionTool that shells the already-required ffmpeg/ffprobe — no new dependency)
+and runs it on the mixed audio BEFORE the final combine, so the container tracks
+the VIDEO length. This is the one spot the capstone drops below MCP, and it is a
+deliberate, documented teaching point (README "How it works").
 --------------------------------------------------------------------------------
 """
 
+import json
 import os
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -286,6 +311,18 @@ def _build_shot_stage(profile: Profile) -> ParallelAgent:
         )
         for i in range(MAX_SHOTS)
     ]
+    # KNOWN QUIRK (benign, no fix needed): running several shot slots
+    # concurrently, each calling AgentTool-wrapped personas that hold stdio
+    # MCPToolsets, can emit teardown noise in the logs as the parallel branches
+    # finish — e.g. "ConnectionError: MCP session connection lost" /
+    # "BrokenResourceError" as the per-call stdio subprocesses close. It is
+    # harmless: it is retried and blocks no artifact. AgentTool already closes
+    # its child runner and MCP sessions correctly (tools/agent_tool.py:340,
+    # "Clean up runner resources (especially MCP sessions)"), so this is NOT a
+    # leak in our wiring — it is a concurrency/teardown artifact of the
+    # AgentTool-over-stdio-MCP reuse pattern. Because AgentTool always builds its
+    # own child runner regardless of the outer runner, it is not specific to the
+    # headless InMemoryRunner. Documented in the README so learners aren't alarmed.
     return ParallelAgent(
         name="shots",
         description=(
@@ -348,8 +385,97 @@ def _build_audio_stage(profile: Profile) -> LlmAgent:
 
 
 # ============================================================================
-# Stage 4 — the assembler (LlmAgent wiring avtool directly)
+# Stage 4 — the assembler (LlmAgent wiring avtool + one local ffmpeg helper)
 # ============================================================================
+def _ffprobe_duration_seconds(media_path: str) -> float:
+    """Return a media file's duration in seconds via ffprobe (float)."""
+    out = subprocess.run(
+        [
+            "ffprobe", "-v", "error",
+            "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            media_path,
+        ],
+        capture_output=True, text=True, check=True,
+    )
+    return float(out.stdout.strip())
+
+
+def trim_audio_to_video_length(
+    audio_path: str, video_path: str, output_path: str
+) -> str:
+    """Trim an audio file so it is no longer than a video, writing a new audio file.
+
+    Use this on the MIXED music+VO track BEFORE combining it with the video, so
+    the finished ad's audio does not run past the visuals. It is needed because
+    the reused Lyria music bed is a fixed ~30s clip (no duration parameter) and
+    avtool mixes with `amix=duration=longest` and offers no `-shortest`/trim, so
+    without this step a 20s ad becomes a ~30s file with a silent/last-frame tail.
+
+    The video is never modified. If the audio is already shorter than the video,
+    it is left as-is (nothing to trim).
+
+    Args:
+      audio_path: local path to the mixed audio (music bed + VO) to trim.
+      video_path: local path to the concatenated video whose duration is the target.
+      output_path: local path to write the trimmed audio to (e.g.
+        ./output/ad_mix_fit.m4a). The extension selects the container.
+
+    Returns:
+      A human-readable status string with the video duration, the original and
+      the resulting audio durations, and the output path (verify by existence).
+    """
+    for tool in ("ffprobe", "ffmpeg"):
+        if shutil.which(tool) is None:
+            return (
+                f"ERROR: '{tool}' is not on PATH. ffmpeg and ffprobe are required "
+                "for assembly (see the project prerequisites)."
+            )
+    for label, p in (("audio", audio_path), ("video", video_path)):
+        if not os.path.isfile(p):
+            return f"ERROR: {label} file not found at '{p}'. Pass the verified path from the earlier step."
+
+    try:
+        video_dur = _ffprobe_duration_seconds(video_path)
+        audio_dur = _ffprobe_duration_seconds(audio_path)
+    except (subprocess.CalledProcessError, ValueError) as exc:
+        return f"ERROR: could not read media duration with ffprobe: {exc}"
+
+    if audio_dur <= video_dur + 0.05:
+        return (
+            f"No trim needed: audio {audio_dur:.2f}s <= video {video_dur:.2f}s. "
+            f"Use '{audio_path}' as the audio input to the final combine."
+        )
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    # -t caps the OUTPUT to the video duration: the video is untouched and the
+    # audio is cut at video length, so the combined container tracks the video.
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", audio_path, "-t", f"{video_dur:.3f}",
+             "-c:a", "aac", output_path],
+            capture_output=True, text=True, check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        return f"ERROR: ffmpeg trim failed: {exc.stderr or exc}"
+
+    if not os.path.isfile(output_path):
+        return f"ERROR: expected trimmed audio at '{output_path}' but it was not written."
+    try:
+        new_dur = _ffprobe_duration_seconds(output_path)
+    except (subprocess.CalledProcessError, ValueError):
+        new_dur = video_dur
+    return (
+        f"Trimmed audio to the video length. video={video_dur:.2f}s, "
+        f"audio was {audio_dur:.2f}s, now {new_dur:.2f}s. "
+        f"Use '{output_path}' as the audio input to the final combine (verified: file exists)."
+    )
+
+
+# ---------------------------------------------------------------------------
+# The assembler wires the avtool server (LlmAgent tool orchestration) plus the
+# one local helper above.
+# ---------------------------------------------------------------------------
 # The assembler is the capstone's OWN new role (no crawl persona covers final
 # video assembly), so it wires the avtool server directly with the video tools
 # the Music Producer's audio-only avtool filter deliberately hides. avtool is
@@ -405,12 +531,23 @@ Call `ffmpeg_layer_audio_files` with `input_audio_uris` = [music bed, VO],
 sit above the bed, you may lower the bed with a volume step, but a straight mix
 is fine for the reference.
 
-# 3. Lay the mixed audio over the video -> the final ad
+# 3. Trim the mixed audio to the VIDEO length (so the audio doesn't run long)
+The Lyria music bed is a fixed ~30s clip and avtool mixes with
+`amix=duration=longest`, so the mixed audio from step 2 is usually LONGER than
+the video from step 1 — combining them directly would leave the ad's audio
+playing over a frozen/black tail. Before combining, call the
+`trim_audio_to_video_length` tool with `audio_path` = the mixed audio (step 2),
+`video_path` = the concatenated video (step 1), and
+`output_path="./output/ad_mix_fit.m4a"`. Use its returned audio path as the
+audio input to the next step (it tells you whether it trimmed or no trim was
+needed). This keeps BOTH streams and never modifies the video.
+
+# 4. Lay the (fitted) audio over the video -> the final ad
 Call `ffmpeg_combine_audio_and_video` with `input_video_uri` = the concatenated
-video from step 1, `input_audio_uri` = the mixed audio from step 2,
+video from step 1, `input_audio_uri` = the fitted audio from step 3,
 `output_filename="final_ad.mp4"`, `output_local_dir="./output"`.
 
-# 4. VERIFY the final ad by existence — never a resource_link
+# 5. VERIFY the final ad by existence — never a resource_link
 Confirm final_ad.mp4 really exists and is within the duration budget: call
 `ffmpeg_get_media_info` on it and report its duration, and tell the user to list
 the destination (e.g. `ls -l ./output/final_ad.mp4`, or
@@ -429,11 +566,16 @@ def _build_assembler(profile: Profile) -> LlmAgent:
         model=MODEL,
         name="assembler",
         description=(
-            "Concatenates the per-shot clips, mixes music + VO, lays the audio "
-            "over the video via avtool, and verifies the final ad by existence."
+            "Concatenates the per-shot clips, mixes music + VO, trims the audio "
+            "to the video length, lays it over the video via avtool, and verifies "
+            "the final ad by existence."
         ),
         instruction=ASSEMBLER_INSTRUCTION,
-        tools=[assembler_avtool],
+        # avtool MCPToolset for the transform steps, plus one local ffmpeg helper
+        # (a bare callable ADK auto-wraps in a FunctionTool: llm_agent.py:206-207)
+        # that fills avtool's missing audio-trim; see the AUDIO/VIDEO DURATION note
+        # in the module docstring.
+        tools=[assembler_avtool, trim_audio_to_video_length],
     )
 
 

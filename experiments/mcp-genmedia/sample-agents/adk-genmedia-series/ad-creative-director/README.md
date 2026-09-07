@@ -102,7 +102,7 @@ SequentialAgent(name="ad_creative_director_ad", sub_agents=[
     planner,                       # LlmAgent(output_schema=AdPlan, output_key="ad_plan")
     ParallelAgent(name="shots", sub_agents=[shot_1, shot_2, shot_3]),
     audio,                         # LlmAgent(tools=[music_producer_tool])
-    assembler,                     # LlmAgent(tools=[avtool])
+    assembler,                     # LlmAgent(tools=[avtool, trim_audio_to_video_length])
 ])
 root_agent = build_root_agent(AD_PROFILE)   # adk web loads the ad capstone
 ```
@@ -128,9 +128,29 @@ and a voiceover from the plan's `vo_line`s.
 
 **Stage 4 — the assembler** is an `LlmAgent` that wires the **avtool** server
 directly (final video assembly is a new role no crawl persona covers). It
-concatenates the clips, mixes the music bed with the VO, lays that audio over the
-video, and **verifies the final file by existence** (media-info + destination
-listing), never by a returned resource link.
+concatenates the clips, mixes the music bed with the VO, **trims that audio to
+the video's length**, lays it over the video, and **verifies the final file by
+existence** (media-info + destination listing), never by a returned resource
+link. That trim step is the one place this capstone drops below MCP — see
+*Keeping the audio in sync* below for why.
+
+### Keeping the audio in sync (the one local helper)
+
+There is exactly one spot where the assembler does *not* call an MCP tool. The
+reused Music Producer's Lyria bed is a **fixed ~30-second clip** —
+`lyria_generate_music` has no duration parameter — and avtool always mixes with
+`amix=duration=longest` and exposes no `-shortest`/trim option
+([`mcp_handlers.go:485`](../../../mcp-genmedia-go/mcp-avtool-go/mcp_handlers.go)
+in combine, `:1310` in layer). So mixing a 30s bed onto a 20s video and combining
+directly yields a **~30s file** whose last ~10s is audio over a frozen/black
+tail. Since modifying the shared avtool server is out of scope for this example,
+the assembler fills the gap with a tiny local helper,
+`trim_audio_to_video_length` — a plain Python function ADK auto-wraps as a
+`FunctionTool` — that shells the already-required `ffprobe`/`ffmpeg` to cut the
+mixed audio to the concatenated-video duration (`-t`) before the final combine.
+It keeps both streams and never touches the video. Real pipelines are full of
+these seams where a managed tool doesn't expose the one flag you need; the honest
+move is a small, well-labelled local step, not pretending the gap isn't there.
 
 ### Reuse, not re-implement (and the co-location dependency)
 
@@ -210,6 +230,16 @@ This is the honest shape of a static-graph framework meeting a dynamic plan: pic
 a cap you can justify against the real constraints (here, the Veo clip-length
 grid and the duration budget), enforce it in the schema *and* the instruction,
 and make the extra slots degrade gracefully.
+
+> **A benign log quirk you may see.** When the shot slots run in parallel, each
+> calls `AgentTool`-wrapped personas that hold stdio `MCPToolset`s, and as those
+> concurrent branches finish you may see teardown noise in the logs —
+> `ConnectionError: MCP session connection lost` or `BrokenResourceError` — as
+> the per-call stdio subprocesses close. It is **harmless**: it is retried and
+> blocks no artifact. `AgentTool` already closes its child runner and MCP
+> sessions correctly ([`tools/agent_tool.py:340`](https://github.com/google/adk-python/blob/v2.8.0/src/google/adk/tools/agent_tool.py#L340)),
+> so this is not a leak in the wiring — it's a concurrency/teardown artifact of
+> reusing stdio-MCP agents as tools under a `ParallelAgent`. Nothing to fix.
 
 **And, as everywhere in this series: verify by existence.** The assembler confirms
 the final `.mp4` with `ffmpeg_get_media_info` and a destination listing — never a
