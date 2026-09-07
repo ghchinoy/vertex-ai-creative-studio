@@ -38,7 +38,11 @@ MAX_SHOTS sub-agents and each reads `shots[i]` if present / no-ops if absent.
 The budget math for MAX_SHOTS is justified in agent.py and the README.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+# The only clip durations Veo-3 supports (see the Director persona + agent.py
+# budget note). Enforced in-schema below so a bad plan fails at validation time.
+VALID_SHOT_DURATIONS = (4, 6, 8)
 
 # Fixed number of per-shot slots the ParallelAgent fans out to. Veo-3 clips are
 # 4, 6, or 8 seconds each (see the Director persona + agent.py budget note), so
@@ -72,6 +76,21 @@ class Shot(BaseModel):
         )
     )
 
+    @field_validator("duration_seconds")
+    @classmethod
+    def _duration_must_be_veo3_supported(cls, v: int) -> int:
+        # Fail-loud at model_validate time: the prose above steers generation,
+        # but this guarantees an out-of-grid duration never reaches Veo. (We
+        # use a validator rather than Literal[4, 6, 8] because integer-enum
+        # response-schema translation is not confirmed honored by the pinned
+        # ADK/genai; the validator is guaranteed to fire.)
+        if v not in VALID_SHOT_DURATIONS:
+            raise ValueError(
+                f"duration_seconds must be one of {VALID_SHOT_DURATIONS} "
+                f"(Veo-3 supported), got {v}"
+            )
+        return v
+
 
 class AdPlan(BaseModel):
     """A duration-budgeted plan for one short video ad.
@@ -82,12 +101,14 @@ class AdPlan(BaseModel):
 
     brand: str = Field(description="The brand or product the ad is for.")
     total_duration_seconds: int = Field(
+        ge=15,
+        le=120,
         description=(
             "Target length of the finished ad in seconds. Must be within the "
             "15-120s (15s-2m) budget. The per-shot durations should sum to "
             "approximately this value, up to the hero-footage ceiling "
             "(MAX_SHOTS x 8s)."
-        )
+        ),
     )
     music_mood: str = Field(
         description=(

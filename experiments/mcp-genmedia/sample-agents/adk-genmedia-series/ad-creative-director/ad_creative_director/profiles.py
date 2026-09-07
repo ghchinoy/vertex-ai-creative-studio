@@ -28,7 +28,6 @@ building the engine on it would schedule a removal into the series.
 """
 
 from dataclasses import dataclass
-from typing import Type
 
 from pydantic import BaseModel
 
@@ -51,7 +50,7 @@ class Profile:
 
     name: str
     planner_persona: str
-    plan_schema: Type[BaseModel]
+    plan_schema: type[BaseModel]
     shot_media: str
     assembler_recipe: str
 
