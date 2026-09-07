@@ -39,8 +39,9 @@ or demo that does the same job on another surface.
 | 3 | **Three servers, one agent** — [Music Producer](./music-producer/) | multiple `MCPToolset`s, `tool_name_prefix`, and the naming crosswalk | **ready** |
 | 4 | **Your first pipeline** — [Scriptwriter / Storyboarder](./scriptwriter-storyboarder/) | `SequentialAgent` + `output_key` state passing between agents | **ready** |
 | 5 | **A real multi-agent app** — [Ad creative-director's assistant](./ad-creative-director/) | `SequentialAgent` ⊃ `ParallelAgent` + `AgentTool`; composing the persona agents | **ready** |
+| 6 | **Dogfood the studio — Creative Studio (storyboard profile)** — [same engine, storyboard profile + headless CLI](./ad-creative-director/#creative-studio--the-storyboard-profile-dogfood) | one engine, two profiles via a plain-Python profile factory; a machine-readable package + versioned `manifest.json` contract over a headless CLI | **ready** |
 
-> Steps 2–5 are being added as the series rolls out; they're listed here so you
+> Steps 2–6 are being added as the series rolls out; they're listed here so you
 > can see the whole arc. Only linked steps are live today.
 
 ## How the series is organized

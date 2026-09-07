@@ -1,10 +1,21 @@
-# Ad creative-director's assistant — a real multi-agent app
+# Ad creative-director's assistant — a real multi-agent app (+ Creative Studio)
 
-> **The capstone.** This is the last and largest agent in the series. It reuses
-> the same eight-section template as the rest (**What you'll build · What you'll
-> learn · Prerequisites · Run it · How it works · The gotcha this teaches · See
-> also · Next in the series**), but where the earlier agents each wired one or a
-> few tools, this one **composes the agents you already built**.
+> **The capstone — and a small engine.** This is the last and largest agent in
+> the series. It reuses the same eight-section template as the rest (**What
+> you'll build · What you'll learn · Prerequisites · Run it · How it works · The
+> gotcha this teaches · See also · Next in the series**), but where the earlier
+> agents each wired one or a few tools, this one **composes the agents you
+> already built**.
+>
+> It is also **one engine that serves two audiences through a plain-Python
+> profile factory** — `build_root_agent(profile)`:
+> - the **`ad`** profile (the capstone below): a brand brief → one assembled
+>   short video ad. It is the **default** (`root_agent = build_root_agent(AD_PROFILE)`),
+>   so `adk web` loads it unchanged. Read this first — it teaches the graph.
+> - the **`storyboard`** profile ("**Creative Studio**"): an editorial, stills-only
+>   animatic + a machine-readable **package + `manifest.json`**, run through a
+>   **headless CLI**. It is the series' *dogfood* tool ("we built this to write
+>   about itself"). See **[Creative Studio — the storyboard profile](#creative-studio--the-storyboard-profile-dogfood)**.
 
 ## What you'll build
 
@@ -134,23 +145,44 @@ existence** (media-info + destination listing), never by a returned resource
 link. That trim step is the one place this capstone drops below MCP — see
 *Keeping the audio in sync* below for why.
 
-### Keeping the audio in sync (the one local helper)
+### Keeping below MCP honest (the two local helpers)
 
-There is exactly one spot where the assembler does *not* call an MCP tool. The
-reused Music Producer's Lyria bed is a **fixed ~30-second clip** —
-`lyria_generate_music` has no duration parameter — and avtool always mixes with
-`amix=duration=longest` and exposes no `-shortest`/trim option
+There are exactly **two** spots in this engine where an assembler does *not* call
+an MCP tool. Both are the same honest move — a small, well-labelled local
+`ffmpeg`/`ffprobe` step where avtool doesn't expose the one flag you need — and
+both live in `agent.py`, documented at their definitions, right below the avtool
+wiring:
+
+**1. `trim_audio_to_video_length` (the `ad` profile).** The reused Music
+Producer's Lyria bed is a **fixed ~30-second clip** — `lyria_generate_music` has
+no duration parameter — and avtool always mixes with `amix=duration=longest` and
+exposes no `-shortest`/trim option
 ([`mcp_handlers.go:485`](../../../mcp-genmedia-go/mcp-avtool-go/mcp_handlers.go)
 in combine, `:1310` in layer). So mixing a 30s bed onto a 20s video and combining
 directly yields a **~30s file** whose last ~10s is audio over a frozen/black
-tail. Since modifying the shared avtool server is out of scope for this example,
-the assembler fills the gap with a tiny local helper,
-`trim_audio_to_video_length` — a plain Python function ADK auto-wraps as a
-`FunctionTool` — that shells the already-required `ffprobe`/`ffmpeg` to cut the
-mixed audio to the concatenated-video duration (`-t`) before the final combine.
-It keeps both streams and never touches the video. Real pipelines are full of
-these seams where a managed tool doesn't expose the one flag you need; the honest
-move is a small, well-labelled local step, not pretending the gap isn't there.
+tail. Since modifying the shared avtool server is out of scope, the assembler
+fills the gap with a tiny local helper — a plain Python function ADK auto-wraps
+as a `FunctionTool` — that shells the already-required `ffprobe`/`ffmpeg` to cut
+the mixed audio to the concatenated-video duration (`-t`) before the final
+combine. It keeps both streams and never touches the video.
+
+**2. `build_stills_animatic_slideshow` (the `storyboard` profile).** The
+storyboard profile has no Veo clips — it turns the still panels into a slideshow
+video. avtool's tool surface transforms and combines *existing* media
+(`ffmpeg_combine_audio_and_video`, `ffmpeg_layer_audio_files`,
+`ffmpeg_get_media_info`) but has **no "images → timed slideshow" tool**
+([`mcp-avtool-go/mcp_handlers.go`](../../../mcp-genmedia-go/mcp-avtool-go/mcp_handlers.go)
+registers no such handler). So the assembler builds the slideshow with a second
+local helper — same shape as the trim helper — that shells `ffmpeg`'s concat
+demuxer over the panel stills, pacing each panel so the slideshow length matches
+the narration audio, then hands the result back to avtool to mix and combine. And
+because the narration length and the slideshow length still won't match exactly,
+the storyboard assembler **reuses the very same `trim_audio_to_video_length`** to
+trim before the final combine — one trimmer, two profiles.
+
+Real pipelines are full of these seams where a managed tool doesn't expose the one
+flag (or the one operation) you need; the honest move is a small, well-labelled
+local step, not pretending the gap isn't there.
 
 ### Reuse, not re-implement (and the co-location dependency)
 
@@ -195,12 +227,22 @@ project's own dependencies, so a single `uv sync` here runs the whole thing.
 ### The profile seam (one internal line)
 
 The engine is built by `build_root_agent(profile=AD_PROFILE)`. A `Profile` (a
-frozen dataclass in `profiles.py`) selects the planner's persona, the plan schema
-(`AdPlan`), what each shot slot produces, and the assembler recipe. **This project
-ships the `ad` profile only** — the seam is a thin internal factory so the same
-engine can grow a second audience later without reshaping the graph. It is
-deliberately a plain-Python dataclass + factory, **not** ADK's `from_config` /
-`AgentConfig` YAML, which is `@deprecated` *and* `@experimental` in ADK 2.8.0.
+frozen dataclass in `profiles.py`) selects the planner's persona, the plan schema,
+what each shot slot produces, the assembler recipe, and whether the run emits a
+package. **This project ships two profiles** through that one seam — `AD_PROFILE`
+(the capstone above) and `STORYBOARD_PROFILE` (**[Creative
+Studio](#creative-studio--the-storyboard-profile-dogfood)**, below) — so the same
+graph serves two audiences without being reshaped. It is deliberately a
+plain-Python dataclass + factory, **not** ADK's `from_config` / `AgentConfig`
+YAML, which is `@deprecated` *and* `@experimental` in ADK 2.8.0.
+
+The seam is small on purpose. `AD_PROFILE` keeps the existing behavior exactly —
+`shot_media="clips"` (still → Veo clip per shot), `assembler_recipe="video_ad_concat"`,
+`plan_schema=AdPlan`, `plan_state_key="ad_plan"`, `emit_package=False` — so
+`root_agent = build_root_agent(AD_PROFILE)` and `adk web` are unchanged.
+`STORYBOARD_PROFILE` flips exactly the fields it must: `plan_schema=StoryboardPlan`,
+`shot_media="stills"` (photoshoot only, **no Veo**), `assembler_recipe="stills_animatic"`,
+`plan_state_key="plan"`, `emit_package=True`.
 
 ## The gotcha this teaches
 
@@ -255,6 +297,122 @@ reuse), and the naming crosswalk that spans all of them is
 [`../NAMING.md`](../NAMING.md) — this is the agent that exercises the whole
 crosswalk.
 
+## Creative Studio — the storyboard profile (dogfood)
+
+The **storyboard** profile turns the same engine into a **Creative Studio**: from
+a subject brief it plans a short **editorial storyboard**, generates a **still
+panel** per beat (photoshoot only — **no Veo**), lays a music bed and a narration
+track, assembles a **stills animatic** (`animatic.mp4`), and — the point of this
+profile — emits a **machine-readable package**: a directory of the real media plus
+a versioned `manifest.json` that a downstream tool can consume without ever
+touching the agent's Python.
+
+This is the series' **dogfood** surface — *"we built the studio to write about
+itself."* It runs through a **headless CLI** (no `adk web`), so it is scriptable
+and its output is a stable data contract, not a chat transcript.
+
+### Run it (headless)
+
+```bash
+uv run python -m ad_creative_director.package \
+    --profile storyboard \
+    --brief "A quiet three-panel storyboard for a lighthouse keeper at dawn; \
+hopeful, cinematic, ends on the lit lamp." \
+    --out packages/lighthouse/
+```
+
+- `--brief` takes literal text **or** `@path/to/brief.txt`.
+- `--out` is optional; it defaults to `packages/<slug>-<UTC-timestamp>/`.
+- **Exit code is the contract**: `0` only when **every** expected artifact is
+  verified to exist; **non-zero** if any is missing (and the manifest records
+  `artifacts_verified: false`). **No stubs, ever** — a missing file is a hard
+  failure, not a placeholder. `packages/` is git-ignored.
+
+Prerequisites are the same as the capstone **minus Veo** (the storyboard profile
+never calls `mcp-veo-go`) **plus** the deterministic suite-version pin: set
+`GENMEDIA_SUITE_VERSION` in `.env` to the suite version you installed (single
+source of truth: `mcp-genmedia-go/VERSION`). If unset, the packager falls back to
+the series-pinned floor (`3.18.1`). This value is recorded in the manifest
+**deterministically — never authored by the LLM.**
+
+**One extra sibling.** The storyboard profile reuses PR-4's beat author, so — on
+top of the three siblings the ad capstone needs
+([`photoshoot/`](../photoshoot/), [`director-videographer/`](../director-videographer/),
+[`music-producer/`](../music-producer/)) — it **also** requires
+[`scriptwriter-storyboarder/`](../scriptwriter-storyboarder/) next to this project
+(**four** siblings in total). That import is **lazy**: it happens only when the
+storyboard planner is built, so the ad capstone / `adk web` never needs this
+fourth sibling and its import surface is unchanged. If you run the storyboard CLI
+without `scriptwriter-storyboarder/` present, the planner build **fails loud** with
+a `RuntimeError` naming the missing sibling.
+
+### Package layout
+
+```
+packages/lighthouse/
+├── manifest.json        # the versioned contract (read this downstream)
+├── plan.json            # the schema-validated planner output (provenance)
+├── shots/
+│   ├── shot-01.png      # one still panel per storyboard beat
+│   ├── shot-02.png
+│   └── shot-03.png
+├── audio/
+│   ├── narration.wav
+│   └── music.mp3
+└── animatic.mp4         # the assembled stills animatic
+```
+
+### The manifest contract (`manifest_version: "1"`)
+
+The manifest is written by a **thin, deterministic, non-LLM packaging function**
+(`build_manifest` in `package.py`) that reads the schema-validated plan from
+session state, derives each expected artifact path from the shot indices and the
+fixed audio/animatic names, and records `verified: <bool>` for each from a real
+`os.path.exists` check against the package dir — **never** from a returned
+`resource_link`. `artifacts_verified` is `true` **only if every listed path
+exists** (an empty plan never verifies). Both `manifest.json` and `plan.json` are
+written even on failure, so a bad run leaves an inspectable record of *which*
+files were missing.
+
+```jsonc
+{
+  "manifest_version": "1",      // bump only on a breaking schema change
+  "profile": "storyboard",
+  "brief": "A quiet three-panel storyboard …",
+  "created": "2026-09-07T12:00:00Z",   // UTC, seconds precision, Z-suffixed
+  "model": "gemini-3.8-flash",         // engine MODEL, for provenance
+  "suite_version": "3.18.1",           // deterministic (GENMEDIA_SUITE_VERSION)
+  "subject": "a lighthouse keeper at dawn",
+  "music_mood": "hopeful, cinematic",
+  "shots": [
+    { "index": 1, "beat": "…", "prompt": "…", "image": "shots/shot-01.png", "verified": true }
+  ],
+  "audio": { "narration": "audio/narration.wav", "music": "audio/music.mp3" },
+  "assembled": "animatic.mp4",
+  "artifacts_verified": true    // AND of every verified flag above
+}
+```
+
+A consumer (see the archivist in **See also**) reads **only** `manifest.json` —
+a stable, versioned data contract — never the agent's internals. `manifest_version`
+is bumped only on a breaking change to this shape.
+
+### How the storyboard profile differs from the capstone
+
+It is the *same graph*; only the profile fields change (see **The profile seam**
+above). Concretely: the planner emits a `StoryboardPlan` (no per-shot duration
+budget — an editorial board, not a duration-budgeted ad) into `state["plan"]`;
+each shot slot produces a **still only** (the photoshoot tool, no director/Veo);
+the assembler runs the `stills_animatic` recipe — it builds the slideshow with the
+local `build_stills_animatic_slideshow` helper, mixes the audio, **reuses
+`trim_audio_to_video_length`** to match the tracks, and combines to `animatic.mp4`
+(see **Keeping below MCP honest** above for both local helpers). And
+`emit_package=True` is what tells the CLI to run the deterministic packager.
+
+The `ad` capstone is untouched by any of this: `root_agent =
+build_root_agent(AD_PROFILE)`, so `adk web` still loads the ad pipeline exactly as
+before.
+
 ## See also
 
 - **[`countdown-workflow`](../../../../countdown-workflow/)** — a Python pipeline
@@ -270,11 +428,24 @@ crosswalk.
   self-critique loop — is the storytelling craft behind the planner and the
   (future, optional) QC stage. Read it for the technique; this agent is an
   ADK-runnable surface of the same idea. Cited, not forked.
+- **Downstream: the archivist (manifest consumer).** The Creative Studio profile
+  exists to be *consumed*, not just watched. A downstream tool — the series'
+  archivist, which assembles blog/marketing posts — reads **only** the
+  [`manifest.json` contract](#the-manifest-contract-manifest_version-1): it runs
+  the CLI (or is handed a finished package dir), then reads the versioned manifest
+  for verified artifact paths and provenance (`profile`, `model`, `suite_version`,
+  `created`). It never imports this agent's Python and never re-implements the
+  pipeline — the dependency is the **stable, versioned data contract over the
+  headless entrypoint**, nothing more. That separation is the whole point of the
+  deterministic packager: the studio can change internally as long as
+  `manifest_version` holds.
 
 ## Next in the series
 
 You've reached the capstone — head back to the [series overview](../README.md)
 to see the whole arc, from a nine-line single-tool agent to this multi-agent ad
-pipeline. From here, the natural extensions (an optional `LoopAgent` QC stage, or
-a second planner profile) build directly on the profile seam and the reuse
-pattern you just saw.
+pipeline. This example already grows a **second** audience on the profile seam —
+the [Creative Studio storyboard profile](#creative-studio--the-storyboard-profile-dogfood)
+and its headless package/manifest dogfood tool. From here, the natural next
+extension (an optional `LoopAgent` QC stage) builds directly on the same profile
+seam and reuse pattern you just saw.

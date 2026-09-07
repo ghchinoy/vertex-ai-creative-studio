@@ -30,9 +30,12 @@ NOT re-author them.
     )
 
 The engine is built behind `build_root_agent(profile=AD_PROFILE)` (see
-profiles.py) so a future audience is purely additive; THIS PR ships the `ad`
-profile only, and `root_agent = build_root_agent(AD_PROFILE)` so `adk web` shows
-the ad capstone by default.
+profiles.py). It ships TWO profiles: the `ad` capstone (default, above) and the
+editorial `storyboard` profile (stills-only, board-paced animatic + package/
+manifest) reached through the headless `package` CLI (see package.py). Both use
+the SAME graph shape; only the per-stage builders branch on the Profile.
+`root_agent = build_root_agent(AD_PROFILE)` so `adk web` shows the ad capstone by
+default, unchanged.
 
 --------------------------------------------------------------------------------
 ADK 2.8.0 constructs used here are source-verified against the installed 2.8.0
@@ -155,16 +158,28 @@ if project_id:
 # idempotent, and a missing sibling fails LOUD with an actionable message — a
 # reader who copied only this dir gets help, not an opaque ImportError.
 _SERIES_ROOT = Path(__file__).resolve().parents[2]
-for _sibling in ("photoshoot", "director-videographer", "music-producer"):
+# These three siblings are what the DEFAULT (ad) profile composes, so they are
+# required at module load: `root_agent = build_root_agent(AD_PROFILE)` imports this
+# module, and `adk web` must construct the ad capstone. The `storyboard` profile
+# ALSO reuses PR-4's scriptwriter-storyboarder, but that sibling is imported LAZILY
+# (only when the storyboard planner is built — see `_load_scriptwriter_tool`), so
+# the ad path's import surface stays byte-identical to PR-5: adk web needs only
+# these three, never scriptwriter-storyboarder.
+for _sibling in (
+    "photoshoot",
+    "director-videographer",
+    "music-producer",
+):
     _project_dir = _SERIES_ROOT / _sibling
     if not _project_dir.is_dir():
         raise RuntimeError(
-            "ad-creative-director is the capstone: it COMPOSES the crawl "
-            f"personas and needs the sibling example project '{_sibling}/' at "
-            f"{_project_dir}, but that directory is missing. Check out the whole "
-            "adk-genmedia-series/ (photoshoot/, director-videographer/, "
-            "music-producer/ next to ad-creative-director/), not just this "
-            "folder. See this project's README, section 'How it works'."
+            "ad-creative-director is the profile-driven engine: it COMPOSES the "
+            f"crawl/walk personas and needs the sibling example project "
+            f"'{_sibling}/' at {_project_dir}, but that directory is missing. "
+            "Check out the whole adk-genmedia-series/ (photoshoot/, "
+            "director-videographer/, music-producer/, scriptwriter-storyboarder/ "
+            "next to ad-creative-director/), not just this folder. See this "
+            "project's README, section 'How it works'."
         )
     if str(_project_dir) not in sys.path:
         sys.path.insert(0, str(_project_dir))
@@ -173,13 +188,53 @@ from photoshoot.agent import root_agent as photoshoot_agent  # noqa: E402
 from director_videographer.agent import root_agent as director_agent  # noqa: E402
 from music_producer.agent import root_agent as music_producer_agent  # noqa: E402
 
-# Wrap each persona as a callable tool. AgentTool(name=agent.name), so the tool
-# names the LLM sees are "photoshoot", "director_videographer", "music_producer".
-# These wrappers are stateless config, safe to share across the parallel shot
-# slots (each call gets its own isolated Runner + session; see the header).
+# Wrap each ad-profile persona as a callable tool. AgentTool(name=agent.name), so
+# the tool names the LLM sees are "photoshoot", "director_videographer",
+# "music_producer". These wrappers are stateless config, safe to share across the
+# parallel shot slots (each call gets its own isolated Runner + session; see the
+# header). The storyboard profile's scriptwriter tool is built lazily in
+# `_load_scriptwriter_tool` so the ad path never imports that sibling.
 photoshoot_tool = AgentTool(agent=photoshoot_agent)
 director_tool = AgentTool(agent=director_agent)
 music_producer_tool = AgentTool(agent=music_producer_agent)
+
+
+def _load_scriptwriter_tool() -> AgentTool:
+    """Lazily import PR-4's scriptwriter LEAF and wrap it as a callable tool.
+
+    Called ONLY when the storyboard planner is built (`_build_planner`, stills
+    branch), never at module load — so the AD profile's import surface stays
+    byte-identical to PR-5: `adk web` (root_agent = build_root_agent(AD_PROFILE))
+    needs only the three ad siblings above and NOT scriptwriter-storyboarder.
+
+    The storyboard profile REUSES the scriptwriter LEAF (the text beat author,
+    output_key="shot_list"), NOT the storyboarder image half — in this profile the
+    stills come from the shot stage reusing Photoshoot (addendum §4.4). Importing
+    scriptwriter_storyboarder.agent constructs its SequentialAgent, which sets
+    `scriptwriter.parent_agent`; that is fine — AgentTool runs the wrapped agent in
+    its OWN Runner and never adds it to a sub_agents list, so there is no "already
+    has a parent agent" conflict (base_agent.py:704-712 only fires when an agent is
+    added as a sub_agent).
+
+    Fails LOUD (RuntimeError naming the missing sibling) if scriptwriter-
+    storyboarder/ is absent — the storyboard profile's extra co-location
+    requirement, documented in the README's Creative Studio section.
+    """
+    _project_dir = _SERIES_ROOT / "scriptwriter-storyboarder"
+    if not _project_dir.is_dir():
+        raise RuntimeError(
+            "The 'storyboard' profile REUSES PR-4's scriptwriter to author "
+            "editorial beats, so it needs the sibling example project "
+            f"'scriptwriter-storyboarder/' at {_project_dir}, but that directory "
+            "is missing. Check out the whole adk-genmedia-series/ tree next to "
+            "ad-creative-director/. (The AD profile / `adk web` does NOT need this "
+            "sibling.) See this project's README, section 'Creative Studio'."
+        )
+    if str(_project_dir) not in sys.path:
+        sys.path.insert(0, str(_project_dir))
+    from scriptwriter_storyboarder.agent import scriptwriter  # noqa: E402
+
+    return AgentTool(agent=scriptwriter)
 
 
 # ============================================================================
@@ -220,19 +275,76 @@ Return ONLY the plan as JSON matching the required schema — no preamble.
 """
 
 
+# The storyboard planner's construct-level base. Unlike the ad planner it (a)
+# has a TOOL — it REUSES PR-4's scriptwriter to author the editorial beats rather
+# than re-authoring beat planning from scratch — and (b) has NO duration budget
+# (board-paced, addendum §6). `output_schema` (StoryboardPlan) and `tools` are
+# used TOGETHER: ADK exposes the tool during the thought loop and enforces the
+# schema only on the final reply (llm_agent.py:404-418, docstring verbatim: "The
+# ADK supports using output_schema and tools together. It works by exposing tools
+# during the thought loop and enforcing structure only on the final output.").
+# There are NO `{...}` templates here: the planner is the FIRST stage and reads
+# the user's brief directly.
+STORYBOARD_PLANNER_BASE = f"""\
+You are the planner for an editorial storyboard. Turn the user's brief into a
+board-paced storyboard plan of AT MOST {MAX_SHOTS} panels. There is NO ad
+duration budget — the story sets the pace, not a clock.
+
+# Author the beats by REUSING the scriptwriter (do not invent them cold)
+First call the `scriptwriter` tool with the user's brief to get a numbered shot
+list of editorial beats (it returns plain text: Scene / Action / Look per shot).
+Use that as the backbone of your plan — it is the series' walk-tier beat author,
+and reusing it keeps this profile consistent with what the series already taught.
+You MAY tighten or trim it to at most {MAX_SHOTS} panels, but do not discard it
+and re-author from scratch.
+
+# Structure the result into the required plan
+Turn the scriptwriter's beats into the plan: a `subject` (what the storyboard is
+about), a `music_mood` for the bed, and a `shots` list (1..{MAX_SHOTS} panels).
+For EACH panel provide: `beat` (the editorial moment), `prompt` (art-direction
+for the still — subject, composition, lens, light, mood; this drives the
+nanobanana still, there is no motion/clip), and `narration_line` (one neutral,
+explanatory voiceover line). Keep the combined narration concise: all
+`narration_line`s together should be well under ~800 characters (the TTS cap the
+audio stage honors).
+
+Return ONLY the plan as JSON matching the required schema — no preamble.
+"""
+
+
 def _build_planner(profile: Profile) -> LlmAgent:
+    # The storyboard profile reuses PR-4's scriptwriter to author beats and emits
+    # a StoryboardPlan; the ad profile plans clips with no tools (unchanged).
+    if profile.shot_media == "stills":
+        # Build the scriptwriter tool HERE (lazily) — this is the only place the
+        # storyboard profile pulls in the scriptwriter-storyboarder sibling, so the
+        # ad path never imports it (see _load_scriptwriter_tool).
+        scriptwriter_tool = _load_scriptwriter_tool()
+        return LlmAgent(
+            model=MODEL,
+            name="storyboard_planner",
+            description=(
+                "Reuses PR-4's scriptwriter to author editorial beats, then "
+                "emits a schema-validated StoryboardPlan into "
+                f"state['{profile.plan_state_key}']."
+            ),
+            instruction=STORYBOARD_PLANNER_BASE + profile.planner_persona,
+            tools=[scriptwriter_tool],
+            output_schema=profile.plan_schema,
+            output_key=profile.plan_state_key,
+        )
     return LlmAgent(
         model=MODEL,
         name="creative_director",
         description=(
             "Turns a brand brief + target duration into a schema-validated, "
-            "duration-budgeted shot plan (AdPlan) in state['ad_plan']."
+            f"duration-budgeted shot plan (AdPlan) in state['{profile.plan_state_key}']."
         ),
         instruction=PLANNER_BASE + profile.planner_persona,
         # output_schema makes the reply a schema-validated JSON plan; output_key
-        # lands it in state['ad_plan'] for the downstream stages to read.
+        # lands it in state[plan_state_key] for the downstream stages to read.
         output_schema=profile.plan_schema,
-        output_key="ad_plan",
+        output_key=profile.plan_state_key,
     )
 
 
@@ -293,10 +405,79 @@ fabricate a path or URI.
 """
 
 
+# ---------------------------------------------------------------------------
+# Stills-only shot slot (storyboard profile). NO director, NO Veo anywhere —
+# addendum §6: the storyboard is a stills board (cheaper/faster/deterministic
+# docs tool). Each slot reuses ONLY the Photoshoot persona and saves its still
+# into the package's shots/ dir with an index-derived name the deterministic
+# packager can predict (shot-0N.png). Reads its panel from state[<plan key>]
+# and the destination dir from state['shots_dir'] (both seeded by the package
+# CLI; see package.py).
+def _stills_slot_instruction(index: int, plan_key: str) -> str:
+    human = index + 1
+    return f"""\
+You are the unit that produces STORYBOARD PANEL {human}. The planner's storyboard
+plan is injected below from session state, and the destination directory for the
+stills is also injected:
+
+<plan>
+{{{plan_key}}}
+</plan>
+
+Save stills into this directory (an absolute path):
+<shots_dir>{{shots_dir}}</shots_dir>
+
+# 1. Find YOUR panel
+Read the plan's `shots` list (0-indexed) and take element [{index}] — that is
+YOUR panel ({human}). If the list has fewer than {human} shots, then this slot
+has no work: say "panel {human}: no shot in plan" and STOP without calling any
+tool. Do NOT borrow another slot's panel and do NOT invent one.
+
+# 2. Generate ONE still (reuse the Photoshoot persona as a tool)
+Call the `photoshoot` tool with YOUR panel's `prompt` as the shot description.
+Tell it to save LOCALLY by passing output_directory="{{shots_dir}}" and
+output_filename="shot-{human:02d}.png" so the file lands at
+{{shots_dir}}/shot-{human:02d}.png with a predictable name. There is NO clip and
+NO video for this profile — do NOT call any director or Veo tool; a still is the
+whole job. The Photoshoot persona art-directs, calls nanobanana, and verifies the
+file by existence. Capture the exact local path it reports.
+
+# 3. Report
+End with one labelled line for panel {human}:
+  panel {human} still -> <local path> (verified)
+If the still could not be verified, say so plainly for panel {human} — do not
+fabricate a path.
+"""
+
+
 def _build_shot_stage(profile: Profile) -> ParallelAgent:
-    # profile.shot_media == "clips" for the ad profile: still (photoshoot) then
-    # clip (director) per slot. Kept on the Profile so a future stills-only
-    # audience is a one-line change, not a graph rewrite.
+    # profile.shot_media selects what each of the MAX_SHOTS fixed slots produces:
+    #   "clips"  -> still (photoshoot) then clip (director): the ad path.
+    #   "stills" -> still ONLY (photoshoot), no director/Veo: the storyboard path.
+    if profile.shot_media == "stills":
+        shot_slots = [
+            LlmAgent(
+                model=MODEL,
+                name=f"panel_{i + 1}",
+                description=(
+                    f"Produces storyboard panel {i + 1}: a still (photoshoot) "
+                    f"only, reading shots[{i}] from the plan; no-ops if absent."
+                ),
+                instruction=_stills_slot_instruction(i, profile.plan_state_key),
+                tools=[photoshoot_tool],
+            )
+            for i in range(MAX_SHOTS)
+        ]
+        return ParallelAgent(
+            name="panels",
+            description=(
+                f"Runs {MAX_SHOTS} per-panel slots concurrently; each turns its "
+                "plan panel into a verified nanobanana still (no clip/Veo)."
+            ),
+            sub_agents=shot_slots,
+        )
+
+    # profile.shot_media == "clips" — the ad path (unchanged from PR-5).
     shot_slots = [
         LlmAgent(
             model=MODEL,
@@ -370,7 +551,64 @@ If either could not be verified, say so plainly — do not fabricate a path.
 """
 
 
+# The storyboard audio stage: same reuse of the Music Producer persona, but it
+# reads a StoryboardPlan (narration_line per panel, not vo_line) and writes the
+# two files into the package's audio/ dir with predictable names the packager can
+# find (music.mp3, narration.wav). `plan_key` is threaded the way
+# _stills_slot_instruction does it: `{{{plan_key}}}` becomes the state template
+# `{plan}` (for the shipped profile), while `{{audio_dir}}` stays a runtime state
+# template. Resolved text is identical for plan_state_key="plan".
+def _storyboard_audio_instruction(plan_key: str) -> str:
+    return f"""\
+You are the audio department for an editorial storyboard animatic. The planner's
+storyboard plan is injected below, and the destination directory for the audio:
+
+<plan>
+{{{plan_key}}}
+</plan>
+
+Save audio into this directory (an absolute path):
+<audio_dir>{{audio_dir}}</audio_dir>
+
+Produce TWO audio artifacts by delegating to the `music_producer` persona tool
+(it wires lyria for music and gemini TTS for voice, and verifies each file by
+existence):
+
+# 1. The music bed
+Ask `music_producer` to generate a music bed matching the plan's `music_mood`,
+saved LOCALLY into {{audio_dir}} with the name `music.mp3` (lyria writes MP3 on the
+default model; give it a local destination so a file is actually written).
+
+# 2. The narration
+Concatenate the plan's per-panel `narration_line`s, in panel order, into ONE
+continuous explainer narration script and ask `music_producer` to generate it as
+speech, saved LOCALLY into {{audio_dir}} with the name `narration.wav`. The gemini
+TTS tool caps `text` at 800 characters — if the combined narration exceeds that,
+tell the user to shorten the narration lines rather than truncating silently. You
+want the narration as its OWN file; you do NOT need the persona's mixed output
+(the assembler mixes music and narration against the animatic in the next stage).
+
+# 3. Report
+End with two labelled lines, each with the concrete verified local path:
+  music bed -> {{audio_dir}}/music.mp3 (verified)
+  narration -> {{audio_dir}}/narration.wav (verified)
+If either could not be verified, say so plainly — do not fabricate a path.
+"""
+
+
 def _build_audio_stage(profile: Profile) -> LlmAgent:
+    if profile.shot_media == "stills":
+        return LlmAgent(
+            model=MODEL,
+            name="audio",
+            description=(
+                "Reuses the Music Producer persona to produce a music bed (from "
+                "music_mood) and an explainer narration (from the panels' "
+                "narration_lines) as files in the package's audio/ dir."
+            ),
+            instruction=_storyboard_audio_instruction(profile.plan_state_key),
+            tools=[music_producer_tool],
+        )
     return LlmAgent(
         model=MODEL,
         name="audio",
@@ -472,6 +710,121 @@ def trim_audio_to_video_length(
     )
 
 
+def build_stills_animatic_slideshow(
+    image_paths: list[str],
+    output_path: str,
+    narration_audio_path: str = "",
+    seconds_per_image: float = 3.0,
+) -> str:
+    """Build a silent slideshow video (.mp4) from an ordered list of still images.
+
+    This is the storyboard profile's SECOND "one spot below MCP" (the ad profile
+    has one: `trim_audio_to_video_length`). It exists because avtool genuinely has
+    NO stills->video tool: its surface is ffmpeg_get_media_info,
+    ffmpeg_convert_audio_wav_to_mp3, ffmpeg_video_to_gif,
+    ffmpeg_combine_audio_and_video, ffmpeg_overlay_image_on_video,
+    ffmpeg_adjust_volume, ffmpeg_layer_audio_files, and
+    ffmpeg_concatenate_media_files (mcp-avtool-go/mcp_handlers.go:57, 116, 218,
+    367, 532, 1035, 1158, 652) — every one needs existing media as input; none
+    turns a set of PNGs into a timed video. Modifying the shared avtool server is
+    out of scope, so this helper fills the gap by shelling the already-required
+    ffmpeg (no new dependency), and the avtool server still does the audio mix +
+    combine (the established reuse). Documented in the README "one spot below MCP".
+
+    The slideshow is BOARD-PACED: if `narration_audio_path` is given and exists,
+    each image is shown for narration_duration / len(images) seconds so the video
+    length matches the narration (the storyboard has no ad duration budget — the
+    narration sets the pace, addendum §6). Otherwise each image is shown for
+    `seconds_per_image` seconds.
+
+    Args:
+      image_paths: ordered local paths to the still images (shots/shot-01.png …).
+      output_path: local path to write the slideshow .mp4 to, e.g.
+        <package>/slideshow.mp4.
+      narration_audio_path: optional local path to the narration audio; when
+        present its measured duration drives the per-image time (board-pacing).
+      seconds_per_image: fallback per-image duration when no narration is given.
+
+    Returns:
+      A human-readable status string with the resulting video path and duration
+      (verify by existence), or an "ERROR: …" string on any failure (fail-loud;
+      the caller must NOT claim success on an ERROR return).
+    """
+    for tool in ("ffprobe", "ffmpeg"):
+        if shutil.which(tool) is None:
+            return (
+                f"ERROR: '{tool}' is not on PATH. ffmpeg and ffprobe are required "
+                "for the storyboard animatic (see the project prerequisites)."
+            )
+    if not image_paths:
+        return "ERROR: no image paths were given; cannot build a slideshow."
+    for p in image_paths:
+        if not os.path.isfile(p):
+            return f"ERROR: still not found at '{p}'. Pass the verified paths from the panel stage."
+
+    per_image = seconds_per_image
+    if narration_audio_path:
+        if not os.path.isfile(narration_audio_path):
+            return f"ERROR: narration audio not found at '{narration_audio_path}'."
+        try:
+            narration_dur = _ffprobe_duration_seconds(narration_audio_path)
+            if narration_dur > 0:
+                per_image = max(0.5, narration_dur / len(image_paths))
+        except (subprocess.CalledProcessError, ValueError) as exc:
+            return f"ERROR: could not read narration duration with ffprobe: {exc}"
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    # Use the ffmpeg concat demuxer: a temp list naming each image with a
+    # `duration`. The concat demuxer needs the LAST image repeated with no
+    # trailing duration so the final panel is held for its full time. Scale to
+    # even dimensions and force yuv420p so the .mp4 is broadly playable.
+    import tempfile
+
+    list_lines = []
+    for p in image_paths:
+        abs_p = os.path.abspath(p)
+        list_lines.append(f"file '{abs_p}'")
+        list_lines.append(f"duration {per_image:.3f}")
+    # Repeat the last file (concat demuxer quirk) so its duration is honored.
+    list_lines.append(f"file '{os.path.abspath(image_paths[-1])}'")
+    list_text = "\n".join(list_lines) + "\n"
+
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".txt", delete=False
+    ) as list_file:
+        list_file.write(list_text)
+        list_path = list_file.name
+
+    try:
+        subprocess.run(
+            [
+                "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", list_path,
+                "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p",
+                "-r", "25", "-pix_fmt", "yuv420p", output_path,
+            ],
+            capture_output=True, text=True, check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        return f"ERROR: ffmpeg slideshow build failed: {exc.stderr or exc}"
+    finally:
+        try:
+            os.unlink(list_path)
+        except OSError:
+            pass
+
+    if not os.path.isfile(output_path):
+        return f"ERROR: expected slideshow at '{output_path}' but it was not written."
+    try:
+        dur = _ffprobe_duration_seconds(output_path)
+    except (subprocess.CalledProcessError, ValueError):
+        dur = per_image * len(image_paths)
+    return (
+        f"Built the silent slideshow at '{output_path}': {len(image_paths)} "
+        f"panels x {per_image:.2f}s = {dur:.2f}s (verified: file exists). Use it "
+        "as the video input to the audio mix + combine steps."
+    )
+
+
 # ---------------------------------------------------------------------------
 # The assembler wires the avtool server (LlmAgent tool orchestration) plus the
 # one local helper above.
@@ -560,8 +913,117 @@ duration, and confirm it fits the 15s-2m budget.
 """
 
 
+# The storyboard assembler wires avtool for the audio mix + combine + info, and
+# has TWO local ffmpeg helpers: build_stills_animatic_slideshow (stills->silent
+# video — avtool has no such tool) and the SAME trim_audio_to_video_length the ad
+# assembler uses (do NOT write a second trimmer). The Lyria bed is a fixed ~30s
+# clip and avtool mixes with amix=duration=longest with no -shortest, so the mixed
+# music+narration must be trimmed to the slideshow length before combining, or the
+# animatic gets a tail over a frozen last panel — the exact trap the ad path hit.
+storyboard_assembler_avtool = MCPToolset(
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command="mcp-avtool-go",
+            env=server_env,
+        ),
+        timeout=300,
+    ),
+    tool_filter=[
+        "ffmpeg_layer_audio_files",
+        "ffmpeg_combine_audio_and_video",
+        "ffmpeg_get_media_info",
+    ],
+)
+
+
+# `plan_key` is threaded the way _stills_slot_instruction does it: `{{{plan_key}}}`
+# becomes the state template `{plan}` (for the shipped profile), while
+# `{{package_dir}}` stays a runtime state template. Resolved text is identical for
+# plan_state_key="plan".
+def _stills_animatic_instruction(plan_key: str) -> str:
+    return f"""\
+You are the editor who assembles the final editorial ANIMATIC (a stills board set
+to narration + music). The planner's storyboard plan is injected for reference,
+and the package directory where the final file must land:
+
+<plan>
+{{{plan_key}}}
+</plan>
+
+Write the final animatic into this directory (an absolute path):
+<package_dir>{{package_dir}}</package_dir>
+
+The panel stage produced one verified still per panel (local, named
+shot-01.png, shot-02.png, … under {{package_dir}}/shots) and the audio stage
+produced a verified music bed ({{package_dir}}/audio/music.mp3) and a verified
+narration ({{package_dir}}/audio/narration.wav). The exact paths are in the
+conversation above — read them from there; do NOT guess names.
+
+There is NO Veo clip in this profile — you build the video FROM the stills. Work
+in this order and verify by existence at the end:
+
+# 1. Build the silent slideshow FROM the stills
+Call the `build_stills_animatic_slideshow` tool with `image_paths` = the verified
+still paths IN PANEL ORDER, `output_path="{{package_dir}}/slideshow.mp4"`, and
+`narration_audio_path="{{package_dir}}/audio/narration.wav"` (so the slideshow is
+board-paced to the narration length). Use the video path it reports. If it
+returns an ERROR, stop and report it — do not continue.
+
+# 2. Mix the music bed + narration -> one audio track
+Call `ffmpeg_layer_audio_files` with `input_audio_uris` =
+["{{package_dir}}/audio/music.mp3", "{{package_dir}}/audio/narration.wav"],
+`output_filename="animatic_mix.m4a"`, `output_local_dir="{{package_dir}}"`.
+
+# 3. Trim the mixed audio to the SLIDESHOW length
+The Lyria bed is a fixed ~30s clip and avtool mixes with amix=duration=longest,
+so the mixed audio is usually LONGER than the slideshow — combining directly
+leaves audio over a frozen last panel. Call `trim_audio_to_video_length` with
+`audio_path` = the mixed audio (step 2), `video_path` = the slideshow (step 1),
+and `output_path="{{package_dir}}/animatic_mix_fit.m4a"`. Use its returned audio
+path as the audio input to the next step.
+
+# 4. Lay the (fitted) audio over the slideshow -> the animatic
+Call `ffmpeg_combine_audio_and_video` with `input_video_uri` = the slideshow from
+step 1, `input_audio_uri` = the fitted audio from step 3,
+`output_filename="animatic.mp4"`, `output_local_dir="{{package_dir}}"`. The final
+file MUST be exactly {{package_dir}}/animatic.mp4 so the packager can find it.
+
+# 5. VERIFY the animatic by existence — never a resource_link
+Call `ffmpeg_get_media_info` on {{package_dir}}/animatic.mp4 and report its
+duration, and tell the user to list the destination (e.g.
+`ls -l {{package_dir}}/animatic.mp4`). A tool returning successfully or a bare
+resource_link is NOT proof — the destination listing / media info IS. If the file
+cannot be verified, say so plainly; do not claim success.
+
+End with the concrete verified path of {{package_dir}}/animatic.mp4 and its
+measured duration.
+"""
+
+
 def _build_assembler(profile: Profile) -> LlmAgent:
-    # profile.assembler_recipe == "video_ad_concat" for the ad profile.
+    if profile.assembler_recipe == "stills_animatic":
+        return LlmAgent(
+            model=MODEL,
+            name="assembler",
+            description=(
+                "Builds a silent slideshow from the panels' stills, mixes music "
+                "+ narration, trims the audio to the slideshow length, lays it "
+                "over the slideshow via avtool, and verifies animatic.mp4 by "
+                "existence."
+            ),
+            instruction=_stills_animatic_instruction(profile.plan_state_key),
+            # avtool for mix/combine/info, plus TWO local ffmpeg helpers: the new
+            # stills->video slideshow builder and the SAME trim helper the ad
+            # assembler uses (bare callables ADK auto-wraps in FunctionTools:
+            # llm_agent.py:206-207).
+            tools=[
+                storyboard_assembler_avtool,
+                build_stills_animatic_slideshow,
+                trim_audio_to_video_length,
+            ],
+        )
+
+    # profile.assembler_recipe == "video_ad_concat" — the ad path (unchanged).
     return LlmAgent(
         model=MODEL,
         name="assembler",
@@ -583,11 +1045,14 @@ def _build_assembler(profile: Profile) -> LlmAgent:
 # The engine — one factory, the ad profile as default
 # ============================================================================
 def build_root_agent(profile: Profile = AD_PROFILE) -> SequentialAgent:
-    """Build the capstone SequentialAgent for the given profile.
+    """Build the engine's SequentialAgent for the given profile.
 
-    THIS PR ships the `ad` profile only. The factory seam keeps a future
-    audience (e.g. an editorial storyboard profile) purely additive — no change
-    to this graph shape, just a different Profile passed in.
+    The same graph shape serves both audiences — only the per-stage builders
+    branch on the Profile's fields (shot_media, assembler_recipe, plan_schema,
+    plan_state_key). `AD_PROFILE` (default) is the ad capstone; `STORYBOARD_PROFILE`
+    is the editorial storyboard/dogfood profile reached via the `package` CLI.
+    `root_agent` below is built with AD_PROFILE, so `adk web` loads the ad
+    capstone unchanged.
     """
     return SequentialAgent(
         name=f"ad_creative_director_{profile.name}",

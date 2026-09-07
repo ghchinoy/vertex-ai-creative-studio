@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Schema-validated shot plan for the ad creative-director capstone.
+"""Schema-validated shot plans for the profile-driven creative-studio engine.
+
+This module defines the two planner `output_schema`s the engine ships:
+  * `AdPlan` — the `ad` profile (Veo clips, duration-budgeted). Default.
+  * `StoryboardPlan` — the `storyboard` profile (nanobanana stills, board-paced,
+    NO duration budget). See the note above `StoryboardShot` below.
 
 `AdPlan` is the planner's `output_schema`. Giving the planner an `output_schema`
 turns its reply into a schema-validated JSON spine that lands in session state
@@ -38,11 +43,20 @@ MAX_SHOTS sub-agents and each reads `shots[i]` if present / no-ops if absent.
 The budget math for MAX_SHOTS is justified in agent.py and the README.
 """
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 # The only clip durations Veo-3 supports (see the Director persona + agent.py
 # budget note). Enforced in-schema below so a bad plan fails at validation time.
 VALID_SHOT_DURATIONS = (4, 6, 8)
+
+# The finished-ad duration envelope (15s-2m). `total_duration_seconds` is bounded
+# to this per-field (ge/le below), and — closing PR-5 review FYI-1 — the SUM of
+# the per-shot `duration_seconds` is bounded to the same envelope by an AdPlan
+# cross-field validator, because per-field bounds alone did not guarantee the
+# aggregate (three legal 8s shots sum to 24s — fine — but three legal 4s shots
+# sum to 12s, which is below the 15s floor even though each shot is valid).
+MIN_TOTAL_DURATION_SECONDS = 15
+MAX_TOTAL_DURATION_SECONDS = 120
 
 # Fixed number of per-shot slots the ParallelAgent fans out to. Veo-3 clips are
 # 4, 6, or 8 seconds each (see the Director persona + agent.py budget note), so
@@ -121,5 +135,102 @@ class AdPlan(BaseModel):
             f"The hero shots, in order. AT MOST {MAX_SHOTS} shots — the shot "
             "stage has a fixed number of parallel slots."
         ),
+        max_length=MAX_SHOTS,
+    )
+
+    @model_validator(mode="after")
+    def _sum_of_shot_durations_in_envelope(self) -> "AdPlan":
+        # Cross-field invariant (closes PR-5 review FYI-1). Each shot's
+        # `duration_seconds` is individually valid (one of 4/6/8) and
+        # `total_duration_seconds` is individually in [15, 120], but neither
+        # guarantees the ASSEMBLED hero-footage length — the sum of the per-shot
+        # durations — lands in the 15s-2m envelope. Enforce it here so a plan
+        # whose shots are each legal but sum out of range fails LOUD at
+        # validation time rather than producing an out-of-budget ad. Runs after
+        # the per-field validators, so `shots` are already grid-valid here.
+        total = sum(shot.duration_seconds for shot in self.shots)
+        if not (
+            MIN_TOTAL_DURATION_SECONDS <= total <= MAX_TOTAL_DURATION_SECONDS
+        ):
+            raise ValueError(
+                "the sum of the per-shot duration_seconds must be within "
+                f"[{MIN_TOTAL_DURATION_SECONDS}, {MAX_TOTAL_DURATION_SECONDS}] "
+                f"seconds (the 15s-2m ad envelope), got {total}s from "
+                f"{[shot.duration_seconds for shot in self.shots]}. Adjust the "
+                "shot durations (each still one of 4/6/8) so they sum into range."
+            )
+        return self
+
+
+# ============================================================================
+# StoryboardPlan — the `storyboard` (journalism/marketing) profile's plan
+# ============================================================================
+# The storyboard profile is a SECOND audience for the same engine (see
+# profiles.py / agent.py). It is board-paced and narration-driven, NOT ad-
+# budgeted: there is deliberately NO veo, NO clip, and — per the design addendum
+# §6 ("Duration model: board-paced; narration length drives it, not a hard ad
+# budget") — NO hard duration budget. Consequences for this schema:
+#   * StoryboardShot carries NO `duration_seconds` (stills, not Veo clips), so
+#     the Veo-3 duration grid is irrelevant here.
+#   * StoryboardPlan carries NO total-duration field, so the AdPlan aggregate
+#     sum-in-[15,120] invariant above DOES NOT APPLY to StoryboardPlan (N/A by
+#     design — the animatic length is driven by the narration at assembly time).
+# The only shared constraint is the fixed shot-slot cap: the shot stage reuses
+# the same MAX_SHOTS ParallelAgent, so `shots` is bounded to [1, MAX_SHOTS].
+
+
+class StoryboardShot(BaseModel):
+    """One storyboard panel: an editorial beat, its still, and its narration."""
+
+    beat: str = Field(
+        description=(
+            "The editorial beat this panel covers — what this moment of the "
+            "story explains or shows (e.g. 'establish the problem')."
+        )
+    )
+    prompt: str = Field(
+        description=(
+            "Art-direction for the still: subject, composition, lens, light, "
+            "and mood. This drives the Photoshoot (nanobanana) still — there is "
+            "no motion/clip in the storyboard profile."
+        )
+    )
+    narration_line: str = Field(
+        description=(
+            "The explainer voiceover line spoken over this panel (editorial, "
+            "neutral register). Concatenated in order into the narration track."
+        )
+    )
+
+
+class StoryboardPlan(BaseModel):
+    """A board-paced, narration-driven editorial storyboard plan.
+
+    The planner's `output_schema` for the `storyboard` profile. Unlike `AdPlan`
+    there is NO duration budget (see the note above): the animatic's length is
+    set by the narration at assembly time, so this schema has no total-duration
+    field and the AdPlan aggregate-duration invariant does not apply.
+    """
+
+    subject: str = Field(
+        description=(
+            "The brand, product, story, or subject the storyboard is about "
+            "(editorial framing, not necessarily an advertiser)."
+        )
+    )
+    music_mood: str = Field(
+        description=(
+            "The mood/genre for the music bed (e.g. 'calm, contemplative "
+            "documentary underscore'), handed to the Music Producer (lyria) "
+            "persona."
+        )
+    )
+    shots: list[StoryboardShot] = Field(
+        description=(
+            f"The storyboard panels, in order. Between 1 and {MAX_SHOTS} shots "
+            "— the shot stage has a fixed number of parallel slots, and an "
+            "empty plan must not yield a zero-shot package."
+        ),
+        min_length=1,
         max_length=MAX_SHOTS,
     )

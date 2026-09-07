@@ -12,3 +12,5 @@ wheels/
 # Local secrets and generated media
 .env
 output/
+# Storyboard-profile dogfood packages produced by `python -m ad_creative_director.package`
+packages/
