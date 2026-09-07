@@ -1,0 +1,87 @@
+// music-producer.dot — architecture of the Music Producer crawl agent (PR-3 / #1815).
+// Theme: blog/graphic-theme.md §5. Verified against merged
+// music-producer/music_producer/agent.py (three MCPToolsets, bare-token tool_name_prefix).
+// Render:
+//   dot -Tsvg blog/diagrams/music-producer.dot -o blog/diagrams/music-producer.svg
+//   dot -Tpng -Gdpi=144 blog/diagrams/music-producer.dot -o blog/diagrams/music-producer.png
+digraph music_producer {
+  graph [fontname="Inter", bgcolor="#FBFBF8", rankdir=TB, splines=true,
+         nodesep=0.4, ranksep=0.55,
+         label="Music Producer — one LlmAgent, THREE MCPToolsets\lNamespaced by role with tool_name_prefix; the naming crosswalk baked in.\l",
+         labelloc="t", fontsize=14, fontcolor="#1F2933"];
+  node  [fontname="Inter", fontsize=11, penwidth=1.6];
+  edge  [fontname="JetBrains Mono", fontsize=9, color="#1F2933", penwidth=1.3];
+
+  user [shape=oval, style=filled, fillcolor="#F1F3F4", color="#52606D",
+        label="You\nmood/genre for a bed + a VO script"];
+  gemini [shape=ellipse, style=filled, fillcolor="#FDF0CE", color="#F9A825", fontcolor="#1F2933",
+          label="Gemini plans the order\nmusic → VO → mix\n& reconciles the naming crosswalk"];
+
+  agent [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+         label="LlmAgent  name=\"music_producer\"  model=gemini-3.8-flash\ntools=[lyria, tts, avtool]"];
+
+  // three toolsets (ADK, indigo) with bare-token prefixes
+  ts_music [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+            label="MCPToolset\ntool_name_prefix=\"music\""];
+  ts_tts [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+          label="MCPToolset\ntool_name_prefix=\"tts\""];
+  ts_av [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+         label="MCPToolset\ntool_name_prefix=\"av\""];
+
+  // three servers (MCP, teal)
+  s_lyria [shape=box3d, style=filled, fillcolor="#DBF3F1", color="#00A39C",
+           label="mcp-lyria-go\nmusic_lyria_generate_music"];
+  s_gem [shape=box3d, style=filled, fillcolor="#DBF3F1", color="#00A39C",
+         label="mcp-gemini-go\ntts_gemini_audio_tts"];
+  s_av [shape=box3d, style=filled, fillcolor="#DBF3F1", color="#00A39C",
+        label="mcp-avtool-go\nav_ffmpeg_layer_audio_files\n(transform-only · needs ffmpeg+ffprobe)"];
+
+  // artifacts
+  a_bed [shape=folder, style=filled, fillcolor="#F1F3F4", color="#52606D", label="./output/bed.mp3"];
+  a_vo  [shape=folder, style=filled, fillcolor="#F1F3F4", color="#52606D", label="./output/vo.wav"];
+  a_mix [shape=folder, style=filled, fillcolor="#F1F3F4", color="#52606D",
+         label="./output/mix.mp3\n(extension selects container)"];
+
+  verify [shape=box, style="rounded,filled", fillcolor="white", color="#1E8E3E", fontcolor="#1E8E3E",
+          label="Verify by existence (all three)\nls the path / gcloud storage ls\ncontainer == extension (av_ffmpeg_get_media_info)"];
+
+  // gotchas
+  g_lyria [shape=box, style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C",
+           label="lyria: negative_prompt / seed / sample_count\nSILENTLY IGNORED on lyria-3-clip-preview\n(global-only); only prompt reaches the model"];
+  g_cross [shape=note, style=filled, fillcolor="white", color="#8E24AA", fontcolor="#8E24AA",
+           label="local dir spelled 3 ways:\nlyria local_path · tts output_directory · av output_local_dir\n(NAMING.md)"];
+
+  // flow
+  user -> gemini [label="request"];
+  gemini -> agent;
+  agent -> ts_music; agent -> ts_tts; agent -> ts_av;
+  ts_music -> s_lyria; ts_tts -> s_gem; ts_av -> s_av;
+  s_lyria -> a_bed [label="prompt, local_path"];
+  s_gem   -> a_vo  [label="text (<=800), output_directory"];
+
+  // avtool consumes the two generated files
+  edge [color="#00A39C"];
+  a_bed -> s_av [label="input_audio_uris[0]", style=dashed, arrowhead=vee];
+  a_vo  -> s_av [label="input_audio_uris[1]", style=dashed, arrowhead=vee];
+  edge [color="#1F2933"];
+  s_av -> a_mix [label="layer → mix"];
+
+  a_bed -> verify [color="#1E8E3E", style=dotted, arrowhead=none];
+  a_vo  -> verify [color="#1E8E3E", style=dotted, arrowhead=none];
+  a_mix -> verify [color="#1E8E3E"];
+
+  // annotations
+  s_lyria -> g_lyria [style=dashed, color="#E8590C", arrowhead=none];
+  agent -> g_cross [style=dashed, color="#8E24AA", arrowhead=none, label="crosswalk"];
+
+  subgraph cluster_legend {
+    label="Legend"; fontname="Inter"; fontsize=11; color="#9AA5B1"; style="rounded";
+    L_adk    [shape=box,     style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9", label="ADK"];
+    L_mcp    [shape=box3d,   style="filled",         fillcolor="#DBF3F1", color="#00A39C", label="genmedia MCP"];
+    L_gemini [shape=ellipse, style="filled",         fillcolor="#FDF0CE", color="#F9A825", label="Gemini"];
+    L_ver    [shape=box,     style="rounded,filled", fillcolor="white",   color="#1E8E3E", fontcolor="#1E8E3E", label="verify"];
+    L_got    [shape=box,     style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C", label="gotcha"];
+    L_state  [shape=note,    style="filled",         fillcolor="white",   color="#8E24AA", fontcolor="#8E24AA", label="crosswalk"];
+    L_adk -> L_mcp -> L_gemini -> L_ver -> L_got -> L_state [style=invis];
+  }
+}

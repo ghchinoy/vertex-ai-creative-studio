@@ -1,0 +1,63 @@
+// director.dot — architecture of the Director/Videographer crawl agent (PR-2 / #1814).
+// Theme: blog/graphic-theme.md §5.  Verified against merged
+// director-videographer/director_videographer/agent.py and the veo Go sources cited in its README.
+// Render:
+//   dot -Tsvg blog/diagrams/director.dot -o blog/diagrams/director.svg
+//   dot -Tpng -Gdpi=144 blog/diagrams/director.dot -o blog/diagrams/director.png
+digraph director {
+  graph [fontname="Inter", bgcolor="#FBFBF8", rankdir=TB, splines=true,
+         nodesep=0.35, ranksep=0.55,
+         label="Director / Videographer — one LlmAgent, one MCPToolset (veo)\lSame shape as Photoshoot; Gemini must pick a Veo-3 model to clear the footgun.\l",
+         labelloc="t", fontsize=14, fontcolor="#1F2933"];
+  node  [fontname="Inter", fontsize=11, penwidth=1.6];
+  edge  [fontname="JetBrains Mono", fontsize=9, color="#1F2933", penwidth=1.3];
+
+  user [shape=oval, style=filled, fillcolor="#F1F3F4", color="#52606D",
+        label="You\n\"6s cinematic clip, red umbrella,\nneon Tokyo, ambient rain\""];
+
+  gemini [shape=ellipse, style=filled, fillcolor="#FDF0CE", color="#F9A825", fontcolor="#1F2933",
+          label="Gemini directs the shot &\nreasons about requirements:\naudio? vertical? duration?\n→ chooses a Veo-3 model"];
+
+  agent [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+         label="LlmAgent  name=\"director_videographer\"\nmodel=gemini-3.8-flash"];
+  toolset [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+           label="MCPToolset (stdio, timeout=300)\ntool_filter=[veo_t2v, veo_i2v]"];
+
+  server [shape=box3d, style=filled, fillcolor="#DBF3F1", color="#00A39C",
+          label="mcp-veo-go\nveo_t2v / veo_i2v"];
+
+  // correct path
+  artifact [shape=folder, style=filled, fillcolor="#F1F3F4", color="#52606D",
+            label="gs://<bucket>/veo_outputs/…/sample_0.mp4\n(veo ALWAYS writes to GCS)"];
+  verify [shape=box, style="rounded,filled", fillcolor="white", color="#1E8E3E", fontcolor="#1E8E3E",
+          label="Verify by LISTING\ngcloud storage ls gs://…/veo_outputs/\n(never trust the resource_link)"];
+
+  // footgun contrast path
+  fallback [shape=box3d, style="filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C",
+            label="model UNSET → falls back to\nveo-2.0-generate-001"];
+  error [shape=box, style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C",
+         label="ERROR: generate_audio=true (default)\nnot supported by veo-2.0\n→ the \"minimal\" call fails"];
+
+  // correct flow
+  user -> gemini [label="scene idea"];
+  gemini -> agent [label="cinematic prompt\n+ explicit Veo-3 model"];
+  agent -> toolset [label="tools=[veo]"];
+  toolset -> server [label="veo_t2v\nmodel=veo-3.1-fast-generate-001"];
+  server -> artifact [label="writes to GCS"];
+  artifact -> verify [color="#1E8E3E"];
+
+  // footgun path (orange dashed)
+  edge [style=dashed, color="#E8590C", fontcolor="#E8590C"];
+  toolset -> fallback [label="if model omitted"];
+  fallback -> error;
+
+  subgraph cluster_legend {
+    label="Legend"; fontname="Inter"; fontsize=11; color="#9AA5B1"; style="rounded";
+    L_adk    [shape=box,     style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9", label="ADK"];
+    L_mcp    [shape=box3d,   style="filled",         fillcolor="#DBF3F1", color="#00A39C", label="genmedia MCP"];
+    L_gemini [shape=ellipse, style="filled",         fillcolor="#FDF0CE", color="#F9A825", label="Gemini"];
+    L_ver    [shape=box,     style="rounded,filled", fillcolor="white",   color="#1E8E3E", fontcolor="#1E8E3E", label="verify"];
+    L_got    [shape=box,     style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C", label="footgun"];
+    L_adk -> L_mcp -> L_gemini -> L_ver -> L_got [style=invis];
+  }
+}
