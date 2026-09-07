@@ -17,8 +17,9 @@ that wires **more than one MCP server**.
 ## What you'll learn
 
 **The one new ADK concept: wiring multiple `MCPToolset`s in a single `LlmAgent`
-and giving each a distinct `tool_name_prefix`** (`lyria_`, `tts_`, `av_`) so the
-servers' tool names never collide and the model's tool choices stay legible.
+and giving each a distinct `tool_name_prefix`** (`music`, `tts`, `av`) so the
+servers' tool names never collide and the model's tool choices stay legible
+(exposed as `music_*`, `tts_*`, `av_*`).
 
 With more than one server comes the second lesson: **the genmedia servers spell
 "the same" parameter differently.** The model can't see those differences from
@@ -87,8 +88,8 @@ lyria = MCPToolset(                   # server 1: music
         server_params=StdioServerParameters(command="mcp-lyria-go", env=server_env),
         timeout=180,
     ),
-    tool_filter=["lyria_generate_music"],
-    tool_name_prefix="lyria_",        # -> lyria_generate_music
+    tool_filter=["lyria_generate_music"],   # tool_filter matches the BASE name
+    tool_name_prefix="music",         # -> music_lyria_generate_music
 )
 
 tts = MCPToolset(                     # server 2: voiceover
@@ -97,7 +98,7 @@ tts = MCPToolset(                     # server 2: voiceover
         timeout=120,
     ),
     tool_filter=["gemini_audio_tts"],
-    tool_name_prefix="tts_",          # -> tts_gemini_audio_tts
+    tool_name_prefix="tts",           # -> tts_gemini_audio_tts
 )
 
 avtool = MCPToolset(                  # server 3: mix / convert
@@ -105,7 +106,10 @@ avtool = MCPToolset(                  # server 3: mix / convert
         server_params=StdioServerParameters(command="mcp-avtool-go", env=server_env),
         timeout=180,
     ),
-    tool_name_prefix="av_",           # -> av_ffmpeg_layer_audio_files, ...
+    tool_filter=["ffmpeg_layer_audio_files",     # base names, applied
+                 "ffmpeg_convert_audio_wav_to_mp3",  # before prefixing
+                 "ffmpeg_get_media_info"],
+    tool_name_prefix="av",            # -> av_ffmpeg_layer_audio_files, ...
 )
 
 root_agent = LlmAgent(model=MODEL, name="music_producer",
@@ -114,10 +118,24 @@ root_agent = LlmAgent(model=MODEL, name="music_producer",
 
 `tool_name_prefix` is the teaching point: without it, three servers could each
 expose a tool the model refers to ambiguously; with it, every tool the model can
-call is unambiguously namespaced (`lyria_*`, `tts_*`, `av_*`). The `INSTRUCTION`
-then does the sequencing — generate music → generate VO → mix — and, crucially,
-bakes the **exact, per-tool parameter names** (below) because the model can't
-infer them from the tool schema.
+call is unambiguously namespaced (`music_*`, `tts_*`, `av_*`). Two details that
+make this a *correct* prefixing example, not just a working one:
+
+- **ADK inserts the separator itself** — it exposes each tool as
+  `f"{prefix}_{tool.name}"` ([`base_toolset.py:162`](https://github.com/google/adk-python/blob/main/src/google/adk/tools/base_toolset.py)).
+  So the prefix VALUES are **bare role tokens with no trailing underscore**
+  (`"music"`, not `"music_"`) — otherwise you'd get a doubled `music__…`. And you
+  name them by **role**, not by echoing the server (`"music"`, not `"lyria"`),
+  so the result reads `music_lyria_generate_music`, not a stuttering
+  `lyria_lyria_generate_music`.
+- **`tool_filter` matches the BASE tool name** (it is applied *before* prefixing),
+  so the filter values stay `lyria_generate_music` / `gemini_audio_tts` /
+  `ffmpeg_*` even though the exposed names gain the prefix.
+
+The `INSTRUCTION` then does the sequencing — generate music → generate VO → mix —
+referring to tools by their **exposed** names (`music_lyria_generate_music`,
+`tts_gemini_audio_tts`, `av_ffmpeg_*`) and baking the **exact, per-tool parameter
+names** (below) because the model can't infer them from the tool schema.
 
 ### Why gemini TTS (and not chirp3)
 
@@ -136,7 +154,7 @@ still noted in NAMING.md and in the validation recipe's alternate path.)
 Every name below is verified against the genmedia Go sources (file:line in
 `agent.py`); it is a concrete instance of [`../NAMING.md`](../NAMING.md):
 
-| Concept | `lyria_generate_music` | `tts_gemini_audio_tts` | `av_*` (e.g. layer/convert) |
+| Concept | `music_lyria_generate_music` | `tts_gemini_audio_tts` | `av_*` (e.g. layer/convert) |
 |---|---|---|---|
 | content | `prompt` | `text` (+ `prompt` = **style**) | — (transform-only) |
 | model id | `model_id` | `model_name` | — |

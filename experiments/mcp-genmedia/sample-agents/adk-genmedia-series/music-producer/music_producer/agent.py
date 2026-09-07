@@ -19,8 +19,11 @@ One LlmAgent wiring THREE MCPToolsets over stdio: lyria (music), gemini TTS
 wire more than one server, so it is where two ADK/genmedia ideas are taught:
 
   1. `tool_name_prefix` on every MCPToolset, so the three servers' tool names
-     never collide and the model's tool choices stay legible (lyria_*, tts_*,
-     av_*).
+     never collide and the model's tool choices stay legible (music_*, tts_*,
+     av_*). ADK inserts the separator itself — prefixed_name = f"{prefix}_
+     {tool.name}" (base_toolset.py:162) — so the prefix VALUES are bare role
+     tokens with NO trailing underscore ("music", "tts", "av"), named by role so
+     they don't echo the base tool name.
   2. The naming crosswalk (../NAMING.md): the servers spell "the same" parameter
      differently (model_id vs model_name, output_gcs_bucket vs output_directory
      vs local_path vs output_local_dir, sample_count, text vs prompt). The model
@@ -68,6 +71,10 @@ if project_id:
 #   see lyria.go:61), output_gcs_bucket:143, local_path:152, output_filename:146,
 #   sample_count:138 / negative_prompt:132 / seed:135 (DROPPED on the default
 #   model — see the INSTRUCTION and NAMING.md Lyria caveat).
+# tool_filter matches the BASE tool.name (applied before prefixing), so it stays
+# "lyria_generate_music". tool_name_prefix is the bare role token "music" (NOT
+# "lyria" — that would echo the base name and stutter); ADK adds the separator,
+# so the exposed name is "music_lyria_generate_music".
 lyria = MCPToolset(
     connection_params=StdioConnectionParams(
         server_params=StdioServerParameters(
@@ -77,7 +84,7 @@ lyria = MCPToolset(
         timeout=180,
     ),
     tool_filter=["lyria_generate_music"],
-    tool_name_prefix="lyria_",
+    tool_name_prefix="music",
 )
 
 
@@ -87,8 +94,9 @@ lyria = MCPToolset(
 #   params text:126 (required, 800-char cap — enforced in
 #   tts_handlers.go:267-268), prompt:130 (STYLE, not content), voice_name:133,
 #   model_name:138, output_directory:154 (local; no GCS output param).
-# tool_filter keeps the surface to just the TTS tool (this server also exposes
-# gemini_image_generation, list_gemini_voices, omni_video_generation).
+# tool_filter (base names) keeps the surface to just the TTS tool (this server
+# also exposes gemini_image_generation, list_gemini_voices, omni_video_generation).
+# Bare role prefix "tts" -> exposed name "tts_gemini_audio_tts".
 tts = MCPToolset(
     connection_params=StdioConnectionParams(
         server_params=StdioServerParameters(
@@ -98,7 +106,7 @@ tts = MCPToolset(
         timeout=120,
     ),
     tool_filter=["gemini_audio_tts"],
-    tool_name_prefix="tts_",
+    tool_name_prefix="tts",
 )
 
 
@@ -118,8 +126,11 @@ tts = MCPToolset(
 # this job (the video/gif/overlay/concat/volume transforms stay hidden). The
 # strings are the exact source tool names (verified: ffmpeg_layer_audio_files
 # mcp_handlers.go:1158, ffmpeg_convert_audio_wav_to_mp3 mcp_handlers.go:116,
-# ffmpeg_get_media_info mcp_handlers.go:57); a filter entry that doesn't match a
-# real tool name is silently dropped, so these must match source verbatim.
+# ffmpeg_get_media_info mcp_handlers.go:57); tool_filter matches these BASE names
+# (applied before prefixing) and a filter entry that doesn't match a real tool
+# name is silently dropped, so these must match source verbatim. Bare role prefix
+# "av" -> exposed names av_ffmpeg_layer_audio_files, av_ffmpeg_convert_audio_wav
+# _to_mp3, av_ffmpeg_get_media_info.
 avtool = MCPToolset(
     connection_params=StdioConnectionParams(
         server_params=StdioServerParameters(
@@ -133,7 +144,7 @@ avtool = MCPToolset(
         "ffmpeg_convert_audio_wav_to_mp3",
         "ffmpeg_get_media_info",
     ],
-    tool_name_prefix="av_",
+    tool_name_prefix="av",
 )
 
 
@@ -144,15 +155,15 @@ VO file, and a mixed file that layers the two — and you VERIFY each one exists
 before reporting success.
 
 You wire THREE servers. Because tool names could collide across servers, every
-tool you can call is namespaced with a prefix — `lyria_`, `tts_`, `av_`. Use the
-prefixed names exactly. The parameter constraints below are NOT visible from the
-tool schemas, so honor them here. The full crosswalk of why the names differ
-across servers is in ../NAMING.md — read it once; the exact names for YOUR three
-tools are baked below.
+tool you can call is namespaced by role — `music_`, `tts_`, `av_`. Use the
+prefixed names exactly as written below. The parameter constraints below are NOT
+visible from the tool schemas, so honor them here. The full crosswalk of why the
+names differ across servers is in ../NAMING.md — read it once; the exact names
+for YOUR three tools are baked below.
 
 Work in this order and do not skip the verification after each step.
 
-# 1. Generate the music bed — `lyria_generate_music`
+# 1. Generate the music bed — `music_lyria_generate_music`
 - `prompt` (REQUIRED): a rich description of the music bed (genre, instruments,
   tempo, mood). This is the one parameter that reliably shapes the output.
 - `local_path` (recommended): a local directory, e.g. `./output`. NOTE the
