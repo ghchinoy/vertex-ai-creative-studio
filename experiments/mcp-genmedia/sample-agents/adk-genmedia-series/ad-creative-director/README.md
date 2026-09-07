@@ -52,6 +52,11 @@ schema-validated JSON plan via `output_schema`.** Concretely:
 - **The static-fan-out constraint.** `ParallelAgent`'s sub-agent list is fixed at
   build time — you'll see how to reconcile that with a runtime-variable shot
   count.
+- **`LoopAgent` — a bounded self-critique loop.** The optional **Editor's QC
+  Room** wraps the assembler with a critic and re-assembles until an *objective,
+  measured* check passes (the critic **escalates**) or a small `max_iterations`
+  cap is hit — the framework-level guarantee against an infinite loop. It applies
+  to **both** profiles.
 
 ## Prerequisites
 
@@ -113,9 +118,12 @@ SequentialAgent(name="ad_creative_director_ad", sub_agents=[
     planner,                       # LlmAgent(output_schema=AdPlan, output_key="ad_plan")
     ParallelAgent(name="shots", sub_agents=[shot_1, shot_2, shot_3]),
     audio,                         # LlmAgent(tools=[music_producer_tool])
-    assembler,                     # LlmAgent(tools=[avtool, trim_audio_to_video_length])
+    LoopAgent(name="editor_qc", max_iterations=2, sub_agents=[   # PR-7 QC loop (both profiles)
+        assembler,                 # LlmAgent(tools=[avtool, trim_audio_to_video_length])
+        critic,                    # LlmAgent(output_schema=QCVerdict, tools=[probe, exit_loop])
+    ]),
 ])
-root_agent = build_root_agent(AD_PROFILE)   # adk web loads the ad capstone
+root_agent = build_root_agent(AD_PROFILE)   # adk web loads the ad capstone (now with the QC loop)
 ```
 
 **Stage 1 — the planner** is an `LlmAgent` with an `output_schema` (`AdPlan`) and
@@ -144,6 +152,11 @@ the video's length**, lays it over the video, and **verifies the final file by
 existence** (media-info + destination listing), never by a returned resource
 link. That trim step is the one place this capstone drops below MCP — see
 *Keeping the audio in sync* below for why.
+
+When a profile enables QC (both shipped profiles do), stage four is not the bare
+assembler but a **`LoopAgent` — the "Editor's QC Room"** — that pairs the
+assembler with a critic and re-assembles until the cut passes an objective check
+or a small cap is hit. See **[The Editor's QC Room](#the-editors-qc-room-a-bounded-self-critique-loop)**.
 
 ### Keeping below MCP honest (the two local helpers)
 
@@ -297,6 +310,84 @@ reuse), and the naming crosswalk that spans all of them is
 [`../NAMING.md`](../NAMING.md) — this is the agent that exercises the whole
 crosswalk.
 
+## The Editor's QC Room (a bounded self-critique loop)
+
+The series' one remaining major ADK construct is a **`LoopAgent`**, and this is
+where it lives: an optional **"Editor's QC Room"** that turns stage four from a
+one-shot assembler into a **self-critique + bounded re-assemble** loop. It is
+**profile-agnostic** — it wraps assembly for **both** the `ad` capstone *and* the
+`storyboard` animatic. It ships **on** for both profiles (`enable_qc=True`), so
+`adk web` now runs it; set `enable_qc=False` on a profile to get the pre-QC
+one-shot assembler back.
+
+```python
+# build_root_agent(profile), when profile.enable_qc:
+LoopAgent(
+    name="editor_qc",
+    max_iterations=profile.qc_max_iterations,   # = 2
+    sub_agents=[assembler, critic],             # assembler FIRST, critic SECOND
+)
+```
+
+**Assembler-first, critic-second.** Each iteration the `LoopAgent` runs its
+sub-agents in order and restarts from the top next pass
+([`loop_agent.py:98`](https://github.com/google/adk-python/blob/v2.8.0/src/google/adk/agents/loop_agent.py#L98)
+/ [`:126`](https://github.com/google/adk-python/blob/v2.8.0/src/google/adk/agents/loop_agent.py#L126)
+@ v2.8.0), so putting the assembler first means the critic always has a **real,
+just-built cut** to measure — there is no first-iteration critic with nothing to
+review. The **single** assembler instance lives **only** inside the loop (an ADK
+agent may have exactly one parent —
+[`base_agent.py:704-712`](https://github.com/google/adk-python/blob/v2.8.0/src/google/adk/agents/base_agent.py#L704),
+which fires for `sub_agents` but not for `AgentTool`), never also as a bare fourth
+stage.
+
+**The critic is objective, not cosmetic.** It is an `LlmAgent` with
+`output_schema=QCVerdict` (`{acceptable, issues, correction_notes}`) and
+`output_key="qc_verdict"`. It does not *opine* — it **measures** with a tiny local
+`ffprobe` helper (`probe_media_durations`, reusing the same `_ffprobe_duration_seconds`
+the assembler uses) and judges from the numbers, verifying the final file **by
+existence** (never a `resource_link` or a tool's success text):
+
+- **Existence** — the final `.mp4` must actually exist on disk.
+- **Audio/video sync** — the final cut must not run more than **1.0s** longer than
+  the video-only track. This is the check with teeth (see below).
+- **Duration budget** — *ad profile only:* the final cut must be within the
+  **15–120s** budget. The storyboard is board-paced and has **no** budget check.
+
+**Two ways the loop stops — and it *always* stops:**
+
+1. **The critic escalates.** When the cut passes, the critic calls a one-line
+   `exit_loop` tool that sets `tool_context.actions.escalate = True`. The
+   `LoopAgent` checks `event.actions.escalate` on every event it sees and stops
+   ([`loop_agent.py:116-117`](https://github.com/google/adk-python/blob/v2.8.0/src/google/adk/agents/loop_agent.py#L116)
+   @ v2.8.0).
+2. **The `max_iterations` cap.** Even if the critic *never* escalates, the loop is
+   bounded by `max_iterations` (=2): the run condition is `times_looped <
+   self.max_iterations`
+   ([`loop_agent.py:95-97`](https://github.com/google/adk-python/blob/v2.8.0/src/google/adk/agents/loop_agent.py#L95),
+   incremented at [`:127`](https://github.com/google/adk-python/blob/v2.8.0/src/google/adk/agents/loop_agent.py#L127)
+   @ v2.8.0). This cap is the framework-level **guarantee of no infinite loop**.
+
+**The concrete defect it catches (and fixes) on-camera.** This is the same
+Lyria-overrun trap that `trim_audio_to_video_length` exists for — now caught
+*visibly* by the QC room. When QC is on, the assembler's **first** pass deliberately
+**skips the fit-trim** and combines the audio directly, so the fixed **~30-second**
+Lyria music bed genuinely overruns the ~12–24s ad video (or the board-paced
+animatic). The critic measures it — *final 30.1s vs video 20.0s, +10.1s > 1.0s* —
+writes `acceptable=false` with `correction_notes` ("re-run
+`trim_audio_to_video_length` … then re-combine"), and the loop iterates. On the
+second pass the assembler reads that verdict (via the optional `{qc_verdict?}`
+instruction template, which renders empty on the first pass), applies the trim,
+and re-combines; the critic re-measures — now in sync — sets `acceptable=true`, and
+escalates. The loop stops **at or before** the cap, and the final artifact is the
+corrected cut. Nothing about the defect is faked: it is a real measured
+consequence of skipping a real step, caught by a real measurement.
+
+> **Why gate the skipped trim behind `enable_qc`?** So the defect is a property of
+> *the QC demonstration*, not of the assembler itself: with `enable_qc=False` the
+> assembler is byte-for-byte the pre-QC one that always trims. The QC room is where
+> the trap is taught, so that is the only place the trap is allowed to appear.
+
 ## Creative Studio — the storyboard profile (dogfood)
 
 The **storyboard** profile turns the same engine into a **Creative Studio**: from
@@ -426,8 +517,9 @@ before.
   [`experiments/mcp-genmedia/skills/story-generator/SKILL.md`](../../../skills/story-generator/SKILL.md).
   Its "writers room → per-scene generation" shape — and its "Editor's QC Room"
   self-critique loop — is the storytelling craft behind the planner and the
-  (future, optional) QC stage. Read it for the technique; this agent is an
-  ADK-runnable surface of the same idea. Cited, not forked.
+  [QC `LoopAgent` stage](#the-editors-qc-room-a-bounded-self-critique-loop). Read
+  it for the technique; this agent is an ADK-runnable surface of the same idea.
+  Cited, not forked.
 - **Downstream: the archivist (manifest consumer).** The Creative Studio profile
   exists to be *consumed*, not just watched. A downstream tool — the series'
   archivist, which assembles blog/marketing posts — reads **only** the
@@ -446,6 +538,7 @@ You've reached the capstone — head back to the [series overview](../README.md)
 to see the whole arc, from a nine-line single-tool agent to this multi-agent ad
 pipeline. This example already grows a **second** audience on the profile seam —
 the [Creative Studio storyboard profile](#creative-studio--the-storyboard-profile-dogfood)
-and its headless package/manifest dogfood tool. From here, the natural next
-extension (an optional `LoopAgent` QC stage) builds directly on the same profile
-seam and reuse pattern you just saw.
+and its headless package/manifest dogfood tool — and a **self-critique
+`LoopAgent`**, the [Editor's QC Room](#the-editors-qc-room-a-bounded-self-critique-loop),
+that re-assembles until an objective check passes. Both build directly on the same
+profile seam and reuse pattern you just saw.

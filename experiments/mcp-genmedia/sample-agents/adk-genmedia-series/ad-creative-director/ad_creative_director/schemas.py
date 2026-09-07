@@ -19,6 +19,12 @@ This module defines the two planner `output_schema`s the engine ships:
   * `StoryboardPlan` — the `storyboard` profile (nanobanana stills, board-paced,
     NO duration budget). See the note above `StoryboardShot` below.
 
+It also defines `QCVerdict` — the `output_schema` of the PR-7 "Editor's QC Room"
+critic (both profiles). The critic MEASURES the assembled cut and writes a
+`QCVerdict` to `state["qc_verdict"]`; the `LoopAgent` stops on escalate (an
+acceptable cut) or the `max_iterations` cap. See `QCVerdict` at the end of this
+module and `_build_critic` in agent.py.
+
 `AdPlan` is the planner's `output_schema`. Giving the planner an `output_schema`
 turns its reply into a schema-validated JSON spine that lands in session state
 (`state["ad_plan"]`) instead of free text — every downstream stage reads a
@@ -233,4 +239,50 @@ class StoryboardPlan(BaseModel):
         ),
         min_length=1,
         max_length=MAX_SHOTS,
+    )
+
+
+# ============================================================================
+# QCVerdict — the "Editor's QC Room" critic's output_schema (PR-7, both profiles)
+# ============================================================================
+# The critic (an LlmAgent with output_schema=QCVerdict, output_key="qc_verdict")
+# runs SECOND inside the editor_qc LoopAgent, after the assembler. It MEASURES the
+# just-assembled cut (ffprobe) and emits this structured verdict into session
+# state. The LoopAgent stops when the critic escalates (an acceptable cut, via the
+# exit_loop tool) OR when the max_iterations cap is hit. On a non-acceptable
+# verdict the assembler reads `correction_notes` via the optional `{qc_verdict?}`
+# template on the next iteration and re-assembles. `acceptable` is REQUIRED (no
+# default) so a malformed verdict fails LOUD at validation time rather than being
+# silently treated as a pass.
+
+
+class QCVerdict(BaseModel):
+    """The QC critic's objective pass/fail verdict on one assembled cut."""
+
+    acceptable: bool = Field(
+        description=(
+            "True IFF the assembled cut passes every objective QC check: the final "
+            "file EXISTS, the audio/video durations are in sync (the final cut is "
+            "not more than the sync tolerance longer than the video-only track), "
+            "and — for the ad profile ONLY — the total duration is within the "
+            "15-120s budget. When True the critic also calls the `exit_loop` tool "
+            "to stop the QC loop; when False it does NOT escalate."
+        )
+    )
+    issues: list[str] = Field(
+        default_factory=list,
+        description=(
+            "The concrete, MEASURED problems found (empty when acceptable). Each "
+            "is an objective, reproducible fact, e.g. 'final 30.10s exceeds video "
+            "20.00s by 10.10s (> 1.0s sync tolerance)'."
+        ),
+    )
+    correction_notes: str = Field(
+        default="",
+        description=(
+            "Actionable instructions the assembler applies on the next iteration "
+            "to fix the issues (empty when acceptable), e.g. 're-run "
+            "trim_audio_to_video_length on the mixed audio against the video, then "
+            "re-combine and re-verify'."
+        ),
     )
