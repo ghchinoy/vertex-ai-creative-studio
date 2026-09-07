@@ -1,0 +1,135 @@
+// ad-creative-director.dot — architecture of the Ad creative-director capstone (RUN tier / PR #1821).
+// Theme: blog/graphic-theme.md §5. Run-tier signature: the SequentialAgent spine CONTAINS a
+// ParallelAgent fan-out, the crawl personas are REUSED via AgentTool, and the planner writes a
+// schema-checked plan into session state (purple note — the walk/run state signature).
+// Verified against merged ad-creative-director/ad_creative_director/agent.py + schemas.py + profiles.py
+//   (SequentialAgent[planner -> ParallelAgent(shots) -> audio -> assembler];
+//    planner: output_schema=AdPlan, output_key="ad_plan", no tools/sub-agents;
+//    ParallelAgent: MAX_SHOTS=3 static slots, each reads shots[i] / no-ops if absent;
+//    shot slot tools=[photoshoot_tool, director_tool]; audio tools=[music_producer_tool];
+//    assembler tools=[avtool(tool_filter), trim_audio_to_video_length]; verify-by-existence).
+// Render:
+//   dot -Tsvg blog/diagrams/ad-creative-director.dot -o blog/diagrams/ad-creative-director.svg
+//   dot -Tpng -Gdpi=144 blog/diagrams/ad-creative-director.dot -o blog/diagrams/ad-creative-director.png
+digraph ad_creative_director {
+  graph [fontname="Inter", bgcolor="#FBFBF8", rankdir=TB, splines=true,
+         nodesep=0.42, ranksep=0.55, compound=true,
+         label="Ad creative-director's assistant — a real multi-agent app\lSequentialAgent[ planner → ParallelAgent(shots) → audio → assembler ]; crawl personas reused via AgentTool.\l",
+         labelloc="t", fontsize=14, fontcolor="#1F2933"];
+  node  [fontname="Inter", fontsize=11, penwidth=1.6];
+  edge  [fontname="JetBrains Mono", fontsize=9, color="#1F2933", penwidth=1.3];
+
+  user [shape=oval, style=filled, fillcolor="#F1F3F4", color="#52606D",
+        label="You\na brand brief + a target duration"];
+
+  // The top-level SequentialAgent spine (ADK, indigo).
+  subgraph cluster_pipeline {
+    label="root_agent = SequentialAgent(\"ad_creative_director_ad\")\lruns the four stages in order\l";
+    labelloc="t"; fontname="Inter"; fontsize=11; fontcolor="#5B4FE9";
+    color="#5B4FE9"; style="rounded,dashed";
+
+    // Stage 1: planner (LlmAgent, output_schema=AdPlan, output_key="ad_plan", NO tools)
+    planner [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+             label="LlmAgent  name=\"creative_director\"\nno tools · no sub-agents\noutput_schema=AdPlan · output_key=\"ad_plan\""];
+
+    // Stage 2: the ParallelAgent shot fan-out (three static slots).
+    subgraph cluster_shots {
+      label="ParallelAgent(\"shots\") — 3 static slots run CONCURRENTLY\leach reads shots[i] from {ad_plan} · no-ops if absent\l";
+      labelloc="t"; fontname="Inter"; fontsize=10; fontcolor="#5B4FE9";
+      color="#5B4FE9"; style="rounded";
+      shot1 [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+             label="shot_1\ntools=[photoshoot, director]"];
+      shot2 [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+             label="shot_2\ntools=[photoshoot, director]"];
+      shot3 [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+             label="shot_3\ntools=[photoshoot, director]"];
+    }
+
+    // Stage 3: audio (LlmAgent, reuses music_producer)
+    audio [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+           label="LlmAgent  name=\"audio\"\ntools=[music_producer]\nmusic bed + voiceover"];
+
+    // Stage 4: assembler (LlmAgent, avtool + local trim helper)
+    assembler [shape=box, style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9",
+               label="LlmAgent  name=\"assembler\"\ntools=[avtool (filtered), trim_audio_to_video_length]"];
+  }
+
+  // Session state — the schema-checked plan (run/walk signature: purple note).
+  state [shape=note, style=filled, fillcolor="white", color="#8E24AA", fontcolor="#8E24AA",
+         label="session state\nstate[\"ad_plan\"] = AdPlan (validated)\nbrand · total_duration_seconds (15–120)\nmusic_mood · shots[≤3]{ look, motion, vo_line, duration∈{4,6,8} }"];
+
+  // Gemini reasoning inside the planner (amber ellipse).
+  g_plan [shape=ellipse, style=filled, fillcolor="#FDF0CE", color="#F9A825", fontcolor="#1F2933",
+          label="Gemini writes the plan\nbudgeted shots, one voiceover line each"];
+
+  // REUSED crawl personas as AgentTools — indigo boxes with a teal genmedia core.
+  subgraph cluster_reuse {
+    label="Reused crawl personas — AgentTool(agent=…), imported verbatim (not re-authored)";
+    labelloc="b"; fontname="Inter"; fontsize=10; fontcolor="#00A39C";
+    color="#00A39C"; style="rounded,dashed";
+    photoshoot [shape=box3d, style=filled, fillcolor="#DBF3F1", color="#00A39C",
+                label="photoshoot_tool\n(Photoshoot persona → nanobanana still)"];
+    director   [shape=box3d, style=filled, fillcolor="#DBF3F1", color="#00A39C",
+                label="director_tool\n(Director persona → Veo-3 clip)"];
+    musicprod  [shape=box3d, style=filled, fillcolor="#DBF3F1", color="#00A39C",
+                label="music_producer_tool\n(Music Producer → lyria bed + gemini TTS voice)"];
+  }
+
+  // avtool (teal) — the one NEW server: final assembly only.
+  avtool [shape=box3d, style=filled, fillcolor="#DBF3F1", color="#00A39C",
+          label="mcp-avtool-go (transform-only)\nffmpeg_concatenate · layer_audio · combine · get_media_info"];
+
+  // artifacts + the final ad.
+  finalad [shape=folder, style=filled, fillcolor="#F1F3F4", color="#52606D",
+           label="./output/\nshot-01…03.png · clips · bed.mp3 · vo.wav\n→ final_ad.mp4"];
+
+  // verify (green)
+  verify [shape=box, style="rounded,filled", fillcolor="white", color="#1E8E3E", fontcolor="#1E8E3E",
+          label="Verify by existence\nffmpeg_get_media_info + destination listing\n(NOT a returned resource_link)"];
+
+  // gotcha 1: static fan-out (orange dashed)
+  gotcha_fan [shape=box, style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C",
+              label="ParallelAgent fans out to a FIXED list, not a runtime count\nbuild MAX_SHOTS=3 slots; cap the plan on BOTH sides\n(3 × {4,6,8}s = 12–24s hero footage, inside the 15s–2m budget)"];
+
+  // gotcha 2: the trim seam (orange dashed)
+  gotcha_trim [shape=box, style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C",
+               label="Lyria bed ≈30s fixed · avtool mixes amix=duration=longest (no trim)\n→ one local FunctionTool trims mixed audio to the video length before combine"];
+
+  // ---- flow ----
+  user -> planner [label="brief + duration", lhead=cluster_pipeline];
+  planner -> g_plan [style=dotted, color="#F9A825", arrowhead=none];
+
+  // planner WRITES the validated plan into state (purple dashed).
+  planner -> state [style=dashed, color="#8E24AA", fontcolor="#8E24AA", label="output_schema writes"];
+  // shot stage READS its shot from state (purple dashed).
+  state -> shot1 [style=dashed, color="#8E24AA", fontcolor="#8E24AA", label="{ad_plan}: shots[0..2]", lhead=cluster_shots];
+
+  // each shot slot: still THEN clip (reused personas).
+  shot1 -> photoshoot [style=invis];
+  shot2 -> photoshoot [label="still, then clip", color="#00A39C"];
+  photoshoot -> director [style=dotted, color="#00A39C", arrowhead=none, label="per shot"];
+
+  // audio stage reuses the music producer, reading the plan's mood/lines.
+  state -> audio [style=dashed, color="#8E24AA", fontcolor="#8E24AA", label="{ad_plan}: music_mood, vo_line"];
+  audio -> musicprod [label="bed + voiceover", color="#00A39C"];
+
+  // assembler wires avtool + the local trim helper, then verifies.
+  assembler -> avtool [label="concat + mix + combine", color="#00A39C"];
+  avtool -> finalad [label="write .mp4"];
+  finalad -> verify [color="#1E8E3E"];
+
+  // annotations
+  shot2 -> gotcha_fan [style=dashed, color="#E8590C", arrowhead=none, ltail=cluster_shots];
+  assembler -> gotcha_trim [style=dashed, color="#E8590C", arrowhead=none];
+
+  subgraph cluster_legend {
+    label="Legend"; fontname="Inter"; fontsize=11; color="#9AA5B1"; style="rounded";
+    L_adk    [shape=box,     style="rounded,filled", fillcolor="#E8E6FD", color="#5B4FE9", label="ADK"];
+    L_mcp    [shape=box3d,   style="filled",         fillcolor="#DBF3F1", color="#00A39C", label="genmedia MCP / reused persona"];
+    L_gemini [shape=ellipse, style="filled",         fillcolor="#FDF0CE", color="#F9A825", label="Gemini"];
+    L_state  [shape=note,    style="filled",         fillcolor="white",   color="#8E24AA", fontcolor="#8E24AA", label="session state / output_schema"];
+    L_ver    [shape=box,     style="rounded,filled", fillcolor="white",   color="#1E8E3E", fontcolor="#1E8E3E", label="verify"];
+    L_got    [shape=box,     style="rounded,filled,dashed", fillcolor="white", color="#E8590C", fontcolor="#E8590C", label="gotcha"];
+    L_adk -> L_mcp -> L_gemini -> L_state -> L_ver -> L_got [style=invis];
+  }
+}

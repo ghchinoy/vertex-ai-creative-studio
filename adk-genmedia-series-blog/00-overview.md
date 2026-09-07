@@ -7,11 +7,11 @@ status: draft
 audience: creative builders — marketers, brand & content teams, creative technologists
 register: Think With Google (creative, outcome-first)
 hero: illustrations/00-overview-hero.png
-diagram: diagrams/series-arc.png
+diagram: diagrams/series-arc.svg
 source_of_truth: >
   GoogleCloudPlatform/vertex-ai-creative-studio @ main.
   Grounded on merged PRs #1811 (Tier-0), #1812 (Photoshoot), #1814 (Director), #1815 (Music
-  Producer), #1816 (Scriptwriter/Storyboarder).
+  Producer), #1816 (Scriptwriter/Storyboarder), #1821 (Ad creative-director — run-tier finale).
 ---
 
 # Your own AI creative studio: from a one-line brief to a full set of on-brand assets
@@ -63,11 +63,11 @@ not a gamble.
 | 2 | **The Director** — [now it moves](crawl-02-director.md) | a scene → a short cinematic clip, with sound, in the right format | ✅ shipped (#1814) |
 | 3 | **The Music Producer** — [give it a soundtrack](crawl-03-music-producer.md) | a brief → an original music bed + voiceover, mixed into one track | ✅ shipped (#1815) |
 | 4 | **The Scriptwriter / Storyboarder** — [your first pipeline](walk-01-scriptwriter-storyboarder.md) | an idea → a script → a storyboard, handed cleanly down the line | ✅ shipped (#1816) |
-| 5 | **The creative director's assistant** — the whole team | a campaign brief → a coordinated set of assets from every collaborator | 🗺️ planned |
+| 5 | **The creative director's assistant** — [the whole team](run-01-ad-creative-director.md) | a campaign brief → one finished, on-brand ad, assembled by every collaborator | ✅ shipped (#1821) |
 
 > Everything you read here ships only after it's been proven on a **real, credentialed run** — the
-> asset actually generated, the file actually there. The planned steps are shown so you can see the
-> whole arc; only the shipped steps are live today.
+> asset actually generated, the file actually there. The whole crawl→walk→run arc is now shipped,
+> from a single collaborator to the full creative team.
 
 ## Why these collaborators can be trusted
 

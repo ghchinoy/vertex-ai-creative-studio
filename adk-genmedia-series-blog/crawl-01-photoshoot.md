@@ -10,7 +10,7 @@ register: Think With Google (creative, outcome-first)
 merged: "PR #1812 — feat(adk-series): scaffold ADK genmedia series + Photoshoot crawl agent"
 agent_path: experiments/mcp-genmedia/sample-agents/adk-genmedia-series/photoshoot/
 hero: illustrations/crawl-01-photoshoot-hero.png
-diagram: diagrams/photoshoot.png
+diagram: diagrams/photoshoot.svg
 three_fold: { adk: Med, mcp: "Low/Med", gemini: High }
 ---
 

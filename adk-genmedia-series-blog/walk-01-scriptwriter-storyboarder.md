@@ -10,7 +10,7 @@ register: Think With Google (creative, outcome-first)
 merged: "PR #1816 (merge commit 05e005a on main) — feat(adk-series): Scriptwriter/Storyboarder walk-tier SequentialAgent pipeline"
 agent_path: experiments/mcp-genmedia/sample-agents/adk-genmedia-series/scriptwriter-storyboarder/
 hero: illustrations/walk-01-scriptwriter-storyboarder-hero.png
-diagram: diagrams/scriptwriter-storyboarder.png
+diagram: diagrams/scriptwriter-storyboarder.svg
 three_fold: { adk: High, mcp: Med, gemini: High }
 ---
 

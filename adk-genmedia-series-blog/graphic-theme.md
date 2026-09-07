@@ -175,7 +175,12 @@ colours/shapes, so a diagram is self-explaining out of context.
 - `scriptwriter-storyboarder` — `SequentialAgent`(scriptwriter → storyboarder); the walk-tier
   signature: the **purple session-state handoff** (`output_key="shot_list"` → `{shot_list}`) with the
   same-key contract gotcha and per-shot verify + 1:1 shot→image map.
-- *(added per milestone: `ad-creative-director`.)*
+- `ad-creative-director` — the run-tier finale: `SequentialAgent[planner → ParallelAgent(shots) →
+  audio → assembler]`. Run-tier signature — an indigo spine that **contains a `ParallelAgent`
+  fan-out** (three static shot slots), the crawl personas **reused as teal `AgentTool` boxes**
+  (photoshoot/director/music-producer in a dashed reuse cluster), the planner's **purple
+  `output_schema` plan** (`AdPlan` → `{ad_plan}`), and two orange gotchas (static fan-out cap
+  `MAX_SHOTS=3`; the Lyria-bed-vs-avtool trim seam). Ends on verify-by-existence of one `final_ad.mp4`.
 
 ---
 

@@ -10,7 +10,7 @@ register: Think With Google (creative, outcome-first)
 merged: "PR #1814 — feat(adk-series): Director/Videographer veo crawl agent"
 agent_path: experiments/mcp-genmedia/sample-agents/adk-genmedia-series/director-videographer/
 hero: illustrations/crawl-02-director-hero.png
-diagram: diagrams/director.png
+diagram: diagrams/director.svg
 three_fold: { adk: Med, mcp: Med, gemini: High }
 ---
 

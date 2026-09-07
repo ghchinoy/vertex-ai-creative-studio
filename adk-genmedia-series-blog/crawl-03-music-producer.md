@@ -10,7 +10,7 @@ register: Think With Google (creative, outcome-first)
 merged: "PR #1815 (commit 8979c9f) — feat(adk-series): Music Producer crawl multi-server agent"
 agent_path: experiments/mcp-genmedia/sample-agents/adk-genmedia-series/music-producer/
 hero: illustrations/crawl-03-music-producer-hero.png
-diagram: diagrams/music-producer.png
+diagram: diagrams/music-producer.svg
 three_fold: { adk: High, mcp: High, gemini: Med }
 ---
 

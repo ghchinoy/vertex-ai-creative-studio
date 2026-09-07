@@ -1,9 +1,3 @@
-> ⚠️ **STAGING / REVIEW ONLY — never merged to `main`.** This branch exists so the series can
-> be read with rendered images (hero illustrations + diagrams) for **voice/tone review**. The durable
-> source of truth lives on the team scratchpad; the real publication venue is **Medium + the Google
-> Developers forum**, not this repo. Diagram embeds here point at PNG copies so GitHub renders them;
-> the canonical posts use SVG. Start with the posts below.
-
 # ADK Genmedia Series — blog (index)
 
 The devrel **blog series** that runs alongside the ADK genmedia example code, maintained **in
@@ -42,8 +36,8 @@ their diagrams, illustration art-direction, and the shared visual identity.
 | 1 | crawl | [crawl-01-photoshoot](crawl-01-photoshoot.md) | PR #1812 ✅ | `photoshoot` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
 | 2 | crawl | [crawl-02-director](crawl-02-director.md) | PR #1814 ✅ | `director` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
 | 3 | crawl | [crawl-03-music-producer](crawl-03-music-producer.md) | PR #1815 ✅ | `music-producer` ✅ | art-direction ✅ / render ✅ | **draft** |
-| 4 | walk | [walk-01-scriptwriter-storyboarder](walk-01-scriptwriter-storyboarder.md) | PR #1816 ✅ | `scriptwriter-storyboarder` ✅ | art-direction ✅ / render ✅ | **draft (this cycle)** |
-| 5 | run | run-01-ad-creative-director | not yet | — | — | awaiting milestone |
+| 4 | walk | [walk-01-scriptwriter-storyboarder](walk-01-scriptwriter-storyboarder.md) | PR #1816 ✅ | `scriptwriter-storyboarder` ✅ | art-direction ✅ / render ✅ | **draft** |
+| 5 | run | [run-01-ad-creative-director](run-01-ad-creative-director.md) | PR #1821 ✅ | `ad-creative-director` ✅ | art-direction ✅ / render ⏳ | **draft (this cycle)** |
 
 Legend: ✅ done · ⏳ pending/merging. All four crawl-tier hero illustrations are now **real
 existence-verified renders** (2752×1536 PNG, produced on the credentialed genmedia stack via the EM
@@ -54,7 +48,7 @@ render channel and theme-compliance-reviewed by the archivist) dropped beside th
 
 The series is a single numbered path; each step adds **exactly one** ADK construct on top of the
 last, while Gemini's reasoning stays front-and-centre from the very first agent. (Rendered:
-[`diagrams/series-arc.png`](diagrams/series-arc.png).)
+[`diagrams/series-arc.svg`](diagrams/series-arc.png).)
 
 1. **Meet ADK** → the refreshed Tier-0 `adk/` sample — *an agent is an `LlmAgent` + `MCPToolset`s;
    the LLM drives across many tools.* (PR #1811)
@@ -67,7 +61,8 @@ last, while Gemini's reasoning stays front-and-centre from the very first agent.
 5. **Your first pipeline** → **Scriptwriter / Storyboarder** — *`SequentialAgent` + `output_key`
    state passing between agents.* (PR #1816 ✅ — **walk tier begins**)
 6. **A real multi-agent app** → **Ad creative-director's assistant** — *`SequentialAgent` ⊃
-   `ParallelAgent` + `AgentTool`, composing the persona agents; optional QC loop.* (planned)
+   `ParallelAgent` + `AgentTool`, composing the persona agents; `output_schema` plan.* (PR #1821 ✅
+   — **run tier / finale: the arc's payoff**)
 
 Each step ends with "what you learned," a link to the next, and a **See also** cross-link to the
 non-ADK skill/demo that does the same job on another surface — the series *complements* the skills,
